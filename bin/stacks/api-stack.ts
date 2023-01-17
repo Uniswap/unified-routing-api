@@ -1,0 +1,178 @@
+import * as cdk from 'aws-cdk-lib';
+import { CfnOutput } from 'aws-cdk-lib';
+import * as aws_apigateway from 'aws-cdk-lib/aws-apigateway';
+import { MethodLoggingLevel } from 'aws-cdk-lib/aws-apigateway';
+import * as aws_asg from 'aws-cdk-lib/aws-applicationautoscaling';
+import * as aws_iam from 'aws-cdk-lib/aws-iam';
+import * as aws_lambda from 'aws-cdk-lib/aws-lambda';
+import * as aws_lambda_nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
+import * as aws_logs from 'aws-cdk-lib/aws-logs';
+import * as aws_waf from 'aws-cdk-lib/aws-wafv2';
+import { Construct } from 'constructs';
+import * as path from 'path';
+
+import { SERVICE_NAME } from '../constants';
+
+export class APIStack extends cdk.Stack {
+  public readonly url: CfnOutput;
+
+  constructor(
+    parent: Construct,
+    name: string,
+    props: cdk.StackProps & {
+      provisionedConcurrency: number;
+      throttlingOverride?: string;
+      chatbotSNSArn?: string;
+      stage: string;
+    }
+  ) {
+    super(parent, name, props);
+    const { provisionedConcurrency } = props;
+
+    /*
+     *  API Gateway Initialization
+     */
+    const accessLogGroup = new aws_logs.LogGroup(this, `${SERVICE_NAME}APIGAccessLogs`);
+
+    const api = new aws_apigateway.RestApi(this, `${SERVICE_NAME}`, {
+      restApiName: `${SERVICE_NAME}`,
+      deployOptions: {
+        tracingEnabled: true,
+        loggingLevel: MethodLoggingLevel.ERROR,
+        accessLogDestination: new aws_apigateway.LogGroupLogDestination(accessLogGroup),
+        accessLogFormat: aws_apigateway.AccessLogFormat.jsonWithStandardFields({
+          ip: false,
+          caller: false,
+          user: false,
+          requestTime: true,
+          httpMethod: true,
+          resourcePath: true,
+          status: true,
+          protocol: true,
+          responseLength: true,
+        }),
+      },
+      defaultCorsPreflightOptions: {
+        allowOrigins: aws_apigateway.Cors.ALL_ORIGINS,
+        allowMethods: aws_apigateway.Cors.ALL_METHODS,
+      },
+    });
+
+    const ipThrottlingACL = new aws_waf.CfnWebACL(this, `${SERVICE_NAME}IPThrottlingACL`, {
+      defaultAction: { allow: {} },
+      scope: 'REGIONAL',
+      visibilityConfig: {
+        sampledRequestsEnabled: true,
+        cloudWatchMetricsEnabled: true,
+        metricName: `${SERVICE_NAME}IPBasedThrottling`,
+      },
+      customResponseBodies: {
+        [`${SERVICE_NAME}ThrottledResponseBody`]: {
+          contentType: 'APPLICATION_JSON',
+          content: '{"errorCode": "TOO_MANY_REQUESTS"}',
+        },
+      },
+      name: `${SERVICE_NAME}IPThrottling`,
+      rules: [
+        {
+          name: 'ip',
+          priority: 0,
+          statement: {
+            rateBasedStatement: {
+              // Limit is per 5 mins, i.e. 120 requests every 5 mins
+              limit: props.throttlingOverride ? parseInt(props.throttlingOverride) : 120,
+              // API is of type EDGE so is fronted by Cloudfront as a proxy.
+              // Use the ip set in X-Forwarded-For by Cloudfront, not the regular IP
+              // which would just resolve to Cloudfronts IP.
+              aggregateKeyType: 'FORWARDED_IP',
+              forwardedIpConfig: {
+                headerName: 'X-Forwarded-For',
+                fallbackBehavior: 'MATCH',
+              },
+            },
+          },
+          action: {
+            block: {
+              customResponse: {
+                responseCode: 429,
+                customResponseBodyKey: `${SERVICE_NAME}ThrottledResponseBody`,
+              },
+            },
+          },
+          visibilityConfig: {
+            sampledRequestsEnabled: true,
+            cloudWatchMetricsEnabled: true,
+            metricName: `${SERVICE_NAME}IPBasedThrottlingRule`,
+          },
+        },
+      ],
+    });
+
+    const region = cdk.Stack.of(this).region;
+    const apiArn = `arn:aws:apigateway:${region}::/restapis/${api.restApiId}/stages/${api.deploymentStage.stageName}`;
+
+    new aws_waf.CfnWebACLAssociation(this, `${SERVICE_NAME}IPThrottlingAssociation`, {
+      resourceArn: apiArn,
+      webAclArn: ipThrottlingACL.getAtt('Arn').toString(),
+    });
+
+    /*
+     * Lambda Initialization
+     */
+    const lambdaRole = new aws_iam.Role(this, `$LambdaRole`, {
+      assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
+      managedPolicies: [
+        aws_iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
+        aws_iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonDynamoDBFullAccess'),
+      ],
+    });
+    const quoteLambda = new aws_lambda_nodejs.NodejsFunction(this, 'Quote', {
+      role: lambdaRole,
+      runtime: aws_lambda.Runtime.NODEJS_16_X,
+      entry: path.join(__dirname, '../../lib/handlers/index.ts'),
+      handler: 'quoteHandler',
+      memorySize: 256,
+      bundling: {
+        minify: true,
+        sourceMap: true,
+      },
+      environment: {
+        VERSION: '2',
+        NODE_OPTIONS: '--enable-source-maps',
+        stage: props.stage,
+      },
+      timeout: cdk.Duration.seconds(30),
+    });
+
+    const quoteLambdaAlias = new aws_lambda.Alias(this, `GetOrdersLiveAlias`, {
+      aliasName: 'live',
+      version: quoteLambda.currentVersion,
+      provisionedConcurrentExecutions: provisionedConcurrency > 0 ? provisionedConcurrency : undefined,
+    });
+
+    if (provisionedConcurrency > 0) {
+      const quoteTarget = new aws_asg.ScalableTarget(this, 'QuoteProvConcASG', {
+        serviceNamespace: aws_asg.ServiceNamespace.LAMBDA,
+        maxCapacity: provisionedConcurrency * 5,
+        minCapacity: provisionedConcurrency,
+        resourceId: `function:${quoteLambdaAlias.lambda.functionName}:${quoteLambdaAlias.aliasName}`,
+        scalableDimension: 'lambda:function:ProvisionedConcurrency',
+      });
+
+      quoteTarget.node.addDependency(quoteLambdaAlias);
+    }
+
+    const quoteLambdaIntegration = new aws_apigateway.LambdaIntegration(quoteLambdaAlias, {});
+    const quote = api.root.addResource('quote', {
+      defaultCorsPreflightOptions: {
+        allowOrigins: aws_apigateway.Cors.ALL_ORIGINS,
+        allowMethods: aws_apigateway.Cors.ALL_METHODS,
+      },
+    });
+    quote.addMethod('POST', quoteLambdaIntegration);
+
+    this.url = new CfnOutput(this, 'Url', {
+      value: api.url,
+    });
+  }
+}
