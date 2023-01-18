@@ -91,7 +91,14 @@ export class DutchLimitConfig implements DutchLimitConfigData {
 export class ClassicConfig implements RoutingConfigData {
   public static fromRequestBody(body: ClassicConfigJSON): ClassicConfig {
     return new ClassicConfig({
-      protocols: body.protocols.map((p: string) => ClassicProtocols[p as keyof typeof ClassicProtocols]),
+      // protocols: body.protocols.map((p: string) => ClassicProtocols[p as keyof typeof ClassicProtocols]),
+      protocols: body.protocols.flatMap((p: string) => {
+        if (p in ClassicProtocols) {
+          return [ClassicProtocols[p as keyof typeof ClassicProtocols]];
+        } else {
+          return [];
+        }
+      }),
       simulateFromAddress: body.simulateFromAddress,
       permitSignature: body.permitSignature,
       permitNonce: body.permitNonce,

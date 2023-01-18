@@ -5,6 +5,7 @@ import {
   ClassicConfig,
   ClassicConfigJSON,
   DutchLimitConfig,
+  DutchLimitConfigJSON,
   RoutingConfig,
   RoutingConfigJSON,
   RoutingType,
@@ -48,14 +49,14 @@ export class QuoteRequest implements QuoteRequestData {
 
   // ignores routing types that are not supported
   private static parseConfig(configs: RoutingConfigJSON[]): RoutingConfig[] {
-    return configs.reduce((acc, config) => {
+    return configs.flatMap((config) => {
       if (config.routingType === RoutingType.CLASSIC) {
-        acc.push(ClassicConfig.fromRequestBody(config as ClassicConfigJSON));
+        return ClassicConfig.fromRequestBody(config as ClassicConfigJSON);
       } else if (config.routingType === RoutingType.DUTCH_LIMIT) {
-        acc.push(DutchLimitConfig.fromRequestBody(config as DutchLimitConfig));
+        return DutchLimitConfig.fromRequestBody(config as DutchLimitConfigJSON);
       }
-      return acc;
-    }, [] as RoutingConfig[]);
+      return [];
+    });
   }
 
   public toJSON(): QuoteRequestDataJSON {
