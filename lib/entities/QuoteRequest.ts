@@ -1,6 +1,6 @@
 import { BigNumber } from 'ethers';
 
-import { QuoteType } from './quotes';
+import { TradeType } from './quotes';
 import {
   ClassicConfig,
   ClassicConfigJSON,
@@ -18,13 +18,13 @@ export interface QuoteRequestData {
   tokenIn: string;
   tokenOut: string;
   amount: BigNumber;
-  quoteType: QuoteType;
+  tradeType: TradeType;
   routing: RoutingType[];
   configs: RoutingConfig[];
 }
 
-export interface QuoteRequestDataJSON extends Omit<QuoteRequestData, 'quoteType' | 'amount' | 'routing' | 'configs'> {
-  quoteType: string;
+export interface QuoteRequestDataJSON extends Omit<QuoteRequestData, 'tradeType' | 'amount' | 'routing' | 'configs'> {
+  tradeType: string;
   amount: string;
   routing: string[];
   configs: RoutingConfigJSON[];
@@ -39,7 +39,7 @@ export class QuoteRequest implements QuoteRequestData {
       tokenIn: body.tokenIn,
       tokenOut: body.tokenOut,
       amount: BigNumber.from(body.amount),
-      quoteType: QuoteType[body.quoteType as keyof typeof QuoteType],
+      tradeType: TradeType[body.tradeType as keyof typeof TradeType],
       routing: body.routing as RoutingType[],
       configs: this.parseConfig(body.configs),
     });
@@ -62,6 +62,7 @@ export class QuoteRequest implements QuoteRequestData {
   public toJSON(): QuoteRequestDataJSON {
     return {
       ...this.data,
+      tradeType: TradeType[this.data.tradeType],
       amount: this.amount.toString(),
       configs: this.configs.map((config) => config.toJSON()),
     };
@@ -91,8 +92,8 @@ export class QuoteRequest implements QuoteRequestData {
     return this.data.amount;
   }
 
-  public get quoteType(): QuoteType {
-    return this.data.quoteType;
+  public get tradeType(): TradeType {
+    return this.data.tradeType;
   }
 
   public get routing(): RoutingType[] {
