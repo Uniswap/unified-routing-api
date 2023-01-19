@@ -22,8 +22,8 @@ const CLASSIC_CONFIG_JSON = {
 };
 
 const MOCK_REQUEST_JSON = {
-  chainInId: CHAIN_IN_ID,
-  chainOutId: CHAIN_OUT_ID,
+  tokenInChainId: CHAIN_IN_ID,
+  tokenOutChainId: CHAIN_OUT_ID,
   requestId: 'requestId',
   tokenIn: TOKEN_IN,
   tokenOut: TOKEN_OUT,

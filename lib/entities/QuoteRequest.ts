@@ -12,8 +12,8 @@ import {
 } from './routing';
 
 export interface QuoteRequestData {
-  chainInId: number;
-  chainOutId: number;
+  tokenInChainId: number;
+  tokenOutChainId: number;
   requestId: string;
   tokenIn: string;
   tokenOut: string;
@@ -33,8 +33,8 @@ export interface QuoteRequestDataJSON extends Omit<QuoteRequestData, 'tradeType'
 export class QuoteRequest implements QuoteRequestData {
   public static fromRequestBody(body: QuoteRequestDataJSON): QuoteRequest {
     return new QuoteRequest({
-      chainInId: body.chainInId,
-      chainOutId: body.chainOutId,
+      tokenInChainId: body.tokenInChainId,
+      tokenOutChainId: body.tokenOutChainId,
       requestId: body.requestId,
       tokenIn: body.tokenIn,
       tokenOut: body.tokenOut,
@@ -68,12 +68,12 @@ export class QuoteRequest implements QuoteRequestData {
     };
   }
 
-  public get chainInId(): number {
-    return this.data.chainInId;
+  public get tokenInChainId(): number {
+    return this.data.tokenInChainId;
   }
 
-  public get chainOutId(): number {
-    return this.data.chainOutId;
+  public get tokenOutChainId(): number {
+    return this.data.tokenOutChainId;
   }
 
   public get requestId(): string {
