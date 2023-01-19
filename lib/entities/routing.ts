@@ -1,14 +1,9 @@
+import { Protocol } from '@uniswap/router-sdk';
 import { BigNumber } from 'ethers';
 
 export enum RoutingType {
   CLASSIC = 'CLASSIC',
   DUTCH_LIMIT = 'DUTCH_LIMIT',
-}
-
-export enum ClassicProtocols {
-  V2 = 'V2',
-  V3 = 'V3',
-  MIXED = 'MIXED',
 }
 
 export interface RoutingConfigData {
@@ -26,7 +21,7 @@ export interface DutchLimitConfigJSON extends Omit<DutchLimitConfigData, 'routin
 }
 
 export interface ClassicConfigData extends RoutingConfigData {
-  protocols: ClassicProtocols[];
+  protocols: Protocol[];
   gasPriceWei: string;
   simulateFromAddress?: string;
   permitSignature?: string;
@@ -93,8 +88,8 @@ export class ClassicConfig implements RoutingConfigData {
     return new ClassicConfig({
       // protocols: body.protocols.map((p: string) => ClassicProtocols[p as keyof typeof ClassicProtocols]),
       protocols: body.protocols.flatMap((p: string) => {
-        if (p in ClassicProtocols) {
-          return [ClassicProtocols[p as keyof typeof ClassicProtocols]];
+        if (p in Protocol) {
+          return [Protocol[p as keyof typeof Protocol]];
         } else {
           return [];
         }
@@ -120,7 +115,7 @@ export class ClassicConfig implements RoutingConfigData {
 
   public toJSON(): ClassicConfigJSON {
     return {
-      protocols: this.data.protocols.map((p: ClassicProtocols) => p.toString()),
+      protocols: this.data.protocols.map((p: Protocol) => p.toString()),
       simulateFromAddress: this.data.simulateFromAddress,
       permitSignature: this.data.permitSignature,
       permitNonce: this.data.permitNonce,
@@ -142,7 +137,7 @@ export class ClassicConfig implements RoutingConfigData {
     return this.data.routingType;
   }
 
-  public get protocols(): ClassicProtocols[] {
+  public get protocols(): Protocol[] {
     return this.data.protocols;
   }
 
