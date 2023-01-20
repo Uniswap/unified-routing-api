@@ -1,5 +1,12 @@
 import { BigNumber } from 'ethers';
-import { DutchInput, DutchLimitOrderInfo } from 'gouda-sdk';
+import {
+  DutchInput,
+  DutchInputJSON,
+  DutchLimitOrderInfo,
+  DutchLimitOrderInfoJSON,
+  DutchOutput,
+  DutchOutputJSON,
+} from 'gouda-sdk';
 import { QuoteResponse as ClassicQuoteResponse } from 'routing-api/lib/handlers/schema';
 
 import { RoutingType } from './routing';
@@ -11,21 +18,9 @@ export type DutchLimitQuoteData = DutchLimitOrderInfo & {
   routing: RoutingType;
 };
 
-export type DutchInputJSON = Omit<DutchInput, 'startAmount' | 'endAmount'> & {
-  startAmount: string;
-  endAmount: string;
-};
-
-export type DutchOutputJSON = DutchInputJSON & {
-  recipient: string;
-  isFeeOutput: boolean;
-};
-
-export type DutchLimitQuoteJSON = Omit<DutchLimitQuoteData, 'nonce' | 'routingType' | 'input' | 'outputs'> & {
-  nonce: string;
+export type DutchLimitQuoteJSON = DutchLimitOrderInfoJSON & {
+  quoteId: string;
   routing: string;
-  input: DutchInputJSON;
-  outputs: DutchOutputJSON[];
 };
 
 export type ClassicQuoteData = ClassicQuoteResponse & {
@@ -33,40 +28,53 @@ export type ClassicQuoteData = ClassicQuoteResponse & {
 };
 
 export type ClassicQuoteJSON = Omit<ClassicQuoteData, 'routingType'> & {
-  routing: string;z
+  routing: string;
 };
 
 export type QuoteData = DutchLimitQuoteData | ClassicQuoteData;
 
 export type QuoteJSON = DutchLimitQuoteJSON | ClassicQuoteJSON;
 
-export class DutchLimitQuote implements DutchLimitQuote {
+export class DutchLimitQuote implements DutchLimitQuoteData {
   public static fromResponseBody(body: DutchLimitQuoteJSON): DutchLimitQuote {
-    return new DutchLimitQuote({
-      quoteId: 
-      routing: RoutingType[body.routing as keyof typeof RoutingType],
-      nonce: BigNumber.from(body.nonce),
-      reactor: body.reactor,
-      offerer: body.offerer,
-      validationContract: body.validationContract,
-      validationData: body.validationData,
-      deadline: body.deadline,
-      startTime: body.startTime,
-      endTime: body.endTime,
-      input: {
+    return new DutchLimitQuote(
+      body.quoteId,
+      RoutingType[body.routing as keyof typeof RoutingType],
+      BigNumber.from(body.nonce),
+      body.reactor,
+      body.offerer,
+      body.validationContract,
+      body.validationData,
+      body.deadline,
+      body.startTime,
+      body.endTime,
+      {
         ...body.input,
         startAmount: BigNumber.from(body.input.startAmount),
         endAmount: BigNumber.from(body.input.endAmount),
       },
-      outputs: body.outputs.map((output) => ({
+      body.outputs.map((output) => ({
         ...output,
         startAmount: BigNumber.from(output.startAmount),
         endAmount: BigNumber.from(output.endAmount),
-      })),
-    });
+      }))
+    );
   }
 
-  constructor(private data: DutchLimitQuoteData) {}
+  constructor(
+    public readonly qouteId: string,
+    public readonly routing: RoutingType,
+    public readonly nonce: BigNumber,
+    public readonly reactor: string,
+    public readonly offerer: string,
+    public readonly validationContract: string,
+    public readonly validationData: string,
+    public readonly deadline: number,
+    public readonly startTime: number,
+    public readonly endTime: number,
+    public readonly input: DutchInput,
+    public readonly outputs: DutchOutput[]
+  ) {}
 
   public toJSON(): DutchLimitQuoteJSON {
     return {
@@ -83,25 +91,5 @@ export class DutchLimitQuote implements DutchLimitQuote {
         endAmount: output.endAmount.toString(),
       })),
     };
-  }
-
-  public get routing(): RoutingType {
-    return this.data.routing;
-  }
-
-  public get quoteId(): string {
-    return this.data.quoteId;
-  }
-
-  public get nonce(): BigNumber {
-    return this.data.nonce;
-  }
-
-  public get input(): DutchInput {
-    return this.data.input;
-  }
-
-  public get outputs(): DutchOutput[] {
-    return this.data.outputs;
   }
 }
