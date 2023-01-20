@@ -17,7 +17,7 @@ export interface DutchLimitConfigData extends RoutingConfigData {
 }
 
 export interface DutchLimitConfigJSON extends Omit<DutchLimitConfigData, 'routingType'> {
-  routingType: string;
+  routingType: 'DUTCH_LIMIT';
 }
 
 export interface ClassicConfigData extends RoutingConfigData {
@@ -38,7 +38,7 @@ export interface ClassicConfigData extends RoutingConfigData {
 }
 
 export interface ClassicConfigJSON extends Omit<ClassicConfigData, 'routingType' | 'protocols' | 'permitAmount'> {
-  routingType: string;
+  routingType: 'CLASSIC';
   protocols: string[];
   permitAmount?: string;
 }

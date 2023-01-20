@@ -63,6 +63,7 @@
     "dynamodb-toolbox": "^0.6.1",
     "esm": "^3.2.25",
     "gouda-parameterization-api": "git+ssh://git@github.com:Uniswap/gouda-parameterization-api",
+    "gouda-sdk": "github:Uniswap/gouda-sdk#main",
     "joi": "^17.7.0",
     "node-cache": "^5.1.2",
     "routing-api": "github:Uniswap/routing-api",
