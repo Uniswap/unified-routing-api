@@ -29,7 +29,6 @@ const MOCK_REQUEST_JSON = {
   tokenOut: TOKEN_OUT,
   amount: AMOUNT_IN,
   tradeType: 'EXACT_INPUT',
-  routing: ['DUTCH_LIMIT', 'CLASSIC'],
   configs: [MOCK_DL_CONFIG_JSON, CLASSIC_CONFIG_JSON],
 };
 

@@ -19,14 +19,12 @@ export interface QuoteRequestData {
   tokenOut: string;
   amount: BigNumber;
   tradeType: TradeType;
-  routing: RoutingType[];
   configs: RoutingConfig[];
 }
 
-export interface QuoteRequestDataJSON extends Omit<QuoteRequestData, 'tradeType' | 'amount' | 'routing' | 'configs'> {
+export interface QuoteRequestDataJSON extends Omit<QuoteRequestData, 'tradeType' | 'amount' | 'configs'> {
   tradeType: string;
   amount: string;
-  routing: string[];
   configs: RoutingConfigJSON[];
 }
 
@@ -40,7 +38,6 @@ export class QuoteRequest implements QuoteRequestData {
       body.tokenOut,
       BigNumber.from(body.amount),
       TradeType[body.tradeType as keyof typeof TradeType],
-      body.routing as RoutingType[],
       this.parseConfig(body.configs)
     );
   }
@@ -53,7 +50,6 @@ export class QuoteRequest implements QuoteRequestData {
     public readonly tokenOut: string,
     public readonly amount: BigNumber,
     public readonly tradeType: TradeType,
-    public readonly routing: RoutingType[],
     public readonly configs: RoutingConfig[]
   ) {}
 
@@ -78,7 +74,6 @@ export class QuoteRequest implements QuoteRequestData {
       tokenOut: this.tokenOut,
       tradeType: TradeType[this.tradeType],
       amount: this.amount.toString(),
-      routing: this.routing,
       configs: this.configs.map((config) => config.toJSON()),
     };
   }
