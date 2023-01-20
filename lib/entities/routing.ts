@@ -1,5 +1,6 @@
 import { Protocol } from '@uniswap/router-sdk';
 import { BigNumber } from 'ethers';
+import invariant from 'tiny-invariant';
 
 export enum RoutingType {
   CLASSIC = 'CLASSIC',
@@ -47,6 +48,7 @@ export type RoutingConfigJSON = DutchLimitConfigJSON | ClassicConfigJSON;
 
 export class DutchLimitConfig implements DutchLimitConfigData {
   public static fromRequestBody(body: DutchLimitConfigJSON): DutchLimitConfig {
+    invariant(body.routingType == 'DUTCH_LIMIT', 'routingType must be DUTCH_LIMIT');
     return new DutchLimitConfig(
       RoutingType.DUTCH_LIMIT as const,
       body.offerer,
@@ -74,6 +76,7 @@ export class DutchLimitConfig implements DutchLimitConfigData {
 
 export class ClassicConfig implements RoutingConfigData {
   public static fromRequestBody(body: ClassicConfigJSON): ClassicConfig {
+    invariant(body.routingType == 'CLASSIC', 'routingType must be CLASSIC');
     return new ClassicConfig(
       RoutingType.CLASSIC,
       body.protocols.flatMap((p: string) => {
