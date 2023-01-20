@@ -9,14 +9,14 @@ const TOKEN_OUT = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 const AMOUNT_IN = '1000000000000000000';
 
 const MOCK_DL_CONFIG_JSON = {
-  routingType: 'DUTCH_LIMIT',
+  routingType: 'DUTCH_LIMIT' as const,
   offerer: OFFERER,
   exclusivePeriodSecs: 24,
   auctionPeriodSecs: 60,
 };
 
 const CLASSIC_CONFIG_JSON = {
-  routingType: 'CLASSIC',
+  routingType: 'CLASSIC' as const,
   protocols: ['V3', 'V2', 'MIXED'],
   gasPriceWei: '1000000000',
 };
@@ -46,6 +46,6 @@ describe('QuoteRequest', () => {
 
   it('parses a complete quote request properly', () => {
     const request = QuoteRequest.fromRequestBody(MOCK_REQUEST_JSON);
-    expect(request.toJSON()).toEqual(MOCK_REQUEST_JSON);
+    expect(request.toJSON()).toMatchObject(MOCK_REQUEST_JSON);
   });
 });

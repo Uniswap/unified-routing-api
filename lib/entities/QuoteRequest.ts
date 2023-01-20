@@ -32,75 +32,54 @@ export interface QuoteRequestDataJSON extends Omit<QuoteRequestData, 'tradeType'
 
 export class QuoteRequest implements QuoteRequestData {
   public static fromRequestBody(body: QuoteRequestDataJSON): QuoteRequest {
-    return new QuoteRequest({
-      tokenInChainId: body.tokenInChainId,
-      tokenOutChainId: body.tokenOutChainId,
-      requestId: body.requestId,
-      tokenIn: body.tokenIn,
-      tokenOut: body.tokenOut,
-      amount: BigNumber.from(body.amount),
-      tradeType: TradeType[body.tradeType as keyof typeof TradeType],
-      routing: body.routing as RoutingType[],
-      configs: this.parseConfig(body.configs),
-    });
+    return new QuoteRequest(
+      body.tokenInChainId,
+      body.tokenOutChainId,
+      body.requestId,
+      body.tokenIn,
+      body.tokenOut,
+      BigNumber.from(body.amount),
+      TradeType[body.tradeType as keyof typeof TradeType],
+      body.routing as RoutingType[],
+      this.parseConfig(body.configs)
+    );
   }
 
-  constructor(private data: QuoteRequestData) {}
+  constructor(
+    public readonly tokenInChainId: number,
+    public readonly tokenOutChainId: number,
+    public readonly requestId: string,
+    public readonly tokenIn: string,
+    public readonly tokenOut: string,
+    public readonly amount: BigNumber,
+    public readonly tradeType: TradeType,
+    public readonly routing: RoutingType[],
+    public readonly configs: RoutingConfig[]
+  ) {}
 
   // ignores routing types that are not supported
   private static parseConfig(configs: RoutingConfigJSON[]): RoutingConfig[] {
     return configs.flatMap((config) => {
-      if (config.routingType === RoutingType.CLASSIC) {
+      if (config.routingType == RoutingType.CLASSIC) {
         return ClassicConfig.fromRequestBody(config as ClassicConfigJSON);
-      } else if (config.routingType === RoutingType.DUTCH_LIMIT) {
+      } else if (config.routingType == RoutingType.DUTCH_LIMIT) {
         return DutchLimitConfig.fromRequestBody(config as DutchLimitConfigJSON);
       }
       return [];
     });
   }
 
-  public toJSON(): QuoteRequestDataJSON {
+  public toJSON() {
     return {
-      ...this.data,
-      tradeType: TradeType[this.data.tradeType],
+      tokenInChainId: this.tokenInChainId,
+      tokenOutChainId: this.tokenOutChainId,
+      requestId: this.requestId,
+      tokenIn: this.tokenIn,
+      tokenOut: this.tokenOut,
+      tradeType: TradeType[this.tradeType],
       amount: this.amount.toString(),
+      routing: this.routing,
       configs: this.configs.map((config) => config.toJSON()),
     };
-  }
-
-  public get tokenInChainId(): number {
-    return this.data.tokenInChainId;
-  }
-
-  public get tokenOutChainId(): number {
-    return this.data.tokenOutChainId;
-  }
-
-  public get requestId(): string {
-    return this.data.requestId;
-  }
-
-  public get tokenIn(): string {
-    return this.data.tokenIn;
-  }
-
-  public get tokenOut(): string {
-    return this.data.tokenOut;
-  }
-
-  public get amount(): BigNumber {
-    return this.data.amount;
-  }
-
-  public get tradeType(): TradeType {
-    return this.data.tradeType;
-  }
-
-  public get routing(): RoutingType[] {
-    return this.data.routing;
-  }
-
-  public get configs(): RoutingConfig[] {
-    return this.data.configs;
   }
 }

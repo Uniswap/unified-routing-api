@@ -47,149 +47,94 @@ export type RoutingConfigJSON = DutchLimitConfigJSON | ClassicConfigJSON;
 
 export class DutchLimitConfig implements DutchLimitConfigData {
   public static fromRequestBody(body: DutchLimitConfigJSON): DutchLimitConfig {
-    return new DutchLimitConfig({
-      offerer: body.offerer,
-      exclusivePeriodSecs: body.exclusivePeriodSecs,
-      auctionPeriodSecs: body.auctionPeriodSecs,
-      routingType: RoutingType.DUTCH_LIMIT,
-    });
+    return new DutchLimitConfig(
+      RoutingType.DUTCH_LIMIT as const,
+      body.offerer,
+      body.exclusivePeriodSecs,
+      body.auctionPeriodSecs
+    );
   }
 
-  constructor(private data: DutchLimitConfigData) {}
+  constructor(
+    public readonly routingType: RoutingType,
+    public readonly offerer: string,
+    public readonly exclusivePeriodSecs: number,
+    public readonly auctionPeriodSecs: number
+  ) {}
 
   public toJSON() {
     return {
-      offerer: this.data.offerer,
-      exclusivePeriodSecs: this.data.exclusivePeriodSecs,
-      auctionPeriodSecs: this.data.auctionPeriodSecs,
-      routingType: this.data.routingType,
+      offerer: this.offerer,
+      exclusivePeriodSecs: this.exclusivePeriodSecs,
+      auctionPeriodSecs: this.auctionPeriodSecs,
+      routingType: 'DUTCH_LIMIT',
     };
-  }
-
-  public get routingType(): RoutingType {
-    return this.data.routingType;
-  }
-
-  public get offerer(): string {
-    return this.data.offerer;
-  }
-
-  public get exclusivePeriodSecs(): number {
-    return this.data.exclusivePeriodSecs;
-  }
-
-  public get auctionPeriodSecs(): number {
-    return this.data.auctionPeriodSecs;
   }
 }
 
 export class ClassicConfig implements RoutingConfigData {
   public static fromRequestBody(body: ClassicConfigJSON): ClassicConfig {
-    return new ClassicConfig({
-      // protocols: body.protocols.map((p: string) => ClassicProtocols[p as keyof typeof ClassicProtocols]),
-      protocols: body.protocols.flatMap((p: string) => {
+    return new ClassicConfig(
+      RoutingType.CLASSIC,
+      body.protocols.flatMap((p: string) => {
         if (p in Protocol) {
-          return [Protocol[p as keyof typeof Protocol]];
+          return Protocol[p as keyof typeof Protocol];
         } else {
           return [];
         }
       }),
-      simulateFromAddress: body.simulateFromAddress,
-      permitSignature: body.permitSignature,
-      permitNonce: body.permitNonce,
-      permitExpiration: body.permitExpiration,
-      permitAmount: body.permitAmount ? BigNumber.from(body.permitAmount) : undefined,
-      permitSigDeadline: body.permitSigDeadline,
-      enableUniversalRouter: body.enableUniversalRouter,
-      slippageTolerance: body.slippageTolerance,
-      deadline: body.deadline,
-      gasPriceWei: body.gasPriceWei,
-      minSplits: body.minSplits,
-      forceCrossProtocol: body.forceCrossProtocol,
-      forceMixedRoutes: body.forceMixedRoutes,
-      routingType: RoutingType.CLASSIC,
-    });
+      body.gasPriceWei,
+      body.simulateFromAddress,
+      body.permitSignature,
+      body.permitNonce,
+      body.permitExpiration,
+      body.permitAmount ? BigNumber.from(body.permitAmount) : undefined,
+      body.permitSigDeadline,
+      body.enableUniversalRouter,
+      body.slippageTolerance,
+      body.deadline,
+      body.minSplits,
+      body.forceCrossProtocol,
+      body.forceMixedRoutes
+    );
   }
 
-  constructor(private data: ClassicConfigData) {}
+  constructor(
+    public readonly routingType: RoutingType,
+    public readonly protocols: Protocol[],
+    public readonly gasPriceWei: string,
+    public readonly simulateFromAddress?: string,
+    public readonly permitSignature?: string,
+    public readonly permitNonce?: string,
+    public readonly permitExpiration?: string,
+    public readonly permitAmount?: BigNumber,
+    public readonly permitSigDeadline?: number,
+    public readonly enableUniversalRouter?: boolean,
+    public readonly slippageTolerance?: number,
+    public readonly deadline?: number,
+    public readonly minSplits?: number,
+    public readonly forceCrossProtocol?: boolean,
+    public readonly forceMixedRoutes?: boolean
+  ) {}
 
   public toJSON(): ClassicConfigJSON {
     return {
-      protocols: this.data.protocols.map((p: Protocol) => p.toString()),
-      simulateFromAddress: this.data.simulateFromAddress,
-      permitSignature: this.data.permitSignature,
-      permitNonce: this.data.permitNonce,
-      permitExpiration: this.data.permitExpiration,
-      permitAmount: this.data.permitAmount?.toString(),
-      permitSigDeadline: this.data.permitSigDeadline,
-      enableUniversalRouter: this.data.enableUniversalRouter,
-      slippageTolerance: this.data.slippageTolerance,
-      deadline: this.data.deadline,
-      gasPriceWei: this.data.gasPriceWei,
-      minSplits: this.data.minSplits,
-      forceCrossProtocol: this.data.forceCrossProtocol,
-      forceMixedRoutes: this.data.forceMixedRoutes,
-      routingType: this.data.routingType,
+      protocols: this.protocols.map((p: Protocol) => p.toString()),
+      simulateFromAddress: this.simulateFromAddress,
+      permitSignature: this.permitSignature,
+      permitNonce: this.permitNonce,
+      permitExpiration: this.permitExpiration,
+      permitAmount: this.permitAmount?.toString(),
+      permitSigDeadline: this.permitSigDeadline,
+      enableUniversalRouter: this.enableUniversalRouter,
+      slippageTolerance: this.slippageTolerance,
+      deadline: this.deadline,
+      gasPriceWei: this.gasPriceWei,
+      minSplits: this.minSplits,
+      forceCrossProtocol: this.forceCrossProtocol,
+      forceMixedRoutes: this.forceMixedRoutes,
+      routingType: 'CLASSIC',
     };
-  }
-
-  public get routingType(): RoutingType {
-    return this.data.routingType;
-  }
-
-  public get protocols(): Protocol[] {
-    return this.data.protocols;
-  }
-
-  public get simulateFromAddress(): string | undefined {
-    return this.data.simulateFromAddress;
-  }
-
-  public get permitSignature(): string | undefined {
-    return this.data.permitSignature;
-  }
-  public get permitNonce(): string | undefined {
-    return this.data.permitNonce;
-  }
-
-  public get permitExpiration(): string | undefined {
-    return this.data.permitExpiration;
-  }
-
-  public get permitAmount(): BigNumber | undefined {
-    return this.data.permitAmount;
-  }
-
-  public get permitSigDeadline(): number | undefined {
-    return this.data.permitSigDeadline;
-  }
-
-  public get enableUniversalRouter(): boolean | undefined {
-    return this.data.enableUniversalRouter;
-  }
-
-  public get slippageTolerance(): number | undefined {
-    return this.data.slippageTolerance;
-  }
-
-  public get deadline(): number | undefined {
-    return this.data.deadline;
-  }
-
-  public get gasPriceWei(): string | undefined {
-    return this.data.gasPriceWei;
-  }
-
-  public get minSplits(): number | undefined {
-    return this.data.minSplits;
-  }
-
-  public get forceCrossProtocol(): boolean | undefined {
-    return this.data.forceCrossProtocol;
-  }
-
-  public get forceMixedRoutes(): boolean | undefined {
-    return this.data.forceMixedRoutes;
   }
 }
 
