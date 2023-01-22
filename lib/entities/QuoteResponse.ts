@@ -1,8 +1,4 @@
-import { BigNumber } from 'ethers';
-import { string } from 'joi';
-import { v4 as uuidv4 } from 'uuid';
-
-import { ClassicQuote, Quote, QuoteJSON, TradeType } from './quotes';
+import { DutchLimitQuote, Quote, QuoteData, QuoteJSON } from './quotes';
 import { RoutingType } from './routing';
 
 export interface QuoteResponseData {
@@ -11,45 +7,33 @@ export interface QuoteResponseData {
 }
 
 export interface QuoteResponseJSON {
-  routingType: string;
+  routing: string;
   quote: QuoteJSON;
 }
 
 export class QuoteResponse implements QuoteResponseData {
   public static fromResponseJSON(body: QuoteResponseJSON): QuoteResponse {
-    return new QuoteResponse({
-      routing: RoutingType[body.routingType as keyof typeof RoutingType],
-      quote: parseQuote(body.routingType, body.quote),
-    });
+    return new QuoteResponse(
+      RoutingType[body.routing as keyof typeof RoutingType],
+      this.parseQuote(body.routing, body.quote)
+    );
   }
 
-  constructor(private data: QuoteResponseData) {}
+  constructor(public readonly routing: RoutingType, public readonly quote: Quote) {}
 
-  private parseQuote(routing: string, quote: QuoteJSON): Quote {
+  private static parseQuote(routing: string, quote: QuoteJSON): Quote {
     switch (routing) {
-      case RoutingType.CLASSIC:
-        return ClassicQuote.from(quote);
       case RoutingType.DUTCH_LIMIT:
-        return DutchLimitQuote.fromJSON(quote);
+        return DutchLimitQuote.fromResponseBody(quote);
       default:
-        throw new Error(`Unknown quote type: ${quote.type}`);
+        throw new Error(`Unknown routing type: ${routing}`);
     }
   }
 
-  public toJSON(): QuoteResponseJson {
+  public toJSON(): QuoteResponseJSON {
     return {
-      ...this.data,
-      tradeType: TradeType[this.data.tradeType],
-      amountIn: this.data.amountIn.toString(),
-      amountOut: this.data.amountOut.toString(),
+      routing: this.routing,
+      quote: this.quote.toJSON(),
     };
-  }
-
-  public get routing(): RoutingType {
-    return this.data.routing;
-  }
-
-  public get quote(): Quote {
-    return this.data.quote;
   }
 }

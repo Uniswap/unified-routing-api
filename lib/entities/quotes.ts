@@ -1,38 +1,24 @@
 import { BigNumber } from 'ethers';
 import { DutchInput, DutchLimitOrderInfo, DutchLimitOrderInfoJSON, DutchOutput } from 'gouda-sdk';
-import { QuoteResponse as ClassicQuoteResponse } from 'routing-api/lib/handlers/schema';
-
-import { RoutingType } from './routing';
 
 export { TradeType } from '@uniswap/sdk-core';
 
 export type DutchLimitQuoteData = DutchLimitOrderInfo & {
   quoteId: string;
-  routing: RoutingType;
 };
 
 export type DutchLimitQuoteJSON = DutchLimitOrderInfoJSON & {
   quoteId: string;
-  routing: string;
 };
 
-export type ClassicQuoteData = ClassicQuoteResponse & {
-  routing: RoutingType;
-};
+export type QuoteData = DutchLimitQuoteData;
 
-export type ClassicQuoteJSON = Omit<ClassicQuoteData, 'routingType'> & {
-  routing: string;
-};
-
-export type QuoteData = DutchLimitQuoteData | ClassicQuoteData;
-
-export type QuoteJSON = DutchLimitQuoteJSON | ClassicQuoteJSON;
+export type QuoteJSON = DutchLimitQuoteJSON;
 
 export class DutchLimitQuote implements DutchLimitQuoteData {
   public static fromResponseBody(body: DutchLimitQuoteJSON): DutchLimitQuote {
     return new DutchLimitQuote(
       body.quoteId,
-      RoutingType[body.routing as keyof typeof RoutingType],
       BigNumber.from(body.nonce),
       body.reactor,
       body.offerer,
@@ -56,7 +42,6 @@ export class DutchLimitQuote implements DutchLimitQuoteData {
 
   constructor(
     public readonly quoteId: string,
-    public readonly routing: RoutingType,
     public readonly nonce: BigNumber,
     public readonly reactor: string,
     public readonly offerer: string,
@@ -72,7 +57,6 @@ export class DutchLimitQuote implements DutchLimitQuoteData {
   public toJSON(): DutchLimitQuoteJSON {
     return {
       quoteId: this.quoteId,
-      routing: RoutingType[this.routing],
       nonce: this.nonce.toString(),
       reactor: this.reactor,
       offerer: this.offerer,
@@ -94,3 +78,5 @@ export class DutchLimitQuote implements DutchLimitQuoteData {
     };
   }
 }
+
+export type Quote = DutchLimitQuote;
