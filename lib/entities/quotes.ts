@@ -1,12 +1,5 @@
 import { BigNumber } from 'ethers';
-import {
-  DutchInput,
-  DutchInputJSON,
-  DutchLimitOrderInfo,
-  DutchLimitOrderInfoJSON,
-  DutchOutput,
-  DutchOutputJSON,
-} from 'gouda-sdk';
+import { DutchInput, DutchLimitOrderInfo, DutchLimitOrderInfoJSON, DutchOutput } from 'gouda-sdk';
 import { QuoteResponse as ClassicQuoteResponse } from 'routing-api/lib/handlers/schema';
 
 import { RoutingType } from './routing';
@@ -62,7 +55,7 @@ export class DutchLimitQuote implements DutchLimitQuoteData {
   }
 
   constructor(
-    public readonly qouteId: string,
+    public readonly quoteId: string,
     public readonly routing: RoutingType,
     public readonly nonce: BigNumber,
     public readonly reactor: string,
@@ -78,14 +71,22 @@ export class DutchLimitQuote implements DutchLimitQuoteData {
 
   public toJSON(): DutchLimitQuoteJSON {
     return {
-      ...this.data,
-      nonce: this.data.nonce.toString(),
+      quoteId: this.quoteId,
+      routing: RoutingType[this.routing],
+      nonce: this.nonce.toString(),
+      reactor: this.reactor,
+      offerer: this.offerer,
+      validationContract: this.validationContract,
+      validationData: this.validationData,
+      deadline: this.deadline,
+      startTime: this.startTime,
+      endTime: this.endTime,
       input: {
-        ...this.data.input,
-        startAmount: this.data.input.startAmount.toString(),
-        endAmount: this.data.input.endAmount.toString(),
+        ...this.input,
+        startAmount: this.input.startAmount.toString(),
+        endAmount: this.input.endAmount.toString(),
       },
-      outputs: this.data.outputs.map((output) => ({
+      outputs: this.outputs.map((output) => ({
         ...output,
         startAmount: output.startAmount.toString(),
         endAmount: output.endAmount.toString(),
