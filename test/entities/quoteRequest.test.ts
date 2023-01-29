@@ -1,12 +1,6 @@
 import { QuoteRequest } from '../../lib/entities/QuoteRequest';
 import { ClassicConfig, DutchLimitConfig } from '../../lib/entities/routing';
-
-const CHAIN_IN_ID = 1;
-const CHAIN_OUT_ID = 2;
-const OFFERER = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
-const TOKEN_IN = '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984';
-const TOKEN_OUT = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
-const AMOUNT_IN = '1000000000000000000';
+import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, OFFERER, TOKEN_IN, TOKEN_OUT } from '../constants';
 
 const MOCK_DL_CONFIG_JSON = {
   routingType: 'DUTCH_LIMIT' as const,

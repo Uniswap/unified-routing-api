@@ -1,14 +1,21 @@
 import { BigNumber } from 'ethers';
-import { DutchInput, DutchLimitOrderInfo, DutchLimitOrderInfoJSON, DutchOutput } from 'gouda-sdk';
 
 export { TradeType } from '@uniswap/sdk-core';
 
-export type DutchLimitQuoteData = DutchLimitOrderInfo & {
-  quoteId: string;
+export type DutchLimitQuoteData = {
+  chainId: number;
+  requestId: string;
+  tokenIn: string;
+  amountIn: BigNumber;
+  tokenOut: string;
+  amountOut: BigNumber;
+  offerer: string;
+  filler?: string;
 };
 
-export type DutchLimitQuoteJSON = DutchLimitOrderInfoJSON & {
-  quoteId: string;
+export type DutchLimitQuoteJSON = Omit<DutchLimitQuoteData, 'amountIn' | 'amountOut'> & {
+  amountIn: string;
+  amountOut: string;
 };
 
 export type QuoteData = DutchLimitQuoteData;
@@ -18,63 +25,38 @@ export type QuoteJSON = DutchLimitQuoteJSON;
 export class DutchLimitQuote implements DutchLimitQuoteData {
   public static fromResponseBody(body: DutchLimitQuoteJSON): DutchLimitQuote {
     return new DutchLimitQuote(
-      body.quoteId,
-      BigNumber.from(body.nonce),
-      body.reactor,
+      body.chainId,
+      body.requestId,
+      body.tokenIn,
+      BigNumber.from(body.amountIn),
+      body.tokenOut,
+      BigNumber.from(body.amountOut),
       body.offerer,
-      body.validationContract,
-      body.validationData,
-      body.deadline,
-      body.startTime,
-      body.endTime,
-      {
-        ...body.input,
-        startAmount: BigNumber.from(body.input.startAmount),
-        endAmount: BigNumber.from(body.input.endAmount),
-      },
-      body.outputs.map((output) => ({
-        ...output,
-        startAmount: BigNumber.from(output.startAmount),
-        endAmount: BigNumber.from(output.endAmount),
-      }))
+      body.filler
     );
   }
 
   constructor(
-    public readonly quoteId: string,
-    public readonly nonce: BigNumber,
-    public readonly reactor: string,
+    public readonly chainId: number,
+    public readonly requestId: string,
+    public readonly tokenIn: string,
+    public readonly amountIn: BigNumber,
+    public readonly tokenOut: string,
+    public readonly amountOut: BigNumber,
     public readonly offerer: string,
-    public readonly validationContract: string,
-    public readonly validationData: string,
-    public readonly deadline: number,
-    public readonly startTime: number,
-    public readonly endTime: number,
-    public readonly input: DutchInput,
-    public readonly outputs: DutchOutput[]
+    public readonly filler?: string
   ) {}
 
   public toJSON(): DutchLimitQuoteJSON {
     return {
-      quoteId: this.quoteId,
-      nonce: this.nonce.toString(),
-      reactor: this.reactor,
+      chainId: this.chainId,
+      requestId: this.requestId,
+      tokenIn: this.tokenIn,
+      amountIn: this.amountIn.toString(),
+      tokenOut: this.tokenOut,
+      amountOut: this.amountOut.toString(),
       offerer: this.offerer,
-      validationContract: this.validationContract,
-      validationData: this.validationData,
-      deadline: this.deadline,
-      startTime: this.startTime,
-      endTime: this.endTime,
-      input: {
-        ...this.input,
-        startAmount: this.input.startAmount.toString(),
-        endAmount: this.input.endAmount.toString(),
-      },
-      outputs: this.outputs.map((output) => ({
-        ...output,
-        startAmount: output.startAmount.toString(),
-        endAmount: output.endAmount.toString(),
-      })),
+      filler: this.filler,
     };
   }
 }

@@ -1,4 +1,4 @@
-import { DutchLimitQuote, Quote, QuoteData, QuoteJSON } from './quotes';
+import { DutchLimitQuote, Quote, QuoteJSON } from './quotes';
 import { RoutingType } from './routing';
 
 export interface QuoteResponseData {
@@ -12,7 +12,7 @@ export interface QuoteResponseJSON {
 }
 
 export class QuoteResponse implements QuoteResponseData {
-  public static fromResponseJSON(body: QuoteResponseJSON): QuoteResponse {
+  public static fromResponseBody(body: QuoteResponseJSON): QuoteResponse {
     return new QuoteResponse(
       RoutingType[body.routing as keyof typeof RoutingType],
       this.parseQuote(body.routing, body.quote)
