@@ -51,6 +51,32 @@ const DL_QUOTE_EXACT_IN_BETTER: QuoteResponse = QuoteResponse.fromResponseBody({
   },
 });
 
+const DL_QUOTE_EXACT_OUT_WORSE: QuoteResponse = QuoteResponse.fromResponseBody({
+  routing: 'DUTCH_LIMIT',
+  quote: {
+    chainId: 1,
+    requestId: 'requestId',
+    tokenIn: 'tokenIn',
+    amountIn: '2',
+    tokenOut: 'tokenOut',
+    amountOut: '1',
+    offerer: 'offerer',
+  },
+});
+
+const DL_QUOTE_EXACT_OUT_BETTER: QuoteResponse = QuoteResponse.fromResponseBody({
+  routing: 'DUTCH_LIMIT',
+  quote: {
+    chainId: 1,
+    requestId: 'requestId',
+    tokenIn: 'tokenIn',
+    amountIn: '1',
+    tokenOut: 'tokenOut',
+    amountOut: '1',
+    offerer: 'offerer',
+  },
+});
+
 describe('QuoteHandler', () => {
   // silent logger in tests
   const logger = Logger.createLogger({ name: 'test' });
@@ -59,9 +85,11 @@ describe('QuoteHandler', () => {
   describe('compareQuotes', () => {
     it('returns true if lhs is a better dutch limit quote than rhs', () => {
       expect(compareQuotes(DL_QUOTE_EXACT_IN_BETTER, DL_QUOTE_EXACT_IN_WORSE, TradeType.EXACT_INPUT)).toBe(true);
+      expect(compareQuotes(DL_QUOTE_EXACT_OUT_BETTER, DL_QUOTE_EXACT_OUT_WORSE, TradeType.EXACT_OUTPUT)).toBe(true);
     });
     it('returns false if lhs is a worse dutch limit quote than rhs', () => {
       expect(compareQuotes(DL_QUOTE_EXACT_IN_WORSE, DL_QUOTE_EXACT_IN_BETTER, TradeType.EXACT_INPUT)).toBe(false);
+      expect(compareQuotes(DL_QUOTE_EXACT_OUT_WORSE, DL_QUOTE_EXACT_OUT_BETTER, TradeType.EXACT_OUTPUT)).toBe(false);
     });
   });
 
