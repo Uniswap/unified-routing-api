@@ -24,6 +24,7 @@ export class APIStack extends cdk.Stack {
       throttlingOverride?: string;
       chatbotSNSArn?: string;
       stage: string;
+      envVars: Record<string, string>;
     }
   ) {
     super(parent, name, props);
@@ -140,6 +141,7 @@ export class APIStack extends cdk.Stack {
         VERSION: '2',
         NODE_OPTIONS: '--enable-source-maps',
         stage: props.stage,
+        ...props.envVars,
       },
       timeout: cdk.Duration.seconds(30),
     });
