@@ -5,10 +5,9 @@ import { QuoteRequest, QuoteResponse } from '../../entities';
 import { QuoteRequestDataJSON } from '../../entities/QuoteRequest';
 import { QuoteResponseJSON } from '../../entities/QuoteResponse';
 import { RoutingType } from '../../entities/routing';
-import { Quoter } from '../../quoters';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
-import { ContainerInjected } from './injector';
+import { ContainerInjected, QuoterByRoutingType } from './injector';
 import { PostQuoteRequestBodyJoi } from './schema';
 
 export class QuoteHandler extends APIGLambdaHandler<
@@ -29,17 +28,35 @@ export class QuoteHandler extends APIGLambdaHandler<
 
     log.info(requestBody, 'requestBody');
 
-    const request = QuoteRequest.fromRequestBody(requestBody);
+    //     const request = QuoteRequest.fromRequestBody(requestBody);
 
-    log.info({
-      eventType: 'QuoteRequest',
-      body: {
-        requestId: request.requestId,
-        tokenIn: request.tokenIn,
-        tokenOut: request.tokenOut,
-        amount: request.amount.toString(),
-        tradeType: request.tradeType,
-      },
+    //     log.info({
+    //       eventType: 'QuoteRequest',
+    //       body: {
+    //         requestId: request.requestId,
+    //         tokenIn: request.tokenIn,
+    //         tokenOut: request.tokenOut,
+    //         amount: request.amount.toString(),
+    //         tradeType: request.tradeType,
+    //       },
+    //     });
+
+    const request = QuoteRequest.fromRequestBody({
+      tokenInChainId: 1,
+      tokenOutChainId: 1,
+      requestId: 'requestId',
+      tokenIn: '0x6b175474e89094c44da98b954eedeac495271d0f',
+      tokenOut: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+      amount: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+      tradeType: 'EXACT_INPUT',
+      configs: [
+        {
+          routingType: 'DUTCH_LIMIT',
+          offerer: '0x6b175474e89094c44da98b954eedeac495271d0f',
+          exclusivePeriodSecs: 12,
+          auctionPeriodSecs: 60,
+        },
+      ],
     });
 
     const bestQuote = await getBestQuote(quoters, request, request.tradeType);
@@ -73,11 +90,19 @@ export class QuoteHandler extends APIGLambdaHandler<
 
 // fetch quotes from all quoters and return the best one
 export async function getBestQuote(
-  quoters: Quoter[],
+  quotersByRoutingType: QuoterByRoutingType,
   quoteRequest: QuoteRequest,
   tradeType: TradeType
 ): Promise<QuoteResponse | null> {
-  const responses: QuoteResponse[] = (await Promise.all(quoters.map((q) => q.quote(quoteRequest)))).flat();
+  const responses: QuoteResponse[] = await Promise.all(
+    quoteRequest.configs.flatMap((config) => {
+      const quoters = quotersByRoutingType[config.routingType];
+      if (!quoters) {
+        return [];
+      }
+      return quoters.map((q) => q.quote(quoteRequest));
+    })
+  );
 
   return responses.reduce((bestQuote: QuoteResponse | null, quote: QuoteResponse) => {
     if (!bestQuote || compareQuotes(quote, bestQuote, tradeType)) {

@@ -3,13 +3,18 @@ import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { default as bunyan, default as Logger } from 'bunyan';
 
 import { QuoteRequestDataJSON } from '../../entities/QuoteRequest';
+import { RoutingType } from '../../entities/routing';
 import { Quoter } from '../../quoters';
 import { RfqQuoter } from '../../quoters/RfqQuoter';
 import { checkDefined } from '../../util/preconditions';
 import { ApiInjector, ApiRInj } from '../base/api-handler';
 
+export type QuoterByRoutingType = {
+  [key in RoutingType]?: Quoter[];
+};
+
 export interface ContainerInjected {
-  quoters: Quoter[];
+  quoters: QuoterByRoutingType;
 }
 
 export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, QuoteRequestDataJSON, void> {
@@ -22,8 +27,11 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
 
     const paramApiUrl = checkDefined(process.env.PARAMETERIZER_API_URL, 'PARAMETERIZER_API_URL is not defined');
 
+    // TODO: consider instantiating one quoter per routing type instead
     return {
-      quoters: [new RfqQuoter(log, paramApiUrl)],
+      quoters: {
+        [RoutingType.DUTCH_LIMIT]: [new RfqQuoter(log, paramApiUrl)],
+      },
     };
   }
 

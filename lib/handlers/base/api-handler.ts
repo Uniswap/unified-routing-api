@@ -39,8 +39,7 @@ export type APIHandleRequestParams<CInj, RInj, ReqBody, ReqQueryParams> = BaseHa
 export type Response<Res> = {
   statusCode: 200 | 201 | 202;
   body: Res;
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  headers?: any;
+  headers?: Record<string, string>;
 };
 
 export type ErrorResponse = {
@@ -275,36 +274,36 @@ export abstract class APIGLambdaHandler<
       queryParams = queryParamsValidation.value as ReqQueryParams;
     }
 
-    const bodySchema = this.requestBodySchema();
+    // const bodySchema = this.requestBodySchema();
 
-    let body: ReqBody | undefined;
-    if (bodyRaw && bodySchema) {
-      const bodyValidation = bodySchema.validate(bodyRaw, {
-        allowUnknown: true, // Makes API schema changes and rollbacks easier.
-        // TODO: flip below when confi validation is added
-        stripUnknown: false,
-      });
+    // let body: ReqBody | undefined;
+    // if (bodyRaw && bodySchema) {
+    //   const bodyValidation = bodySchema.validate(bodyRaw, {
+    //     allowUnknown: true, // Makes API schema changes and rollbacks easier.
+    //     // TODO: flip below when confi validation is added
+    //     stripUnknown: false,
+    //   });
 
-      if (bodyValidation.error) {
-        log.info({ bodyValidation }, 'Request failed validation');
-        return {
-          state: 'invalid',
-          errorResponse: {
-            statusCode: 400,
-            body: JSON.stringify({
-              detail: bodyValidation.error.message,
-              errorCode: 'VALIDATION_ERROR',
-            }),
-          },
-        };
-      }
+    //   if (bodyValidation.error) {
+    //     log.info({ bodyValidation }, 'Request failed validation');
+    //     return {
+    //       state: 'invalid',
+    //       errorResponse: {
+    //         statusCode: 400,
+    //         body: JSON.stringify({
+    //           detail: bodyValidation.error.message,
+    //           errorCode: 'VALIDATION_ERROR',
+    //         }),
+    //       },
+    //     };
+    //   }
 
-      body = bodyValidation.value;
-    }
+    //  body = bodyValidation.value;
+    // }
 
     return {
       state: 'valid',
-      requestBody: body as ReqBody,
+      requestBody: bodyRaw,
       requestQueryParams: queryParams as ReqQueryParams,
     };
   }

@@ -24,9 +24,13 @@ export class FieldValidator {
     return value;
   });
 
-  public static readonly chainId = Joi.number()
+  public static readonly classicChainId = Joi.number()
     .integer()
-    .valid(...SUPPORTED_CHAINS);
+    .valid(...SUPPORTED_CHAINS.CLASSIC);
+
+  public static readonly dutchLimitChainId = Joi.number()
+    .integer()
+    .valid(...SUPPORTED_CHAINS.DUTCH_LIMIT);
 
   public static readonly tradeType = Joi.string().valid('EXACT_INPUT', 'EXACT_OUTPUT');
 }

@@ -4,6 +4,7 @@ import { default as Logger } from 'bunyan';
 import { QuoteRequest } from '../../../lib/entities/QuoteRequest';
 import { QuoteResponse } from '../../../lib/entities/QuoteResponse';
 import { compareQuotes, getBestQuote } from '../../../lib/handlers/quote/handler';
+import { QuoterByRoutingType } from '../../../lib/handlers/quote/injector';
 import { Quoter } from '../../../lib/quoters';
 import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../constants';
 
@@ -102,7 +103,9 @@ describe('QuoteHandler', () => {
     };
 
     it('returns the best quote among two dutch limit quotes', async () => {
-      const quoters = [rfqQuoterMock(DL_QUOTE_EXACT_IN_WORSE), rfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER)];
+      const quoters: QuoterByRoutingType = {
+        DUTCH_LIMIT: [rfqQuoterMock(DL_QUOTE_EXACT_IN_WORSE), rfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER)],
+      };
       const bestQuote = await getBestQuote(quoters, QUOTE_REQUEST, TradeType.EXACT_INPUT);
       expect(bestQuote).toEqual(DL_QUOTE_EXACT_IN_BETTER);
     });
