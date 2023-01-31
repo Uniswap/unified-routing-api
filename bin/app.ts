@@ -21,16 +21,18 @@ export class APIStage extends Stage {
       provisionedConcurrency: number;
       chatbotSNSArn?: string;
       stage: string;
+      envVars: Record<string, string>;
     }
   ) {
     super(scope, id, props);
-    const { provisionedConcurrency, chatbotSNSArn, stage, env } = props;
+    const { provisionedConcurrency, chatbotSNSArn, stage, env, envVars } = props;
 
     const { url } = new APIStack(this, `${SERVICE_NAME}API`, {
       env,
       provisionedConcurrency,
       chatbotSNSArn,
       stage,
+      envVars,
     });
     this.url = url;
   }
@@ -89,6 +91,7 @@ export class APIPipeline extends Stack {
       env: { account: '801328487475', region: 'us-east-2' },
       provisionedConcurrency: 2,
       stage: STAGE.BETA,
+      envVars: envVars,
     });
 
     const betaUsEast2AppStage = pipeline.addStage(betaUsEast2Stage);
@@ -101,6 +104,7 @@ export class APIPipeline extends Stack {
       provisionedConcurrency: 5,
       chatbotSNSArn: 'arn:aws:sns:us-east-2:644039819003:SlackChatbotTopic',
       stage: STAGE.PROD,
+      envVars: envVars,
     });
 
     const prodUsEast2AppStage = pipeline.addStage(prodUsEast2Stage);
@@ -160,15 +164,15 @@ export class APIPipeline extends Stack {
 // Local Dev Stack
 const app = new cdk.App();
 
+const envVars: { [key: string]: string } = {};
+envVars['PARAMETERIZER_API_URL'] = process.env['PARAMETERIZER_API_URL'] || '';
+
 new APIStack(app, `${SERVICE_NAME}Stack`, {
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION,
-  },
   provisionedConcurrency: process.env.PROVISION_CONCURRENCY ? parseInt(process.env.PROVISION_CONCURRENCY) : 0,
   throttlingOverride: process.env.THROTTLE_PER_FIVE_MINS,
   chatbotSNSArn: process.env.CHATBOT_SNS_ARN,
   stage: STAGE.LOCAL,
+  envVars: envVars,
 });
 
 new APIPipeline(app, `${SERVICE_NAME}PipelineStack`, {
