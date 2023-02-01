@@ -46,8 +46,7 @@ describe('QuoteResponse', () => {
 
   it('produces dutch limit order info from param-api respone and config', () => {
     const quote = DutchLimitQuote.fromResponseBodyAndConfig(config, DL_QUOTE_JSON);
-    const json = quote.toJSON();
-    expect(json).toMatchObject({
+    expect(quote.toJSON()).toMatchObject({
       offerer: OFFERER,
       nonce: '100',
       input: {
