@@ -1,7 +1,7 @@
+import { DutchLimitOrderBuilder, DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
 import { TradeType } from '@uniswap/sdk-core';
 import { MethodParameters } from '@uniswap/smart-order-router';
 import { BigNumber } from 'ethers';
-import { DutchLimitOrderBuilder, DutchLimitOrderInfoJSON } from 'gouda-sdk';
 
 import { DutchLimitConfig } from './routing';
 
@@ -83,7 +83,8 @@ export type QuoteJSON = DutchLimitOrderInfoJSON | ClassicQuoteDataJSON;
 export type ReceivedQuoteJSON = DutchLimitQuoteJSON | ClassicQuoteDataJSON;
 
 export interface Quote {
-  toJSON(): QuoteJSON;
+  toJSON(): ReceivedQuoteJSON;
+  toOrder(): QuoteJSON;
   amountOut: BigNumber;
   amountIn: BigNumber;
 }
@@ -115,7 +116,20 @@ export class DutchLimitQuote implements DutchLimitQuoteData, Quote {
     public readonly filler?: string
   ) {}
 
-  public toJSON(): DutchLimitOrderInfoJSON {
+  public toJSON(): DutchLimitQuoteJSON {
+    return {
+      chainId: this.chainId,
+      requestId: this.requestId,
+      tokenIn: this.tokenIn,
+      amountIn: this.amountIn.toString(),
+      tokenOut: this.tokenOut,
+      amountOut: this.amountOut.toString(),
+      offerer: this.offerer,
+      filler: this.filler,
+    };
+  }
+
+  public toOrder(): DutchLimitOrderInfoJSON {
     const orderBuilder = new DutchLimitOrderBuilder(this.chainId);
     const startTime = Math.floor(Date.now() / 1000);
 
@@ -154,6 +168,8 @@ export class ClassicQuote implements Quote {
   public toJSON(): ClassicQuoteDataJSON {
     return this.quoteData;
   }
+
+  public toOrder = this.toJSON;
 
   public get amountOut(): BigNumber {
     return this.tradeType === TradeType.EXACT_INPUT

@@ -56,7 +56,7 @@ export class QuoteHandler extends APIGLambdaHandler<
 
     return {
       statusCode: 200,
-      body: bestQuote.toJSON(),
+      body: bestQuote.toOrder(),
     };
   }
 
