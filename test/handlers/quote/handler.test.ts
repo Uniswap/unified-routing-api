@@ -7,6 +7,7 @@ import { compareQuotes, getBestQuote } from '../../../lib/handlers/quote/handler
 import { QuoterByRoutingType } from '../../../lib/handlers/quote/injector';
 import { Quoter } from '../../../lib/quoters';
 import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../constants';
+import { buildQuoteResponse } from '../../utils/quoteResponse';
 
 const baseQuote = {
   tokenInChainId: CHAIN_IN_ID,
@@ -82,29 +83,29 @@ const CLASSIC_QUOTE_DATA = {
   },
 };
 
-const DL_QUOTE_EXACT_IN_BETTER = QuoteResponse.fromResponseBody(
+const DL_QUOTE_EXACT_IN_BETTER = buildQuoteResponse(
   Object.assign({}, DL_QUOTE_DATA, { quote: { ...DL_QUOTE_DATA.quote, amountOut: '2' } })
 );
-const DL_QUOTE_EXACT_IN_WORSE = QuoteResponse.fromResponseBody(
+const DL_QUOTE_EXACT_IN_WORSE = buildQuoteResponse(
   Object.assign({}, DL_QUOTE_DATA, { quote: { ...DL_QUOTE_DATA.quote, amountOut: '1' } })
 );
-const DL_QUOTE_EXACT_OUT_BETTER = QuoteResponse.fromResponseBody(
+const DL_QUOTE_EXACT_OUT_BETTER = buildQuoteResponse(
   Object.assign({}, DL_QUOTE_DATA, { quote: { ...DL_QUOTE_DATA.quote, amountIn: '1' } })
 );
-const DL_QUOTE_EXACT_OUT_WORSE = QuoteResponse.fromResponseBody(
+const DL_QUOTE_EXACT_OUT_WORSE = buildQuoteResponse(
   Object.assign({}, DL_QUOTE_DATA, { quote: { ...DL_QUOTE_DATA.quote, amountIn: '2' } })
 );
-const CLASSIC_QUOTE_EXACT_IN_BETTER = QuoteResponse.fromResponseBody(
+const CLASSIC_QUOTE_EXACT_IN_BETTER = buildQuoteResponse(
   Object.assign({}, CLASSIC_QUOTE_DATA, { quote: { ...CLASSIC_QUOTE_DATA.quote, quote: '2' } })
 );
-const CLASSIC_QUOTE_EXACT_IN_WORSE = QuoteResponse.fromResponseBody(
+const CLASSIC_QUOTE_EXACT_IN_WORSE = buildQuoteResponse(
   Object.assign({}, CLASSIC_QUOTE_DATA, { quote: { ...CLASSIC_QUOTE_DATA.quote, quote: '1' } })
 );
-const CLASSIC_QUOTE_EXACT_OUT_BETTER = QuoteResponse.fromResponseBody(
+const CLASSIC_QUOTE_EXACT_OUT_BETTER = buildQuoteResponse(
   Object.assign({}, CLASSIC_QUOTE_DATA, { quote: { ...CLASSIC_QUOTE_DATA.quote, quote: '1' } }),
   TradeType.EXACT_OUTPUT
 );
-const CLASSIC_QUOTE_EXACT_OUT_WORSE = QuoteResponse.fromResponseBody(
+const CLASSIC_QUOTE_EXACT_OUT_WORSE = buildQuoteResponse(
   Object.assign({}, CLASSIC_QUOTE_DATA, { quote: { ...CLASSIC_QUOTE_DATA.quote, quote: '2' } }),
   TradeType.EXACT_OUTPUT
 );
