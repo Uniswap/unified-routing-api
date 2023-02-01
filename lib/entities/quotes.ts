@@ -80,6 +80,7 @@ export type ClassicQuoteDataJSON = {
 
 export type QuoteData = DutchLimitQuoteData;
 export type QuoteJSON = DutchLimitOrderInfoJSON | ClassicQuoteDataJSON;
+export type ReceivedQuoteJSON = DutchLimitQuoteJSON | ClassicQuoteDataJSON;
 
 export interface Quote {
   toJSON(): QuoteJSON;
@@ -114,19 +115,6 @@ export class DutchLimitQuote implements DutchLimitQuoteData, Quote {
     public readonly filler?: string
   ) {}
 
-  public toQuoteJSON(): DutchLimitQuoteJSON {
-    return {
-      chainId: this.chainId,
-      requestId: this.requestId,
-      tokenIn: this.tokenIn,
-      amountIn: this.amountIn.toString(),
-      tokenOut: this.tokenOut,
-      amountOut: this.amountOut.toString(),
-      offerer: this.offerer,
-      filler: this.filler,
-    };
-  }
-
   public toJSON(): DutchLimitOrderInfoJSON {
     const orderBuilder = new DutchLimitOrderBuilder(this.chainId);
     const startTime = Math.floor(Date.now() / 1000);
@@ -146,7 +134,7 @@ export class DutchLimitQuote implements DutchLimitQuoteData, Quote {
       .output({
         token: this.tokenOut,
         startAmount: this.amountOut,
-        endAmount: this.amountOut, // TODO: integrate slippageTolerance
+        endAmount: this.amountOut, // TODO: integrate slippageTolerance and do dutch decay
         recipient: this.config.offerer,
         isFeeOutput: false,
       })
