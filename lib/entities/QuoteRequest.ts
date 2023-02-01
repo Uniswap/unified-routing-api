@@ -19,6 +19,7 @@ export interface QuoteRequestData {
   tokenOut: string;
   amount: BigNumber;
   tradeType: TradeType;
+  slippageTolerance?: string;
   configs: RoutingConfig[];
 }
 
@@ -38,7 +39,8 @@ export class QuoteRequest implements QuoteRequestData {
       body.tokenOut,
       BigNumber.from(body.amount),
       TradeType[body.tradeType as keyof typeof TradeType],
-      this.parseConfig(body.configs)
+      this.parseConfig(body.configs),
+      body.slippageTolerance
     );
   }
 
@@ -50,7 +52,8 @@ export class QuoteRequest implements QuoteRequestData {
     public readonly tokenOut: string,
     public readonly amount: BigNumber,
     public readonly tradeType: TradeType,
-    public readonly configs: RoutingConfig[]
+    public readonly configs: RoutingConfig[],
+    public readonly slippageTolerance?: string
   ) {}
 
   // ignores routing types that are not supported
@@ -75,6 +78,7 @@ export class QuoteRequest implements QuoteRequestData {
       tradeType: TradeType[this.tradeType],
       amount: this.amount.toString(),
       configs: this.configs.map((config) => config.toJSON()),
+      slippageTolerance: this.slippageTolerance,
     };
   }
 }
