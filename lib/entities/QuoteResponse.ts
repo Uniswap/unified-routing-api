@@ -1,4 +1,5 @@
-import { DutchLimitQuote, Quote, QuoteJSON } from './quotes';
+import { TradeType } from '@uniswap/sdk-core';
+import { DutchLimitQuote, ClassicQuote, ClassicQuoteDataJSON, Quote, QuoteJSON, DutchLimitQuoteJSON } from './quotes';
 import { RoutingType } from './routing';
 
 export interface QuoteResponseData {
@@ -24,7 +25,11 @@ export class QuoteResponse implements QuoteResponseData {
   private static parseQuote(routing: string, quote: QuoteJSON): Quote {
     switch (routing) {
       case RoutingType.DUTCH_LIMIT:
-        return DutchLimitQuote.fromResponseBody(quote);
+        return DutchLimitQuote.fromResponseBody(quote as DutchLimitQuoteJSON);
+      case RoutingType.CLASSIC:
+        // TODO: figure out how to determine tradetype from output JSON
+        // also: is this parsing quote responses even needed outside of testing?
+        return ClassicQuote.fromResponseBody(quote as ClassicQuoteDataJSON, TradeType.EXACT_INPUT);
       default:
         throw new Error(`Unknown routing type: ${routing}`);
     }

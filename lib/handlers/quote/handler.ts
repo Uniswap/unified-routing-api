@@ -28,19 +28,6 @@ export class QuoteHandler extends APIGLambdaHandler<
 
     log.info(requestBody, 'requestBody');
 
-    //     const request = QuoteRequest.fromRequestBody(requestBody);
-
-    //     log.info({
-    //       eventType: 'QuoteRequest',
-    //       body: {
-    //         requestId: request.requestId,
-    //         tokenIn: request.tokenIn,
-    //         tokenOut: request.tokenOut,
-    //         amount: request.amount.toString(),
-    //         tradeType: request.tradeType,
-    //       },
-    //     });
-
     const request = QuoteRequest.fromRequestBody({
       tokenInChainId: 1,
       tokenOutChainId: 1,
@@ -100,7 +87,7 @@ export async function getBestQuote(
       if (!quoters) {
         return [];
       }
-      return quoters.map((q) => q.quote(quoteRequest));
+      return quoters.map((q) => q.quote(quoteRequest, config));
     })
   );
 

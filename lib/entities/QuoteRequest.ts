@@ -1,6 +1,6 @@
+import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber } from 'ethers';
 
-import { TradeType } from './quotes';
 import {
   ClassicConfig,
   ClassicConfigJSON,

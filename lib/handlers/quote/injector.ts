@@ -4,8 +4,7 @@ import { default as bunyan, default as Logger } from 'bunyan';
 
 import { QuoteRequestDataJSON } from '../../entities/QuoteRequest';
 import { RoutingType } from '../../entities/routing';
-import { Quoter } from '../../quoters';
-import { RfqQuoter } from '../../quoters/RfqQuoter';
+import { Quoter, RfqQuoter, RoutingApiQuoter } from '../../quoters';
 import { checkDefined } from '../../util/preconditions';
 import { ApiInjector, ApiRInj } from '../base/api-handler';
 
@@ -26,11 +25,13 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
     });
 
     const paramApiUrl = checkDefined(process.env.PARAMETERIZER_API_URL, 'PARAMETERIZER_API_URL is not defined');
+    const routingApiUrl = checkDefined(process.env.ROUTING_API_URL, 'ROUTING_API_URL is not defined');
 
     // TODO: consider instantiating one quoter per routing type instead
     return {
       quoters: {
         [RoutingType.DUTCH_LIMIT]: [new RfqQuoter(log, paramApiUrl)],
+        [RoutingType.CLASSIC]: [new RoutingApiQuoter(log, routingApiUrl)],
       },
     };
   }
