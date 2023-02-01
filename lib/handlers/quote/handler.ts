@@ -4,7 +4,6 @@ import Joi from 'joi';
 import { QuoteRequest, QuoteResponse } from '../../entities';
 import { QuoteRequestDataJSON } from '../../entities/QuoteRequest';
 import { QuoteResponseJSON } from '../../entities/QuoteResponse';
-import { RoutingType } from '../../entities/routing';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
 import { ContainerInjected, QuoterByRoutingType } from './injector';
@@ -110,18 +109,5 @@ export function compareQuotes(lhs: QuoteResponse, rhs: QuoteResponse, tradeType:
 }
 
 const getQuotedAmount = (quote: QuoteResponse, tradeType: TradeType) => {
-  if (tradeType === TradeType.EXACT_INPUT) {
-    if (quote.routing === RoutingType.DUTCH_LIMIT) {
-      return quote.quote.amountOut;
-    } else {
-      throw 'Not implemented -- add RoutingType.CLASSIC';
-    }
-  } else {
-    // EXACT_OUTPUT
-    if (quote.routing === RoutingType.DUTCH_LIMIT) {
-      return quote.quote.amountIn;
-    } else {
-      throw 'Not implemented -- add RoutingType.CLASSIC';
-    }
-  }
+  return tradeType === TradeType.EXACT_INPUT ? quote.quote.amountOut : quote.quote.amountIn;
 };
