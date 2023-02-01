@@ -1,5 +1,6 @@
 import { TradeType } from '@uniswap/sdk-core';
-import { ClassicQuote, DutchLimitQuote, DutchLimitQuoteJSON, ClassicQuoteDataJSON } from '../../lib/entities/quotes';
+
+import { ClassicQuote, ClassicQuoteDataJSON, DutchLimitQuote, DutchLimitQuoteJSON } from '../../lib/entities/quotes';
 import { AMOUNT_IN, CHAIN_IN_ID, FILLER, OFFERER, TOKEN_IN, TOKEN_OUT } from '../constants';
 
 const DL_QUOTE_JSON: DutchLimitQuoteJSON = {

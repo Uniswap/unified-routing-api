@@ -1,5 +1,6 @@
 import { TradeType } from '@uniswap/sdk-core';
-import { DutchLimitQuote, ClassicQuote, ClassicQuoteDataJSON, Quote, QuoteJSON, DutchLimitQuoteJSON } from './quotes';
+
+import { ClassicQuote, ClassicQuoteDataJSON, DutchLimitQuote, DutchLimitQuoteJSON, Quote, QuoteJSON } from './quotes';
 import { RoutingType } from './routing';
 
 export interface QuoteResponseData {

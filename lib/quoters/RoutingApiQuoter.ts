@@ -34,28 +34,28 @@ export class RoutingApiQuoter implements Quoter {
     const tradeType = params.tradeType === TradeType.EXACT_INPUT ? 'exactIn' : 'exactOut';
     return (
       this.routingApiUrl +
-      'quote' +
+      'quote?' +
       querystring.stringify({
+        protocols: config.protocols.map((p) => p.toLowerCase()),
         tokenInAddress: params.tokenIn,
         tokenInChainId: params.tokenInChainId,
         tokenOutAddress: params.tokenOut,
         tokenOutChainId: params.tokenOutChainId,
         amount: params.amount.toString(),
         type: tradeType,
-        slippageTolerance: config.slippageTolerance,
-        deadline: config.deadline,
         gasPriceWei: config.gasPriceWei,
-        minSplits: config.minSplits,
-        forceCrossProtocol: config.forceCrossProtocol,
-        forceMixedRoute: config.forceMixedRoutes,
-        protocols: config.protocols.map((p) => p.toLowerCase()),
-        simulateFromAddress: config.simulateFromAddress,
-        permitSignature: config.permitSignature,
-        permitNonce: config.permitNonce,
-        permitExpiration: config.permitExpiration,
-        permitAmount: config.permitAmount && config.permitAmount.toString(),
-        permitSigDeadline: config.permitSigDeadline,
-        enableUniversalRouter: config.enableUniversalRouter,
+        ...(config.slippageTolerance !== undefined && { slippageTolerance: config.slippageTolerance }),
+        ...(config.minSplits !== undefined && { minSplits: config.minSplits }),
+        ...(config.forceCrossProtocol !== undefined && { forceCrossProtocol: config.forceCrossProtocol }),
+        ...(config.forceMixedRoutes !== undefined && { forceMixedRoutes: config.forceMixedRoutes }),
+        ...(config.deadline !== undefined && { deadline: config.deadline }),
+        ...(config.simulateFromAddress !== undefined && { simulateFromAddress: config.simulateFromAddress }),
+        ...(config.permitSignature !== undefined && { permitSignature: config.permitSignature }),
+        ...(config.permitNonce !== undefined && { permitNonce: config.permitNonce }),
+        ...(config.permitExpiration !== undefined && { permitExpiration: config.permitExpiration }),
+        ...(config.permitAmount !== undefined && { permitAmount: config.permitAmount.toString() }),
+        ...(config.permitSigDeadline !== undefined && { permitSigDeadline: config.permitSigDeadline }),
+        ...(config.enableUniversalRouter !== undefined && { enableUniversalRouter: config.enableUniversalRouter }),
       })
     );
   }
