@@ -1,9 +1,12 @@
+import { TradeType } from '@uniswap/sdk-core';
+import axios from 'axios';
 import Logger from 'bunyan';
+import querystring from 'querystring';
 
 import { QuoteRequest } from '../entities/QuoteRequest';
 import { QuoteResponse } from '../entities/QuoteResponse';
-import { DutchLimitQuote } from '../entities/quotes';
-import { RoutingType } from '../entities/routing';
+import { ClassicQuote } from '../entities/quotes';
+import { ClassicConfig, RoutingConfig, RoutingType } from '../entities/routing';
 import { Quoter, QuoterType } from './index';
 
 export class RoutingApiQuoter implements Quoter {
@@ -14,19 +17,45 @@ export class RoutingApiQuoter implements Quoter {
     this.log = _log.child({ quoter: 'RoutingApiQuoter' });
   }
 
-  async quote(params: QuoteRequest): Promise<QuoteResponse> {
+  async quote(params: QuoteRequest, config: RoutingConfig): Promise<QuoteResponse> {
     this.log.info(params, 'quoteRequest');
     this.log.info(this.routingApiUrl, 'routingApiUrl');
-    return new QuoteResponse(
-      RoutingType.CLASSIC,
-      DutchLimitQuote.fromResponseBody({
-        chainId: 1,
-        requestId: '0x123',
-        tokenIn: 'tokenIn',
-        amountIn: '1',
-        tokenOut: 'tokenOut',
-        amountOut: '2',
-        offerer: 'offerer',
+
+    if (config.routingType !== RoutingType.CLASSIC) {
+      throw new Error(`Invalid routing config type: ${config.routingType}`);
+    }
+
+    const response = await axios.get(this.buildRequest(params, config as ClassicConfig));
+
+    return new QuoteResponse(RoutingType.CLASSIC, ClassicQuote.fromResponseBody(response.data, params.tradeType));
+  }
+
+  buildRequest(params: QuoteRequest, config: ClassicConfig): string {
+    const tradeType = params.tradeType === TradeType.EXACT_INPUT ? 'exactIn' : 'exactOut';
+    return (
+      this.routingApiUrl +
+      'quote?' +
+      querystring.stringify({
+        protocols: config.protocols.map((p) => p.toLowerCase()),
+        tokenInAddress: params.tokenIn,
+        tokenInChainId: params.tokenInChainId,
+        tokenOutAddress: params.tokenOut,
+        tokenOutChainId: params.tokenOutChainId,
+        amount: params.amount.toString(),
+        type: tradeType,
+        gasPriceWei: config.gasPriceWei,
+        ...(config.slippageTolerance !== undefined && { slippageTolerance: config.slippageTolerance }),
+        ...(config.minSplits !== undefined && { minSplits: config.minSplits }),
+        ...(config.forceCrossProtocol !== undefined && { forceCrossProtocol: config.forceCrossProtocol }),
+        ...(config.forceMixedRoutes !== undefined && { forceMixedRoutes: config.forceMixedRoutes }),
+        ...(config.deadline !== undefined && { deadline: config.deadline }),
+        ...(config.simulateFromAddress !== undefined && { simulateFromAddress: config.simulateFromAddress }),
+        ...(config.permitSignature !== undefined && { permitSignature: config.permitSignature }),
+        ...(config.permitNonce !== undefined && { permitNonce: config.permitNonce }),
+        ...(config.permitExpiration !== undefined && { permitExpiration: config.permitExpiration }),
+        ...(config.permitAmount !== undefined && { permitAmount: config.permitAmount.toString() }),
+        ...(config.permitSigDeadline !== undefined && { permitSigDeadline: config.permitSigDeadline }),
+        ...(config.enableUniversalRouter !== undefined && { enableUniversalRouter: config.enableUniversalRouter }),
       })
     );
   }

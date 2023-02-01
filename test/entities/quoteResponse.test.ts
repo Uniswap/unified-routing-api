@@ -1,5 +1,6 @@
-import { QuoteResponse, QuoteResponseJSON } from '../../lib/entities/QuoteResponse';
-import { DutchLimitQuote, DutchLimitQuoteJSON } from '../../lib/entities/quotes';
+import { TradeType } from '@uniswap/sdk-core';
+
+import { ClassicQuote, ClassicQuoteDataJSON, DutchLimitQuote, DutchLimitQuoteJSON } from '../../lib/entities/quotes';
 import { AMOUNT_IN, CHAIN_IN_ID, FILLER, OFFERER, TOKEN_IN, TOKEN_OUT } from '../constants';
 
 const DL_QUOTE_JSON: DutchLimitQuoteJSON = {
@@ -13,9 +14,23 @@ const DL_QUOTE_JSON: DutchLimitQuoteJSON = {
   filler: FILLER,
 };
 
-const QUOTE_RESPONSE_JSON: QuoteResponseJSON = {
-  routing: 'DUTCH_LIMIT',
-  quote: DL_QUOTE_JSON,
+const CLASSIC_QUOTE_JSON: ClassicQuoteDataJSON = {
+  quoteId: '0xquoteId',
+  amount: AMOUNT_IN,
+  amountDecimals: '18',
+  quote: '2000000',
+  quoteDecimals: '18',
+  quoteGasAdjusted: AMOUNT_IN,
+  quoteGasAdjustedDecimals: '18',
+  gasUseEstimate: '100',
+  gasUseEstimateQuote: '100',
+  gasUseEstimateQuoteDecimals: '18',
+  gasUseEstimateUSD: '100',
+  simulationStatus: 'asdf',
+  gasPriceWei: '10000',
+  blockNumber: '1234',
+  route: [],
+  routeString: 'USD-ETH',
 };
 
 describe('QuoteResponse', () => {
@@ -24,8 +39,17 @@ describe('QuoteResponse', () => {
     expect(quote.toJSON()).toEqual(DL_QUOTE_JSON);
   });
 
-  it('parses the winning quote properly', () => {
-    const quote = QuoteResponse.fromResponseBody(QUOTE_RESPONSE_JSON);
-    expect(quote.toJSON()).toEqual(QUOTE_RESPONSE_JSON);
+  it('parses classic quote exactInput', () => {
+    const quote = ClassicQuote.fromResponseBody(CLASSIC_QUOTE_JSON, TradeType.EXACT_INPUT);
+    expect(quote.toJSON()).toEqual(CLASSIC_QUOTE_JSON);
+    expect(quote.amountIn.toString()).toEqual(CLASSIC_QUOTE_JSON.amount);
+    expect(quote.amountOut.toString()).toEqual(CLASSIC_QUOTE_JSON.quote);
+  });
+
+  it('parses classic quote exactOutput', () => {
+    const quote = ClassicQuote.fromResponseBody(CLASSIC_QUOTE_JSON, TradeType.EXACT_OUTPUT);
+    expect(quote.toJSON()).toEqual(CLASSIC_QUOTE_JSON);
+    expect(quote.amountIn.toString()).toEqual(CLASSIC_QUOTE_JSON.quote);
+    expect(quote.amountOut.toString()).toEqual(CLASSIC_QUOTE_JSON.amount);
   });
 });

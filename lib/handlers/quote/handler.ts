@@ -4,7 +4,6 @@ import Joi from 'joi';
 import { QuoteRequest, QuoteResponse } from '../../entities';
 import { QuoteRequestDataJSON } from '../../entities/QuoteRequest';
 import { QuoteResponseJSON } from '../../entities/QuoteResponse';
-import { RoutingType } from '../../entities/routing';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
 import { ContainerInjected, QuoterByRoutingType } from './injector';
@@ -27,19 +26,6 @@ export class QuoteHandler extends APIGLambdaHandler<
     } = params;
 
     log.info(requestBody, 'requestBody');
-
-    //     const request = QuoteRequest.fromRequestBody(requestBody);
-
-    //     log.info({
-    //       eventType: 'QuoteRequest',
-    //       body: {
-    //         requestId: request.requestId,
-    //         tokenIn: request.tokenIn,
-    //         tokenOut: request.tokenOut,
-    //         amount: request.amount.toString(),
-    //         tradeType: request.tradeType,
-    //       },
-    //     });
 
     const request = QuoteRequest.fromRequestBody({
       tokenInChainId: 1,
@@ -100,7 +86,7 @@ export async function getBestQuote(
       if (!quoters) {
         return [];
       }
-      return quoters.map((q) => q.quote(quoteRequest));
+      return quoters.map((q) => q.quote(quoteRequest, config));
     })
   );
 
@@ -123,18 +109,5 @@ export function compareQuotes(lhs: QuoteResponse, rhs: QuoteResponse, tradeType:
 }
 
 const getQuotedAmount = (quote: QuoteResponse, tradeType: TradeType) => {
-  if (tradeType === TradeType.EXACT_INPUT) {
-    if (quote.routing === RoutingType.DUTCH_LIMIT) {
-      return quote.quote.amountOut;
-    } else {
-      throw 'Not implemented -- add RoutingType.CLASSIC';
-    }
-  } else {
-    // EXACT_OUTPUT
-    if (quote.routing === RoutingType.DUTCH_LIMIT) {
-      return quote.quote.amountIn;
-    } else {
-      throw 'Not implemented -- add RoutingType.CLASSIC';
-    }
-  }
+  return tradeType === TradeType.EXACT_INPUT ? quote.quote.amountOut : quote.quote.amountIn;
 };
