@@ -24,7 +24,7 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
       level: bunyan.INFO,
     });
 
-    const paramApiUrl = checkDefined(process.env.PARAMETERIZER_API_URL, 'PARAMETERIZER_API_URL is not defined');
+    const paramApiUrl = checkDefined(process.env.PARAMETERIZATION_API_URL, 'PARAMETERIZATION_API_URL is not defined');
     const routingApiUrl = checkDefined(process.env.ROUTING_API_URL, 'ROUTING_API_URL is not defined');
 
     // TODO: consider instantiating one quoter per routing type instead

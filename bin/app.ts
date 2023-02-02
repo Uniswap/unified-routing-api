@@ -165,7 +165,7 @@ export class APIPipeline extends Stack {
 const app = new cdk.App();
 
 const envVars: { [key: string]: string } = {};
-envVars['PARAMETERIZER_API_URL'] = process.env['PARAMETERIZER_API_URL'] || '';
+envVars['PARAMETERIZATION_API_URL'] = process.env['PARAMETERIZATION_API_URL'] || '';
 envVars['ROUTING_API_URL'] = process.env['ROUTING_API_URL'] || '';
 
 new APIStack(app, `${SERVICE_NAME}Stack`, {
