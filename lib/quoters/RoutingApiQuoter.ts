@@ -41,7 +41,6 @@ export class RoutingApiQuoter implements Quoter {
       this.routingApiUrl +
       'quote?' +
       querystring.stringify({
-        protocols: config.protocols.map((p) => p.toLowerCase()).join(','),
         tokenInAddress: params.tokenIn,
         tokenInChainId: params.tokenInChainId,
         tokenOutAddress: params.tokenOut,
@@ -49,6 +48,7 @@ export class RoutingApiQuoter implements Quoter {
         amount: params.amount.toString(),
         type: tradeType,
         gasPriceWei: config.gasPriceWei,
+        ...(config.protocols.length && { protocols: config.protocols.map((p) => p.toLowerCase()).join(',') }),
         ...(config.slippageTolerance !== undefined && { slippageTolerance: config.slippageTolerance }),
         ...(config.minSplits !== undefined && { minSplits: config.minSplits }),
         ...(config.forceCrossProtocol !== undefined && { forceCrossProtocol: config.forceCrossProtocol }),
