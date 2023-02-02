@@ -3,7 +3,7 @@ import Logger from 'bunyan';
 import { QuoteRequest } from '../entities/QuoteRequest';
 import { QuoteResponse } from '../entities/QuoteResponse';
 import { DutchLimitQuote } from '../entities/quotes';
-import { RoutingConfig, RoutingType } from '../entities/routing';
+import { DutchLimitConfig, RoutingType } from '../entities/routing';
 import { Quoter, QuoterType } from './index';
 
 export class RfqQuoter implements Quoter {
@@ -14,12 +14,12 @@ export class RfqQuoter implements Quoter {
     this.log = _log.child({ quoter: 'RfqQuoter' });
   }
 
-  async quote(params: QuoteRequest, _config: RoutingConfig): Promise<QuoteResponse> {
+  async quote(params: QuoteRequest, config: DutchLimitConfig): Promise<QuoteResponse> {
     this.log.info(params, 'quoteRequest');
     this.log.info(this.routingApiUrl, 'routingApiUrl');
     return new QuoteResponse(
       RoutingType.DUTCH_LIMIT,
-      DutchLimitQuote.fromResponseBody({
+      DutchLimitQuote.fromResponseBodyAndConfig(config, {
         chainId: 1,
         requestId: 'requestId',
         tokenIn: '0x0000000000000000000000000000000000000000',

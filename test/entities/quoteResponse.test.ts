@@ -1,7 +1,8 @@
 import { TradeType } from '@uniswap/sdk-core';
 
 import { ClassicQuote, ClassicQuoteDataJSON, DutchLimitQuote, DutchLimitQuoteJSON } from '../../lib/entities/quotes';
-import { AMOUNT_IN, CHAIN_IN_ID, FILLER, OFFERER, TOKEN_IN, TOKEN_OUT } from '../constants';
+import { DutchLimitConfig, DutchLimitConfigJSON } from '../../lib/entities/routing';
+import { AMOUNT_IN, CHAIN_IN_ID, DL_CONFIG, FILLER, OFFERER, TOKEN_IN, TOKEN_OUT } from '../constants';
 
 const DL_QUOTE_JSON: DutchLimitQuoteJSON = {
   chainId: CHAIN_IN_ID,
@@ -34,9 +35,35 @@ const CLASSIC_QUOTE_JSON: ClassicQuoteDataJSON = {
 };
 
 describe('QuoteResponse', () => {
+  let config: DutchLimitConfig;
+  beforeAll(() => {
+    config = DutchLimitConfig.fromRequestBody(DL_CONFIG as DutchLimitConfigJSON);
+  });
+
   it('parses dutch limit quote from param-api properly', () => {
-    const quote = DutchLimitQuote.fromResponseBody(DL_QUOTE_JSON);
-    expect(quote.toJSON()).toEqual(DL_QUOTE_JSON);
+    expect(() => DutchLimitQuote.fromResponseBodyAndConfig(config, DL_QUOTE_JSON)).not.toThrow();
+  });
+
+  it('produces dutch limit order info from param-api respone and config', () => {
+    const quote = DutchLimitQuote.fromResponseBodyAndConfig(config, DL_QUOTE_JSON);
+    expect(quote.toOrder()).toMatchObject({
+      offerer: OFFERER,
+      nonce: '100',
+      input: {
+        token: TOKEN_IN,
+        startAmount: AMOUNT_IN,
+        endAmount: AMOUNT_IN,
+      },
+      outputs: [
+        {
+          token: TOKEN_OUT,
+          startAmount: AMOUNT_IN,
+          endAmount: AMOUNT_IN,
+          recipient: OFFERER,
+          isFeeOutput: false,
+        },
+      ],
+    });
   });
 
   it('parses classic quote exactInput', () => {
