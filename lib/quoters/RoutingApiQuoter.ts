@@ -24,10 +24,15 @@ export class RoutingApiQuoter implements Quoter {
     if (config.routingType !== RoutingType.CLASSIC) {
       throw new Error(`Invalid routing config type: ${config.routingType}`);
     }
-
-    const response = await axios.get(this.buildRequest(params, config as ClassicConfig));
-
-    return new QuoteResponse(RoutingType.CLASSIC, ClassicQuote.fromResponseBody(response.data, params.tradeType));
+    try {
+      const req = this.buildRequest(params, config as ClassicConfig);
+      this.log.info(req, 'routingApiReq');
+      const response = await axios.get(this.buildRequest(params, config as ClassicConfig));
+      return new QuoteResponse(RoutingType.CLASSIC, ClassicQuote.fromResponseBody(response.data, params.tradeType));
+    } catch (e) {
+      this.log.error(e, 'RoutingApiQuoterErr');
+      throw e;
+    }
   }
 
   buildRequest(params: QuoteRequest, config: ClassicConfig): string {
@@ -36,7 +41,7 @@ export class RoutingApiQuoter implements Quoter {
       this.routingApiUrl +
       'quote?' +
       querystring.stringify({
-        protocols: config.protocols.map((p) => p.toLowerCase()),
+        protocols: config.protocols.map((p) => p.toLowerCase()).join(','),
         tokenInAddress: params.tokenIn,
         tokenInChainId: params.tokenInChainId,
         tokenOutAddress: params.tokenOut,

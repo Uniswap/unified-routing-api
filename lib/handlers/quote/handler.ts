@@ -28,24 +28,6 @@ export class QuoteHandler extends APIGLambdaHandler<
     log.info(requestBody, 'requestBody');
     const request = QuoteRequest.fromRequestBody(requestBody);
 
-    // const request = QuoteRequest.fromRequestBody({
-    //   tokenInChainId: 1,
-    //   tokenOutChainId: 1,
-    //   requestId: 'requestId',
-    //   tokenIn: '0x6b175474e89094c44da98b954eedeac495271d0f',
-    //   tokenOut: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    //   amount: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-    //   tradeType: 'EXACT_INPUT',
-    //   configs: [
-    //     {
-    //       routingType: 'DUTCH_LIMIT',
-    //       offerer: '0x6b175474e89094c44da98b954eedeac495271d0f',
-    //       exclusivePeriodSecs: 12,
-    //       auctionPeriodSecs: 60,
-    //     },
-    //   ],
-    // });
-
     const bestQuote = await getBestQuote(quoters, request, request.tradeType);
     if (!bestQuote) {
       return {

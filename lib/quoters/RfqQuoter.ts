@@ -23,14 +23,21 @@ export class RfqQuoter implements Quoter {
       throw new Error(`Invalid routing config type: ${config.routingType}`);
     }
 
-    const response = await axios.post(`${this.rfqUrl}/quote`, {
-      chainId: params.tokenInChainId,
-      tokenIn: params.tokenIn,
-      amountIn: params.amount.toString(),
-      tokenOut: params.tokenOut,
-      offerer: config.offerer,
-    });
-
-    return new QuoteResponse(RoutingType.DUTCH_LIMIT, DutchLimitQuote.fromResponseBodyAndConfig(config, response.data));
+    try {
+      const response = await axios.post(`${this.rfqUrl}quote`, {
+        chainId: params.tokenInChainId,
+        tokenIn: params.tokenIn,
+        amountIn: params.amount.toString(),
+        tokenOut: params.tokenOut,
+        offerer: config.offerer,
+      });
+      return new QuoteResponse(
+        RoutingType.DUTCH_LIMIT,
+        DutchLimitQuote.fromResponseBodyAndConfig(config, response.data)
+      );
+    } catch (e) {
+      this.log.error(e, 'RfqQuoterErr');
+      throw e;
+    }
   }
 }
