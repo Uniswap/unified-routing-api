@@ -14,12 +14,12 @@ export class RfqQuoter implements Quoter {
     this.log = _log.child({ quoter: 'RfqQuoter' });
   }
 
-  async quote(params: QuoteRequest, _config: DutchLimitConfig): Promise<QuoteResponse> {
+  async quote(params: QuoteRequest, config: DutchLimitConfig): Promise<QuoteResponse> {
     this.log.info(params, 'quoteRequest');
     this.log.info(this.routingApiUrl, 'routingApiUrl');
     return new QuoteResponse(
       RoutingType.DUTCH_LIMIT,
-      DutchLimitQuote.fromResponseBodyAndConfig(_config, {
+      DutchLimitQuote.fromResponseBodyAndConfig(config, {
         chainId: 1,
         requestId: 'requestId',
         tokenIn: '0x0000000000000000000000000000000000000000',
