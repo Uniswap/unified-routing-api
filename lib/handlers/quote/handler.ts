@@ -1,4 +1,5 @@
 import { TradeType } from '@uniswap/sdk-core';
+import Logger from 'bunyan';
 import Joi from 'joi';
 
 import { QuoteRequest, QuoteResponse } from '../../entities';
@@ -28,7 +29,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     log.info(requestBody, 'requestBody');
     const request = QuoteRequest.fromRequestBody(requestBody);
 
-    const bestQuote = await getBestQuote(quoters, request, request.tradeType);
+    const bestQuote = await getBestQuote(quoters, request, request.type, log);
     if (!bestQuote) {
       return {
         statusCode: 404,
@@ -61,7 +62,8 @@ export class QuoteHandler extends APIGLambdaHandler<
 export async function getBestQuote(
   quotersByRoutingType: QuoterByRoutingType,
   quoteRequest: QuoteRequest,
-  tradeType: TradeType
+  tradeType: TradeType,
+  log?: Logger
 ): Promise<QuoteResponse | null> {
   const responses: QuoteResponse[] = await Promise.all(
     quoteRequest.configs.flatMap((config) => {
@@ -74,6 +76,7 @@ export async function getBestQuote(
   );
 
   return responses.reduce((bestQuote: QuoteResponse | null, quote: QuoteResponse) => {
+    log?.info({ bestQuote: bestQuote }, 'current bestQuote');
     if (!bestQuote || compareQuotes(quote, bestQuote, tradeType)) {
       return quote;
     }

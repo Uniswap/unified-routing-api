@@ -28,7 +28,7 @@ export class RoutingApiQuoter implements Quoter {
       const req = this.buildRequest(params, config as ClassicConfig);
       this.log.info(req, 'routingApiReq');
       const response = await axios.get(this.buildRequest(params, config as ClassicConfig));
-      return new QuoteResponse(RoutingType.CLASSIC, ClassicQuote.fromResponseBody(response.data, params.tradeType));
+      return new QuoteResponse(RoutingType.CLASSIC, ClassicQuote.fromResponseBody(response.data, params.type));
     } catch (e) {
       this.log.error(e, 'RoutingApiQuoterErr');
       throw e;
@@ -36,7 +36,7 @@ export class RoutingApiQuoter implements Quoter {
   }
 
   buildRequest(params: QuoteRequest, config: ClassicConfig): string {
-    const tradeType = params.tradeType === TradeType.EXACT_INPUT ? 'exactIn' : 'exactOut';
+    const tradeType = params.type === TradeType.EXACT_INPUT ? 'exactIn' : 'exactOut';
     return (
       this.routingApiUrl +
       'quote?' +
