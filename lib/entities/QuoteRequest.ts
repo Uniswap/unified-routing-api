@@ -18,13 +18,13 @@ export interface QuoteRequestData {
   tokenIn: string;
   tokenOut: string;
   amount: BigNumber;
-  tradeType: TradeType;
+  type: TradeType;
   slippageTolerance?: string;
   configs: RoutingConfig[];
 }
 
-export interface QuoteRequestDataJSON extends Omit<QuoteRequestData, 'tradeType' | 'amount' | 'configs'> {
-  tradeType: string;
+export interface QuoteRequestDataJSON extends Omit<QuoteRequestData, 'type' | 'amount' | 'configs'> {
+  type: string;
   amount: string;
   configs: RoutingConfigJSON[];
 }
@@ -38,7 +38,7 @@ export class QuoteRequest implements QuoteRequestData {
       body.tokenIn,
       body.tokenOut,
       BigNumber.from(body.amount),
-      TradeType[body.tradeType as keyof typeof TradeType],
+      TradeType[body.type as keyof typeof TradeType],
       this.parseConfig(body.configs),
       body.slippageTolerance
     );
@@ -51,7 +51,7 @@ export class QuoteRequest implements QuoteRequestData {
     public readonly tokenIn: string,
     public readonly tokenOut: string,
     public readonly amount: BigNumber,
-    public readonly tradeType: TradeType,
+    public readonly type: TradeType,
     public readonly configs: RoutingConfig[],
     public readonly slippageTolerance?: string
   ) {}
@@ -75,7 +75,7 @@ export class QuoteRequest implements QuoteRequestData {
       requestId: this.requestId,
       tokenIn: this.tokenIn,
       tokenOut: this.tokenOut,
-      tradeType: TradeType[this.tradeType],
+      type: TradeType[this.type],
       amount: this.amount.toString(),
       configs: this.configs.map((config) => config.toJSON()),
       slippageTolerance: this.slippageTolerance,

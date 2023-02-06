@@ -11,7 +11,7 @@ const CLASSIC_QUOTE = QuoteRequest.fromRequestBody({
   tokenIn: '0x6b175474e89094c44da98b954eedeac495271d0f',
   tokenOut: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
   amount: '1000000000000000000',
-  tradeType: 'exactIn',
+  type: 'exactIn',
   configs: [
     {
       routingType: 'CLASSIC',

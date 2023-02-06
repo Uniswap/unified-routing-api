@@ -2,6 +2,8 @@ import { Protocol } from '@uniswap/router-sdk';
 import { BigNumber } from 'ethers';
 import invariant from 'tiny-invariant';
 
+import { DEFAULT_AUCTION_PERIOD_SECS, DEFAULT_EXCLUSIVE_PERIOD_SECS, DUMMY_GAS_WEI, ZERO_ADDRESS } from '../constants';
+
 export enum RoutingType {
   CLASSIC = 'CLASSIC',
   DUTCH_LIMIT = 'DUTCH_LIMIT',
@@ -12,9 +14,9 @@ export interface RoutingConfigData {
 }
 
 export interface DutchLimitConfigData extends RoutingConfigData {
-  offerer: string;
-  exclusivePeriodSecs: number;
-  auctionPeriodSecs: number;
+  offerer?: string;
+  exclusivePeriodSecs?: number;
+  auctionPeriodSecs?: number;
 }
 
 export interface DutchLimitConfigJSON extends Omit<DutchLimitConfigData, 'routingType'> {
@@ -23,7 +25,7 @@ export interface DutchLimitConfigJSON extends Omit<DutchLimitConfigData, 'routin
 
 export interface ClassicConfigData extends RoutingConfigData {
   protocols: Protocol[];
-  gasPriceWei: string;
+  gasPriceWei?: string;
   simulateFromAddress?: string;
   permitSignature?: string;
   permitNonce?: string;
@@ -51,9 +53,9 @@ export class DutchLimitConfig implements DutchLimitConfigData {
     invariant(body.routingType == 'DUTCH_LIMIT', 'routingType must be DUTCH_LIMIT');
     return new DutchLimitConfig(
       RoutingType.DUTCH_LIMIT as const,
-      body.offerer,
-      body.exclusivePeriodSecs,
-      body.auctionPeriodSecs
+      body.offerer ?? ZERO_ADDRESS,
+      body.exclusivePeriodSecs ?? DEFAULT_EXCLUSIVE_PERIOD_SECS,
+      body.auctionPeriodSecs ?? DEFAULT_AUCTION_PERIOD_SECS
     );
   }
 
@@ -86,7 +88,7 @@ export class ClassicConfig implements RoutingConfigData {
           return [];
         }
       }),
-      body.gasPriceWei,
+      body.gasPriceWei ?? DUMMY_GAS_WEI,
       body.simulateFromAddress,
       body.permitSignature,
       body.permitNonce,

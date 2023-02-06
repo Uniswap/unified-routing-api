@@ -16,7 +16,7 @@ const baseQuote = {
   tokenIn: TOKEN_IN,
   tokenOut: TOKEN_OUT,
   amount: AMOUNT_IN,
-  tradeType: 'EXACT_INPUT',
+  type: 'EXACT_INPUT',
 };
 
 const QUOTE_REQUEST = QuoteRequest.fromRequestBody({
