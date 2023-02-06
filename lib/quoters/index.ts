@@ -11,5 +11,5 @@ export enum QuoterType {
 }
 
 export interface Quoter {
-  quote(params: QuoteRequest, config: RoutingConfig): Promise<QuoteResponse>;
+  quote(params: QuoteRequest, config: RoutingConfig): Promise<QuoteResponse | null>;
 }

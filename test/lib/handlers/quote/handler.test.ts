@@ -1,12 +1,12 @@
 import { TradeType } from '@uniswap/sdk-core';
 import { default as Logger } from 'bunyan';
 
-import { QuoteRequest } from '../../../lib/entities/QuoteRequest';
-import { QuoteResponse } from '../../../lib/entities/QuoteResponse';
-import { compareQuotes, getBestQuote } from '../../../lib/handlers/quote/handler';
-import { QuoterByRoutingType } from '../../../lib/handlers/quote/injector';
-import { Quoter } from '../../../lib/quoters';
-import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../constants';
+import { QuoteRequest } from '../../../../lib/entities/QuoteRequest';
+import { QuoteResponse } from '../../../../lib/entities/QuoteResponse';
+import { compareQuotes, getBestQuote } from '../../../../lib/handlers/quote/handler';
+import { QuoterByRoutingType } from '../../../../lib/handlers/quote/injector';
+import { Quoter } from '../../../../lib/quoters';
+import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
 import { buildQuoteResponse } from '../../utils/quoteResponse';
 
 const baseQuote = {

@@ -65,15 +65,17 @@ export async function getBestQuote(
   tradeType: TradeType,
   log?: Logger
 ): Promise<QuoteResponse | null> {
-  const responses: QuoteResponse[] = await Promise.all(
-    quoteRequest.configs.flatMap((config) => {
-      const quoters = quotersByRoutingType[config.routingType];
-      if (!quoters) {
-        return [];
-      }
-      return quoters.map((q) => q.quote(quoteRequest, config));
-    })
-  );
+  const responses = (
+    await Promise.all(
+      quoteRequest.configs.flatMap((config) => {
+        const quoters = quotersByRoutingType[config.routingType];
+        if (!quoters) {
+          return [];
+        }
+        return quoters.map((q) => q.quote(quoteRequest, config));
+      })
+    )
+  ).filter((r): r is QuoteResponse => !!r);
 
   return responses.reduce((bestQuote: QuoteResponse | null, quote: QuoteResponse) => {
     log?.info({ bestQuote: bestQuote }, 'current bestQuote');
