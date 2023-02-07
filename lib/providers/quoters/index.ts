@@ -1,6 +1,6 @@
-import { QuoteRequest } from '../entities/QuoteRequest';
-import { QuoteResponse } from '../entities/QuoteResponse';
-import { RoutingConfig } from '../entities/routing';
+import { QuoteRequest } from '../../entities/QuoteRequest';
+import { QuoteResponse } from '../../entities/QuoteResponse';
+import { RoutingConfig } from '../../entities/routing';
 
 export * from './RfqQuoter';
 export * from './RoutingApiQuoter';

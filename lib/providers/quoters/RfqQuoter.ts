@@ -1,10 +1,10 @@
 import axios from 'axios';
 import Logger from 'bunyan';
 
-import { QuoteRequest } from '../entities/QuoteRequest';
-import { QuoteResponse } from '../entities/QuoteResponse';
-import { DutchLimitQuote } from '../entities/quotes';
-import { DutchLimitConfig, RoutingType } from '../entities/routing';
+import { QuoteRequest } from '../../entities/QuoteRequest';
+import { QuoteResponse } from '../../entities/QuoteResponse';
+import { DutchLimitQuote } from '../../entities/quotes';
+import { DutchLimitConfig, RoutingType } from '../../entities/routing';
 import { Quoter, QuoterType } from './index';
 
 export class RfqQuoter implements Quoter {

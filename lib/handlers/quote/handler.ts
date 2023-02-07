@@ -2,9 +2,7 @@ import { TradeType } from '@uniswap/sdk-core';
 import Logger from 'bunyan';
 import Joi from 'joi';
 
-import { QuoteRequest, QuoteResponse } from '../../entities';
-import { QuoteRequestDataJSON } from '../../entities/QuoteRequest';
-import { QuoteResponseJSON } from '../../entities/QuoteResponse';
+import { QuoteRequest, QuoteRequestDataJSON, QuoteResponse, QuoteResponseJSON } from '../../entities';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
 import { ContainerInjected, QuoterByRoutingType } from './injector';
@@ -23,13 +21,16 @@ export class QuoteHandler extends APIGLambdaHandler<
     const {
       requestInjected: { log },
       requestBody,
-      containerInjected: { quoters },
+      containerInjected: { quoters, quoteFilter },
     } = params;
 
     log.info(requestBody, 'requestBody');
     const request = QuoteRequest.fromRequestBody(requestBody);
 
-    const bestQuote = await getBestQuote(quoters, request, request.type, log);
+    const quotes = await getQuotes(quoters, request);
+    const filtered = await quoteFilter.filter(request, quotes);
+
+    const bestQuote = await getBestQuote(request, filtered, log);
     if (!bestQuote) {
       return {
         statusCode: 404,
@@ -58,14 +59,12 @@ export class QuoteHandler extends APIGLambdaHandler<
   }
 }
 
-// fetch quotes from all quoters and return the best one
-export async function getBestQuote(
+// fetch quotes for all quote requests using the configured quoters
+export async function getQuotes(
   quotersByRoutingType: QuoterByRoutingType,
-  quoteRequest: QuoteRequest,
-  tradeType: TradeType,
-  log?: Logger
-): Promise<QuoteResponse | null> {
-  const responses = (
+  quoteRequest: QuoteRequest
+): Promise<QuoteResponse[]> {
+  return (
     await Promise.all(
       quoteRequest.configs.flatMap((config) => {
         const quoters = quotersByRoutingType[config.routingType];
@@ -76,10 +75,17 @@ export async function getBestQuote(
       })
     )
   ).filter((r): r is QuoteResponse => !!r);
+}
 
-  return responses.reduce((bestQuote: QuoteResponse | null, quote: QuoteResponse) => {
+// determine and return the "best" quote of the given list
+export async function getBestQuote(
+  quoteRequest: QuoteRequest,
+  quotes: QuoteResponse[],
+  log?: Logger
+): Promise<QuoteResponse | null> {
+  return quotes.reduce((bestQuote: QuoteResponse | null, quote: QuoteResponse) => {
     log?.info({ bestQuote: bestQuote }, 'current bestQuote');
-    if (!bestQuote || compareQuotes(quote, bestQuote, tradeType)) {
+    if (!bestQuote || compareQuotes(quote, bestQuote, quoteRequest.type)) {
       return quote;
     }
     return bestQuote;
