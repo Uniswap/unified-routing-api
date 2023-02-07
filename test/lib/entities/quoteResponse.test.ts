@@ -1,6 +1,6 @@
 import { TradeType } from '@uniswap/sdk-core';
 
-import { ClassicQuote, ClassicQuoteDataJSON, DutchLimitQuote, DutchLimitQuoteJSON } from '../../../lib/entities/quotes';
+import { ClassicQuote, ClassicQuoteDataJSON, DutchLimitQuote, DutchLimitQuoteJSON } from '../../../lib/entities/quote';
 import { DutchLimitConfig, DutchLimitConfigJSON } from '../../../lib/entities/routing';
 import { AMOUNT_IN, CHAIN_IN_ID, DL_CONFIG, FILLER, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../constants';
 

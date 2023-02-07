@@ -1,32 +1,31 @@
 import { TradeType } from '@uniswap/sdk-core';
 
-import { QuoteResponse } from '../../lib/entities/QuoteResponse';
 import {
   ClassicQuote,
   ClassicQuoteDataJSON,
+  DutchLimitConfig,
   DutchLimitQuote,
   DutchLimitQuoteJSON,
   Quote,
-  ReceivedQuoteJSON,
-} from '../../lib/entities/quotes';
-import { DutchLimitConfig, RoutingConfig, RoutingType } from '../../lib/entities/routing';
+  RoutingConfig,
+  RoutingType,
+} from '../../lib/entities';
 import { DL_CONFIG } from '../constants';
+
+type ReceivedQuoteData = DutchLimitQuoteJSON | ClassicQuoteDataJSON;
 
 export function buildQuoteResponse(
   body: {
     routing: string;
-    quote: ReceivedQuoteJSON;
+    quote: ReceivedQuoteData;
   },
   tradeType: TradeType = TradeType.EXACT_INPUT,
   config: RoutingConfig = DL_CONFIG as DutchLimitConfig
-): QuoteResponse {
-  return new QuoteResponse(
-    RoutingType[body.routing as keyof typeof RoutingType],
-    parseQuote(body.routing, body.quote, tradeType, config)
-  );
+): Quote {
+  return parseQuote(body.routing, body.quote, tradeType, config);
 }
 
-function parseQuote(routing: string, quote: ReceivedQuoteJSON, tradeType: TradeType, config?: RoutingConfig): Quote {
+function parseQuote(routing: string, quote: ReceivedQuoteData, tradeType: TradeType, config?: RoutingConfig): Quote {
   switch (routing) {
     case RoutingType.DUTCH_LIMIT:
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

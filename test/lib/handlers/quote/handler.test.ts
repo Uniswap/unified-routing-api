@@ -1,7 +1,7 @@
 import { TradeType } from '@uniswap/sdk-core';
 import { default as Logger } from 'bunyan';
 
-import { QuoteResponse } from '../../../../lib/entities/QuoteResponse';
+import { Quote } from '../../../../lib/entities';
 import { compareQuotes, getBestQuote, getQuotes } from '../../../../lib/handlers/quote/handler';
 import { QuoterByRoutingType } from '../../../../lib/handlers/quote/injector';
 import { Quoter } from '../../../../lib/providers/quoters';
@@ -76,7 +76,7 @@ describe('QuoteHandler', () => {
   });
 
   describe('getBestQuote', () => {
-    const quoterMock = (quote: QuoteResponse): Quoter => {
+    const quoterMock = (quote: Quote): Quoter => {
       return {
         // eslint-disable-next-line no-unused-labels
         quote: () => Promise.resolve(quote),

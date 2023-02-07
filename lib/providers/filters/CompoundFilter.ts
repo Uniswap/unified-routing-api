@@ -1,4 +1,4 @@
-import { QuoteRequest, QuoteResponse } from '../../entities';
+import { Quote, QuoteRequest } from '../../entities';
 import { QuoteFilter } from '.';
 
 // filters out any quote responses that came from unconfigured quoters
@@ -8,8 +8,8 @@ import { QuoteFilter } from '.';
 export class CompoundFilter implements QuoteFilter {
   constructor(private filters: QuoteFilter[]) {}
 
-  async filter(request: QuoteRequest, quotes: QuoteResponse[]): Promise<QuoteResponse[]> {
-    let result: QuoteResponse[] = quotes;
+  async filter(request: QuoteRequest, quotes: Quote[]): Promise<Quote[]> {
+    let result: Quote[] = quotes;
     for (const filter of this.filters) {
       result = await filter.filter(request, result);
     }

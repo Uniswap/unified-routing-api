@@ -2,11 +2,16 @@ import { TradeType } from '@uniswap/sdk-core';
 import Logger from 'bunyan';
 import Joi from 'joi';
 
-import { QuoteRequest, QuoteRequestDataJSON, QuoteResponse, QuoteResponseJSON } from '../../entities';
+import { Quote, QuoteJSON, QuoteRequest, QuoteRequestDataJSON } from '../../entities';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
 import { ContainerInjected, QuoterByRoutingType } from './injector';
 import { PostQuoteRequestBodyJoi } from './schema';
+
+export interface QuoteResponseJSON {
+  routing: string;
+  quote: QuoteJSON;
+}
 
 export class QuoteHandler extends APIGLambdaHandler<
   ContainerInjected,
@@ -41,7 +46,7 @@ export class QuoteHandler extends APIGLambdaHandler<
 
     return {
       statusCode: 200,
-      body: bestQuote.toOrder(),
+      body: quoteToResponse(bestQuote),
     };
   }
 
@@ -63,7 +68,7 @@ export class QuoteHandler extends APIGLambdaHandler<
 export async function getQuotes(
   quotersByRoutingType: QuoterByRoutingType,
   quoteRequest: QuoteRequest
-): Promise<QuoteResponse[]> {
+): Promise<Quote[]> {
   return (
     await Promise.all(
       quoteRequest.configs.flatMap((config) => {
@@ -74,16 +79,12 @@ export async function getQuotes(
         return quoters.map((q) => q.quote(quoteRequest, config));
       })
     )
-  ).filter((r): r is QuoteResponse => !!r);
+  ).filter((r): r is Quote => !!r);
 }
 
 // determine and return the "best" quote of the given list
-export async function getBestQuote(
-  quoteRequest: QuoteRequest,
-  quotes: QuoteResponse[],
-  log?: Logger
-): Promise<QuoteResponse | null> {
-  return quotes.reduce((bestQuote: QuoteResponse | null, quote: QuoteResponse) => {
+export async function getBestQuote(quoteRequest: QuoteRequest, quotes: Quote[], log?: Logger): Promise<Quote | null> {
+  return quotes.reduce((bestQuote: Quote | null, quote: Quote) => {
     log?.info({ bestQuote: bestQuote }, 'current bestQuote');
     if (!bestQuote || compareQuotes(quote, bestQuote, quoteRequest.type)) {
       return quote;
@@ -93,7 +94,7 @@ export async function getBestQuote(
 }
 
 // compares two quotes of any type and returns the best one based on tradeType
-export function compareQuotes(lhs: QuoteResponse, rhs: QuoteResponse, tradeType: TradeType): boolean {
+export function compareQuotes(lhs: Quote, rhs: Quote, tradeType: TradeType): boolean {
   if (tradeType === TradeType.EXACT_INPUT) {
     return getQuotedAmount(lhs, tradeType).gt(getQuotedAmount(rhs, tradeType));
   } else {
@@ -102,6 +103,13 @@ export function compareQuotes(lhs: QuoteResponse, rhs: QuoteResponse, tradeType:
   }
 }
 
-const getQuotedAmount = (quote: QuoteResponse, tradeType: TradeType) => {
-  return tradeType === TradeType.EXACT_INPUT ? quote.quote.amountOut : quote.quote.amountIn;
+const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
+  return tradeType === TradeType.EXACT_INPUT ? quote.amountOut : quote.amountIn;
 };
+
+export function quoteToResponse(quote: Quote): QuoteResponseJSON {
+  return {
+    routing: quote.routingType,
+    quote: quote.toJSON(),
+  };
+}

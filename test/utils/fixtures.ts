@@ -1,6 +1,7 @@
 import { TradeType } from '@uniswap/sdk-core';
 
 import { QuoteRequest } from '../../lib/entities/QuoteRequest';
+import { RoutingType } from '../../lib/entities/routing';
 import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, OFFERER, TOKEN_IN, TOKEN_OUT } from '../constants';
 import { buildQuoteResponse } from './quoteResponse';
 
@@ -90,7 +91,7 @@ const CLASSIC_QUOTE_DATA = {
 };
 
 export const DL_QUOTE_EXACT_IN_BETTER = buildQuoteResponse(
-  Object.assign({}, DL_QUOTE_DATA, { quote: { ...DL_QUOTE_DATA.quote, amountOut: '2' } })
+  Object.assign({}, DL_QUOTE_DATA, { quote: { ...DL_QUOTE_DATA.quote, type: RoutingType.DUTCH_LIMIT, amountOut: '2' } })
 );
 export const DL_QUOTE_EXACT_IN_WORSE = buildQuoteResponse(
   Object.assign({}, DL_QUOTE_DATA, { quote: { ...DL_QUOTE_DATA.quote, amountOut: '1' } })
