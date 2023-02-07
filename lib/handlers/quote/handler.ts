@@ -75,7 +75,7 @@ export async function getQuotes(quotersByRoutingType: QuoterByRoutingType, reque
       return quoters.map((q) => q.quote(request));
     })
   );
-  return quotes.filter((q) => !!q) as Quote[];
+  return quotes.filter((q): q is Quote => !!q);
 }
 
 // determine and return the "best" quote of the given list
