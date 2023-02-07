@@ -1,8 +1,8 @@
 import { TradeType } from '@uniswap/sdk-core';
 
-import { ClassicQuote, ClassicQuoteDataJSON, DutchLimitQuote, DutchLimitQuoteJSON } from '../../lib/entities/quotes';
-import { DutchLimitConfig, DutchLimitConfigJSON } from '../../lib/entities/routing';
-import { AMOUNT_IN, CHAIN_IN_ID, DL_CONFIG, FILLER, OFFERER, TOKEN_IN, TOKEN_OUT } from '../constants';
+import { ClassicQuote, ClassicQuoteDataJSON, DutchLimitQuote, DutchLimitQuoteJSON } from '../../../lib/entities/quotes';
+import { DutchLimitConfig, DutchLimitConfigJSON } from '../../../lib/entities/routing';
+import { AMOUNT_IN, CHAIN_IN_ID, DL_CONFIG, FILLER, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../constants';
 
 const DL_QUOTE_JSON: DutchLimitQuoteJSON = {
   chainId: CHAIN_IN_ID,

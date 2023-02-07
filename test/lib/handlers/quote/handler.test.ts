@@ -1,12 +1,12 @@
 import { TradeType } from '@uniswap/sdk-core';
 import { default as Logger } from 'bunyan';
 
-import { QuoteRequest } from '../../../lib/entities/QuoteRequest';
-import { QuoteResponse } from '../../../lib/entities/QuoteResponse';
-import { compareQuotes, getBestQuote } from '../../../lib/handlers/quote/handler';
-import { QuoterByRoutingType } from '../../../lib/handlers/quote/injector';
-import { Quoter } from '../../../lib/quoters';
-import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../constants';
+import { QuoteRequest } from '../../../../lib/entities/QuoteRequest';
+import { QuoteResponse } from '../../../../lib/entities/QuoteResponse';
+import { compareQuotes, getBestQuote } from '../../../../lib/handlers/quote/handler';
+import { QuoterByRoutingType } from '../../../../lib/handlers/quote/injector';
+import { Quoter } from '../../../../lib/quoters';
+import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
 import { buildQuoteResponse } from '../../utils/quoteResponse';
 
 const baseQuote = {
@@ -174,6 +174,35 @@ describe('QuoteHandler', () => {
         quote: () => Promise.resolve(quote),
       };
     };
+
+    const nullQuoterMock = (): Quoter => {
+      return {
+        // eslint-disable-next-line no-unused-labels
+        quote: () => Promise.resolve(null),
+      };
+    };
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('returns null if the only specified quoter in config returns null', async () => {
+      const quoters: QuoterByRoutingType = {
+        CLASSIC: [quoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER)],
+        DUTCH_LIMIT: [nullQuoterMock()],
+      };
+      const bestQuote = await getBestQuote(quoters, QUOTE_REQUEST, TradeType.EXACT_INPUT, logger);
+      expect(bestQuote).toBeNull();
+    });
+
+    it('only considers quoters that did not throw', async () => {
+      const quoters: QuoterByRoutingType = {
+        CLASSIC: [quoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER)],
+        DUTCH_LIMIT: [nullQuoterMock()],
+      };
+      const bestQuote = await getBestQuote(quoters, QUOTE_REQUEST_MULTI, TradeType.EXACT_INPUT, logger);
+      expect(bestQuote).toEqual(CLASSIC_QUOTE_EXACT_IN_BETTER);
+    });
 
     it('returns the best quote among two dutch limit quotes', async () => {
       const quoters: QuoterByRoutingType = {

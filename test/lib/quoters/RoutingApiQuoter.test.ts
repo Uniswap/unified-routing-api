@@ -1,8 +1,8 @@
 import { default as Logger } from 'bunyan';
 
-import { QuoteRequest } from '../../lib/entities/QuoteRequest';
-import { ClassicConfig } from '../../lib/entities/routing';
-import { RoutingApiQuoter } from '../../lib/quoters';
+import { QuoteRequest } from '../../../lib/entities/QuoteRequest';
+import { ClassicConfig } from '../../../lib/entities/routing';
+import { RoutingApiQuoter } from '../../../lib/quoters';
 
 const CLASSIC_QUOTE = QuoteRequest.fromRequestBody({
   tokenInChainId: 1,
