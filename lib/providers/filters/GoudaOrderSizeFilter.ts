@@ -1,12 +1,14 @@
+import { TradeType } from '@uniswap/sdk-core';
 import Logger from 'bunyan';
 import { BigNumber } from 'ethers';
 
-import { QuoteRequest, Quote, RoutingType, ClassicQuoteDataJSON } from '../../entities';
+import { ClassicQuoteDataJSON, Quote, QuoteRequest, RoutingType } from '../../entities';
 import { QuoteFilter } from '.';
 
 // if the gas is greater than this proportion of the whole trade size
 // then we will not route the order
 const GAS_PROPORTION_THRESHOLD_BPS = 1000;
+const BPS = 10000;
 
 // filters out any gouda orders which are too small to be worth filling
 // NOTE: there must also be a routing-api quote response for this filter to function
@@ -44,6 +46,21 @@ export class GoudaOrderSizeFilter implements QuoteFilter {
     const routingApiQuoteData = routingApiResponse.toJSON() as ClassicQuoteDataJSON;
     const routingApiQuote = BigNumber.from(routingApiQuoteData.quote);
     // quote - quoteGasAdjusted = gas adjustement in output token
-    const gasUsedInOutput = routingApiQuote.sub(routingApiQuoteData.quoteGasAdjusted);
+    const gasUsedQuote = routingApiQuote.sub(routingApiQuoteData.quoteGasAdjusted);
+
+    if (gasUsedQuote.eq(0)) {
+      this.log.info('No gas estimate for quote, not filtering', routingApiResponse);
+      return quotes;
+    }
+
+    const goudaQuote = request.type === TradeType.EXACT_INPUT ? goudaResponse.amountOut : goudaResponse.amountIn;
+    const quoteGasThreshold = goudaQuote.mul(GAS_PROPORTION_THRESHOLD_BPS).div(BPS);
+
+    // the gas used is less than the threshold, so no filtering
+    if (gasUsedQuote.lt(quoteGasThreshold)) {
+      return quotes;
+    }
+
+    return [routingApiResponse];
   }
 }

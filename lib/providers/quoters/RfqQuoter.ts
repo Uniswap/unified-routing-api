@@ -1,7 +1,7 @@
 import axios from 'axios';
 import Logger from 'bunyan';
 
-import { DutchLimitQuote, DutchLimitRequest, Quote, RoutingType } from '../../entities';
+import { Quote, DutchLimitQuote, DutchLimitRequest, RoutingType } from '../../entities';
 import { Quoter, QuoterType } from './index';
 
 export class RfqQuoter implements Quoter {
