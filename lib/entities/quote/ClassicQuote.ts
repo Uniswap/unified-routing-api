@@ -1,8 +1,9 @@
 import { TradeType } from '@uniswap/sdk-core';
 import { MethodParameters } from '@uniswap/smart-order-router';
 import { BigNumber } from 'ethers';
-import { RoutingType } from './routing';
-import { Quote } from './quotes';
+
+import { RoutingType } from '..';
+import { Quote } from '.';
 
 export type V2ReserveJSON = {
   token: TokenInRouteJSON;
@@ -60,7 +61,6 @@ export type ClassicQuoteDataJSON = {
   routeString: string;
   methodParameters?: MethodParameters;
 };
-
 
 export class ClassicQuote implements Quote {
   public routingType: RoutingType.CLASSIC = RoutingType.CLASSIC;

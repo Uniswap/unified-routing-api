@@ -2,7 +2,7 @@ import { TradeType } from '@uniswap/sdk-core';
 import Logger from 'bunyan';
 import Joi from 'joi';
 
-import { QuoteRequest, QuoteRequestDataJSON, Quote, QuoteJSON } from '../../entities';
+import { Quote, QuoteJSON, QuoteRequest, QuoteRequestDataJSON } from '../../entities';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
 import { ContainerInjected, QuoterByRoutingType } from './injector';
@@ -46,7 +46,7 @@ export class QuoteHandler extends APIGLambdaHandler<
 
     return {
       statusCode: 200,
-      body: quoteToResponse(bestQuote)
+      body: quoteToResponse(bestQuote),
     };
   }
 
@@ -81,11 +81,7 @@ export async function getQuotes(
 }
 
 // determine and return the "best" quote of the given list
-export async function getBestQuote(
-  quoteRequest: QuoteRequest,
-  quotes: Quote[],
-  log?: Logger
-): Promise<Quote | null> {
+export async function getBestQuote(quoteRequest: QuoteRequest, quotes: Quote[], log?: Logger): Promise<Quote | null> {
   return quotes.reduce((bestQuote: Quote | null, quote: Quote) => {
     log?.info({ bestQuote: bestQuote }, 'current bestQuote');
     if (!bestQuote || compareQuotes(quote, bestQuote, quoteRequest.type)) {

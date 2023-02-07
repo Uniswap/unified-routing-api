@@ -1,7 +1,8 @@
-import { Quote, QuoteJSON } from './quotes';
 import { DutchLimitOrderBuilder, DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
 import { BigNumber } from 'ethers';
-import { DutchLimitConfig, RoutingType } from './routing';
+
+import { DutchLimitConfig, RoutingType } from '..';
+import { Quote, QuoteJSON } from '.';
 
 export type DutchLimitQuoteData = {
   chainId: number;

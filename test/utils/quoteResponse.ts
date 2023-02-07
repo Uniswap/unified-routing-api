@@ -3,11 +3,13 @@ import { TradeType } from '@uniswap/sdk-core';
 import {
   ClassicQuote,
   ClassicQuoteDataJSON,
+  DutchLimitConfig,
   DutchLimitQuote,
   DutchLimitQuoteJSON,
   Quote,
-} from '../../lib/entities/quotes';
-import { DutchLimitConfig, RoutingConfig, RoutingType } from '../../lib/entities/routing';
+  RoutingConfig,
+  RoutingType,
+} from '../../lib/entities';
 import { DL_CONFIG } from '../constants';
 
 type ReceivedQuoteData = DutchLimitQuoteJSON | ClassicQuoteDataJSON;

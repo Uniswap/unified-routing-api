@@ -3,8 +3,7 @@ import axios from 'axios';
 import Logger from 'bunyan';
 import querystring from 'querystring';
 
-import { QuoteRequest, Quote } from '../../entities';
-import { ClassicQuote } from '../../entities/quotes';
+import { ClassicQuote, Quote, QuoteRequest } from '../../entities';
 import { ClassicConfig, RoutingConfig, RoutingType } from '../../entities/routing';
 import { Quoter, QuoterType } from './index';
 

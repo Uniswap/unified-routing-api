@@ -1,4 +1,4 @@
-import { QuoteRequest, Quote } from '../../entities';
+import { Quote, QuoteRequest } from '../../entities';
 
 export * from './CompoundFilter';
 export * from './OnlyConfiguredQuotersFilter';

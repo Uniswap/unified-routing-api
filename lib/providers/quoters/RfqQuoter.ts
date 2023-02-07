@@ -1,9 +1,7 @@
 import axios from 'axios';
 import Logger from 'bunyan';
 
-import { QuoteRequest, Quote } from '../../entities';
-import { DutchLimitQuote } from '../../entities/quotes';
-import { DutchLimitConfig, RoutingType } from '../../entities/routing';
+import { DutchLimitConfig, DutchLimitQuote, Quote, QuoteRequest, RoutingType } from '../../entities';
 import { Quoter, QuoterType } from './index';
 
 export class RfqQuoter implements Quoter {
@@ -30,7 +28,7 @@ export class RfqQuoter implements Quoter {
         tokenOut: params.tokenOut,
         offerer: config.offerer,
       });
-      return DutchLimitQuote.fromResponseBodyAndConfig(config, response.data)
+      return DutchLimitQuote.fromResponseBodyAndConfig(config, response.data);
     } catch (e) {
       this.log.error(e, 'RfqQuoterErr');
       throw e;

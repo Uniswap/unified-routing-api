@@ -1,7 +1,7 @@
 import { TradeType } from '@uniswap/sdk-core';
 
-import { RoutingType } from '../../lib/entities/routing';
 import { QuoteRequest } from '../../lib/entities/QuoteRequest';
+import { RoutingType } from '../../lib/entities/routing';
 import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, OFFERER, TOKEN_IN, TOKEN_OUT } from '../constants';
 import { buildQuoteResponse } from './quoteResponse';
 

@@ -1,4 +1,4 @@
-import { QuoteRequest, Quote } from '../../entities';
+import { Quote, QuoteRequest } from '../../entities';
 import { RoutingConfig } from '../../entities/routing';
 
 export * from './RfqQuoter';

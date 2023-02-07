@@ -1,6 +1,6 @@
 import Logger from 'bunyan';
 
-import { QuoteRequest, Quote } from '../../entities';
+import { Quote, QuoteRequest } from '../../entities';
 import { QuoteFilter } from '.';
 
 // filters out any quote responses that came from unconfigured quoters
