@@ -17,10 +17,10 @@ export class GoudaOrderSizeFilter implements QuoteFilter {
   private log: Logger;
 
   constructor(_log: Logger) {
-    this.log = _log.child({ quoter: 'OnlyConfiguredQuotersFilter' });
+    this.log = _log.child({ quoter: 'GoudaOrderSizeFilter' });
   }
 
-  async filter(request: QuoteRequest, quotes: Quote[]): Promise<Quote[]> {
+  async filter(_requests: QuoteRequest[], quotes: Quote[]): Promise<Quote[]> {
     let routingApiResponse: Quote | null = null;
     let goudaResponse: Quote | null = null;
 
@@ -45,15 +45,21 @@ export class GoudaOrderSizeFilter implements QuoteFilter {
 
     const routingApiQuoteData = routingApiResponse.toJSON() as ClassicQuoteDataJSON;
     const routingApiQuote = BigNumber.from(routingApiQuoteData.quote);
-    // quote - quoteGasAdjusted = gas adjustement in output token
-    const gasUsedQuote = routingApiQuote.sub(routingApiQuoteData.quoteGasAdjusted);
+    const routingApiQuoteGasAdjusted = BigNumber.from(routingApiQuoteData.quoteGasAdjusted);
+    // quote - quoteGasAdjusted = gas adjustement in output token if exactInput (gasAdjustment is less output)
+    // quoteGasAdjusted - quote = gas adjustement in input token if exactOutput (gasAdjustment is more input)
+    const gasUsedQuote =
+      routingApiResponse.request.info.type === TradeType.EXACT_INPUT
+        ? routingApiQuote.sub(routingApiQuoteGasAdjusted)
+        : routingApiQuoteGasAdjusted.sub(routingApiQuote);
 
     if (gasUsedQuote.eq(0)) {
       this.log.info('No gas estimate for quote, not filtering', routingApiResponse);
       return quotes;
     }
 
-    const goudaQuote = request.type === TradeType.EXACT_INPUT ? goudaResponse.amountOut : goudaResponse.amountIn;
+    const goudaQuote =
+      goudaResponse.request.info.type === TradeType.EXACT_INPUT ? goudaResponse.amountOut : goudaResponse.amountIn;
     const quoteGasThreshold = goudaQuote.mul(GAS_PROPORTION_THRESHOLD_BPS).div(BPS);
 
     // the gas used is less than the threshold, so no filtering
