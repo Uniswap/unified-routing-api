@@ -15,24 +15,24 @@ describe('OnlyConfiguredQuotersFilter', () => {
   const filter = new OnlyConfiguredQuotersFilter(logger);
 
   it('does not filter classic if configured', async () => {
-    const filtered = await filter.filter(QUOTE_REQUEST_CLASSIC, [CLASSIC_QUOTE_EXACT_IN_BETTER]);
+    const filtered = await filter.filter([QUOTE_REQUEST_CLASSIC], [CLASSIC_QUOTE_EXACT_IN_BETTER]);
     expect(filtered.length).toEqual(1);
     expect(filtered[0]).toEqual(CLASSIC_QUOTE_EXACT_IN_BETTER);
   });
 
   it('does not filter DL if configured', async () => {
-    const filtered = await filter.filter(QUOTE_REQUEST_DL, [DL_QUOTE_EXACT_IN_BETTER]);
+    const filtered = await filter.filter([QUOTE_REQUEST_DL], [DL_QUOTE_EXACT_IN_BETTER]);
     expect(filtered.length).toEqual(1);
     expect(filtered[0]).toEqual(DL_QUOTE_EXACT_IN_BETTER);
   });
 
   it('filters DL if not configured', async () => {
-    const filtered = await filter.filter(QUOTE_REQUEST_CLASSIC, [DL_QUOTE_EXACT_IN_BETTER]);
+    const filtered = await filter.filter([QUOTE_REQUEST_CLASSIC], [DL_QUOTE_EXACT_IN_BETTER]);
     expect(filtered.length).toEqual(0);
   });
 
   it('filters classic if not configured', async () => {
-    const filtered = await filter.filter(QUOTE_REQUEST_DL, [CLASSIC_QUOTE_EXACT_IN_BETTER]);
+    const filtered = await filter.filter([QUOTE_REQUEST_DL], [CLASSIC_QUOTE_EXACT_IN_BETTER]);
     expect(filtered.length).toEqual(0);
   });
 
@@ -45,20 +45,20 @@ describe('OnlyConfiguredQuotersFilter', () => {
   });
 
   it('filters one of several if configured', async () => {
-    let filtered = await filter.filter(QUOTE_REQUEST_CLASSIC, [
-      CLASSIC_QUOTE_EXACT_IN_BETTER,
-      DL_QUOTE_EXACT_IN_BETTER,
-    ]);
+    let filtered = await filter.filter(
+      [QUOTE_REQUEST_CLASSIC],
+      [CLASSIC_QUOTE_EXACT_IN_BETTER, DL_QUOTE_EXACT_IN_BETTER]
+    );
     expect(filtered.length).toEqual(1);
-    filtered = await filter.filter(QUOTE_REQUEST_DL, [CLASSIC_QUOTE_EXACT_IN_BETTER, DL_QUOTE_EXACT_IN_BETTER]);
+    filtered = await filter.filter([QUOTE_REQUEST_DL], [CLASSIC_QUOTE_EXACT_IN_BETTER, DL_QUOTE_EXACT_IN_BETTER]);
     expect(filtered.length).toEqual(1);
   });
 
   it('does not filter multiple of same type', async () => {
-    const filtered = await filter.filter(QUOTE_REQUEST_CLASSIC, [
-      CLASSIC_QUOTE_EXACT_IN_BETTER,
-      CLASSIC_QUOTE_EXACT_IN_BETTER,
-    ]);
+    const filtered = await filter.filter(
+      [QUOTE_REQUEST_CLASSIC],
+      [CLASSIC_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_IN_BETTER]
+    );
     expect(filtered.length).toEqual(2);
   });
 });

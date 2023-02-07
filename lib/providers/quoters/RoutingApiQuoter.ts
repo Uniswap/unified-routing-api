@@ -3,8 +3,7 @@ import axios from 'axios';
 import Logger from 'bunyan';
 import querystring from 'querystring';
 
-import { ClassicQuote, Quote, QuoteRequest } from '../../entities';
-import { ClassicConfig, RoutingConfig, RoutingType } from '../../entities/routing';
+import { ClassicQuote, ClassicRequest, Quote, RoutingType } from '../../entities';
 import { Quoter, QuoterType } from './index';
 
 export class RoutingApiQuoter implements Quoter {
@@ -15,35 +14,36 @@ export class RoutingApiQuoter implements Quoter {
     this.log = _log.child({ quoter: 'RoutingApiQuoter' });
   }
 
-  async quote(params: QuoteRequest, config: RoutingConfig): Promise<Quote | null> {
-    this.log.info(params, 'quoteRequest');
+  async quote(request: ClassicRequest): Promise<Quote> {
+    this.log.info(request, 'quoteRequest');
     this.log.info(this.routingApiUrl, 'routingApiUrl');
 
-    if (config.routingType !== RoutingType.CLASSIC) {
-      throw new Error(`Invalid routing config type: ${config.routingType}`);
+    if (request.routingType !== RoutingType.CLASSIC) {
+      throw new Error(`Invalid routing config type: ${request.routingType}`);
     }
     try {
-      const req = this.buildRequest(params, config as ClassicConfig);
+      const req = this.buildRequest(request);
       this.log.info(req, 'routingApiReq');
-      const response = await axios.get(this.buildRequest(params, config as ClassicConfig));
-      return ClassicQuote.fromResponseBody(response.data, params.type);
+      const response = await axios.get(req);
+      return ClassicQuote.fromResponseBody(request, response.data);
     } catch (e) {
       this.log.error(e, 'RoutingApiQuoterErr');
       return null;
     }
   }
 
-  buildRequest(params: QuoteRequest, config: ClassicConfig): string {
-    const tradeType = params.type === TradeType.EXACT_INPUT ? 'exactIn' : 'exactOut';
+  buildRequest(request: ClassicRequest): string {
+    const tradeType = request.info.type === TradeType.EXACT_INPUT ? 'exactIn' : 'exactOut';
+    const config = request.config;
     return (
       this.routingApiUrl +
       'quote?' +
       querystring.stringify({
-        tokenInAddress: params.tokenIn,
-        tokenInChainId: params.tokenInChainId,
-        tokenOutAddress: params.tokenOut,
-        tokenOutChainId: params.tokenOutChainId,
-        amount: params.amount.toString(),
+        tokenInAddress: request.info.tokenIn,
+        tokenInChainId: request.info.tokenInChainId,
+        tokenOutAddress: request.info.tokenOut,
+        tokenOutChainId: request.info.tokenOutChainId,
+        amount: request.info.amount.toString(),
         type: tradeType,
         gasPriceWei: config.gasPriceWei,
         ...(config.protocols.length && { protocols: config.protocols.map((p) => p.toLowerCase()).join(',') }),

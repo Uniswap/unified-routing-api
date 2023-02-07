@@ -1,11 +1,17 @@
-import { TradeType } from '@uniswap/sdk-core';
-
-import { QuoteRequest } from '../../lib/entities/QuoteRequest';
-import { RoutingType } from '../../lib/entities/routing';
+import {
+  ClassicQuoteDataJSON,
+  ClassicRequest,
+  DutchLimitQuoteJSON,
+  DutchLimitRequest,
+  parseQuoteRequests,
+  Quote,
+  QuoteRequestBodyJSON,
+  RoutingType,
+} from '../../lib/entities';
 import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, OFFERER, TOKEN_IN, TOKEN_OUT } from '../constants';
 import { buildQuoteResponse } from './quoteResponse';
 
-const baseQuote = {
+export const BASE_REQUEST_INFO = {
   tokenInChainId: CHAIN_IN_ID,
   tokenOutChainId: CHAIN_OUT_ID,
   requestId: 'requestId',
@@ -15,40 +21,51 @@ const baseQuote = {
   type: 'EXACT_INPUT',
 };
 
-export const QUOTE_REQUEST_CLASSIC = QuoteRequest.fromRequestBody({
-  ...baseQuote,
-  configs: [
-    {
-      routingType: 'CLASSIC',
-      protocols: ['v3'],
-      gasPriceWei: '12',
-    },
-  ],
-});
+function makeClassicRequest(overrides: Partial<QuoteRequestBodyJSON>): ClassicRequest {
+  const requestInfo = Object.assign({}, BASE_REQUEST_INFO, overrides);
 
-export const QUOTE_REQUEST_DL = QuoteRequest.fromRequestBody({
-  ...baseQuote,
+  return parseQuoteRequests({
+    ...requestInfo,
+    configs: [
+      {
+        routingType: RoutingType.CLASSIC,
+        protocols: ['v3'],
+        gasPriceWei: '12',
+      },
+    ],
+  })[0] as ClassicRequest;
+}
+
+export const QUOTE_REQUEST_CLASSIC = makeClassicRequest({});
+
+function makeDutchLimitRequest(overrides: Partial<QuoteRequestBodyJSON>): DutchLimitRequest {
+  const requestInfo = Object.assign({}, BASE_REQUEST_INFO, overrides);
+  return parseQuoteRequests({
+    ...requestInfo,
+    configs: [
+      {
+        routingType: RoutingType.DUTCH_LIMIT,
+        offerer: OFFERER,
+        exclusivePeriodSecs: 12,
+        auctionPeriodSecs: 60,
+      },
+    ],
+  })[0] as DutchLimitRequest;
+}
+
+export const QUOTE_REQUEST_DL = makeDutchLimitRequest({});
+
+export const QUOTE_REQUEST_MULTI = parseQuoteRequests({
+  ...BASE_REQUEST_INFO,
   configs: [
     {
-      routingType: 'DUTCH_LIMIT',
+      routingType: RoutingType.DUTCH_LIMIT,
       offerer: OFFERER,
       exclusivePeriodSecs: 12,
       auctionPeriodSecs: 60,
     },
-  ],
-});
-
-export const QUOTE_REQUEST_MULTI = QuoteRequest.fromRequestBody({
-  ...baseQuote,
-  configs: [
     {
-      routingType: 'DUTCH_LIMIT',
-      offerer: OFFERER,
-      exclusivePeriodSecs: 12,
-      auctionPeriodSecs: 60,
-    },
-    {
-      routingType: 'CLASSIC',
+      routingType: RoutingType.CLASSIC,
       protocols: ['v3'],
       gasPriceWei: '12',
     },
@@ -56,20 +73,20 @@ export const QUOTE_REQUEST_MULTI = QuoteRequest.fromRequestBody({
 });
 
 const DL_QUOTE_DATA = {
-  routing: 'DUTCH_LIMIT',
+  routing: RoutingType.DUTCH_LIMIT,
   quote: {
     chainId: 1,
     requestId: 'requestId',
-    tokenIn: 'tokenIn',
+    tokenIn: TOKEN_IN,
     amountIn: '1',
-    tokenOut: 'tokenOut',
+    tokenOut: TOKEN_OUT,
     amountOut: '1',
-    offerer: 'offerer',
+    offerer: OFFERER,
   },
 };
 
 const CLASSIC_QUOTE_DATA = {
-  routing: 'CLASSIC',
+  routing: RoutingType.CLASSIC,
   quote: {
     quoteId: '1',
     amount: '1',
@@ -82,7 +99,7 @@ const CLASSIC_QUOTE_DATA = {
     gasUseEstimateQuote: '100',
     gasUseEstimateQuoteDecimals: '18',
     gasUseEstimateUSD: '100',
-    simulationStatus: 'asdf',
+    simulationStatus: 'start',
     gasPriceWei: '10000',
     blockNumber: '1234',
     route: [],
@@ -90,29 +107,28 @@ const CLASSIC_QUOTE_DATA = {
   },
 };
 
-export const DL_QUOTE_EXACT_IN_BETTER = buildQuoteResponse(
-  Object.assign({}, DL_QUOTE_DATA, { quote: { ...DL_QUOTE_DATA.quote, type: RoutingType.DUTCH_LIMIT, amountOut: '2' } })
-);
-export const DL_QUOTE_EXACT_IN_WORSE = buildQuoteResponse(
-  Object.assign({}, DL_QUOTE_DATA, { quote: { ...DL_QUOTE_DATA.quote, amountOut: '1' } })
-);
-export const DL_QUOTE_EXACT_OUT_BETTER = buildQuoteResponse(
-  Object.assign({}, DL_QUOTE_DATA, { quote: { ...DL_QUOTE_DATA.quote, amountIn: '1' } })
-);
-export const DL_QUOTE_EXACT_OUT_WORSE = buildQuoteResponse(
-  Object.assign({}, DL_QUOTE_DATA, { quote: { ...DL_QUOTE_DATA.quote, amountIn: '2' } })
-);
-export const CLASSIC_QUOTE_EXACT_IN_BETTER = buildQuoteResponse(
-  Object.assign({}, CLASSIC_QUOTE_DATA, { quote: { ...CLASSIC_QUOTE_DATA.quote, quote: '2' } })
-);
-export const CLASSIC_QUOTE_EXACT_IN_WORSE = buildQuoteResponse(
-  Object.assign({}, CLASSIC_QUOTE_DATA, { quote: { ...CLASSIC_QUOTE_DATA.quote, quote: '1' } })
-);
-export const CLASSIC_QUOTE_EXACT_OUT_BETTER = buildQuoteResponse(
-  Object.assign({}, CLASSIC_QUOTE_DATA, { quote: { ...CLASSIC_QUOTE_DATA.quote, quote: '1' } }),
-  TradeType.EXACT_OUTPUT
-);
-export const CLASSIC_QUOTE_EXACT_OUT_WORSE = buildQuoteResponse(
-  Object.assign({}, CLASSIC_QUOTE_DATA, { quote: { ...CLASSIC_QUOTE_DATA.quote, quote: '2' } }),
-  TradeType.EXACT_OUTPUT
-);
+function dlQuote(overrides: Partial<DutchLimitQuoteJSON>, type: string): Quote {
+  return buildQuoteResponse(
+    Object.assign({}, DL_QUOTE_DATA, {
+      quote: { ...DL_QUOTE_DATA.quote, type: RoutingType.DUTCH_LIMIT, ...overrides },
+    }),
+    makeDutchLimitRequest({ type })
+  );
+}
+
+function classicQuote(overrides: Partial<ClassicQuoteDataJSON>, type: string): Quote {
+  return buildQuoteResponse(
+    Object.assign({}, CLASSIC_QUOTE_DATA, { quote: { ...CLASSIC_QUOTE_DATA.quote, ...overrides } }),
+    makeClassicRequest({ type })
+  );
+}
+
+export const DL_QUOTE_EXACT_IN_BETTER = dlQuote({ amountOut: '2' }, 'EXACT_INPUT');
+export const DL_QUOTE_EXACT_IN_WORSE = dlQuote({ amountOut: '1' }, 'EXACT_INPUT');
+export const DL_QUOTE_EXACT_OUT_BETTER = dlQuote({ amountIn: '1' }, 'EXACT_OUTPUT');
+export const DL_QUOTE_EXACT_OUT_WORSE = dlQuote({ amountIn: '2' }, 'EXACT_OUTPUT');
+
+export const CLASSIC_QUOTE_EXACT_IN_BETTER = classicQuote({ quote: '2' }, 'EXACT_INPUT');
+export const CLASSIC_QUOTE_EXACT_IN_WORSE = classicQuote({ quote: '1' }, 'EXACT_INPUT');
+export const CLASSIC_QUOTE_EXACT_OUT_BETTER = classicQuote({ quote: '1' }, 'EXACT_OUTPUT');
+export const CLASSIC_QUOTE_EXACT_OUT_WORSE = classicQuote({ quote: '2' }, 'EXACT_OUTPUT');

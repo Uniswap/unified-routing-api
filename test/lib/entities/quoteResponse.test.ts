@@ -1,8 +1,12 @@
-import { TradeType } from '@uniswap/sdk-core';
-
-import { ClassicQuote, ClassicQuoteDataJSON, DutchLimitQuote, DutchLimitQuoteJSON } from '../../../lib/entities/quote';
-import { DutchLimitConfig, DutchLimitConfigJSON } from '../../../lib/entities/routing';
-import { AMOUNT_IN, CHAIN_IN_ID, DL_CONFIG, FILLER, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../constants';
+import {
+  ClassicQuote,
+  ClassicQuoteDataJSON,
+  DutchLimitQuote,
+  DutchLimitQuoteJSON,
+  DutchLimitRequest,
+} from '../../../lib/entities';
+import { AMOUNT_IN, CHAIN_IN_ID, FILLER, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../constants';
+import { CLASSIC_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_OUT_BETTER, QUOTE_REQUEST_DL } from '../../utils/fixtures';
 
 const DL_QUOTE_JSON: DutchLimitQuoteJSON = {
   chainId: CHAIN_IN_ID,
@@ -35,17 +39,14 @@ const CLASSIC_QUOTE_JSON: ClassicQuoteDataJSON = {
 };
 
 describe('QuoteResponse', () => {
-  let config: DutchLimitConfig;
-  beforeAll(() => {
-    config = DutchLimitConfig.fromRequestBody(DL_CONFIG as DutchLimitConfigJSON);
-  });
+  const config: DutchLimitRequest = QUOTE_REQUEST_DL;
 
   it('parses dutch limit quote from param-api properly', () => {
-    expect(() => DutchLimitQuote.fromResponseBodyAndConfig(config, DL_QUOTE_JSON)).not.toThrow();
+    expect(() => DutchLimitQuote.fromResponseBody(config, DL_QUOTE_JSON)).not.toThrow();
   });
 
   it('produces dutch limit order info from param-api respone and config', () => {
-    const quote = DutchLimitQuote.fromResponseBodyAndConfig(config, DL_QUOTE_JSON);
+    const quote = DutchLimitQuote.fromResponseBody(config, DL_QUOTE_JSON);
     expect(quote.toOrder()).toMatchObject({
       offerer: OFFERER,
       nonce: '100',
@@ -67,14 +68,14 @@ describe('QuoteResponse', () => {
   });
 
   it('parses classic quote exactInput', () => {
-    const quote = ClassicQuote.fromResponseBody(CLASSIC_QUOTE_JSON, TradeType.EXACT_INPUT);
+    const quote = ClassicQuote.fromResponseBody(CLASSIC_QUOTE_EXACT_IN_BETTER.request, CLASSIC_QUOTE_JSON);
     expect(quote.toJSON()).toEqual(CLASSIC_QUOTE_JSON);
     expect(quote.amountIn.toString()).toEqual(CLASSIC_QUOTE_JSON.amount);
     expect(quote.amountOut.toString()).toEqual(CLASSIC_QUOTE_JSON.quote);
   });
 
   it('parses classic quote exactOutput', () => {
-    const quote = ClassicQuote.fromResponseBody(CLASSIC_QUOTE_JSON, TradeType.EXACT_OUTPUT);
+    const quote = ClassicQuote.fromResponseBody(CLASSIC_QUOTE_EXACT_OUT_BETTER.request, CLASSIC_QUOTE_JSON);
     expect(quote.toJSON()).toEqual(CLASSIC_QUOTE_JSON);
     expect(quote.amountIn.toString()).toEqual(CLASSIC_QUOTE_JSON.quote);
     expect(quote.amountOut.toString()).toEqual(CLASSIC_QUOTE_JSON.amount);

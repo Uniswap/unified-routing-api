@@ -14,8 +14,8 @@ export class OnlyConfiguredQuotersFilter implements QuoteFilter {
     this.log = _log.child({ quoter: 'OnlyConfiguredQuotersFilter' });
   }
 
-  async filter(request: QuoteRequest, quotes: Quote[]): Promise<Quote[]> {
-    const configuredQuoters = request.configs.map((config) => config.routingType);
+  async filter(requests: QuoteRequest[], quotes: Quote[]): Promise<Quote[]> {
+    const configuredQuoters = requests.map((request) => request.routingType);
     return quotes.filter((quote) => {
       if (configuredQuoters.includes(quote.routingType)) {
         return true;

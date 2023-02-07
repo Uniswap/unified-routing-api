@@ -2,7 +2,7 @@ import { setGlobalLogger } from '@uniswap/smart-order-router';
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { default as bunyan, default as Logger } from 'bunyan';
 
-import { QuoteRequestDataJSON, RoutingType } from '../../entities';
+import { QuoteRequestBodyJSON, RoutingType } from '../../entities';
 import { CompoundFilter, OnlyConfiguredQuotersFilter, QuoteFilter } from '../../providers/filters';
 import { Quoter, RfqQuoter, RoutingApiQuoter } from '../../providers/quoters';
 import { checkDefined } from '../../util/preconditions';
@@ -17,7 +17,7 @@ export interface ContainerInjected {
   quoteFilter: QuoteFilter;
 }
 
-export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, QuoteRequestDataJSON, void> {
+export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void> {
   public async buildContainerInjected(): Promise<ContainerInjected> {
     const log: Logger = bunyan.createLogger({
       name: this.injectorName,
@@ -40,7 +40,7 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
 
   public async getRequestInjected(
     _containerInjected: ContainerInjected,
-    requestBody: QuoteRequestDataJSON,
+    requestBody: QuoteRequestBodyJSON,
     _requestQueryParams: void,
     _event: APIGatewayProxyEvent,
     context: Context,

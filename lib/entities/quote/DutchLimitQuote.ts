@@ -1,31 +1,26 @@
 import { DutchLimitOrderBuilder, DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
 import { BigNumber } from 'ethers';
 
-import { DutchLimitConfig, RoutingType } from '..';
+import { DutchLimitRequest, RoutingType } from '..';
 import { Quote, QuoteJSON } from '.';
 
-export type DutchLimitQuoteData = {
+export type DutchLimitQuoteJSON = {
   chainId: number;
   requestId: string;
   tokenIn: string;
-  amountIn: BigNumber;
+  amountIn: string;
   tokenOut: string;
-  amountOut: BigNumber;
+  amountOut: string;
   offerer: string;
   filler?: string;
-};
-
-export type DutchLimitQuoteJSON = Omit<DutchLimitQuoteData, 'amountIn' | 'amountOut'> & {
-  amountIn: string;
-  amountOut: string;
 };
 
 export class DutchLimitQuote implements Quote {
   public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
 
-  public static fromResponseBodyAndConfig(config: DutchLimitConfig, body: DutchLimitQuoteJSON): DutchLimitQuote {
+  public static fromResponseBody(request: DutchLimitRequest, body: DutchLimitQuoteJSON): DutchLimitQuote {
     return new DutchLimitQuote(
-      config,
+      request,
       body.chainId,
       body.requestId,
       body.tokenIn,
@@ -38,7 +33,7 @@ export class DutchLimitQuote implements Quote {
   }
 
   constructor(
-    public readonly config: DutchLimitConfig,
+    public readonly request: DutchLimitRequest,
     public readonly chainId: number,
     public readonly requestId: string,
     public readonly tokenIn: string,
@@ -59,10 +54,10 @@ export class DutchLimitQuote implements Quote {
 
     // TODO: properly handle timestamp related fields
     const order = orderBuilder
-      .startTime(startTime + this.config.exclusivePeriodSecs)
-      .endTime(startTime + this.config.exclusivePeriodSecs + this.config.auctionPeriodSecs)
-      .deadline(startTime + this.config.exclusivePeriodSecs + this.config.auctionPeriodSecs)
-      .offerer(this.config.offerer)
+      .startTime(startTime + this.request.config.exclusivePeriodSecs)
+      .endTime(startTime + this.request.config.exclusivePeriodSecs + this.request.config.auctionPeriodSecs)
+      .deadline(startTime + this.request.config.exclusivePeriodSecs + this.request.config.auctionPeriodSecs)
+      .offerer(this.request.config.offerer)
       .nonce(BigNumber.from(100)) // TODO: get nonce from gouda-service
       .input({
         token: this.tokenIn,
@@ -73,7 +68,7 @@ export class DutchLimitQuote implements Quote {
         token: this.tokenOut,
         startAmount: this.amountOut,
         endAmount: this.amountOut, // TODO: integrate slippageTolerance and do dutch decay
-        recipient: this.config.offerer,
+        recipient: this.request.config.offerer,
         isFeeOutput: false,
       })
       .build();
