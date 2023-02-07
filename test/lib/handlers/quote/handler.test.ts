@@ -1,10 +1,10 @@
 import { TradeType } from '@uniswap/sdk-core';
 import { default as Logger } from 'bunyan';
 
-import { Quote } from '../../../lib/entities';
-import { compareQuotes, getBestQuote, getQuotes } from '../../../lib/handlers/quote/handler';
-import { QuoterByRoutingType } from '../../../lib/handlers/quote/injector';
-import { Quoter } from '../../../lib/providers/quoters';
+import { Quote } from '../../../../lib/entities';
+import { compareQuotes, getBestQuote, getQuotes } from '../../../../lib/handlers/quote/handler';
+import { QuoterByRoutingType } from '../../../../lib/handlers/quote/injector';
+import { Quoter } from '../../../../lib/providers/quoters';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_IN_WORSE,
@@ -16,7 +16,7 @@ import {
   DL_QUOTE_EXACT_OUT_WORSE,
   QUOTE_REQUEST_DL,
   QUOTE_REQUEST_MULTI,
-} from '../../utils/fixtures';
+} from '../../../utils/fixtures';
 
 describe('QuoteHandler', () => {
   // silent logger in tests
@@ -82,6 +82,37 @@ describe('QuoteHandler', () => {
         quote: () => Promise.resolve(quote),
       };
     };
+
+    const nullQuoterMock = (): Quoter => {
+      return {
+        // eslint-disable-next-line no-unused-labels
+        quote: () => Promise.resolve(null),
+      };
+    };
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('returns null if the only specified quoter in config returns null', async () => {
+      const quoters: QuoterByRoutingType = {
+        CLASSIC: [quoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER)],
+        DUTCH_LIMIT: [nullQuoterMock()],
+      };
+      const quotes = await getQuotes(quoters, QUOTE_REQUEST_DL);
+      const bestQuote = await getBestQuote(QUOTE_REQUEST_DL, quotes);
+      expect(bestQuote).toBeNull();
+    });
+
+    it('only considers quoters that did not throw', async () => {
+      const quoters: QuoterByRoutingType = {
+        CLASSIC: [quoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER)],
+        DUTCH_LIMIT: [nullQuoterMock()],
+      };
+      const quotes = await getQuotes(quoters, QUOTE_REQUEST_MULTI);
+      const bestQuote = await getBestQuote(QUOTE_REQUEST_MULTI, quotes);
+      expect(bestQuote).toEqual(CLASSIC_QUOTE_EXACT_IN_BETTER);
+    });
 
     it('returns the best quote among two dutch limit quotes', async () => {
       const quoters: QuoterByRoutingType = {

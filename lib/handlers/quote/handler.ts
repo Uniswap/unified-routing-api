@@ -69,15 +69,17 @@ export async function getQuotes(
   quotersByRoutingType: QuoterByRoutingType,
   quoteRequest: QuoteRequest
 ): Promise<Quote[]> {
-  return await Promise.all(
-    quoteRequest.configs.flatMap((config) => {
-      const quoters = quotersByRoutingType[config.routingType];
-      if (!quoters) {
-        return [];
-      }
-      return quoters.map((q) => q.quote(quoteRequest, config));
-    })
-  );
+  return (
+    await Promise.all(
+      quoteRequest.configs.flatMap((config) => {
+        const quoters = quotersByRoutingType[config.routingType];
+        if (!quoters) {
+          return [];
+        }
+        return quoters.map((q) => q.quote(quoteRequest, config));
+      })
+    )
+  ).filter((r): r is Quote => !!r);
 }
 
 // determine and return the "best" quote of the given list
