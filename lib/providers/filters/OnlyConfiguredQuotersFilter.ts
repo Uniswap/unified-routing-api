@@ -1,6 +1,6 @@
 import Logger from 'bunyan';
 
-import { QuoteRequest, QuoteResponse } from '../../entities';
+import { QuoteRequest, Quote } from '../../entities';
 import { QuoteFilter } from '.';
 
 // filters out any quote responses that came from unconfigured quoters
@@ -14,14 +14,14 @@ export class OnlyConfiguredQuotersFilter implements QuoteFilter {
     this.log = _log.child({ quoter: 'OnlyConfiguredQuotersFilter' });
   }
 
-  async filter(request: QuoteRequest, quotes: QuoteResponse[]): Promise<QuoteResponse[]> {
+  async filter(request: QuoteRequest, quotes: Quote[]): Promise<Quote[]> {
     const configuredQuoters = request.configs.map((config) => config.routingType);
     return quotes.filter((quote) => {
-      if (configuredQuoters.includes(quote.routing)) {
+      if (configuredQuoters.includes(quote.routingType)) {
         return true;
       }
 
-      this.log.debug(`Removing quote from unconfigured quoter: ${quote.routing}`);
+      this.log.debug(`Removing quote from unconfigured quoter: ${quote.routingType}`);
       return false;
     });
   }

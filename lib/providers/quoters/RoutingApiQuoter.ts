@@ -3,8 +3,7 @@ import axios from 'axios';
 import Logger from 'bunyan';
 import querystring from 'querystring';
 
-import { QuoteRequest } from '../../entities/QuoteRequest';
-import { QuoteResponse } from '../../entities/QuoteResponse';
+import { QuoteRequest, Quote } from '../../entities';
 import { ClassicQuote } from '../../entities/quotes';
 import { ClassicConfig, RoutingConfig, RoutingType } from '../../entities/routing';
 import { Quoter, QuoterType } from './index';
@@ -17,7 +16,7 @@ export class RoutingApiQuoter implements Quoter {
     this.log = _log.child({ quoter: 'RoutingApiQuoter' });
   }
 
-  async quote(params: QuoteRequest, config: RoutingConfig): Promise<QuoteResponse> {
+  async quote(params: QuoteRequest, config: RoutingConfig): Promise<Quote> {
     this.log.info(params, 'quoteRequest');
     this.log.info(this.routingApiUrl, 'routingApiUrl');
 
@@ -28,7 +27,7 @@ export class RoutingApiQuoter implements Quoter {
       const req = this.buildRequest(params, config as ClassicConfig);
       this.log.info(req, 'routingApiReq');
       const response = await axios.get(this.buildRequest(params, config as ClassicConfig));
-      return new QuoteResponse(RoutingType.CLASSIC, ClassicQuote.fromResponseBody(response.data, params.type));
+      return ClassicQuote.fromResponseBody(response.data, params.type);
     } catch (e) {
       this.log.error(e, 'RoutingApiQuoterErr');
       throw e;

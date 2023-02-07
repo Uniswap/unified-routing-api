@@ -1,5 +1,4 @@
-import { QuoteRequest } from '../../entities/QuoteRequest';
-import { QuoteResponse } from '../../entities/QuoteResponse';
+import { QuoteRequest, Quote } from '../../entities';
 import { RoutingConfig } from '../../entities/routing';
 
 export * from './RfqQuoter';
@@ -11,5 +10,5 @@ export enum QuoterType {
 }
 
 export interface Quoter {
-  quote(params: QuoteRequest, config: RoutingConfig): Promise<QuoteResponse>;
+  quote(params: QuoteRequest, config: RoutingConfig): Promise<Quote>;
 }
