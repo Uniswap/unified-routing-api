@@ -27,9 +27,10 @@ export class QuoteHandler extends APIGLambdaHandler<
     log.info(requestBody, 'requestBody');
     const request = QuoteRequest.fromRequestBody(requestBody);
 
-    const quotes = await quoteFilter.filter(request, await getQuotes(quoters, request));
+    const quotes = await getQuotes(quoters, request);
+    const filtered = await quoteFilter.filter(request, quotes);
 
-    const bestQuote = await getBestQuote(request, quotes, log);
+    const bestQuote = await getBestQuote(request, filtered, log);
     if (!bestQuote) {
       return {
         statusCode: 404,
