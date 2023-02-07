@@ -2,9 +2,9 @@ import { setGlobalLogger } from '@uniswap/smart-order-router';
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { default as bunyan, default as Logger } from 'bunyan';
 
-import { QuoteRequestDataJSON } from '../../entities/QuoteRequest';
-import { RoutingType } from '../../entities/routing';
-import { Quoter, RfqQuoter, RoutingApiQuoter } from '../../quoters';
+import { QuoteRequestDataJSON, RoutingType } from '../../entities';
+import { CompoundFilter, OnlyConfiguredQuotersFilter, QuoteFilter } from '../../providers/filters';
+import { Quoter, RfqQuoter, RoutingApiQuoter } from '../../providers/quoters';
 import { checkDefined } from '../../util/preconditions';
 import { ApiInjector, ApiRInj } from '../base/api-handler';
 
@@ -14,6 +14,7 @@ export type QuoterByRoutingType = {
 
 export interface ContainerInjected {
   quoters: QuoterByRoutingType;
+  quoteFilter: QuoteFilter;
 }
 
 export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, QuoteRequestDataJSON, void> {
@@ -33,6 +34,7 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
         [RoutingType.DUTCH_LIMIT]: [new RfqQuoter(log, paramApiUrl)],
         [RoutingType.CLASSIC]: [new RoutingApiQuoter(log, routingApiUrl)],
       },
+      quoteFilter: new CompoundFilter([new OnlyConfiguredQuotersFilter(log)]),
     };
   }
 

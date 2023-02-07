@@ -3,10 +3,10 @@ import axios from 'axios';
 import Logger from 'bunyan';
 import querystring from 'querystring';
 
-import { QuoteRequest } from '../entities/QuoteRequest';
-import { QuoteResponse } from '../entities/QuoteResponse';
-import { ClassicQuote } from '../entities/quotes';
-import { ClassicConfig, RoutingConfig, RoutingType } from '../entities/routing';
+import { QuoteRequest } from '../../entities/QuoteRequest';
+import { QuoteResponse } from '../../entities/QuoteResponse';
+import { ClassicQuote } from '../../entities/quotes';
+import { ClassicConfig, RoutingConfig, RoutingType } from '../../entities/routing';
 import { Quoter, QuoterType } from './index';
 
 export class RoutingApiQuoter implements Quoter {
