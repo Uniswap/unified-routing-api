@@ -1,7 +1,7 @@
 import axios from 'axios';
 import Logger from 'bunyan';
 
-import { DutchLimitConfig, DutchLimitQuote, Quote, QuoteRequest, RoutingType } from '../../entities';
+import { DutchLimitQuote, DutchLimitRequest, Quote, RoutingType } from '../../entities';
 import { Quoter, QuoterType } from './index';
 
 export class RfqQuoter implements Quoter {
@@ -12,23 +12,23 @@ export class RfqQuoter implements Quoter {
     this.log = _log.child({ quoter: 'RfqQuoter' });
   }
 
-  async quote(params: QuoteRequest, config: DutchLimitConfig): Promise<Quote | null> {
-    this.log.info(params, 'quoteRequest');
+  async quote(request: DutchLimitRequest): Promise<Quote | null> {
+    this.log.info(request, 'quoteRequest');
     this.log.info(this.rfqUrl, 'rfqUrl');
 
-    if (config.routingType !== RoutingType.DUTCH_LIMIT) {
-      throw new Error(`Invalid routing config type: ${config.routingType}`);
+    if (request.routingType !== RoutingType.DUTCH_LIMIT) {
+      throw new Error(`Invalid routing config type: ${request.routingType}`);
     }
 
     try {
       const response = await axios.post(`${this.rfqUrl}quote`, {
-        chainId: params.tokenInChainId,
-        tokenIn: params.tokenIn,
-        amountIn: params.amount.toString(),
-        tokenOut: params.tokenOut,
-        offerer: config.offerer,
+        chainId: request.info.tokenInChainId,
+        tokenIn: request.info.tokenIn,
+        amountIn: request.info.amount.toString(),
+        tokenOut: request.info.tokenOut,
+        offerer: request.config.offerer,
       });
-      return DutchLimitQuote.fromResponseBodyAndConfig(config, response.data);
+      return DutchLimitQuote.fromResponseBody(request, response.data);
     } catch (e) {
       this.log.error(e, 'RfqQuoterErr');
       return null;

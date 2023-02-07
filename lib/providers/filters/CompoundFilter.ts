@@ -8,10 +8,10 @@ import { QuoteFilter } from '.';
 export class CompoundFilter implements QuoteFilter {
   constructor(private filters: QuoteFilter[]) {}
 
-  async filter(request: QuoteRequest, quotes: Quote[]): Promise<Quote[]> {
+  async filter(requests: QuoteRequest[], quotes: Quote[]): Promise<Quote[]> {
     let result: Quote[] = quotes;
     for (const filter of this.filters) {
-      result = await filter.filter(request, result);
+      result = await filter.filter(requests, result);
     }
     return result;
   }

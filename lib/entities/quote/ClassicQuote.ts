@@ -2,7 +2,7 @@ import { TradeType } from '@uniswap/sdk-core';
 import { MethodParameters } from '@uniswap/smart-order-router';
 import { BigNumber } from 'ethers';
 
-import { RoutingType } from '..';
+import { QuoteRequest, RoutingType } from '..';
 import { Quote } from '.';
 
 export type V2ReserveJSON = {
@@ -65,24 +65,24 @@ export type ClassicQuoteDataJSON = {
 export class ClassicQuote implements Quote {
   public routingType: RoutingType.CLASSIC = RoutingType.CLASSIC;
 
-  public static fromResponseBody(body: ClassicQuoteDataJSON, tradeType: TradeType): ClassicQuote {
-    return new ClassicQuote(body, tradeType);
+  public static fromResponseBody(request: QuoteRequest, body: ClassicQuoteDataJSON): ClassicQuote {
+    return new ClassicQuote(request, body);
   }
 
-  constructor(private quoteData: ClassicQuoteDataJSON, private tradeType: TradeType) {}
+  constructor(public request: QuoteRequest, private quoteData: ClassicQuoteDataJSON) {}
 
   public toJSON(): ClassicQuoteDataJSON {
     return this.quoteData;
   }
 
   public get amountOut(): BigNumber {
-    return this.tradeType === TradeType.EXACT_INPUT
+    return this.request.info.type === TradeType.EXACT_INPUT
       ? BigNumber.from(this.quoteData.quote)
       : BigNumber.from(this.quoteData.amount);
   }
 
   public get amountIn(): BigNumber {
-    return this.tradeType === TradeType.EXACT_OUTPUT
+    return this.request.info.type === TradeType.EXACT_OUTPUT
       ? BigNumber.from(this.quoteData.quote)
       : BigNumber.from(this.quoteData.amount);
   }

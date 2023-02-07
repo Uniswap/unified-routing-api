@@ -4,5 +4,5 @@ export * from './CompoundFilter';
 export * from './OnlyConfiguredQuotersFilter';
 
 export interface QuoteFilter {
-  filter(request: QuoteRequest, quotes: Quote[]): Promise<Quote[]>;
+  filter(requests: QuoteRequest[], quotes: Quote[]): Promise<Quote[]>;
 }

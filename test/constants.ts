@@ -1,4 +1,4 @@
-import { RoutingType } from '../lib/entities/routing';
+import { RoutingType } from '../lib/entities';
 
 export const CHAIN_IN_ID = 1;
 export const CHAIN_OUT_ID = 1;
