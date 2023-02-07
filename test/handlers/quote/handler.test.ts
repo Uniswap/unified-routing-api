@@ -87,8 +87,8 @@ describe('QuoteHandler', () => {
       const quoters: QuoterByRoutingType = {
         DUTCH_LIMIT: [quoterMock(DL_QUOTE_EXACT_IN_WORSE), quoterMock(DL_QUOTE_EXACT_IN_BETTER)],
       };
-      const quotes = await getQuotes(quoters, QUOTE_REQUEST_DL);
-      const bestQuote = await getBestQuote(QUOTE_REQUEST_DL, quotes);
+      const quotes = await getQuotes(quoters, [QUOTE_REQUEST_DL]);
+      const bestQuote = await getBestQuote(quotes);
       expect(bestQuote).toEqual(DL_QUOTE_EXACT_IN_BETTER);
     });
 
@@ -97,8 +97,8 @@ describe('QuoteHandler', () => {
         DUTCH_LIMIT: [quoterMock(DL_QUOTE_EXACT_IN_WORSE)],
         CLASSIC: [quoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER)],
       };
-      const quotes = await getQuotes(quoters, QUOTE_REQUEST_DL);
-      const bestQuote = await getBestQuote(QUOTE_REQUEST_DL, quotes);
+      const quotes = await getQuotes(quoters, [QUOTE_REQUEST_DL]);
+      const bestQuote = await getBestQuote(quotes);
       expect(bestQuote).toEqual(DL_QUOTE_EXACT_IN_WORSE);
     });
 
@@ -108,7 +108,7 @@ describe('QuoteHandler', () => {
         CLASSIC: [quoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER)],
       };
       const quotes = await getQuotes(quoters, QUOTE_REQUEST_MULTI);
-      const bestQuote = await getBestQuote(QUOTE_REQUEST_MULTI, quotes);
+      const bestQuote = await getBestQuote(quotes);
       expect(bestQuote).toEqual(CLASSIC_QUOTE_EXACT_IN_BETTER);
     });
 
@@ -118,7 +118,7 @@ describe('QuoteHandler', () => {
         CLASSIC: [quoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE)],
       };
       const quotes = await getQuotes(quoters, QUOTE_REQUEST_MULTI);
-      const bestQuote = await getBestQuote(QUOTE_REQUEST_MULTI, quotes);
+      const bestQuote = await getBestQuote(quotes);
       expect(bestQuote).toEqual(DL_QUOTE_EXACT_IN_BETTER);
     });
   });

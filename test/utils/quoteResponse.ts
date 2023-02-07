@@ -1,39 +1,35 @@
-import { TradeType } from '@uniswap/sdk-core';
-
 import {
   ClassicQuote,
   ClassicQuoteDataJSON,
-  DutchLimitConfig,
   DutchLimitQuote,
   DutchLimitQuoteJSON,
+  DutchLimitRequest,
   Quote,
-  RoutingConfig,
+  QuoteRequest,
   RoutingType,
 } from '../../lib/entities';
-import { DL_CONFIG } from '../constants';
 
 type ReceivedQuoteData = DutchLimitQuoteJSON | ClassicQuoteDataJSON;
 
 export function buildQuoteResponse(
   body: {
-    routing: string;
+    routing: RoutingType;
     quote: ReceivedQuoteData;
   },
-  tradeType: TradeType = TradeType.EXACT_INPUT,
-  config: RoutingConfig = DL_CONFIG as DutchLimitConfig
+  request: QuoteRequest
 ): Quote {
-  return parseQuote(body.routing, body.quote, tradeType, config);
+  return parseQuote(request, body.routing, body.quote);
 }
 
-function parseQuote(routing: string, quote: ReceivedQuoteData, tradeType: TradeType, config?: RoutingConfig): Quote {
+function parseQuote(request: QuoteRequest, routing: RoutingType, quote: ReceivedQuoteData): Quote {
   switch (routing) {
     case RoutingType.DUTCH_LIMIT:
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      return DutchLimitQuote.fromResponseBodyAndConfig(config! as DutchLimitConfig, quote as DutchLimitQuoteJSON);
+      return DutchLimitQuote.fromResponseBody(request as DutchLimitRequest, quote as DutchLimitQuoteJSON);
     case RoutingType.CLASSIC:
       // TODO: figure out how to determine tradetype from output JSON
       // also: is this parsing quote responses even needed outside of testing?
-      return ClassicQuote.fromResponseBody(quote as ClassicQuoteDataJSON, tradeType);
+      return ClassicQuote.fromResponseBody(request, quote as ClassicQuoteDataJSON);
     default:
       throw new Error(`Unknown routing type: ${routing}`);
   }
