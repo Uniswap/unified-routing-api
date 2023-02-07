@@ -12,7 +12,7 @@ export class RfqQuoter implements Quoter {
     this.log = _log.child({ quoter: 'RfqQuoter' });
   }
 
-  async quote(request: DutchLimitRequest): Promise<Quote> {
+  async quote(request: DutchLimitRequest): Promise<Quote | null> {
     this.log.info(request, 'quoteRequest');
     this.log.info(this.rfqUrl, 'rfqUrl');
 

@@ -9,5 +9,5 @@ export enum QuoterType {
 }
 
 export interface Quoter {
-  quote(params: QuoteRequest): Promise<Quote>;
+  quote(params: QuoteRequest): Promise<Quote | null>;
 }

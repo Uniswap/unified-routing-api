@@ -99,8 +99,8 @@ describe('QuoteHandler', () => {
         CLASSIC: [quoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER)],
         DUTCH_LIMIT: [nullQuoterMock()],
       };
-      const quotes = await getQuotes(quoters, QUOTE_REQUEST_DL);
-      const bestQuote = await getBestQuote(QUOTE_REQUEST_DL, quotes);
+      const quotes = await getQuotes(quoters, [QUOTE_REQUEST_DL]);
+      const bestQuote = await getBestQuote(quotes);
       expect(bestQuote).toBeNull();
     });
 
@@ -110,7 +110,7 @@ describe('QuoteHandler', () => {
         DUTCH_LIMIT: [nullQuoterMock()],
       };
       const quotes = await getQuotes(quoters, QUOTE_REQUEST_MULTI);
-      const bestQuote = await getBestQuote(QUOTE_REQUEST_MULTI, quotes);
+      const bestQuote = await getBestQuote(quotes);
       expect(bestQuote).toEqual(CLASSIC_QUOTE_EXACT_IN_BETTER);
     });
 

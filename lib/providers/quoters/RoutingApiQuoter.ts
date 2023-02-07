@@ -14,7 +14,7 @@ export class RoutingApiQuoter implements Quoter {
     this.log = _log.child({ quoter: 'RoutingApiQuoter' });
   }
 
-  async quote(request: ClassicRequest): Promise<Quote> {
+  async quote(request: ClassicRequest): Promise<Quote | null> {
     this.log.info(request, 'quoteRequest');
     this.log.info(this.routingApiUrl, 'routingApiUrl');
 

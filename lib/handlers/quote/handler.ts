@@ -66,7 +66,7 @@ export class QuoteHandler extends APIGLambdaHandler<
 
 // fetch quotes for all quote requests using the configured quoters
 export async function getQuotes(quotersByRoutingType: QuoterByRoutingType, requests: QuoteRequest[]): Promise<Quote[]> {
-  return await Promise.all(
+  const quotes = await Promise.all(
     requests.flatMap((request) => {
       const quoters = quotersByRoutingType[request.routingType];
       if (!quoters) {
@@ -75,6 +75,7 @@ export async function getQuotes(quotersByRoutingType: QuoterByRoutingType, reque
       return quoters.map((q) => q.quote(request));
     })
   );
+  return quotes.filter((q) => !!q) as Quote[];
 }
 
 // determine and return the "best" quote of the given list

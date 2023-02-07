@@ -1,25 +1,7 @@
 import { default as Logger } from 'bunyan';
 
-import { QuoteRequest } from '../../../lib/entities/QuoteRequest';
-import { ClassicConfig } from '../../../lib/entities/routing';
 import { RoutingApiQuoter } from '../../../lib/providers/quoters';
-
-const CLASSIC_QUOTE = QuoteRequest.fromRequestBody({
-  tokenInChainId: 1,
-  tokenOutChainId: 1,
-  requestId: '1',
-  tokenIn: '0x6b175474e89094c44da98b954eedeac495271d0f',
-  tokenOut: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-  amount: '1000000000000000000',
-  type: 'exactIn',
-  configs: [
-    {
-      routingType: 'CLASSIC',
-      gasPriceWei: '10000',
-      protocols: ['v3'],
-    },
-  ],
-});
+import { QUOTE_REQUEST_CLASSIC } from '../../utils/fixtures';
 
 describe('RoutingApiQuoter', () => {
   // silent logger in tests
@@ -29,8 +11,8 @@ describe('RoutingApiQuoter', () => {
 
   describe('buildRequest', () => {
     it('properly builds query string', () => {
-      expect(routingApiQuoter.buildRequest(CLASSIC_QUOTE, CLASSIC_QUOTE.configs[0] as ClassicConfig)).toEqual(
-        'https://api.uniswap.org/quote?tokenInAddress=0x6b175474e89094c44da98b954eedeac495271d0f&tokenInChainId=1&tokenOutAddress=0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2&tokenOutChainId=1&amount=1000000000000000000&type=exactOut&gasPriceWei=10000'
+      expect(routingApiQuoter.buildRequest(QUOTE_REQUEST_CLASSIC)).toEqual(
+        'https://api.uniswap.org/quote?tokenInAddress=0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984&tokenInChainId=1&tokenOutAddress=0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2&tokenOutChainId=1&amount=1000000000000000000&type=exactIn&gasPriceWei=12'
       );
     });
   });
