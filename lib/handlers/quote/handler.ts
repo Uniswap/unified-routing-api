@@ -62,10 +62,8 @@ export class QuoteHandler extends APIGLambdaHandler<
 // fetch quotes for all quote requests using the configured quoters
 export async function getQuotes(
   quotersByRoutingType: QuoterByRoutingType,
-  quoteRequest: QuoteRequest,
-  tradeType: TradeType,
-  log?: Logger
-): Promise<QuoteResponse | null> {
+  quoteRequest: QuoteRequest
+): Promise<QuoteResponse[]> {
   return (
     await Promise.all(
       quoteRequest.configs.flatMap((config) => {

@@ -2,11 +2,7 @@ import { default as Logger } from 'bunyan';
 
 import { QuoteRequest } from '../../../lib/entities/QuoteRequest';
 import { ClassicConfig } from '../../../lib/entities/routing';
-<<<<<<<< HEAD:test/providers/quoters/RoutingApiQuoter.test.ts
 import { RoutingApiQuoter } from '../../../lib/providers/quoters';
-========
-import { RoutingApiQuoter } from '../../../lib/quoters';
->>>>>>>> main:test/lib/quoters/RoutingApiQuoter.test.ts
 
 const CLASSIC_QUOTE = QuoteRequest.fromRequestBody({
   tokenInChainId: 1,

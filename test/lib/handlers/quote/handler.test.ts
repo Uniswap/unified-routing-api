@@ -1,10 +1,10 @@
 import { TradeType } from '@uniswap/sdk-core';
 import { default as Logger } from 'bunyan';
 
-import { QuoteResponse } from '../../../lib/entities/QuoteResponse';
-import { compareQuotes, getBestQuote, getQuotes } from '../../../lib/handlers/quote/handler';
-import { QuoterByRoutingType } from '../../../lib/handlers/quote/injector';
-import { Quoter } from '../../../lib/providers/quoters';
+import { QuoteResponse } from '../../../../lib/entities/QuoteResponse';
+import { compareQuotes, getBestQuote, getQuotes } from '../../../../lib/handlers/quote/handler';
+import { QuoterByRoutingType } from '../../../../lib/handlers/quote/injector';
+import { Quoter } from '../../../../lib/providers/quoters';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_IN_WORSE,
@@ -16,7 +16,7 @@ import {
   DL_QUOTE_EXACT_OUT_WORSE,
   QUOTE_REQUEST_DL,
   QUOTE_REQUEST_MULTI,
-} from '../../utils/fixtures';
+} from '../../../utils/fixtures';
 
 describe('QuoteHandler', () => {
   // silent logger in tests
@@ -99,7 +99,8 @@ describe('QuoteHandler', () => {
         CLASSIC: [quoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER)],
         DUTCH_LIMIT: [nullQuoterMock()],
       };
-      const bestQuote = await getBestQuote(quoters, QUOTE_REQUEST, TradeType.EXACT_INPUT, logger);
+      const quotes = await getQuotes(quoters, QUOTE_REQUEST_DL);
+      const bestQuote = await getBestQuote(QUOTE_REQUEST_DL, quotes);
       expect(bestQuote).toBeNull();
     });
 
@@ -108,7 +109,8 @@ describe('QuoteHandler', () => {
         CLASSIC: [quoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER)],
         DUTCH_LIMIT: [nullQuoterMock()],
       };
-      const bestQuote = await getBestQuote(quoters, QUOTE_REQUEST_MULTI, TradeType.EXACT_INPUT, logger);
+      const quotes = await getQuotes(quoters, QUOTE_REQUEST_MULTI);
+      const bestQuote = await getBestQuote(QUOTE_REQUEST_MULTI, quotes);
       expect(bestQuote).toEqual(CLASSIC_QUOTE_EXACT_IN_BETTER);
     });
 

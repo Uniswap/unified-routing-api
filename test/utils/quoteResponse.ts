@@ -1,6 +1,6 @@
 import { TradeType } from '@uniswap/sdk-core';
 
-import { QuoteResponse } from '../../../lib/entities/QuoteResponse';
+import { QuoteResponse } from '../../lib/entities/QuoteResponse';
 import {
   ClassicQuote,
   ClassicQuoteDataJSON,
@@ -8,9 +8,9 @@ import {
   DutchLimitQuoteJSON,
   Quote,
   ReceivedQuoteJSON,
-} from '../../../lib/entities/quotes';
-import { DutchLimitConfig, RoutingConfig, RoutingType } from '../../../lib/entities/routing';
-import { DL_CONFIG } from '../../constants';
+} from '../../lib/entities/quotes';
+import { DutchLimitConfig, RoutingConfig, RoutingType } from '../../lib/entities/routing';
+import { DL_CONFIG } from '../constants';
 
 export function buildQuoteResponse(
   body: {
