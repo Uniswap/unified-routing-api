@@ -122,6 +122,7 @@ export function quoteToResponse(quote: Quote, quoteByRoutingType: QuoteByRouting
 export function classicQuoteToUniswapXResponse(quote: ClassicQuote, xQuote: Quote) {
   if (xQuote.routingType === RoutingType.DUTCH_LIMIT) {
     const dlOrderJSON = (xQuote as DutchLimitQuote).toJSON() as DutchLimitOrderInfoJSON;
+    // starting at 2% better than routing-api quote
     if (quote.request.info.type === TradeType.EXACT_INPUT) {
       const outStartAmount = quote.amountOut.mul(102).div(100);
       const outEndAmount = outStartAmount
