@@ -165,6 +165,8 @@ describe('QuoteHandler', () => {
         CLASSIC_QUOTE_EXACT_IN_BETTER as ClassicQuote,
         DL_QUOTE_EXACT_IN_BETTER
       );
+      expect(goudaOrderJSON.routing).toEqual('DUTCH_LIMIT');
+      expect(goudaOrderJSON.quote).toMatchObject({});
     });
   });
 });

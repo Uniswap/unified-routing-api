@@ -62,18 +62,11 @@ export class GoudaOrderSizeFilter implements QuoteFilter {
       goudaResponse.request.info.type === TradeType.EXACT_INPUT ? goudaResponse.amountOut : goudaResponse.amountIn;
     const quoteGasThreshold = goudaQuote.mul(GAS_PROPORTION_THRESHOLD_BPS).div(BPS);
 
-    this.log.info({
-      gasUsedQuote: gasUsedQuote.toString(),
-      quoteGasThreshold: quoteGasThreshold.toString(),
-      routingApiQuoteGasAdjusted: routingApiQuoteGasAdjusted.toString(),
-      goudaQuote: goudaQuote.toString(),
-    });
-
     // the gas used is less than the threshold, so no filtering
     if (gasUsedQuote.lt(quoteGasThreshold)) {
       return quotes;
     }
-    this.log.info('Filtering UniswapX quote due to gas cost');
+    this.log.info({ goudaQuote: goudaQuote, gasUsedQuote: gasUsedQuote }, 'Removing UniswapX quote due to gas cost');
     return [routingApiResponse];
   }
 }

@@ -1,8 +1,8 @@
 import { Protocol } from '@uniswap/router-sdk';
 import { BigNumber } from 'ethers';
 
-import { DUMMY_GAS_WEI } from '../../constants';
 import { QuoteRequest, QuoteRequestInfo, RoutingType } from '.';
+import { DUMMY_GAS_WEI } from '../../constants';
 
 export interface ClassicConfig {
   protocols: Protocol[];

@@ -26,7 +26,7 @@ export interface QuoteRequestInfo {
   tokenOut: string;
   amount: BigNumber;
   type: TradeType;
-  slippageTolerance: string;
+  slippageTolerance?: string;
 }
 
 export interface QuoteRequestBodyJSON extends Omit<QuoteRequestInfo, 'type' | 'amount'> {

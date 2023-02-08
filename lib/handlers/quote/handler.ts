@@ -1,6 +1,5 @@
 import { DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
 import { TradeType } from '@uniswap/sdk-core';
-import Logger from 'bunyan';
 import { BigNumber } from 'ethers';
 import Joi from 'joi';
 
@@ -37,11 +36,9 @@ export class QuoteHandler extends APIGLambdaHandler<
     } = params;
 
     const requests = parseQuoteRequests(requestBody);
-    console.log({ reqs: requests }, 'all requests');
     const quoteByRoutingType: QuoteByRoutingType = {};
     const quotes = await getQuotes(quoters, requests);
     const filtered = await quoteFilter.filter(requests, quotes);
-    console.log({ filtered: filtered }, 'filtered quotes');
     filtered.forEach((q) => (quoteByRoutingType[q.request.routingType] = q));
 
     const bestQuote = await getBestQuote(filtered);
@@ -54,12 +51,9 @@ export class QuoteHandler extends APIGLambdaHandler<
     }
 
     log.info({ bestQuote: bestQuote }, 'bestQuote');
-    if (bestQuote.routingType === RoutingType.CLASSIC) {
-      console.log('CLASSIC!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-    }
     return {
       statusCode: 200,
-      body: quoteToResponse(bestQuote, quoteByRoutingType, log),
+      body: quoteToResponse(bestQuote, quoteByRoutingType),
     };
   }
 
@@ -115,11 +109,9 @@ const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
   return tradeType === TradeType.EXACT_INPUT ? quote.amountOut : quote.amountIn;
 };
 
-export function quoteToResponse(quote: Quote, quoteByRoutingType: QuoteByRoutingType, log?: Logger): QuoteResponseJSON {
-  log?.info({ quote: quote, qBRT: quoteByRoutingType }, 'quoteToResponse');
+export function quoteToResponse(quote: Quote, quoteByRoutingType: QuoteByRoutingType): QuoteResponseJSON {
   if (quote.routingType === RoutingType.CLASSIC && quoteByRoutingType[RoutingType.DUTCH_LIMIT]) {
-    log?.info({ dlQuote: quoteByRoutingType[RoutingType.DUTCH_LIMIT] }, 'dlQuote');
-    return classicQuoteToUniswapXResponse(quote as ClassicQuote, quoteByRoutingType[RoutingType.DUTCH_LIMIT], log);
+    return classicQuoteToUniswapXResponse(quote as ClassicQuote, quoteByRoutingType[RoutingType.DUTCH_LIMIT]);
   }
   return {
     routing: quote.routingType,
@@ -127,15 +119,13 @@ export function quoteToResponse(quote: Quote, quoteByRoutingType: QuoteByRouting
   };
 }
 
-export function classicQuoteToUniswapXResponse(quote: ClassicQuote, xQuote: Quote, log?: Logger) {
-  log?.info({ quote: quote }, 'classicQuoteToUniswapXResponse');
+export function classicQuoteToUniswapXResponse(quote: ClassicQuote, xQuote: Quote) {
   if (xQuote.routingType === RoutingType.DUTCH_LIMIT) {
     const dlOrderJSON = (xQuote as DutchLimitQuote).toJSON() as DutchLimitOrderInfoJSON;
     const outStartAmount = quote.amountOut.mul(102).div(100);
     const outEndAmount = outStartAmount
       .mul(BigNumber.from(THOUSAND_FIXED_POINT).sub(BigNumber.from(xQuote.request.info.slippageTolerance)))
       .div(THOUSAND_FIXED_POINT);
-    console.log('outEndAmount', outEndAmount.toString());
     return {
       routing: RoutingType.DUTCH_LIMIT,
       quote: {

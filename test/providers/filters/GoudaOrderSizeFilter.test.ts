@@ -42,10 +42,7 @@ describe('GoudaOrderSizeFilter', () => {
 
     it('filters if amountOut == gas used', async () => {
       const amountOut = ethers.utils.parseEther('1');
-      const classicQuote = createClassicQuote(
-        { quote: amountOut.toString(), quoteGasAdjusted: amountOut.sub(1).toString() },
-        'EXACT_INPUT'
-      );
+      const classicQuote = createClassicQuote({ quote: amountOut.toString(), quoteGasAdjusted: '1' }, 'EXACT_INPUT');
       const filtered = await filter.filter(QUOTE_REQUEST_MULTI, [classicQuote, DL_QUOTE_EXACT_IN_BETTER]);
       expect(filtered.length).toEqual(1);
       expect(filtered[0]).toEqual(classicQuote);
