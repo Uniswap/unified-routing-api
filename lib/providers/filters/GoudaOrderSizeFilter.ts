@@ -2,8 +2,8 @@ import { TradeType } from '@uniswap/sdk-core';
 import Logger from 'bunyan';
 import { BigNumber } from 'ethers';
 
-import { ClassicQuoteDataJSON, Quote, QuoteRequest, RoutingType } from '../../entities';
 import { QuoteFilter } from '.';
+import { ClassicQuoteDataJSON, Quote, QuoteRequest, RoutingType } from '../../entities';
 
 // if the gas is greater than this proportion of the whole trade size
 // then we will not route the order
@@ -62,11 +62,18 @@ export class GoudaOrderSizeFilter implements QuoteFilter {
       goudaResponse.request.info.type === TradeType.EXACT_INPUT ? goudaResponse.amountOut : goudaResponse.amountIn;
     const quoteGasThreshold = goudaQuote.mul(GAS_PROPORTION_THRESHOLD_BPS).div(BPS);
 
+    this.log.info({
+      gasUsedQuote: gasUsedQuote.toString(),
+      quoteGasThreshold: quoteGasThreshold.toString(),
+      routingApiQuoteGasAdjusted: routingApiQuoteGasAdjusted.toString(),
+      goudaQuote: goudaQuote.toString(),
+    });
+
     // the gas used is less than the threshold, so no filtering
     if (gasUsedQuote.lt(quoteGasThreshold)) {
       return quotes;
     }
-
+    this.log.info('Filtering UniswapX quote due to gas cost');
     return [routingApiResponse];
   }
 }

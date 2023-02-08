@@ -39,7 +39,7 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
         [RoutingType.DUTCH_LIMIT]: [new RfqQuoter(log, paramApiUrl)],
         [RoutingType.CLASSIC]: [new RoutingApiQuoter(log, routingApiUrl)],
       },
-      quoteFilter: new CompoundFilter([new GoudaOrderSizeFilter(log), new OnlyConfiguredQuotersFilter(log)]),
+      quoteFilter: new CompoundFilter([new OnlyConfiguredQuotersFilter(log)]),
     };
   }
 

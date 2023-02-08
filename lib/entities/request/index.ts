@@ -1,6 +1,7 @@
 import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber } from 'ethers';
 
+import { DEFAULT_SLIPPAGE_TOLERANCE } from '../../constants';
 import { ClassicConfig, ClassicConfigJSON, ClassicRequest } from './ClassicRequest';
 import { DutchLimitConfig, DutchLimitConfigJSON, DutchLimitRequest } from './DutchLimitRequest';
 
@@ -25,7 +26,7 @@ export interface QuoteRequestInfo {
   tokenOut: string;
   amount: BigNumber;
   type: TradeType;
-  slippageTolerance?: string;
+  slippageTolerance: string;
 }
 
 export interface QuoteRequestBodyJSON extends Omit<QuoteRequestInfo, 'type' | 'amount'> {
@@ -50,7 +51,7 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON): QuoteRequest[] {
     tokenOut: body.tokenOut,
     amount: BigNumber.from(body.amount),
     type: TradeType[body.type as keyof typeof TradeType],
-    slippageTolerance: body.slippageTolerance,
+    slippageTolerance: body.slippageTolerance ?? DEFAULT_SLIPPAGE_TOLERANCE,
   };
 
   return body.configs.flatMap((config) => {

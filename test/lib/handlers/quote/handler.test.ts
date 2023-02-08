@@ -1,8 +1,13 @@
 import { TradeType } from '@uniswap/sdk-core';
 import { default as Logger } from 'bunyan';
 
-import { Quote } from '../../../../lib/entities';
-import { compareQuotes, getBestQuote, getQuotes } from '../../../../lib/handlers/quote/handler';
+import { ClassicQuote, Quote } from '../../../../lib/entities';
+import {
+  classicQuoteToUniswapXResponse,
+  compareQuotes,
+  getBestQuote,
+  getQuotes,
+} from '../../../../lib/handlers/quote/handler';
 import { QuoterByRoutingType } from '../../../../lib/handlers/quote/injector';
 import { Quoter } from '../../../../lib/providers/quoters';
 import {
@@ -151,6 +156,15 @@ describe('QuoteHandler', () => {
       const quotes = await getQuotes(quoters, QUOTE_REQUEST_MULTI);
       const bestQuote = await getBestQuote(quotes);
       expect(bestQuote).toEqual(DL_QUOTE_EXACT_IN_BETTER);
+    });
+  });
+
+  describe('classicToUniswapX', () => {
+    it('uses classic quote to build gouda order', () => {
+      const goudaOrderJSON = classicQuoteToUniswapXResponse(
+        CLASSIC_QUOTE_EXACT_IN_BETTER as ClassicQuote,
+        DL_QUOTE_EXACT_IN_BETTER
+      );
     });
   });
 });

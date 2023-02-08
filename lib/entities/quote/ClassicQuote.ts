@@ -2,8 +2,7 @@ import { TradeType } from '@uniswap/sdk-core';
 import { MethodParameters } from '@uniswap/smart-order-router';
 import { BigNumber } from 'ethers';
 
-import { QuoteRequest, RoutingType } from '..';
-import { Quote } from '.';
+import { Quote, QuoteRequest, RoutingType } from '..';
 
 export type V2ReserveJSON = {
   token: TokenInRouteJSON;
