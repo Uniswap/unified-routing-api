@@ -1,11 +1,8 @@
-import { DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
 import { TradeType } from '@uniswap/sdk-core';
-import { BigNumber } from 'ethers';
+import Logger from 'bunyan';
 import Joi from 'joi';
 
-import { THOUSAND_FIXED_POINT } from '../../constants';
-import { ClassicQuote, parseQuoteRequests, Quote, QuoteJSON, QuoteRequest, QuoteRequestBodyJSON } from '../../entities';
-import { DutchLimitQuote } from '../../entities/quote/DutchLimitQuote';
+import { parseQuoteRequests, Quote, QuoteJSON, QuoteRequest, QuoteRequestBodyJSON } from '../../entities';
 import { RoutingType } from '../../entities/request/index';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
@@ -32,16 +29,16 @@ export class QuoteHandler extends APIGLambdaHandler<
     const {
       requestInjected: { log },
       requestBody,
-      containerInjected: { quoters, quoteFilter },
+      containerInjected: { quoters, quoteTransformer },
     } = params;
 
     const requests = parseQuoteRequests(requestBody);
     const quoteByRoutingType: QuoteByRoutingType = {};
     const quotes = await getQuotes(quoters, requests);
-    const filtered = await quoteFilter.filter(requests, quotes);
-    filtered.forEach((q) => (quoteByRoutingType[q.request.routingType] = q));
+    const transformed = await quoteTransformer.transform(requests, quotes);
+    transformed.forEach((q) => (quoteByRoutingType[q.request.routingType] = q));
 
-    const bestQuote = await getBestQuote(filtered);
+    const bestQuote = await getBestQuote(transformed);
     if (!bestQuote) {
       return {
         statusCode: 404,
@@ -50,10 +47,10 @@ export class QuoteHandler extends APIGLambdaHandler<
       };
     }
 
-    log.info({ bestQuote: bestQuote }, 'bestQuote');
+    log.info({ bestQuote: bestQuote }, 'bestQuote to response');
     return {
       statusCode: 200,
-      body: quoteToResponse(bestQuote, quoteByRoutingType),
+      body: quoteToResponse(bestQuote, log),
     };
   }
 
@@ -109,57 +106,10 @@ const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
   return tradeType === TradeType.EXACT_INPUT ? quote.amountOut : quote.amountIn;
 };
 
-export function quoteToResponse(quote: Quote, quoteByRoutingType: QuoteByRoutingType): QuoteResponseJSON {
-  if (quote.routingType === RoutingType.CLASSIC && quoteByRoutingType[RoutingType.DUTCH_LIMIT]) {
-    return classicQuoteToUniswapXResponse(quote as ClassicQuote, quoteByRoutingType[RoutingType.DUTCH_LIMIT]);
-  }
+export function quoteToResponse(quote: Quote, log?: Logger): QuoteResponseJSON {
+  log?.info({ toJSON: quote.toJSON() }, 'quote.toJSON()');
   return {
     routing: quote.routingType,
     quote: quote.toJSON(),
   };
-}
-
-export function classicQuoteToUniswapXResponse(quote: ClassicQuote, xQuote: Quote) {
-  if (xQuote.routingType === RoutingType.DUTCH_LIMIT) {
-    const dlOrderJSON = (xQuote as DutchLimitQuote).toJSON() as DutchLimitOrderInfoJSON;
-    // starting at 2% better than routing-api quote
-    if (quote.request.info.type === TradeType.EXACT_INPUT) {
-      const outStartAmount = quote.amountOut.mul(102).div(100);
-      const outEndAmount = outStartAmount
-        .mul(THOUSAND_FIXED_POINT.sub(BigNumber.from(xQuote.request.info.slippageTolerance)))
-        .div(THOUSAND_FIXED_POINT);
-
-      return {
-        routing: RoutingType.DUTCH_LIMIT,
-        quote: {
-          ...dlOrderJSON,
-          outputs: [
-            {
-              ...dlOrderJSON.outputs[0],
-              startAmount: outStartAmount.toString(),
-              endAmount: outEndAmount.toString(),
-            },
-          ],
-        },
-      };
-    } else {
-      const inStartAmount = quote.amountIn.mul(98).div(100);
-      const inEndAmount = inStartAmount
-        .mul(THOUSAND_FIXED_POINT.add(BigNumber.from(xQuote.request.info.slippageTolerance)))
-        .div(THOUSAND_FIXED_POINT);
-      return {
-        routing: RoutingType.DUTCH_LIMIT,
-        quote: {
-          ...dlOrderJSON,
-          input: {
-            ...dlOrderJSON.input,
-            startAmount: inStartAmount.toString(),
-            endAmount: inEndAmount.toString(),
-          },
-        },
-      };
-    }
-  } else {
-    throw new Error(`Unsupported routing type ${xQuote.routingType}`);
-  }
 }

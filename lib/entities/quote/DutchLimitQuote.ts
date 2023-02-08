@@ -1,8 +1,11 @@
 import { DutchLimitOrderBuilder, DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
+import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber } from 'ethers';
 
 import { Quote, QuoteJSON } from '.';
 import { DutchLimitRequest, RoutingType } from '..';
+import { THOUSAND_FIXED_POINT } from '../../constants';
+import { ClassicQuote } from './ClassicQuote';
 
 export type DutchLimitQuoteJSON = {
   chainId: number;
@@ -44,6 +47,62 @@ export class DutchLimitQuote implements Quote {
     public readonly filler?: string
   ) {}
 
+  public static fromClassicQuote(request: DutchLimitRequest, quote: ClassicQuote): DutchLimitQuote {
+    if (request.info.type === TradeType.EXACT_INPUT) {
+      return new DutchLimitQuote(
+        request,
+        request.info.tokenInChainId,
+        request.info.requestId,
+        request.info.tokenIn,
+        request.info.amount, // fixed amountIn
+        quote.request.info.tokenOut,
+        quote.amountOut.mul(102).div(100),
+        request.config.offerer,
+        ''
+      );
+    } else {
+      return new DutchLimitQuote(
+        request,
+        request.info.tokenInChainId,
+        request.info.requestId,
+        request.info.tokenIn,
+        quote.amountIn.mul(98).div(100),
+        quote.request.info.tokenOut,
+        request.info.amount, // fixed amountOut
+        request.config.offerer,
+        ''
+      );
+    }
+  }
+
+  public transformWithClassicQuote(quote: ClassicQuote): DutchLimitQuote {
+    if (this.request.info.type === TradeType.EXACT_INPUT) {
+      return new DutchLimitQuote(
+        this.request,
+        this.chainId,
+        this.requestId,
+        this.tokenIn,
+        this.amountIn,
+        quote.request.info.tokenOut,
+        quote.amountOut.mul(102).div(100),
+        this.offerer,
+        ''
+      );
+    } else {
+      return new DutchLimitQuote(
+        this.request,
+        this.chainId,
+        this.requestId,
+        this.tokenIn,
+        quote.amountIn.mul(98).div(100),
+        quote.request.info.tokenOut,
+        this.amountOut,
+        this.offerer,
+        ''
+      );
+    }
+  }
+
   public toJSON(): QuoteJSON {
     return this.toOrder();
   }
@@ -54,7 +113,21 @@ export class DutchLimitQuote implements Quote {
     // TODO: get nonce from gouda-service to get gas benefit of same-word nonces
     const nonce = BigNumber.from(Math.floor(Math.random() * 100000000000000));
 
-    // TODO: properly handle timestamp related fields
+    let endAmount;
+    if (this.request.info.type === TradeType.EXACT_INPUT) {
+      endAmount = this.amountOut
+        .mul(THOUSAND_FIXED_POINT.sub(BigNumber.from(this.request.info.slippageTolerance)))
+        .div(THOUSAND_FIXED_POINT);
+      console.log({
+        endAmount: endAmount.toString(),
+        slippage: this.request.info.slippageTolerance!.toString(),
+      });
+    } else {
+      endAmount = this.amountIn
+        .mul(THOUSAND_FIXED_POINT.add(BigNumber.from(this.request.info.slippageTolerance)))
+        .div(THOUSAND_FIXED_POINT);
+    }
+
     const order = orderBuilder
       .startTime(startTime + this.request.config.exclusivePeriodSecs)
       .endTime(startTime + this.request.config.exclusivePeriodSecs + this.request.config.auctionPeriodSecs)
@@ -64,12 +137,12 @@ export class DutchLimitQuote implements Quote {
       .input({
         token: this.tokenIn,
         startAmount: this.amountIn,
-        endAmount: this.amountIn,
+        endAmount: this.request.info.type === TradeType.EXACT_INPUT ? this.amountIn : endAmount,
       })
       .output({
         token: this.tokenOut,
         startAmount: this.amountOut,
-        endAmount: this.amountOut, // TODO: integrate slippageTolerance and do dutch decay
+        endAmount: this.request.info.type === TradeType.EXACT_INPUT ? endAmount : this.amountOut,
         recipient: this.request.config.offerer,
         isFeeOutput: false,
       })
