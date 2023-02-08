@@ -122,23 +122,42 @@ export function quoteToResponse(quote: Quote, quoteByRoutingType: QuoteByRouting
 export function classicQuoteToUniswapXResponse(quote: ClassicQuote, xQuote: Quote) {
   if (xQuote.routingType === RoutingType.DUTCH_LIMIT) {
     const dlOrderJSON = (xQuote as DutchLimitQuote).toJSON() as DutchLimitOrderInfoJSON;
-    const outStartAmount = quote.amountOut.mul(102).div(100);
-    const outEndAmount = outStartAmount
-      .mul(BigNumber.from(THOUSAND_FIXED_POINT).sub(BigNumber.from(xQuote.request.info.slippageTolerance)))
-      .div(THOUSAND_FIXED_POINT);
-    return {
-      routing: RoutingType.DUTCH_LIMIT,
-      quote: {
-        ...dlOrderJSON,
-        outputs: [
-          {
-            ...dlOrderJSON.outputs[0],
-            startAmount: outStartAmount.toString(),
-            endAmount: outEndAmount.toString(),
+    if (quote.request.info.type === TradeType.EXACT_INPUT) {
+      const outStartAmount = quote.amountOut.mul(102).div(100);
+      const outEndAmount = outStartAmount
+        .mul(THOUSAND_FIXED_POINT.sub(BigNumber.from(xQuote.request.info.slippageTolerance)))
+        .div(THOUSAND_FIXED_POINT);
+
+      return {
+        routing: RoutingType.DUTCH_LIMIT,
+        quote: {
+          ...dlOrderJSON,
+          outputs: [
+            {
+              ...dlOrderJSON.outputs[0],
+              startAmount: outStartAmount.toString(),
+              endAmount: outEndAmount.toString(),
+            },
+          ],
+        },
+      };
+    } else {
+      const inStartAmount = quote.amountIn.mul(98).div(100);
+      const inEndAmount = inStartAmount
+        .mul(THOUSAND_FIXED_POINT.add(BigNumber.from(xQuote.request.info.slippageTolerance)))
+        .div(THOUSAND_FIXED_POINT);
+      return {
+        routing: RoutingType.DUTCH_LIMIT,
+        quote: {
+          ...dlOrderJSON,
+          input: {
+            ...dlOrderJSON.input,
+            startAmount: inStartAmount.toString(),
+            endAmount: inEndAmount.toString(),
           },
-        ],
-      },
-    };
+        },
+      };
+    }
   } else {
     throw new Error(`Unsupported routing type ${xQuote.routingType}`);
   }
