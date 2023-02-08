@@ -1,3 +1,5 @@
+import { BigNumber } from 'ethers';
+
 import {
   ClassicQuote,
   ClassicQuoteDataJSON,
@@ -49,7 +51,6 @@ describe('QuoteResponse', () => {
     const quote = DutchLimitQuote.fromResponseBody(config, DL_QUOTE_JSON);
     expect(quote.toOrder()).toMatchObject({
       offerer: OFFERER,
-      nonce: '100',
       input: {
         token: TOKEN_IN,
         startAmount: AMOUNT_IN,
@@ -65,6 +66,8 @@ describe('QuoteResponse', () => {
         },
       ],
     });
+
+    expect(BigNumber.from(quote.toOrder().nonce).gt(0)).toBeTruthy();
   });
 
   it('parses classic quote exactInput', () => {

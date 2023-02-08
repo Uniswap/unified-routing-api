@@ -51,6 +51,8 @@ export class DutchLimitQuote implements Quote {
   public toOrder(): DutchLimitOrderInfoJSON {
     const orderBuilder = new DutchLimitOrderBuilder(this.chainId);
     const startTime = Math.floor(Date.now() / 1000);
+    // TODO: get nonce from gouda-service to get gas benefit of same-word nonces
+    const nonce = BigNumber.from(Math.floor(Math.random() * 100000000000000));
 
     // TODO: properly handle timestamp related fields
     const order = orderBuilder
@@ -58,7 +60,7 @@ export class DutchLimitQuote implements Quote {
       .endTime(startTime + this.request.config.exclusivePeriodSecs + this.request.config.auctionPeriodSecs)
       .deadline(startTime + this.request.config.exclusivePeriodSecs + this.request.config.auctionPeriodSecs)
       .offerer(this.request.config.offerer)
-      .nonce(BigNumber.from(100)) // TODO: get nonce from gouda-service
+      .nonce(nonce)
       .input({
         token: this.tokenIn,
         startAmount: this.amountIn,
