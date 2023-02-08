@@ -52,7 +52,7 @@ export class DutchLimitQuote implements Quote {
     const orderBuilder = new DutchLimitOrderBuilder(this.chainId);
     const startTime = Math.floor(Date.now() / 1000);
     // TODO: get nonce from gouda-service to get gas benefit of same-word nonces
-    const nonce = BigNumber.from(Math.floor(Math.random() * 100000000000000))
+    const nonce = BigNumber.from(Math.floor(Math.random() * 100000000000000));
 
     // TODO: properly handle timestamp related fields
     const order = orderBuilder
