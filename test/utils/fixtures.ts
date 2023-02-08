@@ -107,7 +107,7 @@ const CLASSIC_QUOTE_DATA = {
   },
 };
 
-function dlQuote(overrides: Partial<DutchLimitQuoteJSON>, type: string): Quote {
+export function createDutchLimitQuote(overrides: Partial<DutchLimitQuoteJSON>, type: string): Quote {
   return buildQuoteResponse(
     Object.assign({}, DL_QUOTE_DATA, {
       quote: { ...DL_QUOTE_DATA.quote, type: RoutingType.DUTCH_LIMIT, ...overrides },
@@ -116,19 +116,19 @@ function dlQuote(overrides: Partial<DutchLimitQuoteJSON>, type: string): Quote {
   );
 }
 
-function classicQuote(overrides: Partial<ClassicQuoteDataJSON>, type: string): Quote {
+export function createClassicQuote(overrides: Partial<ClassicQuoteDataJSON>, type: string): Quote {
   return buildQuoteResponse(
     Object.assign({}, CLASSIC_QUOTE_DATA, { quote: { ...CLASSIC_QUOTE_DATA.quote, ...overrides } }),
     makeClassicRequest({ type })
   );
 }
 
-export const DL_QUOTE_EXACT_IN_BETTER = dlQuote({ amountOut: '2' }, 'EXACT_INPUT');
-export const DL_QUOTE_EXACT_IN_WORSE = dlQuote({ amountOut: '1' }, 'EXACT_INPUT');
-export const DL_QUOTE_EXACT_OUT_BETTER = dlQuote({ amountIn: '1' }, 'EXACT_OUTPUT');
-export const DL_QUOTE_EXACT_OUT_WORSE = dlQuote({ amountIn: '2' }, 'EXACT_OUTPUT');
+export const DL_QUOTE_EXACT_IN_BETTER = createDutchLimitQuote({ amountOut: '2' }, 'EXACT_INPUT');
+export const DL_QUOTE_EXACT_IN_WORSE = createDutchLimitQuote({ amountOut: '1' }, 'EXACT_INPUT');
+export const DL_QUOTE_EXACT_OUT_BETTER = createDutchLimitQuote({ amountIn: '1' }, 'EXACT_OUTPUT');
+export const DL_QUOTE_EXACT_OUT_WORSE = createDutchLimitQuote({ amountIn: '2' }, 'EXACT_OUTPUT');
 
-export const CLASSIC_QUOTE_EXACT_IN_BETTER = classicQuote({ quote: '2' }, 'EXACT_INPUT');
-export const CLASSIC_QUOTE_EXACT_IN_WORSE = classicQuote({ quote: '1' }, 'EXACT_INPUT');
-export const CLASSIC_QUOTE_EXACT_OUT_BETTER = classicQuote({ quote: '1' }, 'EXACT_OUTPUT');
-export const CLASSIC_QUOTE_EXACT_OUT_WORSE = classicQuote({ quote: '2' }, 'EXACT_OUTPUT');
+export const CLASSIC_QUOTE_EXACT_IN_BETTER = createClassicQuote({ quote: '2' }, 'EXACT_INPUT');
+export const CLASSIC_QUOTE_EXACT_IN_WORSE = createClassicQuote({ quote: '1' }, 'EXACT_INPUT');
+export const CLASSIC_QUOTE_EXACT_OUT_BETTER = createClassicQuote({ quote: '1' }, 'EXACT_OUTPUT');
+export const CLASSIC_QUOTE_EXACT_OUT_WORSE = createClassicQuote({ quote: '2' }, 'EXACT_OUTPUT');

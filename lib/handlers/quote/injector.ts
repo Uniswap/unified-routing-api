@@ -3,7 +3,12 @@ import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { default as bunyan, default as Logger } from 'bunyan';
 
 import { QuoteRequestBodyJSON, RoutingType } from '../../entities';
-import { CompoundFilter, OnlyConfiguredQuotersFilter, QuoteFilter } from '../../providers/filters';
+import {
+  CompoundFilter,
+  GoudaOrderSizeFilter,
+  OnlyConfiguredQuotersFilter,
+  QuoteFilter,
+} from '../../providers/filters';
 import { Quoter, RfqQuoter, RoutingApiQuoter } from '../../providers/quoters';
 import { checkDefined } from '../../util/preconditions';
 import { ApiInjector, ApiRInj } from '../base/api-handler';
@@ -34,7 +39,7 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
         [RoutingType.DUTCH_LIMIT]: [new RfqQuoter(log, paramApiUrl)],
         [RoutingType.CLASSIC]: [new RoutingApiQuoter(log, routingApiUrl)],
       },
-      quoteFilter: new CompoundFilter([new OnlyConfiguredQuotersFilter(log)]),
+      quoteFilter: new CompoundFilter([new GoudaOrderSizeFilter(log), new OnlyConfiguredQuotersFilter(log)]),
     };
   }
 
