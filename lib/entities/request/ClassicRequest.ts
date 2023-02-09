@@ -1,8 +1,8 @@
 import { Protocol } from '@uniswap/router-sdk';
 import { BigNumber } from 'ethers';
 
-import { DUMMY_GAS_WEI } from '../../constants';
 import { QuoteRequest, QuoteRequestInfo, RoutingType } from '.';
+import { DUMMY_GAS_WEI } from '../../constants';
 
 export interface ClassicConfig {
   protocols: Protocol[];
@@ -41,6 +41,7 @@ export class ClassicRequest implements QuoteRequest {
             return [];
           }
         }),
+        slippageTolerance: body.slippageTolerance,
         gasPriceWei: body.gasPriceWei ?? DUMMY_GAS_WEI,
         permitAmount: body.permitAmount ? BigNumber.from(body.permitAmount) : undefined,
       })
