@@ -16,7 +16,7 @@ import {
 
 type QuoteByRoutingType = { [key in RoutingType]?: Quote };
 
-describe('SyntheticGoudaTransformer', () => {
+describe('SyntheticUniswapXTransformer', () => {
   const logger = Logger.createLogger({ name: 'test' });
   logger.level(Logger.FATAL);
   const transformer = new SyntheticUniswapXTransformer(logger);
