@@ -1,6 +1,6 @@
 import Logger from 'bunyan';
 
-import { THOUSAND_FIXED_POINT } from '../../../lib/constants';
+import { HUNDRED_PERCENT } from '../../../lib/constants';
 import { Quote, RoutingType } from '../../../lib/entities';
 import { SyntheticUniswapXTransformer } from '../../../lib/providers/transformers';
 import {
@@ -46,7 +46,7 @@ describe('SyntheticUniswapXTransformer', () => {
       expect(transformed.length).toEqual(3);
 
       const outStartAmount = CLASSIC_QUOTE_EXACT_IN_LARGE.amountOut.mul(101).div(100);
-      const outEndAmount = outStartAmount.mul(THOUSAND_FIXED_POINT.sub(5)).div(THOUSAND_FIXED_POINT);
+      const outEndAmount = outStartAmount.mul(HUNDRED_PERCENT.sub(50)).div(HUNDRED_PERCENT);
       expect(transformed[2].toJSON()).toMatchObject({
         outputs: [
           {
@@ -77,7 +77,7 @@ describe('SyntheticUniswapXTransformer', () => {
       expect(transformed.length).toEqual(3);
 
       const outStartAmount = CLASSIC_QUOTE_EXACT_OUT_LARGE.amountIn.mul(99).div(100);
-      const outEndAmount = outStartAmount.mul(THOUSAND_FIXED_POINT.add(5)).div(THOUSAND_FIXED_POINT);
+      const outEndAmount = outStartAmount.mul(HUNDRED_PERCENT.add(50)).div(HUNDRED_PERCENT);
       expect(transformed[2].toJSON()).toMatchObject({
         input: {
           startAmount: outStartAmount.toString(),

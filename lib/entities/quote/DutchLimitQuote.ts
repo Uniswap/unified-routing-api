@@ -2,9 +2,9 @@ import { DutchLimitOrderBuilder, DutchLimitOrderInfoJSON } from '@uniswap/gouda-
 import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber } from 'ethers';
 
-import { THOUSAND_FIXED_POINT } from '../../constants';
-import { DutchLimitRequest, RoutingType } from '..';
 import { Quote, QuoteJSON } from '.';
+import { DutchLimitRequest, RoutingType } from '..';
+import { HUNDRED_PERCENT } from '../../constants';
 import { ClassicQuote } from './ClassicQuote';
 
 export type DutchLimitQuoteJSON = {
@@ -20,8 +20,8 @@ export type DutchLimitQuoteJSON = {
 
 export class DutchLimitQuote implements Quote {
   public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
-  public static improvementExactIn = BigNumber.from(1010);
-  public static improvementExactOut = BigNumber.from(990);
+  public static improvementExactIn = BigNumber.from(10100);
+  public static improvementExactOut = BigNumber.from(9900);
 
   public static fromResponseBody(request: DutchLimitRequest, body: DutchLimitQuoteJSON): DutchLimitQuote {
     return new DutchLimitQuote(
@@ -58,7 +58,7 @@ export class DutchLimitQuote implements Quote {
         request.info.tokenIn,
         request.info.amount, // fixed amountIn
         quote.request.info.tokenOut,
-        quote.amountOut.mul(DutchLimitQuote.improvementExactIn).div(THOUSAND_FIXED_POINT),
+        quote.amountOut.mul(DutchLimitQuote.improvementExactIn).div(HUNDRED_PERCENT),
         request.config.offerer,
         ''
       );
@@ -68,7 +68,7 @@ export class DutchLimitQuote implements Quote {
         request.info.tokenInChainId,
         request.info.requestId,
         request.info.tokenIn,
-        quote.amountIn.mul(DutchLimitQuote.improvementExactOut).div(THOUSAND_FIXED_POINT),
+        quote.amountIn.mul(DutchLimitQuote.improvementExactOut).div(HUNDRED_PERCENT),
         quote.request.info.tokenOut,
         request.info.amount, // fixed amountOut
         request.config.offerer,
@@ -86,7 +86,7 @@ export class DutchLimitQuote implements Quote {
         this.tokenIn,
         this.amountIn,
         quote.request.info.tokenOut,
-        quote.amountOut.mul(DutchLimitQuote.improvementExactIn).div(THOUSAND_FIXED_POINT),
+        quote.amountOut.mul(DutchLimitQuote.improvementExactIn).div(HUNDRED_PERCENT),
         this.offerer,
         ''
       );
@@ -96,7 +96,7 @@ export class DutchLimitQuote implements Quote {
         this.chainId,
         this.requestId,
         this.tokenIn,
-        quote.amountIn.mul(DutchLimitQuote.improvementExactOut).div(THOUSAND_FIXED_POINT),
+        quote.amountIn.mul(DutchLimitQuote.improvementExactOut).div(HUNDRED_PERCENT),
         quote.request.info.tokenOut,
         this.amountOut,
         this.offerer,
@@ -143,12 +143,12 @@ export class DutchLimitQuote implements Quote {
   private calculateEndAmountFromSlippage(): BigNumber {
     if (this.request.info.type === TradeType.EXACT_INPUT) {
       return this.amountOut
-        .mul(THOUSAND_FIXED_POINT.sub(BigNumber.from(this.request.info.slippageTolerance)))
-        .div(THOUSAND_FIXED_POINT);
+        .mul(HUNDRED_PERCENT.sub(BigNumber.from(this.request.info.slippageTolerance)))
+        .div(HUNDRED_PERCENT);
     } else {
       return this.amountIn
-        .mul(THOUSAND_FIXED_POINT.add(BigNumber.from(this.request.info.slippageTolerance)))
-        .div(THOUSAND_FIXED_POINT);
+        .mul(HUNDRED_PERCENT.add(BigNumber.from(this.request.info.slippageTolerance)))
+        .div(HUNDRED_PERCENT);
     }
   }
 }

@@ -1,10 +1,10 @@
 import Logger from 'bunyan';
 
+import { QuoteTransformer } from '.';
 import { DutchLimitQuote, Quote, QuoteRequest } from '../../entities';
 import { ClassicQuote } from '../../entities/quote/ClassicQuote';
 import { DutchLimitRequest } from '../../entities/request/DutchLimitRequest';
 import { RoutingType } from '../../entities/request/index';
-import { QuoteTransformer } from '.';
 
 export class SyntheticUniswapXTransformer implements QuoteTransformer {
   private log: Logger;
