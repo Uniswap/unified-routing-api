@@ -3,6 +3,7 @@ import { BigNumber } from 'ethers';
 
 import { QuoteRequest, QuoteRequestInfo, RoutingType } from '.';
 import { DUMMY_GAS_WEI } from '../../constants';
+import { DutchLimitRequest } from './DutchLimitRequest';
 
 export interface ClassicConfig {
   protocols: Protocol[];
@@ -46,6 +47,13 @@ export class ClassicRequest implements QuoteRequest {
         permitAmount: body.permitAmount ? BigNumber.from(body.permitAmount) : undefined,
       })
     );
+  }
+
+  public static fromDutchLimitRequest(request: DutchLimitRequest, gasPriceWei: string): ClassicRequest {
+    return new ClassicRequest(request.info, {
+      protocols: [Protocol.V2, Protocol.V3, Protocol.MIXED],
+      gasPriceWei: gasPriceWei,
+    });
   }
 
   constructor(public readonly info: QuoteRequestInfo, public readonly config: ClassicConfig) {}

@@ -1,7 +1,16 @@
 import { TradeType } from '@uniswap/sdk-core';
 import Joi from 'joi';
 
-import { parseQuoteRequests, Quote, QuoteJSON, QuoteRequest, QuoteRequestBodyJSON } from '../../entities';
+import {
+  ClassicRequest,
+  parseQuoteRequests,
+  Quote,
+  QuoteJSON,
+  QuoteRequest,
+  QuoteRequestBodyJSON,
+  RoutingType,
+} from '../../entities';
+import { DutchLimitRequest } from '../../entities/request/DutchLimitRequest';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
 import { ContainerInjected, QuoterByRoutingType } from './injector';
@@ -11,6 +20,8 @@ export interface QuoteResponseJSON {
   routing: string;
   quote: QuoteJSON;
 }
+
+export type RequestByRoutingType = { [routingType in RoutingType]?: QuoteRequest };
 
 export class QuoteHandler extends APIGLambdaHandler<
   ContainerInjected,
@@ -30,7 +41,12 @@ export class QuoteHandler extends APIGLambdaHandler<
 
     const gasPrice = (await providerByChain[requestBody.tokenInChainId].getGasPrice()).toString();
     const requests = parseQuoteRequests(requestBody, gasPrice);
-    const quotes = await getQuotes(quoters, requests);
+    const requestByRoutingType: RequestByRoutingType = {};
+    requests.forEach((request) => {
+      requestByRoutingType[request.routingType] = request;
+    });
+    const requestsInserted = insertClassicRequest(requests, requestByRoutingType, gasPrice);
+    const quotes = await getQuotes(quoters, requestsInserted);
     const transformed = await quoteTransformer.transform(requests, quotes);
 
     const bestQuote = await getBestQuote(transformed);
@@ -106,4 +122,16 @@ export function quoteToResponse(quote: Quote): QuoteResponseJSON {
     routing: quote.routingType,
     quote: quote.toJSON(),
   };
+}
+
+export function insertClassicRequest(
+  requests: QuoteRequest[],
+  requestByRoutingType: RequestByRoutingType,
+  gasPriceWei: string
+): QuoteRequest[] {
+  if (requestByRoutingType[RoutingType.CLASSIC]) {
+    return requests;
+  }
+  const dlRequest = requestByRoutingType[RoutingType.DUTCH_LIMIT];
+  return [...requests, ClassicRequest.fromDutchLimitRequest(dlRequest as DutchLimitRequest, gasPriceWei)];
 }

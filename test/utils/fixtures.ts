@@ -1,3 +1,4 @@
+import { DUMMY_GAS_WEI } from '../../lib/constants';
 import {
   ClassicQuoteDataJSON,
   ClassicRequest,
@@ -34,24 +35,46 @@ export const BASE_REQUEST_INFO_EXACT_OUT = {
 function makeClassicRequest(overrides: Partial<QuoteRequestBodyJSON>): ClassicRequest {
   const requestInfo = Object.assign({}, BASE_REQUEST_INFO_EXACT_IN, overrides);
 
-  return parseQuoteRequests({
-    ...requestInfo,
-    configs: [
-      {
-        routingType: RoutingType.CLASSIC,
-        protocols: ['v3'],
-        gasPriceWei: '12',
-      },
-    ],
-  })[0] as ClassicRequest;
+  return parseQuoteRequests(
+    {
+      ...requestInfo,
+      configs: [
+        {
+          routingType: RoutingType.CLASSIC,
+          protocols: ['v3'],
+          gasPriceWei: '12',
+        },
+      ],
+    },
+    DUMMY_GAS_WEI
+  )[0] as ClassicRequest;
 }
 
 export const QUOTE_REQUEST_CLASSIC = makeClassicRequest({});
 
 function makeDutchLimitRequest(overrides: Partial<QuoteRequestBodyJSON>): DutchLimitRequest {
   const requestInfo = Object.assign({}, BASE_REQUEST_INFO_EXACT_IN, overrides);
-  return parseQuoteRequests({
-    ...requestInfo,
+  return parseQuoteRequests(
+    {
+      ...requestInfo,
+      configs: [
+        {
+          routingType: RoutingType.DUTCH_LIMIT,
+          offerer: OFFERER,
+          exclusivePeriodSecs: 12,
+          auctionPeriodSecs: 60,
+        },
+      ],
+    },
+    DUMMY_GAS_WEI
+  )[0] as DutchLimitRequest;
+}
+
+export const QUOTE_REQUEST_DL = makeDutchLimitRequest({});
+
+export const QUOTE_REQUEST_MULTI = parseQuoteRequests(
+  {
+    ...BASE_REQUEST_INFO_EXACT_IN,
     configs: [
       {
         routingType: RoutingType.DUTCH_LIMIT,
@@ -59,45 +82,35 @@ function makeDutchLimitRequest(overrides: Partial<QuoteRequestBodyJSON>): DutchL
         exclusivePeriodSecs: 12,
         auctionPeriodSecs: 60,
       },
+      {
+        routingType: RoutingType.CLASSIC,
+        protocols: ['v3'],
+        gasPriceWei: '12',
+      },
     ],
-  })[0] as DutchLimitRequest;
-}
+  },
+  DUMMY_GAS_WEI
+);
 
-export const QUOTE_REQUEST_DL = makeDutchLimitRequest({});
-
-export const QUOTE_REQUEST_MULTI = parseQuoteRequests({
-  ...BASE_REQUEST_INFO_EXACT_IN,
-  configs: [
-    {
-      routingType: RoutingType.DUTCH_LIMIT,
-      offerer: OFFERER,
-      exclusivePeriodSecs: 12,
-      auctionPeriodSecs: 60,
-    },
-    {
-      routingType: RoutingType.CLASSIC,
-      protocols: ['v3'],
-      gasPriceWei: '12',
-    },
-  ],
-});
-
-export const QUOTE_REQUEST_MULTI_EXACT_OUT = parseQuoteRequests({
-  ...BASE_REQUEST_INFO_EXACT_OUT,
-  configs: [
-    {
-      routingType: RoutingType.DUTCH_LIMIT,
-      offerer: OFFERER,
-      exclusivePeriodSecs: 12,
-      auctionPeriodSecs: 60,
-    },
-    {
-      routingType: RoutingType.CLASSIC,
-      protocols: ['v3'],
-      gasPriceWei: '12',
-    },
-  ],
-});
+export const QUOTE_REQUEST_MULTI_EXACT_OUT = parseQuoteRequests(
+  {
+    ...BASE_REQUEST_INFO_EXACT_OUT,
+    configs: [
+      {
+        routingType: RoutingType.DUTCH_LIMIT,
+        offerer: OFFERER,
+        exclusivePeriodSecs: 12,
+        auctionPeriodSecs: 60,
+      },
+      {
+        routingType: RoutingType.CLASSIC,
+        protocols: ['v3'],
+        gasPriceWei: '12',
+      },
+    ],
+  },
+  DUMMY_GAS_WEI
+);
 
 const DL_QUOTE_DATA = {
   routing: RoutingType.DUTCH_LIMIT,
