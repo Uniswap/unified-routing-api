@@ -26,7 +26,7 @@ export const BASE_REQUEST_INFO_EXACT_OUT = {
   type: 'EXACT_OUTPUT',
 };
 
-function makeClassicRequest(overrides: Partial<QuoteRequestBodyJSON>): ClassicRequest {
+export function makeClassicRequest(overrides: Partial<QuoteRequestBodyJSON>): ClassicRequest {
   const requestInfo = Object.assign({}, BASE_REQUEST_INFO_EXACT_IN, overrides);
 
   return parseQuoteRequests({
@@ -43,7 +43,7 @@ function makeClassicRequest(overrides: Partial<QuoteRequestBodyJSON>): ClassicRe
 
 export const QUOTE_REQUEST_CLASSIC = makeClassicRequest({});
 
-function makeDutchLimitRequest(overrides: Partial<QuoteRequestBodyJSON>): DutchLimitRequest {
+export function makeDutchLimitRequest(overrides: Partial<QuoteRequestBodyJSON>): DutchLimitRequest {
   const requestInfo = Object.assign({}, BASE_REQUEST_INFO_EXACT_IN, overrides);
   return parseQuoteRequests({
     ...requestInfo,
@@ -107,7 +107,7 @@ const DL_QUOTE_DATA = {
   },
 };
 
-const CLASSIC_QUOTE_DATA = {
+export const CLASSIC_QUOTE_DATA = {
   routing: RoutingType.CLASSIC,
   quote: {
     quoteId: '1',
