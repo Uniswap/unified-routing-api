@@ -6,5 +6,9 @@ export * from './SyntheticUniswapXTransformer';
 export * from './UniswapXOrderSizeFilter';
 
 export interface QuoteTransformer {
-  transform(requests: QuoteRequest[], quotes: Quote[]): Promise<Quote[]>;
+  transform(originalRequests: QuoteRequest[], quotes: Quote[]): Promise<Quote[]>;
+}
+
+export interface QuoteRequestTransformer {
+  transform(originalRequests: QuoteRequest[], currentRequests: QuoteRequest[]): Promise<QuoteRequest[]>;
 }

@@ -6,6 +6,9 @@ import { DutchLimitRequest } from '../../entities/request/DutchLimitRequest';
 import { RoutingType } from '../../entities/request/index';
 import { QuoteTransformer } from '.';
 
+// creates a UniswapX quote from routing-api quote
+// this allows the uniswapX pricing to fall back to routing-api
+// if market maker quotes are too low1
 export class SyntheticUniswapXTransformer implements QuoteTransformer {
   private log: Logger;
 
