@@ -1,14 +1,13 @@
 import { Protocol } from '@uniswap/router-sdk';
 import { TradeType } from '@uniswap/sdk-core';
+import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
 import Logger from 'bunyan';
 import { parseEther } from 'ethers/lib/utils';
 
-import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
 import { RequestTransformer } from '..';
 import { QuoteRequest } from '../../../entities';
 import { ClassicRequest } from '../../../entities/request/ClassicRequest';
-import { RoutingType } from '../../../entities/request/index';
-import { RequestByRoutingType } from '../../../handlers/quote/handler';
+import { RequestByRoutingType, RoutingType } from '../../../entities/request/index';
 
 /*
  * adds a synthetic classic request to check if the output token has route back to ETH

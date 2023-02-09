@@ -1,16 +1,7 @@
 import { TradeType } from '@uniswap/sdk-core';
 import Joi from 'joi';
 
-import {
-  ClassicRequest,
-  parseQuoteRequests,
-  Quote,
-  QuoteJSON,
-  QuoteRequest,
-  QuoteRequestBodyJSON,
-  RoutingType,
-} from '../../entities';
-import { DutchLimitRequest } from '../../entities/request/DutchLimitRequest';
+import { parseQuoteRequests, Quote, QuoteJSON, QuoteRequest, QuoteRequestBodyJSON } from '../../entities';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
 import { ContainerInjected, QuoterByRoutingType } from './injector';
@@ -20,8 +11,6 @@ export interface QuoteResponseJSON {
   routing: string;
   quote: QuoteJSON;
 }
-
-export type RequestByRoutingType = { [routingType in RoutingType]?: QuoteRequest };
 
 export class QuoteHandler extends APIGLambdaHandler<
   ContainerInjected,
@@ -36,11 +25,10 @@ export class QuoteHandler extends APIGLambdaHandler<
     const {
       requestInjected: { log },
       requestBody,
-      containerInjected: { quoters, quoteTransformer, providerByChain },
+      containerInjected: { quoters, quoteTransformer },
     } = params;
 
-    const gasPrice = (await providerByChain[requestBody.tokenInChainId].getGasPrice()).toString();
-    const requests = parseQuoteRequests(requestBody, gasPrice);
+    const requests = parseQuoteRequests(requestBody);
     const quotes = await getQuotes(quoters, requests);
     const transformed = await quoteTransformer.transform(requests, quotes);
 
