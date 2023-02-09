@@ -56,7 +56,7 @@ export class DutchLimitQuote implements Quote {
         request.info.tokenIn,
         request.info.amount, // fixed amountIn
         quote.request.info.tokenOut,
-        quote.amountOut.mul(102).div(100),
+        quote.amountOut.mul(101).div(100),
         request.config.offerer,
         ''
       );
@@ -66,7 +66,7 @@ export class DutchLimitQuote implements Quote {
         request.info.tokenInChainId,
         request.info.requestId,
         request.info.tokenIn,
-        quote.amountIn.mul(98).div(100),
+        quote.amountIn.mul(99).div(100),
         quote.request.info.tokenOut,
         request.info.amount, // fixed amountOut
         request.config.offerer,
@@ -84,7 +84,7 @@ export class DutchLimitQuote implements Quote {
         this.tokenIn,
         this.amountIn,
         quote.request.info.tokenOut,
-        quote.amountOut.mul(102).div(100),
+        quote.amountOut.mul(101).div(100),
         this.offerer,
         ''
       );
@@ -94,7 +94,7 @@ export class DutchLimitQuote implements Quote {
         this.chainId,
         this.requestId,
         this.tokenIn,
-        quote.amountIn.mul(98).div(100),
+        quote.amountIn.mul(99).div(100),
         quote.request.info.tokenOut,
         this.amountOut,
         this.offerer,
@@ -113,21 +113,6 @@ export class DutchLimitQuote implements Quote {
     // TODO: get nonce from gouda-service to get gas benefit of same-word nonces
     const nonce = BigNumber.from(Math.floor(Math.random() * 100000000000000));
 
-    let endAmount;
-    if (this.request.info.type === TradeType.EXACT_INPUT) {
-      endAmount = this.amountOut
-        .mul(THOUSAND_FIXED_POINT.sub(BigNumber.from(this.request.info.slippageTolerance)))
-        .div(THOUSAND_FIXED_POINT);
-      console.log({
-        endAmount: endAmount.toString(),
-        slippage: this.request.info.slippageTolerance!.toString(),
-      });
-    } else {
-      endAmount = this.amountIn
-        .mul(THOUSAND_FIXED_POINT.add(BigNumber.from(this.request.info.slippageTolerance)))
-        .div(THOUSAND_FIXED_POINT);
-    }
-
     const order = orderBuilder
       .startTime(startTime + this.request.config.exclusivePeriodSecs)
       .endTime(startTime + this.request.config.exclusivePeriodSecs + this.request.config.auctionPeriodSecs)
@@ -137,17 +122,31 @@ export class DutchLimitQuote implements Quote {
       .input({
         token: this.tokenIn,
         startAmount: this.amountIn,
-        endAmount: this.request.info.type === TradeType.EXACT_INPUT ? this.amountIn : endAmount,
+        endAmount:
+          this.request.info.type === TradeType.EXACT_INPUT ? this.amountIn : this.calculateEndAmountFromSlippage(),
       })
       .output({
         token: this.tokenOut,
         startAmount: this.amountOut,
-        endAmount: this.request.info.type === TradeType.EXACT_INPUT ? endAmount : this.amountOut,
+        endAmount:
+          this.request.info.type === TradeType.EXACT_INPUT ? this.calculateEndAmountFromSlippage() : this.amountOut,
         recipient: this.request.config.offerer,
         isFeeOutput: false,
       })
       .build();
 
     return order.toJSON();
+  }
+
+  private calculateEndAmountFromSlippage(): BigNumber {
+    if (this.request.info.type === TradeType.EXACT_INPUT) {
+      return this.amountOut
+        .mul(THOUSAND_FIXED_POINT.sub(BigNumber.from(this.request.info.slippageTolerance)))
+        .div(THOUSAND_FIXED_POINT);
+    } else {
+      return this.amountIn
+        .mul(THOUSAND_FIXED_POINT.add(BigNumber.from(this.request.info.slippageTolerance)))
+        .div(THOUSAND_FIXED_POINT);
+    }
   }
 }

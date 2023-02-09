@@ -1,5 +1,4 @@
 import { TradeType } from '@uniswap/sdk-core';
-import Logger from 'bunyan';
 import Joi from 'joi';
 
 import { parseQuoteRequests, Quote, QuoteJSON, QuoteRequest, QuoteRequestBodyJSON } from '../../entities';
@@ -50,7 +49,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     log.info({ bestQuote: bestQuote }, 'bestQuote to response');
     return {
       statusCode: 200,
-      body: quoteToResponse(bestQuote, log),
+      body: quoteToResponse(bestQuote),
     };
   }
 
@@ -106,8 +105,7 @@ const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
   return tradeType === TradeType.EXACT_INPUT ? quote.amountOut : quote.amountIn;
 };
 
-export function quoteToResponse(quote: Quote, log?: Logger): QuoteResponseJSON {
-  log?.info({ toJSON: quote.toJSON() }, 'quote.toJSON()');
+export function quoteToResponse(quote: Quote): QuoteResponseJSON {
   return {
     routing: quote.routingType,
     quote: quote.toJSON(),

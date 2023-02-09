@@ -1,27 +1,18 @@
 import { TradeType } from '@uniswap/sdk-core';
 import { default as Logger } from 'bunyan';
 
-import { ClassicQuote, Quote } from '../../../../lib/entities';
-import {
-  classicQuoteToUniswapXResponse,
-  compareQuotes,
-  getBestQuote,
-  getQuotes,
-} from '../../../../lib/handlers/quote/handler';
+import { Quote } from '../../../../lib/entities';
+import { compareQuotes, getBestQuote, getQuotes } from '../../../../lib/handlers/quote/handler';
 import { QuoterByRoutingType } from '../../../../lib/handlers/quote/injector';
 import { Quoter } from '../../../../lib/providers/quoters';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
-  CLASSIC_QUOTE_EXACT_IN_LARGE,
   CLASSIC_QUOTE_EXACT_IN_WORSE,
   CLASSIC_QUOTE_EXACT_OUT_BETTER,
-  CLASSIC_QUOTE_EXACT_OUT_LARGE,
   CLASSIC_QUOTE_EXACT_OUT_WORSE,
   DL_QUOTE_EXACT_IN_BETTER,
-  DL_QUOTE_EXACT_IN_LARGE,
   DL_QUOTE_EXACT_IN_WORSE,
   DL_QUOTE_EXACT_OUT_BETTER,
-  DL_QUOTE_EXACT_OUT_LARGE,
   DL_QUOTE_EXACT_OUT_WORSE,
   QUOTE_REQUEST_DL,
   QUOTE_REQUEST_MULTI,
@@ -160,38 +151,6 @@ describe('QuoteHandler', () => {
       const quotes = await getQuotes(quoters, QUOTE_REQUEST_MULTI);
       const bestQuote = await getBestQuote(quotes);
       expect(bestQuote).toEqual(DL_QUOTE_EXACT_IN_BETTER);
-    });
-  });
-
-  describe('classicToUniswapX', () => {
-    describe('ExactIn', () => {
-      it('uses classic quote to build gouda order', () => {
-        const goudaOrderJSON = classicQuoteToUniswapXResponse(
-          CLASSIC_QUOTE_EXACT_IN_LARGE as ClassicQuote,
-          DL_QUOTE_EXACT_IN_LARGE
-        );
-        expect(goudaOrderJSON.routing).toEqual('DUTCH_LIMIT');
-        expect(goudaOrderJSON.quote.outputs).toMatchObject([
-          {
-            startAmount: '10200', // starting 2% above auto-router quote
-            endAmount: '9690', // default slippage: 5% below starting amount
-          },
-        ]);
-      });
-    });
-
-    describe('ExactOut', () => {
-      it('uses classic quote to build gouda order', () => {
-        const goudaOrderJSON = classicQuoteToUniswapXResponse(
-          CLASSIC_QUOTE_EXACT_OUT_LARGE as ClassicQuote,
-          DL_QUOTE_EXACT_OUT_LARGE
-        );
-        expect(goudaOrderJSON.routing).toEqual('DUTCH_LIMIT');
-        expect(goudaOrderJSON.quote.input).toMatchObject({
-          startAmount: '9800', // starting 2% below auto-router quote
-          endAmount: '10290', // default slippage: 5% above starting amount
-        });
-      });
     });
   });
 });
