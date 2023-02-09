@@ -22,13 +22,8 @@ export const BASE_REQUEST_INFO_EXACT_IN = {
 };
 
 export const BASE_REQUEST_INFO_EXACT_OUT = {
-  tokenInChainId: CHAIN_IN_ID,
-  tokenOutChainId: CHAIN_OUT_ID,
-  requestId: 'requestId',
-  tokenIn: TOKEN_IN,
-  tokenOut: TOKEN_OUT,
-  amount: AMOUNT_IN,
-  type: 'EXACT_PUT',
+  ...BASE_REQUEST_INFO_EXACT_IN,
+  type: 'EXACT_OUTPUT',
 };
 
 function makeClassicRequest(overrides: Partial<QuoteRequestBodyJSON>): ClassicRequest {
