@@ -1,7 +1,7 @@
 import Logger from 'bunyan';
 import { ethers } from 'ethers';
 
-import { GoudaOrderSizeFilter } from '../../../lib/providers/filters';
+import { UniswapXOrderSizeFilter } from '../../../lib/providers/transformers';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_OUT_BETTER,
@@ -14,26 +14,26 @@ import {
   QUOTE_REQUEST_MULTI,
 } from '../../utils/fixtures';
 
-describe('GoudaOrderSizeFilter', () => {
+describe('UniswapXOrderSizeFilter', () => {
   const logger = Logger.createLogger({ name: 'test' });
   logger.level(Logger.FATAL);
-  const filter = new GoudaOrderSizeFilter(logger);
+  const filter = new UniswapXOrderSizeFilter(logger);
 
   describe('ExactIn', () => {
     it('does not filter if no routing api quote', async () => {
-      const filtered = await filter.filter([QUOTE_REQUEST_DL], [DL_QUOTE_EXACT_IN_BETTER]);
+      const filtered = await filter.transform([QUOTE_REQUEST_DL], [DL_QUOTE_EXACT_IN_BETTER]);
       expect(filtered.length).toEqual(1);
       expect(filtered[0]).toEqual(DL_QUOTE_EXACT_IN_BETTER);
     });
 
     it('does not filter if no gouda quote', async () => {
-      const filtered = await filter.filter([QUOTE_REQUEST_CLASSIC], [CLASSIC_QUOTE_EXACT_IN_BETTER]);
+      const filtered = await filter.transform([QUOTE_REQUEST_CLASSIC], [CLASSIC_QUOTE_EXACT_IN_BETTER]);
       expect(filtered.length).toEqual(1);
       expect(filtered[0]).toEqual(CLASSIC_QUOTE_EXACT_IN_BETTER);
     });
 
     it('does not filter if no gas estimate', async () => {
-      const filtered = await filter.filter(QUOTE_REQUEST_MULTI, [
+      const filtered = await filter.transform(QUOTE_REQUEST_MULTI, [
         DL_QUOTE_EXACT_IN_BETTER,
         CLASSIC_QUOTE_EXACT_IN_BETTER,
       ]);
@@ -42,11 +42,8 @@ describe('GoudaOrderSizeFilter', () => {
 
     it('filters if amountOut == gas used', async () => {
       const amountOut = ethers.utils.parseEther('1');
-      const classicQuote = createClassicQuote(
-        { quote: amountOut.toString(), quoteGasAdjusted: amountOut.sub(1).toString() },
-        'EXACT_INPUT'
-      );
-      const filtered = await filter.filter(QUOTE_REQUEST_MULTI, [classicQuote, DL_QUOTE_EXACT_IN_BETTER]);
+      const classicQuote = createClassicQuote({ quote: amountOut.toString(), quoteGasAdjusted: '1' }, 'EXACT_INPUT');
+      const filtered = await filter.transform(QUOTE_REQUEST_MULTI, [classicQuote, DL_QUOTE_EXACT_IN_BETTER]);
       expect(filtered.length).toEqual(1);
       expect(filtered[0]).toEqual(classicQuote);
     });
@@ -59,7 +56,7 @@ describe('GoudaOrderSizeFilter', () => {
         { quote: amountOut.toString(), quoteGasAdjusted: amountOut.sub(fivePercent).toString() },
         'EXACT_INPUT'
       );
-      const filtered = await filter.filter(QUOTE_REQUEST_MULTI, [classicQuote, dutchQuote]);
+      const filtered = await filter.transform(QUOTE_REQUEST_MULTI, [classicQuote, dutchQuote]);
       expect(filtered.length).toEqual(2);
     });
 
@@ -71,7 +68,7 @@ describe('GoudaOrderSizeFilter', () => {
         { quote: amountOut.toString(), quoteGasAdjusted: amountOut.sub(fivePercent).toString() },
         'EXACT_INPUT'
       );
-      const filtered = await filter.filter(QUOTE_REQUEST_MULTI, [classicQuote, dutchQuote]);
+      const filtered = await filter.transform(QUOTE_REQUEST_MULTI, [classicQuote, dutchQuote]);
       expect(filtered.length).toEqual(1);
       expect(filtered[0]).toEqual(classicQuote);
     });
@@ -79,13 +76,13 @@ describe('GoudaOrderSizeFilter', () => {
 
   describe('ExactOut', () => {
     it('does not filter if no routing api quote', async () => {
-      const filtered = await filter.filter([QUOTE_REQUEST_DL], [DL_QUOTE_EXACT_OUT_BETTER]);
+      const filtered = await filter.transform([QUOTE_REQUEST_DL], [DL_QUOTE_EXACT_OUT_BETTER]);
       expect(filtered.length).toEqual(1);
       expect(filtered[0]).toEqual(DL_QUOTE_EXACT_OUT_BETTER);
     });
 
     it('does not filter if no gouda quote', async () => {
-      const filtered = await filter.filter([QUOTE_REQUEST_CLASSIC], [CLASSIC_QUOTE_EXACT_OUT_BETTER]);
+      const filtered = await filter.transform([QUOTE_REQUEST_CLASSIC], [CLASSIC_QUOTE_EXACT_OUT_BETTER]);
       expect(filtered.length).toEqual(1);
       expect(filtered[0]).toEqual(CLASSIC_QUOTE_EXACT_OUT_BETTER);
     });
@@ -96,7 +93,7 @@ describe('GoudaOrderSizeFilter', () => {
         { quote: amountIn.toString(), quoteGasAdjusted: amountIn.toString() },
         'EXACT_OUTPUT'
       );
-      const filtered = await filter.filter(QUOTE_REQUEST_MULTI, [DL_QUOTE_EXACT_OUT_BETTER, classicQuote]);
+      const filtered = await filter.transform(QUOTE_REQUEST_MULTI, [DL_QUOTE_EXACT_OUT_BETTER, classicQuote]);
       expect(filtered.length).toEqual(2);
     });
 
@@ -106,7 +103,7 @@ describe('GoudaOrderSizeFilter', () => {
         { quote: amountIn.toString(), quoteGasAdjusted: amountIn.add(1).toString() },
         'EXACT_OUTPUT'
       );
-      const filtered = await filter.filter(QUOTE_REQUEST_MULTI, [classicQuote, DL_QUOTE_EXACT_OUT_BETTER]);
+      const filtered = await filter.transform(QUOTE_REQUEST_MULTI, [classicQuote, DL_QUOTE_EXACT_OUT_BETTER]);
       expect(filtered.length).toEqual(1);
       expect(filtered[0]).toEqual(classicQuote);
     });
@@ -119,7 +116,7 @@ describe('GoudaOrderSizeFilter', () => {
         { quote: amountIn.toString(), quoteGasAdjusted: amountIn.add(fivePercent).toString() },
         'EXACT_OUTPUT'
       );
-      const filtered = await filter.filter(QUOTE_REQUEST_MULTI, [classicQuote, dutchQuote]);
+      const filtered = await filter.transform(QUOTE_REQUEST_MULTI, [classicQuote, dutchQuote]);
       expect(filtered.length).toEqual(2);
     });
 
@@ -131,7 +128,7 @@ describe('GoudaOrderSizeFilter', () => {
         { quote: amountIn.toString(), quoteGasAdjusted: amountIn.add(fifteenPercent).toString() },
         'EXACT_OUTPUT'
       );
-      const filtered = await filter.filter(QUOTE_REQUEST_MULTI, [classicQuote, dutchQuote]);
+      const filtered = await filter.transform(QUOTE_REQUEST_MULTI, [classicQuote, dutchQuote]);
       expect(filtered.length).toEqual(1);
       expect(filtered[0]).toEqual(classicQuote);
     });

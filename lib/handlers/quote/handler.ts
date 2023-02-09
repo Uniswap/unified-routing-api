@@ -1,5 +1,4 @@
 import { TradeType } from '@uniswap/sdk-core';
-import Logger from 'bunyan';
 import Joi from 'joi';
 
 import { parseQuoteRequests, Quote, QuoteJSON, QuoteRequest, QuoteRequestBodyJSON } from '../../entities';
@@ -26,16 +25,14 @@ export class QuoteHandler extends APIGLambdaHandler<
     const {
       requestInjected: { log },
       requestBody,
-      containerInjected: { quoters, quoteFilter },
+      containerInjected: { quoters, quoteTransformer },
     } = params;
 
-    log.info(requestBody, 'requestBody');
     const requests = parseQuoteRequests(requestBody);
-
     const quotes = await getQuotes(quoters, requests);
-    const filtered = await quoteFilter.filter(requests, quotes);
+    const transformed = await quoteTransformer.transform(requests, quotes);
 
-    const bestQuote = await getBestQuote(filtered, log);
+    const bestQuote = await getBestQuote(transformed);
     if (!bestQuote) {
       return {
         statusCode: 404,
@@ -44,6 +41,7 @@ export class QuoteHandler extends APIGLambdaHandler<
       };
     }
 
+    log.info({ bestQuote: bestQuote }, 'bestQuote to response');
     return {
       statusCode: 200,
       body: quoteToResponse(bestQuote),
@@ -79,9 +77,8 @@ export async function getQuotes(quotersByRoutingType: QuoterByRoutingType, reque
 }
 
 // determine and return the "best" quote of the given list
-export async function getBestQuote(quotes: Quote[], log?: Logger): Promise<Quote | null> {
+export async function getBestQuote(quotes: Quote[]): Promise<Quote | null> {
   return quotes.reduce((bestQuote: Quote | null, quote: Quote) => {
-    log?.info({ bestQuote: bestQuote }, 'current bestQuote');
     if (!bestQuote || compareQuotes(quote, bestQuote, quote.request.info.type)) {
       return quote;
     }
