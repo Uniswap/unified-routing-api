@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import * as cdk from 'aws-cdk-lib';
 import { CfnOutput, SecretValue, Stack, StackProps, Stage, StageProps } from 'aws-cdk-lib';
 import { BuildEnvironmentVariableType, BuildSpec } from 'aws-cdk-lib/aws-codebuild';
@@ -168,12 +169,32 @@ const envVars: { [key: string]: string } = {};
 envVars['PARAMETERIZATION_API_URL'] = process.env['PARAMETERIZATION_API_URL'] || '';
 envVars['ROUTING_API_URL'] = process.env['ROUTING_API_URL'] || '';
 
+const jsonRpcProviders = {
+  WEB3_RPC_1: process.env.WEB3_RPC_1!,
+  WEB3_RPC_3: process.env.WEB3_RPC_3!,
+  WEB3_RPC_4: process.env.WEB3_RPC_4!,
+  WEB3_RPC_5: process.env.WEB3_RPC_5!,
+  WEB3_RPC_42: process.env.WEB3_RPC_42!,
+  WEB3_RPC_10: process.env.WEB3_RPC_10!,
+  WEB3_RPC_69: process.env.WEB3_RPC_69!,
+  WEB3_RPC_42161: process.env.WEB3_RPC_42161!,
+  WEB3_RPC_421611: process.env.WEB3_RPC_421611!,
+  WEB3_RPC_421613: process.env.WEB3_RPC_421613!,
+  WEB3_RPC_137: process.env.WEB3_RPC_137!,
+  WEB3_RPC_80001: process.env.WEB3_RPC_80001!,
+  WEB3_RPC_42220: process.env.WEB3_RPC_42220!,
+  WEB3_RPC_44787: process.env.WEB3_RPC_44787!,
+};
+
 new APIStack(app, `${SERVICE_NAME}Stack`, {
   provisionedConcurrency: process.env.PROVISION_CONCURRENCY ? parseInt(process.env.PROVISION_CONCURRENCY) : 0,
   throttlingOverride: process.env.THROTTLE_PER_FIVE_MINS,
   chatbotSNSArn: process.env.CHATBOT_SNS_ARN,
   stage: STAGE.LOCAL,
-  envVars: envVars,
+  envVars: {
+    ...envVars,
+    ...jsonRpcProviders,
+  },
 });
 
 new APIPipeline(app, `${SERVICE_NAME}PipelineStack`, {

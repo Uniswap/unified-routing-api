@@ -1,3 +1,4 @@
+import { DUMMY_GAS_WEI } from '../../../lib/constants';
 import { ClassicRequest, DutchLimitRequest, parseQuoteRequests, RoutingType } from '../../../lib/entities';
 import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../constants';
 
@@ -27,7 +28,7 @@ const MOCK_REQUEST_JSON = {
 
 describe('QuoteRequest', () => {
   it('parses dutch limit order config properly', () => {
-    const requests = parseQuoteRequests(MOCK_REQUEST_JSON);
+    const requests = parseQuoteRequests(MOCK_REQUEST_JSON, DUMMY_GAS_WEI);
     const info = requests[0].info;
 
     const config = DutchLimitRequest.fromRequestBody(info, MOCK_DL_CONFIG_JSON);
@@ -35,7 +36,7 @@ describe('QuoteRequest', () => {
   });
 
   it('parses basic classic quote order config properly', () => {
-    const requests = parseQuoteRequests(MOCK_REQUEST_JSON);
+    const requests = parseQuoteRequests(MOCK_REQUEST_JSON, DUMMY_GAS_WEI);
     const info = requests[0].info;
 
     const config = ClassicRequest.fromRequestBody(info, CLASSIC_CONFIG_JSON);
@@ -43,7 +44,7 @@ describe('QuoteRequest', () => {
   });
 
   it('parses a complete quote request properly', () => {
-    const requests = parseQuoteRequests(MOCK_REQUEST_JSON);
+    const requests = parseQuoteRequests(MOCK_REQUEST_JSON, DUMMY_GAS_WEI);
 
     expect(requests.length).toEqual(2);
     expect(requests[0].toJSON()).toMatchObject(MOCK_DL_CONFIG_JSON);

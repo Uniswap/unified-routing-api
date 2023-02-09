@@ -25,10 +25,11 @@ export class QuoteHandler extends APIGLambdaHandler<
     const {
       requestInjected: { log },
       requestBody,
-      containerInjected: { quoters, quoteTransformer },
+      containerInjected: { quoters, quoteTransformer, providerByChain },
     } = params;
 
-    const requests = parseQuoteRequests(requestBody);
+    const gasPrice = (await providerByChain[requestBody.tokenInChainId].getGasPrice()).toString();
+    const requests = parseQuoteRequests(requestBody, gasPrice);
     const quotes = await getQuotes(quoters, requests);
     const transformed = await quoteTransformer.transform(requests, quotes);
 
