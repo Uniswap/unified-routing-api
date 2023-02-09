@@ -27,13 +27,13 @@ export class OnlyConfiguredQuotersFilter implements QuoteTransformer {
 
       const requestInfo = request.info;
       const quoteInfo = quote.request.info;
-      this.log.debug('Removing quote from unconfigured quoter info', requestInfo, quoteInfo);
       if (
         requestInfo.tokenIn !== quoteInfo.tokenIn ||
         requestInfo.tokenOut !== quoteInfo.tokenOut ||
         !requestInfo.amount.eq(quoteInfo.amount) ||
         requestInfo.type !== quoteInfo.type
       ) {
+        this.log.debug('Removing quote from unconfigured quoter info', requestInfo, quoteInfo);
         return false;
       }
 
