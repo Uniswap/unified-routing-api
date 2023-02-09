@@ -6,7 +6,7 @@ import { ClassicQuote } from '../../entities/quote/ClassicQuote';
 import { DutchLimitRequest } from '../../entities/request/DutchLimitRequest';
 import { RoutingType } from '../../entities/request/index';
 
-export class SyntheticGoudaTransformer implements QuoteTransformer {
+export class SyntheticUniswapXTransformer implements QuoteTransformer {
   private log: Logger;
 
   constructor(_log: Logger) {

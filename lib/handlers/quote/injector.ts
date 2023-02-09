@@ -10,7 +10,7 @@ import {
   OnlyConfiguredQuotersFilter,
   QuoteTransformer,
 } from '../../providers/transformers';
-import { SyntheticGoudaTransformer } from '../../providers/transformers/SyntheticUniswapXTransformer';
+import { SyntheticUniswapXTransformer } from '../../providers/transformers/SyntheticUniswapXTransformer';
 import { checkDefined } from '../../util/preconditions';
 import { ApiInjector, ApiRInj } from '../base/api-handler';
 
@@ -41,7 +41,7 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
         [RoutingType.CLASSIC]: [new RoutingApiQuoter(log, routingApiUrl)],
       },
       quoteTransformer: new CompoundTransformer([
-        new SyntheticGoudaTransformer(log),
+        new SyntheticUniswapXTransformer(log),
         new GoudaOrderSizeFilter(log),
         new OnlyConfiguredQuotersFilter(log),
       ]),
