@@ -42,7 +42,7 @@ export interface QuoteRequest {
   toJSON(): RoutingConfigJSON;
 }
 
-export function parseQuoteRequests(body: QuoteRequestBodyJSON, gasPrice: string): QuoteRequest[] {
+export function parseQuoteRequests(body: QuoteRequestBodyJSON): QuoteRequest[] {
   const info: QuoteRequestInfo = {
     requestId: body.requestId,
     tokenInChainId: body.tokenInChainId,
@@ -54,28 +54,12 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON, gasPrice: string)
     slippageTolerance: body.slippageTolerance ?? DEFAULT_SLIPPAGE_TOLERANCE,
   };
 
-  let hasClassic = false;
-  const requests = body.configs.flatMap((config) => {
+  return body.configs.flatMap((config) => {
     if (config.routingType == RoutingType.CLASSIC) {
-      hasClassic = true;
-      if (!(config as ClassicConfig).gasPriceWei) {
-        (config as ClassicConfig).gasPriceWei = gasPrice;
-      }
       return ClassicRequest.fromRequestBody(info, config as ClassicConfigJSON);
     } else if (config.routingType == RoutingType.DUTCH_LIMIT) {
       return DutchLimitRequest.fromRequestBody(info, config as DutchLimitConfigJSON);
     }
     return [];
   });
-
-  if (!hasClassic) {
-    requests.push(
-      ClassicRequest.fromRequestBody(info, {
-        routingType: RoutingType.CLASSIC,
-        protocols: ['V2', 'V3', 'MIXED'],
-        gasPriceWei: gasPrice,
-      })
-    );
-  }
-  return requests;
 }
