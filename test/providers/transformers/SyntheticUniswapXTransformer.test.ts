@@ -1,9 +1,8 @@
 import Logger from 'bunyan';
 
 import { THOUSAND_FIXED_POINT } from '../../../lib/constants';
-import { RoutingType } from '../../../lib/entities';
-import { QuoteByRoutingType } from '../../../lib/handlers/quote/handler';
-import { SyntheticGoudaTransformer } from '../../../lib/providers/transformers';
+import { Quote, RoutingType } from '../../../lib/entities';
+import { SyntheticUniswapXTransformer } from '../../../lib/providers/transformers';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_IN_LARGE,
@@ -15,10 +14,12 @@ import {
   QUOTE_REQUEST_MULTI_EXACT_OUT,
 } from '../../utils/fixtures';
 
+type QuoteByRoutingType = { [key in RoutingType]?: Quote };
+
 describe('SyntheticGoudaTransformer', () => {
   const logger = Logger.createLogger({ name: 'test' });
   logger.level(Logger.FATAL);
-  const transformer = new SyntheticGoudaTransformer(logger);
+  const transformer = new SyntheticUniswapXTransformer(logger);
 
   it('does not transform if UniswapX not requested', async () => {
     const transformed = await transformer.transform([QUOTE_REQUEST_CLASSIC], [CLASSIC_QUOTE_EXACT_IN_BETTER]);

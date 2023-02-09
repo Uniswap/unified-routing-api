@@ -2,7 +2,6 @@ import { TradeType } from '@uniswap/sdk-core';
 import Joi from 'joi';
 
 import { parseQuoteRequests, Quote, QuoteJSON, QuoteRequest, QuoteRequestBodyJSON } from '../../entities';
-import { RoutingType } from '../../entities/request/index';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
 import { ContainerInjected, QuoterByRoutingType } from './injector';
