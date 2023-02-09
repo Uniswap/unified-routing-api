@@ -41,12 +41,7 @@ export class QuoteHandler extends APIGLambdaHandler<
 
     const gasPrice = (await providerByChain[requestBody.tokenInChainId].getGasPrice()).toString();
     const requests = parseQuoteRequests(requestBody, gasPrice);
-    const requestByRoutingType: RequestByRoutingType = {};
-    requests.forEach((request) => {
-      requestByRoutingType[request.routingType] = request;
-    });
-    const requestsInserted = insertClassicRequest(requests, requestByRoutingType, gasPrice);
-    const quotes = await getQuotes(quoters, requestsInserted);
+    const quotes = await getQuotes(quoters, requests);
     const transformed = await quoteTransformer.transform(requests, quotes);
 
     const bestQuote = await getBestQuote(transformed);
@@ -122,16 +117,4 @@ export function quoteToResponse(quote: Quote): QuoteResponseJSON {
     routing: quote.routingType,
     quote: quote.toJSON(),
   };
-}
-
-export function insertClassicRequest(
-  requests: QuoteRequest[],
-  requestByRoutingType: RequestByRoutingType,
-  gasPriceWei: string
-): QuoteRequest[] {
-  if (requestByRoutingType[RoutingType.CLASSIC]) {
-    return requests;
-  }
-  const dlRequest = requestByRoutingType[RoutingType.DUTCH_LIMIT];
-  return [...requests, ClassicRequest.fromDutchLimitRequest(dlRequest as DutchLimitRequest, gasPriceWei)];
 }
