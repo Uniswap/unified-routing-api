@@ -13,8 +13,6 @@ export interface QuoteResponseJSON {
   quote: QuoteJSON;
 }
 
-export type QuoteByRoutingType = { [key in RoutingType]?: Quote };
-
 export class QuoteHandler extends APIGLambdaHandler<
   ContainerInjected,
   ApiRInj,
@@ -32,10 +30,8 @@ export class QuoteHandler extends APIGLambdaHandler<
     } = params;
 
     const requests = parseQuoteRequests(requestBody);
-    const quoteByRoutingType: QuoteByRoutingType = {};
     const quotes = await getQuotes(quoters, requests);
     const transformed = await quoteTransformer.transform(requests, quotes);
-    transformed.forEach((q) => (quoteByRoutingType[q.request.routingType] = q));
 
     const bestQuote = await getBestQuote(transformed);
     if (!bestQuote) {
