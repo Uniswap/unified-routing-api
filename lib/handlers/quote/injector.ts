@@ -6,9 +6,9 @@ import { QuoteRequestBodyJSON, RoutingType } from '../../entities';
 import { Quoter, RfqQuoter, RoutingApiQuoter } from '../../providers/quoters';
 import {
   CompoundTransformer,
-  GoudaOrderSizeFilter,
   OnlyConfiguredQuotersFilter,
   QuoteTransformer,
+  UniswapXOrderSizeFilter,
 } from '../../providers/transformers';
 import { SyntheticUniswapXTransformer } from '../../providers/transformers/SyntheticUniswapXTransformer';
 import { checkDefined } from '../../util/preconditions';
@@ -40,9 +40,10 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
         [RoutingType.DUTCH_LIMIT]: [new RfqQuoter(log, paramApiUrl)],
         [RoutingType.CLASSIC]: [new RoutingApiQuoter(log, routingApiUrl)],
       },
+      // transformer ordering matters! transformers should generally come before filters
       quoteTransformer: new CompoundTransformer([
         new SyntheticUniswapXTransformer(log),
-        new GoudaOrderSizeFilter(log),
+        new UniswapXOrderSizeFilter(log),
         new OnlyConfiguredQuotersFilter(log),
       ]),
     };

@@ -2,9 +2,9 @@ import { DutchLimitOrderBuilder, DutchLimitOrderInfoJSON } from '@uniswap/gouda-
 import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber } from 'ethers';
 
-import { Quote, QuoteJSON } from '.';
-import { DutchLimitRequest, RoutingType } from '..';
 import { THOUSAND_FIXED_POINT } from '../../constants';
+import { DutchLimitRequest, RoutingType } from '..';
+import { Quote, QuoteJSON } from '.';
 import { ClassicQuote } from './ClassicQuote';
 
 export type DutchLimitQuoteJSON = {

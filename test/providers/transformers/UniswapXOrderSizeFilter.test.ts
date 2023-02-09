@@ -1,7 +1,7 @@
 import Logger from 'bunyan';
 import { ethers } from 'ethers';
 
-import { GoudaOrderSizeFilter } from '../../../lib/providers/transformers';
+import { UniswapXOrderSizeFilter } from '../../../lib/providers/transformers';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_OUT_BETTER,
@@ -14,10 +14,10 @@ import {
   QUOTE_REQUEST_MULTI,
 } from '../../utils/fixtures';
 
-describe('GoudaOrderSizeFilter', () => {
+describe('UniswapXOrderSizeFilter', () => {
   const logger = Logger.createLogger({ name: 'test' });
   logger.level(Logger.FATAL);
-  const filter = new GoudaOrderSizeFilter(logger);
+  const filter = new UniswapXOrderSizeFilter(logger);
 
   describe('ExactIn', () => {
     it('does not filter if no routing api quote', async () => {
