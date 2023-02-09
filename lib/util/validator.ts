@@ -52,7 +52,7 @@ export class FieldValidator {
 
   public static readonly enableUniversalRouter = Joi.boolean();
 
-  public static readonly slippageTolerance = Joi.number().min(0).max(200); // 20% in 1000 FIXED POINT
+  public static readonly slippageTolerance = Joi.number().min(0).max(20); // 20%
 
   public static readonly deadline = Joi.number().greater(0).max(10800); // 180 mins, same as interface max;
 
