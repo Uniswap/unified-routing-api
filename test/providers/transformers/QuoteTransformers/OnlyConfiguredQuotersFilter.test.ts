@@ -1,13 +1,13 @@
 import Logger from 'bunyan';
 
-import { OnlyConfiguredQuotersFilter } from '../../../lib/providers/transformers';
+import { OnlyConfiguredQuotersFilter } from '../../../../lib/providers/transformers';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   DL_QUOTE_EXACT_IN_BETTER,
   QUOTE_REQUEST_CLASSIC,
   QUOTE_REQUEST_DL,
   QUOTE_REQUEST_MULTI,
-} from '../../utils/fixtures';
+} from '../../../utils/fixtures';
 
 describe('OnlyConfiguredQuotersFilter', () => {
   const logger = Logger.createLogger({ name: 'test' });

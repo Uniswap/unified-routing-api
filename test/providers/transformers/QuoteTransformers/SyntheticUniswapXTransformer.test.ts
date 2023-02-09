@@ -1,8 +1,8 @@
 import Logger from 'bunyan';
 
-import { HUNDRED_PERCENT } from '../../../lib/constants';
-import { Quote, RoutingType } from '../../../lib/entities';
-import { SyntheticUniswapXTransformer } from '../../../lib/providers/transformers';
+import { HUNDRED_PERCENT } from '../../../../lib/constants';
+import { Quote, RoutingType } from '../../../../lib/entities';
+import { SyntheticUniswapXTransformer } from '../../../../lib/providers/transformers';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_IN_LARGE,
@@ -12,7 +12,7 @@ import {
   QUOTE_REQUEST_CLASSIC,
   QUOTE_REQUEST_MULTI,
   QUOTE_REQUEST_MULTI_EXACT_OUT,
-} from '../../utils/fixtures';
+} from '../../../utils/fixtures';
 
 type QuoteByRoutingType = { [key in RoutingType]?: Quote };
 

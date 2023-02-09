@@ -10,9 +10,9 @@ import {
   CompoundTransformer,
   OnlyConfiguredQuotersFilter,
   QuoteTransformer,
+  SyntheticUniswapXTransformer,
   UniswapXOrderSizeFilter,
 } from '../../providers/transformers';
-import { SyntheticUniswapXTransformer } from '../../providers/transformers/SyntheticUniswapXTransformer';
 import { checkDefined } from '../../util/preconditions';
 import { ApiInjector, ApiRInj } from '../base/api-handler';
 

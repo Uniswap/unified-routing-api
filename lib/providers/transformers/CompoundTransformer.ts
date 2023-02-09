@@ -1,5 +1,5 @@
-import { Quote, QuoteRequest } from '../../entities';
 import { QuoteTransformer } from '.';
+import { Quote, QuoteRequest } from '../../entities';
 
 /*
 applies all supplied transformers one by one, in order
