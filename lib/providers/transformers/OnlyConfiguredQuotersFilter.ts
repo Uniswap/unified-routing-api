@@ -1,6 +1,6 @@
 import Logger from 'bunyan';
 
-import { Quote, QuoteRequest } from '../../entities';
+import { Quote, QuoteRequest, RoutingType } from '../../entities';
 import { QuoteTransformer } from '.';
 
 // filters out any quote responses that came from unconfigured quoters
@@ -14,15 +14,30 @@ export class OnlyConfiguredQuotersFilter implements QuoteTransformer {
     this.log = _log.child({ quoter: 'OnlyConfiguredQuotersFilter' });
   }
 
-  async transform(requests: QuoteRequest[], quotes: Quote[]): Promise<Quote[]> {
-    const configuredQuoters = requests.map((request) => request.routingType);
+  async transform(originalRequests: QuoteRequest[], quotes: Quote[]): Promise<Quote[]> {
+    const requestByRoutingType: { [key in RoutingType]?: QuoteRequest } = {};
+    originalRequests.forEach((r) => (requestByRoutingType[r.routingType] = r));
+
     return quotes.filter((quote) => {
-      if (configuredQuoters.includes(quote.routingType)) {
-        return true;
+      const request = requestByRoutingType[quote.routingType];
+      if (!request) {
+        this.log.debug(`Removing quote from unconfigured quoter type: ${quote.routingType}`);
+        return false;
       }
 
-      this.log.debug(`Removing quote from unconfigured quoter: ${quote.routingType}`);
-      return false;
+      const requestInfo = request.info;
+      const quoteInfo = quote.request.info;
+      this.log.debug('Removing quote from unconfigured quoter info', requestInfo, quoteInfo);
+      if (
+        requestInfo.tokenIn !== quoteInfo.tokenIn ||
+        requestInfo.tokenOut !== quoteInfo.tokenOut ||
+        !requestInfo.amount.eq(quoteInfo.amount) ||
+        requestInfo.type !== quoteInfo.type
+      ) {
+        return false;
+      }
+
+      return true;
     });
   }
 }
