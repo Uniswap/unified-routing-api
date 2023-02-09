@@ -20,6 +20,8 @@ export type DutchLimitQuoteJSON = {
 
 export class DutchLimitQuote implements Quote {
   public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
+  public static improvementExactIn = BigNumber.from(1010);
+  public static improvementExactOut = BigNumber.from(990);
 
   public static fromResponseBody(request: DutchLimitRequest, body: DutchLimitQuoteJSON): DutchLimitQuote {
     return new DutchLimitQuote(
@@ -56,7 +58,7 @@ export class DutchLimitQuote implements Quote {
         request.info.tokenIn,
         request.info.amount, // fixed amountIn
         quote.request.info.tokenOut,
-        quote.amountOut.mul(101).div(100),
+        quote.amountOut.mul(DutchLimitQuote.improvementExactIn).div(THOUSAND_FIXED_POINT),
         request.config.offerer,
         ''
       );
@@ -66,7 +68,7 @@ export class DutchLimitQuote implements Quote {
         request.info.tokenInChainId,
         request.info.requestId,
         request.info.tokenIn,
-        quote.amountIn.mul(99).div(100),
+        quote.amountIn.mul(DutchLimitQuote.improvementExactOut).div(THOUSAND_FIXED_POINT),
         quote.request.info.tokenOut,
         request.info.amount, // fixed amountOut
         request.config.offerer,
@@ -84,7 +86,7 @@ export class DutchLimitQuote implements Quote {
         this.tokenIn,
         this.amountIn,
         quote.request.info.tokenOut,
-        quote.amountOut.mul(101).div(100),
+        quote.amountOut.mul(DutchLimitQuote.improvementExactIn).div(THOUSAND_FIXED_POINT),
         this.offerer,
         ''
       );
@@ -94,7 +96,7 @@ export class DutchLimitQuote implements Quote {
         this.chainId,
         this.requestId,
         this.tokenIn,
-        quote.amountIn.mul(99).div(100),
+        quote.amountIn.mul(DutchLimitQuote.improvementExactOut).div(THOUSAND_FIXED_POINT),
         quote.request.info.tokenOut,
         this.amountOut,
         this.offerer,
