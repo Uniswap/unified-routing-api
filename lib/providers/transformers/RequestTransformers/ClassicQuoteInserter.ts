@@ -49,7 +49,6 @@ function requestInfoEquals(a: QuoteRequestInfo, b: QuoteRequestInfo): boolean {
     a.tokenInChainId === b.tokenInChainId &&
     a.tokenOutChainId === b.tokenOutChainId &&
     a.amount.eq(b.amount) &&
-    a.type === b.type &&
-    a.slippageTolerance === b.slippageTolerance
+    a.type === b.type
   );
 }

@@ -1,14 +1,13 @@
 import Logger from 'bunyan';
-import { ethers } from 'ethers';
 
-import { RouteBackToEthTransformer } from '../../../../lib/providers/transformers/RequestTransformers/RouteBackToEthRequestTransformer';
+import { ClassicQuoteInserter } from '../../../../lib/providers/transformers';
 import { QUOTE_REQUEST_CLASSIC, QUOTE_REQUEST_DL } from '../../../utils/fixtures';
 
 describe('ClassicQuoteInserter', () => {
   const logger = Logger.createLogger({ name: 'test' });
   logger.level(Logger.FATAL);
 
-  const transformer = new RouteBackToEthTransformer(logger);
+  const transformer = new ClassicQuoteInserter(logger);
 
   it('adds a classic request when UniswapX requested', async () => {
     const requests = transformer.transform([QUOTE_REQUEST_DL]);
