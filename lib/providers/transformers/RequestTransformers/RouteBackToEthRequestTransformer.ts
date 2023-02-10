@@ -7,7 +7,7 @@ import { parseEther } from 'ethers/lib/utils';
 import { RequestTransformer } from '..';
 import { QuoteRequest } from '../../../entities';
 import { ClassicRequest } from '../../../entities/request/ClassicRequest';
-import { RequestByRoutingType, RoutingType } from '../../../entities/request/index';
+import { DutchLimitRequest, RequestByRoutingType, RoutingType } from '../../../entities/request/index';
 
 /*
  * adds a synthetic classic request to check if the output token has route back to ETH
@@ -23,14 +23,15 @@ export class RouteBackToEthTransformer implements RequestTransformer {
     const requestByRoutingType: RequestByRoutingType = {};
     requests.forEach((r) => (requestByRoutingType[r.routingType] = r));
 
-    if (!requestByRoutingType[RoutingType.DUTCH_LIMIT]) {
+    const dlRequest = requestByRoutingType[RoutingType.DUTCH_LIMIT] as DutchLimitRequest;
+    if (!dlRequest) {
       this.log.info('UniswapX not requested, skipping transformer');
       return requests;
     }
 
     const synthClassicRequest = new ClassicRequest(
       {
-        ...requests[0].info,
+        ...dlRequest.info,
         type: TradeType.EXACT_OUTPUT,
         tokenIn: requests[0].info.tokenOut,
         amount: parseEther('1'),
