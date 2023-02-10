@@ -15,7 +15,8 @@ import {
   QUOTE_REQUEST_MULTI,
 } from '../../../utils/fixtures';
 
-describe('Quote Transformers Integration', () => {
+// tests several transformers in tandem using the compound transformer
+describe('CompoundQuoteTransformer', () => {
   const logger = Logger.createLogger({ name: 'test' });
   logger.level(Logger.FATAL);
 
