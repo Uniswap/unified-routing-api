@@ -105,13 +105,13 @@ export class DutchLimitQuote implements Quote {
     }
   }
 
-  public get amountInGasAdjusted(): BigNumber {
-    return this.amountIn;
-  }
+  // public get amountInGasAdjusted(): BigNumber {
+  //   return this.amountIn;
+  // }
 
-  public get amountOutGasAdjusted(): BigNumber {
-    return this.amountOut;
-  }
+  // public get amountOutGasAdjusted(): BigNumber {
+  //   return this.amountOut;
+  // }
 
   public toJSON(): QuoteJSON {
     return this.toOrder();

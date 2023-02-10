@@ -4,10 +4,10 @@ import {
   DutchLimitQuoteJSON,
   DutchLimitRequest,
   parseQuoteRequests,
-  Quote,
   QuoteRequestBodyJSON,
   RoutingType,
 } from '../../lib/entities';
+import { ClassicQuote, DutchLimitQuote } from '../../lib/entities/quote';
 import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, OFFERER, TOKEN_IN, TOKEN_OUT } from '../constants';
 import { buildQuoteResponse } from './quoteResponse';
 
@@ -129,20 +129,20 @@ const CLASSIC_QUOTE_DATA = {
   },
 };
 
-export function createDutchLimitQuote(overrides: Partial<DutchLimitQuoteJSON>, type: string): Quote {
+export function createDutchLimitQuote(overrides: Partial<DutchLimitQuoteJSON>, type: string): DutchLimitQuote {
   return buildQuoteResponse(
     Object.assign({}, DL_QUOTE_DATA, {
       quote: { ...DL_QUOTE_DATA.quote, type: RoutingType.DUTCH_LIMIT, ...overrides },
     }),
     makeDutchLimitRequest({ type })
-  );
+  ) as DutchLimitQuote;
 }
 
-export function createClassicQuote(overrides: Partial<ClassicQuoteDataJSON>, type: string): Quote {
+export function createClassicQuote(overrides: Partial<ClassicQuoteDataJSON>, type: string): ClassicQuote {
   return buildQuoteResponse(
     Object.assign({}, CLASSIC_QUOTE_DATA, { quote: { ...CLASSIC_QUOTE_DATA.quote, ...overrides } }),
     makeClassicRequest({ type })
-  );
+  ) as ClassicQuote;
 }
 
 export const DL_QUOTE_EXACT_IN_BETTER = createDutchLimitQuote({ amountOut: '2' }, 'EXACT_INPUT');
