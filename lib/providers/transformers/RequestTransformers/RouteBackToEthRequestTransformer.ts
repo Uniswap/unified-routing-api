@@ -18,7 +18,8 @@ export class RouteBackToEthTransformer implements RequestTransformer {
   constructor(_log: Logger) {
     this.log = _log.child({ quoter: 'RouteBackToEthTransformer' });
   }
-  transform(requests: QuoteRequest[], gasPriceWei: string): QuoteRequest[] {
+
+  transform(requests: QuoteRequest[]): QuoteRequest[] {
     const requestByRoutingType: RequestByRoutingType = {};
     requests.forEach((r) => (requestByRoutingType[r.routingType] = r));
 
@@ -37,7 +38,6 @@ export class RouteBackToEthTransformer implements RequestTransformer {
       },
       {
         protocols: [Protocol.MIXED, Protocol.V2, Protocol.V3],
-        gasPriceWei: gasPriceWei,
       }
     );
     this.log.info({ synthClassicRequest: synthClassicRequest });

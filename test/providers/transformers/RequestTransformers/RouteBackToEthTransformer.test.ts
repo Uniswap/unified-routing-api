@@ -13,7 +13,7 @@ describe('RouteBackToEthTransformer', () => {
   const transformer = new RouteBackToEthTransformer(logger);
 
   it('adds a synthetic classic request when UniswapX requested', async () => {
-    const requests = transformer.transform([QUOTE_REQUEST_DL], '1000000000');
+    const requests = transformer.transform([QUOTE_REQUEST_DL]);
     expect(requests.length).toEqual(2);
     expect(requests[1]).toMatchObject({
       info: {
@@ -24,13 +24,12 @@ describe('RouteBackToEthTransformer', () => {
       },
       config: {
         protocols: ['MIXED', 'V2', 'V3'],
-        gasPriceWei: '1000000000',
       },
     });
   });
 
   it('does not add a synthetic classic request when UniswapX not requested', async () => {
-    const requests = transformer.transform([QUOTE_REQUEST_CLASSIC], '1000000000');
+    const requests = transformer.transform([QUOTE_REQUEST_CLASSIC]);
     expect(requests.length).toEqual(1);
   });
 });
