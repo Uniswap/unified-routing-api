@@ -1,13 +1,17 @@
 import Logger from 'bunyan';
+import { ethers } from 'ethers';
 
 import { OnlyConfiguredQuotersFilter } from '../../../../lib/providers/transformers';
 import {
+  CLASSIC_QUOTE_DATA,
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   DL_QUOTE_EXACT_IN_BETTER,
+  makeClassicRequest,
   QUOTE_REQUEST_CLASSIC,
   QUOTE_REQUEST_DL,
   QUOTE_REQUEST_MULTI,
 } from '../../../utils/fixtures';
+import { buildQuoteResponse } from '../../../utils/quoteResponse';
 
 describe('OnlyConfiguredQuotersFilter', () => {
   const logger = Logger.createLogger({ name: 'test' });
@@ -52,6 +56,20 @@ describe('OnlyConfiguredQuotersFilter', () => {
     expect(filtered.length).toEqual(1);
     filtered = await filter.transform([QUOTE_REQUEST_DL], [CLASSIC_QUOTE_EXACT_IN_BETTER, DL_QUOTE_EXACT_IN_BETTER]);
     expect(filtered.length).toEqual(1);
+  });
+
+  it('filter if configured but different params', async () => {
+    const diffParamQuote = buildQuoteResponse(
+      CLASSIC_QUOTE_DATA,
+      makeClassicRequest({ tokenOut: ethers.constants.AddressZero })
+    );
+
+    const filtered = await filter.transform(QUOTE_REQUEST_MULTI, [
+      CLASSIC_QUOTE_EXACT_IN_BETTER,
+      DL_QUOTE_EXACT_IN_BETTER,
+      diffParamQuote,
+    ]);
+    expect(filtered.length).toEqual(2);
   });
 
   it('does not filter multiple of same type', async () => {
