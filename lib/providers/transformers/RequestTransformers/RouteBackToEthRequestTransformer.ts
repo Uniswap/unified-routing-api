@@ -33,9 +33,9 @@ export class RouteBackToEthTransformer implements RequestTransformer {
       {
         ...dlRequest.info,
         type: TradeType.EXACT_OUTPUT,
-        tokenIn: requests[0].info.tokenOut,
+        tokenIn: dlRequest.info.tokenOut,
         amount: parseEther('1'),
-        tokenOut: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(requests[0].info.tokenOutChainId)].address,
+        tokenOut: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(dlRequest.info.tokenOutChainId)].address,
       },
       {
         protocols: [Protocol.MIXED, Protocol.V2, Protocol.V3],
