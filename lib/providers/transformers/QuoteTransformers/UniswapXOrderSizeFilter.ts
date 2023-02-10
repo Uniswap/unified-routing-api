@@ -21,25 +21,10 @@ export class UniswapXOrderSizeFilter implements QuoteTransformer {
   }
 
   async transform(_requests: QuoteRequest[], quotes: Quote[]): Promise<Quote[]> {
-    let routingApiResponse: Quote | null = null;
-    let uniswapXResponse: Quote | null = null;
-
-    // TODO: throw if multiple of one type?
-    for (const quote of quotes) {
-      if (quote.routingType === RoutingType.CLASSIC) {
-        routingApiResponse = quote;
-      } else if (quote.routingType === RoutingType.DUTCH_LIMIT) {
-        uniswapXResponse = quote;
-      }
-    }
+    const routingApiResponse: Quote | undefined = quotes.find((quote) => quote.routingType === RoutingType.CLASSIC);
 
     if (!routingApiResponse) {
       this.log.error('Missing routing api response');
-      return quotes;
-    }
-
-    if (!uniswapXResponse) {
-      this.log.error('Missing uniswapX response');
       return quotes;
     }
 
@@ -58,20 +43,25 @@ export class UniswapXOrderSizeFilter implements QuoteTransformer {
       return quotes;
     }
 
-    const uniswapXQuote =
-      uniswapXResponse.request.info.type === TradeType.EXACT_INPUT
-        ? uniswapXResponse.amountOut
-        : uniswapXResponse.amountIn;
-    const quoteGasThreshold = uniswapXQuote.mul(GAS_PROPORTION_THRESHOLD_BPS).div(BPS);
+    // filter any dutch quotes that are too small relative to gas
+    return quotes.filter((quote) => {
+      if (quote.routingType !== RoutingType.DUTCH_LIMIT) {
+        return true;
+      }
 
-    // the gas used is less than the threshold, so no filtering
-    if (gasUsedQuote.lt(quoteGasThreshold)) {
-      return quotes;
-    }
-    this.log.info(
-      { uniswapXQuote: uniswapXQuote, gasUsedQuote: gasUsedQuote },
-      'Removing UniswapX quote due to gas cost'
-    );
-    return [routingApiResponse];
+      const uniswapXQuote = quote.request.info.type === TradeType.EXACT_INPUT ? quote.amountOut : quote.amountIn;
+      const quoteGasThreshold = uniswapXQuote.mul(GAS_PROPORTION_THRESHOLD_BPS).div(BPS);
+
+      // the gas used is less than the threshold, so no filtering
+      if (gasUsedQuote.gte(quoteGasThreshold)) {
+        this.log.info(
+          { uniswapXQuote: uniswapXQuote, gasUsedQuote: gasUsedQuote },
+          'Removing UniswapX quote due to gas cost'
+        );
+        return false;
+      }
+
+      return true;
+    });
   }
 }
