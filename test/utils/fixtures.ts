@@ -71,7 +71,7 @@ export const QUOTE_REQUEST_MULTI = parseQuoteRequests({
     },
     {
       routingType: RoutingType.CLASSIC,
-      protocols: ['v3'],
+      protocols: ['v3', 'v2', 'mixed'],
       gasPriceWei: '12',
     },
   ],
