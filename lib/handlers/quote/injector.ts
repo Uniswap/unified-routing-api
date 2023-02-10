@@ -53,6 +53,7 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
         new UniswapXOrderSizeFilter(log),
         new OnlyConfiguredQuotersFilter(log),
       ]),
+
       requestTransformer: new CompoundRequestTransformer([new RouteBackToEthTransformer(log)]),
     };
   }
