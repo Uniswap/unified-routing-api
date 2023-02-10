@@ -5,15 +5,16 @@ import { default as bunyan, default as Logger } from 'bunyan';
 import { QuoteRequestBodyJSON, RoutingType } from '../../entities';
 import { Quoter, RfqQuoter, RoutingApiQuoter } from '../../providers/quoters';
 import {
+  ClassicQuoteInserter,
   CompoundQuoteTransformer,
   CompoundRequestTransformer,
   OnlyConfiguredQuotersFilter,
   QuoteTransformer,
   RequestTransformer,
+  RouteBackToEthTransformer,
   SyntheticUniswapXTransformer,
   UniswapXOrderSizeFilter,
 } from '../../providers/transformers';
-import { RouteBackToEthTransformer } from '../../providers/transformers/RequestTransformers/RouteBackToEthRequestTransformer';
 import { checkDefined } from '../../util/preconditions';
 import { ApiInjector, ApiRInj } from '../base/api-handler';
 
@@ -51,7 +52,10 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
         new OnlyConfiguredQuotersFilter(log),
       ]),
 
-      requestTransformer: new CompoundRequestTransformer([new RouteBackToEthTransformer(log)]),
+      requestTransformer: new CompoundRequestTransformer([
+        new ClassicQuoteInserter(log),
+        new RouteBackToEthTransformer(log),
+      ]),
     };
   }
 
