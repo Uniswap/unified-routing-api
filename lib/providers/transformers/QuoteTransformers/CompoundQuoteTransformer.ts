@@ -1,10 +1,7 @@
-import { Quote, QuoteRequest } from '../../entities';
-import { QuoteTransformer } from '.';
+import { Quote, QuoteRequest } from '../../../entities';
+import { QuoteTransformer } from '..';
 
-/*
-applies all supplied transformers one by one, in order
-*/
-export class CompoundTransformer implements QuoteTransformer {
+export class CompoundQuoteTransformer implements QuoteTransformer {
   constructor(private transformers: QuoteTransformer[]) {}
 
   async transform(requests: QuoteRequest[], quotes: Quote[]): Promise<Quote[]> {

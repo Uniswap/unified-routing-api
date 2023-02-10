@@ -13,6 +13,8 @@ export enum RoutingType {
   DUTCH_LIMIT = 'DUTCH_LIMIT',
 }
 
+export type RequestByRoutingType = { [routingType in RoutingType]?: QuoteRequest };
+
 // config specific to the given routing type
 export type RoutingConfig = DutchLimitConfig | ClassicConfig;
 export type RoutingConfigJSON = DutchLimitConfigJSON | ClassicConfigJSON;

@@ -25,14 +25,15 @@ export class QuoteHandler extends APIGLambdaHandler<
     const {
       requestInjected: { log },
       requestBody,
-      containerInjected: { quoters, quoteTransformer },
+      containerInjected: { quoters, quoteTransformer, requestTransformer },
     } = params;
 
     const requests = parseQuoteRequests(requestBody);
-    const quotes = await getQuotes(quoters, requests);
-    const transformed = await quoteTransformer.transform(requests, quotes);
+    const requestsTransformed = requestTransformer.transform(requests);
+    const quotes = await getQuotes(quoters, requestsTransformed);
+    const quotesTransformed = await quoteTransformer.transform(requests, quotes);
 
-    const bestQuote = await getBestQuote(transformed);
+    const bestQuote = await getBestQuote(quotesTransformed);
     if (!bestQuote) {
       return {
         statusCode: 404,

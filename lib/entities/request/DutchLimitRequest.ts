@@ -1,10 +1,10 @@
-import { QuoteRequest, QuoteRequestInfo, RoutingType } from '.';
 import {
   DEFAULT_AUCTION_PERIOD_SECS,
   DEFAULT_EXCLUSIVE_PERIOD_SECS,
   DEFAULT_SLIPPAGE_TOLERANCE,
   ZERO_ADDRESS,
 } from '../../constants';
+import { QuoteRequest, QuoteRequestInfo, RoutingType } from '.';
 
 export * from './ClassicRequest';
 export * from './DutchLimitRequest';
