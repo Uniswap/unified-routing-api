@@ -12,7 +12,9 @@ export type QuoteJSON = DutchLimitOrderInfoJSON | ClassicQuoteDataJSON;
 export interface Quote {
   routingType: RoutingType;
   amountOut: BigNumber;
+  amountOutGasAdjusted: BigNumber;
   amountIn: BigNumber;
+  amountInGasAdjusted: BigNumber;
   toJSON(): QuoteJSON;
   request: QuoteRequest;
 }
