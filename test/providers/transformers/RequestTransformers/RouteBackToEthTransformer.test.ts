@@ -1,8 +1,8 @@
 import { TradeType } from '@uniswap/sdk-core';
+import { ChainId, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
 import Logger from 'bunyan';
 import { ethers } from 'ethers';
 
-import { ChainId, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
 import { RouteBackToEthTransformer } from '../../../../lib/providers/transformers/RequestTransformers/RouteBackToEthRequestTransformer';
 import { QUOTE_REQUEST_CLASSIC, QUOTE_REQUEST_DL } from '../../../utils/fixtures';
 

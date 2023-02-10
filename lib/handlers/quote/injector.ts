@@ -1,7 +1,6 @@
 import { setGlobalLogger } from '@uniswap/smart-order-router';
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { default as bunyan, default as Logger } from 'bunyan';
-import { ethers } from 'ethers';
 
 import { QuoteRequestBodyJSON, RoutingType } from '../../entities';
 import { Quoter, RfqQuoter, RoutingApiQuoter } from '../../providers/quoters';
@@ -21,8 +20,6 @@ import { ApiInjector, ApiRInj } from '../base/api-handler';
 export type QuoterByRoutingType = {
   [key in RoutingType]?: Quoter[];
 };
-
-export type ProviderByChain = { [chainId: number]: ethers.providers.JsonRpcProvider };
 
 export interface ContainerInjected {
   quoters: QuoterByRoutingType;
