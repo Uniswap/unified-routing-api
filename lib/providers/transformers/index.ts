@@ -10,5 +10,5 @@ export interface QuoteTransformer {
 }
 
 export interface RequestTransformer {
-  transform(requests: QuoteRequest[], gasPriceWei: string): QuoteRequest[];
+  transform(requests: QuoteRequest[]): QuoteRequest[];
 }

@@ -6,12 +6,15 @@ import { ethers } from 'ethers';
 import { QuoteRequestBodyJSON, RoutingType } from '../../entities';
 import { Quoter, RfqQuoter, RoutingApiQuoter } from '../../providers/quoters';
 import {
-  CompoundTransformer,
+  CompoundQuoteTransformer,
+  CompoundRequestTransformer,
   OnlyConfiguredQuotersFilter,
   QuoteTransformer,
+  RequestTransformer,
   SyntheticUniswapXTransformer,
   UniswapXOrderSizeFilter,
 } from '../../providers/transformers';
+import { RouteBackToEthTransformer } from '../../providers/transformers/RequestTransformers/RouteBackToEthRequestTransformer';
 import { checkDefined } from '../../util/preconditions';
 import { ApiInjector, ApiRInj } from '../base/api-handler';
 
@@ -24,6 +27,7 @@ export type ProviderByChain = { [chainId: number]: ethers.providers.JsonRpcProvi
 export interface ContainerInjected {
   quoters: QuoterByRoutingType;
   quoteTransformer: QuoteTransformer;
+  requestTransformer: RequestTransformer;
 }
 
 export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void> {
@@ -44,11 +48,12 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
         [RoutingType.CLASSIC]: [new RoutingApiQuoter(log, routingApiUrl)],
       },
       // transformer ordering matters! transformers should generally come before filters
-      quoteTransformer: new CompoundTransformer([
+      quoteTransformer: new CompoundQuoteTransformer([
         new SyntheticUniswapXTransformer(log),
         new UniswapXOrderSizeFilter(log),
         new OnlyConfiguredQuotersFilter(log),
       ]),
+      requestTransformer: new CompoundRequestTransformer([new RouteBackToEthTransformer(log)]),
     };
   }
 

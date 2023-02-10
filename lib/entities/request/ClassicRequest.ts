@@ -49,10 +49,9 @@ export class ClassicRequest implements QuoteRequest {
     );
   }
 
-  public static fromDutchLimitRequest(request: DutchLimitRequest, gasPriceWei: string): ClassicRequest {
+  public static fromDutchLimitRequest(request: DutchLimitRequest): ClassicRequest {
     return new ClassicRequest(request.info, {
       protocols: [Protocol.V2, Protocol.V3, Protocol.MIXED],
-      gasPriceWei: gasPriceWei,
     });
   }
 
