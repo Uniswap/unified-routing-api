@@ -1,10 +1,10 @@
 import Logger from 'bunyan';
 
+import { QuoteTransformer } from '..';
 import { DutchLimitQuote, Quote, QuoteRequest } from '../../../entities';
 import { ClassicQuote } from '../../../entities/quote/ClassicQuote';
 import { DutchLimitRequest } from '../../../entities/request/DutchLimitRequest';
-import { RoutingType } from '../../../entities/request/index';
-import { QuoteTransformer } from '..';
+import { RequestByRoutingType, RoutingType } from '../../../entities/request/index';
 
 export class SyntheticUniswapXTransformer implements QuoteTransformer {
   private log: Logger;
@@ -15,7 +15,7 @@ export class SyntheticUniswapXTransformer implements QuoteTransformer {
 
   async transform(requests: QuoteRequest[], quotes: Quote[]): Promise<Quote[]> {
     const quoteByRoutingType: { [key in RoutingType]?: Quote } = {};
-    const requestByRoutingType: { [key in RoutingType]?: QuoteRequest } = {};
+    const requestByRoutingType: RequestByRoutingType = {};
     quotes.forEach((q) => (quoteByRoutingType[q.routingType] = q));
     requests.forEach((r) => (requestByRoutingType[r.routingType] = r));
 
