@@ -15,6 +15,7 @@ import {
   SyntheticUniswapXTransformer,
   UniswapXOrderSizeFilter,
 } from '../../providers/transformers';
+import { NoRouteBackToNativeFilter } from '../../providers/transformers/QuoteTransformers/NoRouteBackToNativeFilter';
 import { checkDefined } from '../../util/preconditions';
 import { ApiInjector, ApiRInj } from '../base/api-handler';
 
@@ -47,6 +48,7 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
       },
       // transformer ordering matters! transformers should generally come before filters
       quoteTransformer: new CompoundQuoteTransformer([
+        new NoRouteBackToNativeFilter(log),
         new SyntheticUniswapXTransformer(log),
         new UniswapXOrderSizeFilter(log),
         new OnlyConfiguredQuotersFilter(log),
