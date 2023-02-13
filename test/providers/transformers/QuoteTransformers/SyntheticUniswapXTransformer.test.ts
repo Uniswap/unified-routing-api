@@ -34,7 +34,7 @@ describe('SyntheticUniswapXTransformer', () => {
       const quoteByRoutingType: QuoteByRoutingType = {};
       transformed.forEach((quote) => (quoteByRoutingType[quote.routingType] = quote));
       expect(quoteByRoutingType[RoutingType.DUTCH_LIMIT]?.amountOut).toEqual(
-        CLASSIC_QUOTE_EXACT_IN_LARGE.amountOut.mul(101).div(100)
+        CLASSIC_QUOTE_EXACT_IN_LARGE.amountOutGasAdjusted.mul(101).div(100)
       );
     });
 
@@ -45,7 +45,7 @@ describe('SyntheticUniswapXTransformer', () => {
       ]);
       expect(transformed.length).toEqual(3);
 
-      const outStartAmount = CLASSIC_QUOTE_EXACT_IN_LARGE.amountOut.mul(101).div(100);
+      const outStartAmount = CLASSIC_QUOTE_EXACT_IN_LARGE.amountOutGasAdjusted.mul(101).div(100);
       const outEndAmount = outStartAmount.mul(HUNDRED_PERCENT.sub(50)).div(HUNDRED_PERCENT);
       expect(transformed[2].toJSON()).toMatchObject({
         outputs: [
@@ -65,7 +65,7 @@ describe('SyntheticUniswapXTransformer', () => {
       const quoteByRoutingType: QuoteByRoutingType = {};
       transformed.forEach((quote) => (quoteByRoutingType[quote.routingType] = quote));
       expect(quoteByRoutingType[RoutingType.DUTCH_LIMIT]?.amountIn).toEqual(
-        CLASSIC_QUOTE_EXACT_OUT_LARGE.amountIn.mul(99).div(100)
+        CLASSIC_QUOTE_EXACT_OUT_LARGE.amountInGasAdjusted.mul(99).div(100)
       );
     });
 
@@ -76,7 +76,7 @@ describe('SyntheticUniswapXTransformer', () => {
       ]);
       expect(transformed.length).toEqual(3);
 
-      const outStartAmount = CLASSIC_QUOTE_EXACT_OUT_LARGE.amountIn.mul(99).div(100);
+      const outStartAmount = CLASSIC_QUOTE_EXACT_OUT_LARGE.amountInGasAdjusted.mul(99).div(100);
       const outEndAmount = outStartAmount.mul(HUNDRED_PERCENT.add(50)).div(HUNDRED_PERCENT);
       expect(transformed[2].toJSON()).toMatchObject({
         input: {
