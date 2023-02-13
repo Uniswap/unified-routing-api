@@ -9,7 +9,7 @@ import {
   QuoteRequestBodyJSON,
   RoutingType,
 } from '../../lib/entities';
-import { ClassicQuote, DutchLimitQuote } from '../../lib/entities/quote';
+import { ClassicQuote, DutchLimitQuote, Quote } from '../../lib/entities/quote';
 import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, OFFERER, TOKEN_IN, TOKEN_OUT } from '../constants';
 import { buildQuoteResponse } from './quoteResponse';
 
