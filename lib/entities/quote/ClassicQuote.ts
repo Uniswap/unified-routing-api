@@ -80,15 +80,15 @@ export class ClassicQuote implements Quote {
       : BigNumber.from(this.quoteData.amount);
   }
 
-  public get amountIn(): BigNumber {
-    return this.request.info.type === TradeType.EXACT_OUTPUT
-      ? BigNumber.from(this.quoteData.quote)
+  public get amountOutGasAdjusted(): BigNumber {
+    return this.request.info.type === TradeType.EXACT_INPUT
+      ? BigNumber.from(this.quoteData.quoteGasAdjusted)
       : BigNumber.from(this.quoteData.amount);
   }
 
-  public get amountOutGaAdjusted(): BigNumber {
-    return this.request.info.type === TradeType.EXACT_INPUT
-      ? BigNumber.from(this.quoteData.quoteGasAdjusted)
+  public get amountIn(): BigNumber {
+    return this.request.info.type === TradeType.EXACT_OUTPUT
+      ? BigNumber.from(this.quoteData.quote)
       : BigNumber.from(this.quoteData.amount);
   }
 

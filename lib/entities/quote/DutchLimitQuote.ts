@@ -58,7 +58,7 @@ export class DutchLimitQuote implements Quote {
         request.info.tokenIn,
         request.info.amount, // fixed amountIn
         quote.request.info.tokenOut,
-        quote.amountOut.mul(DutchLimitQuote.improvementExactIn).div(HUNDRED_PERCENT),
+        quote.amountOutGasAdjusted.mul(DutchLimitQuote.improvementExactIn).div(HUNDRED_PERCENT),
         request.config.offerer,
         ''
       );
@@ -68,7 +68,7 @@ export class DutchLimitQuote implements Quote {
         request.info.tokenInChainId,
         request.info.requestId,
         request.info.tokenIn,
-        quote.amountIn.mul(DutchLimitQuote.improvementExactOut).div(HUNDRED_PERCENT),
+        quote.amountInGasAdjusted.mul(DutchLimitQuote.improvementExactOut).div(HUNDRED_PERCENT),
         quote.request.info.tokenOut,
         request.info.amount, // fixed amountOut
         request.config.offerer,
@@ -86,7 +86,7 @@ export class DutchLimitQuote implements Quote {
         this.tokenIn,
         this.amountIn,
         quote.request.info.tokenOut,
-        quote.amountOut.mul(DutchLimitQuote.improvementExactIn).div(HUNDRED_PERCENT),
+        quote.amountOutGasAdjusted.mul(DutchLimitQuote.improvementExactIn).div(HUNDRED_PERCENT),
         this.offerer,
         ''
       );
@@ -96,7 +96,7 @@ export class DutchLimitQuote implements Quote {
         this.chainId,
         this.requestId,
         this.tokenIn,
-        quote.amountIn.mul(DutchLimitQuote.improvementExactOut).div(HUNDRED_PERCENT),
+        quote.amountInGasAdjusted.mul(DutchLimitQuote.improvementExactOut).div(HUNDRED_PERCENT),
         quote.request.info.tokenOut,
         this.amountOut,
         this.offerer,
