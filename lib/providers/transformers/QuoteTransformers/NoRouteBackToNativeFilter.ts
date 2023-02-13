@@ -1,9 +1,9 @@
 import { TradeType } from '@uniswap/sdk-core';
 import Logger from 'bunyan';
 
+import { QuoteTransformer } from '..';
 import { Quote, QuoteRequest, RequestByRoutingType, RoutingType } from '../../../entities';
 import { ClassicQuote } from '../../../entities/quote/ClassicQuote';
-import { QuoteTransformer } from '..';
 
 export class NoRouteBackToNativeFilter implements QuoteTransformer {
   private log: Logger;
@@ -16,8 +16,8 @@ export class NoRouteBackToNativeFilter implements QuoteTransformer {
     const requestByRoutingType: RequestByRoutingType = {};
     originalRequests.forEach((r) => (requestByRoutingType[r.routingType] = r));
 
-    if (!requestByRoutingType[RoutingType.CLASSIC]) {
-      this.log.debug('Classic not requested, skipping filter');
+    if (!requestByRoutingType[RoutingType.DUTCH_LIMIT]) {
+      this.log.debug('UniswapX not requested, skipping filter');
       return quotes;
     }
 
