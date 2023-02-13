@@ -25,7 +25,7 @@ export class NoRouteBackToNativeFilter implements QuoteTransformer {
       quotes.some(
         (quote) =>
           quote.routingType === RoutingType.CLASSIC &&
-          quote.request.info.tokenIn === requestByRoutingType[RoutingType.CLASSIC]?.info.tokenOut &&
+          quote.request.info.tokenIn === requestByRoutingType[RoutingType.DUTCH_LIMIT]?.info.tokenOut &&
           quote.request.info.type === TradeType.EXACT_OUTPUT &&
           quote.amountIn.eq((quote as ClassicQuote).amountInGasAdjusted)
       )
