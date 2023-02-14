@@ -1,3 +1,4 @@
+import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
 import Logger from 'bunyan';
 import { ethers } from 'ethers';
 
@@ -7,6 +8,7 @@ import {
   SyntheticUniswapXTransformer,
   UniswapXOrderSizeFilter,
 } from '../../../../lib/providers/transformers';
+import { NoRouteBackToNativeFilter } from '../../../../lib/providers/transformers/QuoteTransformers/NoRouteBackToNativeFilter';
 import {
   createClassicQuote,
   createDutchLimitQuote,
@@ -21,6 +23,7 @@ describe('CompoundQuoteTransformer', () => {
   logger.level(Logger.FATAL);
 
   const transformer = new CompoundQuoteTransformer([
+    new NoRouteBackToNativeFilter(logger),
     new SyntheticUniswapXTransformer(logger),
     new UniswapXOrderSizeFilter(logger),
     new OnlyConfiguredQuotersFilter(logger),
@@ -109,6 +112,33 @@ describe('CompoundQuoteTransformer', () => {
     );
 
     const transformed = await transformer.transform([QUOTE_REQUEST_CLASSIC], [dutchQuote, classicQuote]);
+    expect(transformed.length).toEqual(1);
+    expect(transformed[0].routingType).toEqual(classicQuote.routingType);
+  });
+
+  it('Filters dutch quote if output token has no route back to ETH', async () => {
+    const dutchQuote = createDutchLimitQuote({ amountOut: ethers.utils.parseEther('2').toString() }, 'EXACT_INPUT');
+    const classicQuote = createClassicQuote(
+      {
+        quote: ethers.utils.parseEther('3').toString(),
+        quoteGasAdjusted: ethers.utils.parseEther('3').sub(2000).toString(),
+      },
+      'EXACT_INPUT'
+    );
+
+    const backToEthQuote = createClassicQuote(
+      {
+        quote: ethers.utils.parseEther('3').toString(),
+        quoteGasAdjusted: ethers.utils.parseEther('3').toString(),
+      },
+      'EXACT_OUTPUT'
+    );
+    backToEthQuote.request.info.tokenIn = dutchQuote.request.info.tokenOut;
+    backToEthQuote.request.info.tokenOut =
+      WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(dutchQuote.request.info.tokenOutChainId)].address;
+
+    const transformed = await transformer.transform(QUOTE_REQUEST_MULTI, [dutchQuote, classicQuote, backToEthQuote]);
+
     expect(transformed.length).toEqual(1);
     expect(transformed[0].routingType).toEqual(classicQuote.routingType);
   });

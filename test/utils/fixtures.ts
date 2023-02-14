@@ -1,3 +1,5 @@
+import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
+
 import {
   ClassicQuoteDataJSON,
   ClassicRequest,
@@ -7,7 +9,7 @@ import {
   QuoteRequestBodyJSON,
   RoutingType,
 } from '../../lib/entities';
-import { ClassicQuote, DutchLimitQuote } from '../../lib/entities/quote';
+import { ClassicQuote, DutchLimitQuote, Quote } from '../../lib/entities/quote';
 import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, OFFERER, TOKEN_IN, TOKEN_OUT } from '../constants';
 import { buildQuoteResponse } from './quoteResponse';
 
@@ -145,6 +147,22 @@ export function createClassicQuote(overrides: Partial<ClassicQuoteDataJSON>, typ
   ) as ClassicQuote;
 }
 
+export function createRouteBackToNativeQuote(overrides: Partial<ClassicQuoteDataJSON>, type: string): Quote {
+  return buildQuoteResponse(
+    Object.assign({}, CLASSIC_QUOTE_DATA, {
+      quote: {
+        ...CLASSIC_QUOTE_DATA.quote,
+        ...overrides,
+      },
+    }),
+    makeClassicRequest({
+      type: type,
+      tokenIn: TOKEN_OUT,
+      tokenOut: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_OUT_ID)].address,
+    })
+  );
+}
+
 export const DL_QUOTE_EXACT_IN_BETTER = createDutchLimitQuote({ amountOut: '2' }, 'EXACT_INPUT');
 export const DL_QUOTE_EXACT_IN_WORSE = createDutchLimitQuote({ amountOut: '1' }, 'EXACT_INPUT');
 export const DL_QUOTE_EXACT_IN_LARGE = createDutchLimitQuote({ amountOut: '10000' }, 'EXACT_INPUT');
@@ -161,3 +179,17 @@ export const CLASSIC_QUOTE_EXACT_IN_LARGE = createClassicQuote(
 export const CLASSIC_QUOTE_EXACT_OUT_BETTER = createClassicQuote({ quote: '1' }, 'EXACT_OUTPUT');
 export const CLASSIC_QUOTE_EXACT_OUT_WORSE = createClassicQuote({ quote: '2' }, 'EXACT_OUTPUT');
 export const CLASSIC_QUOTE_EXACT_OUT_LARGE = createClassicQuote({ quote: '10000' }, 'EXACT_OUTPUT');
+export const CLASSIC_QUOTE_HAS_ROUTE_TO_NATIVE = createRouteBackToNativeQuote(
+  {
+    quote: '100',
+    quoteGasAdjusted: '98',
+  },
+  'EXACT_OUTPUT'
+);
+export const CLASSIC_QUOTE_NO_ROUTE_TO_NATIVE = createRouteBackToNativeQuote(
+  {
+    quote: '100',
+    quoteGasAdjusted: '100',
+  },
+  'EXACT_OUTPUT'
+);
