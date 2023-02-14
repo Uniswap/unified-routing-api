@@ -35,18 +35,18 @@ describe('RfqQuoter test', () => {
     expect(quote).toBeNull();
   });
 
+  it('gracefully handles GET nonce error', async () => {
+    jest.spyOn(axios, 'get').mockRejectedValue(new Error('GET nonce error'));
+    const quote = (await quoter.quote(QUOTE_REQUEST_DL)) as DutchLimitQuote;
+    const nonce = BigNumber.from(quote?.toOrder().nonce);
+    expect(nonce.gt(0) && nonce.lt(ethers.constants.MaxUint256)).toBeTruthy();
+  });
+
   it('uses nonce returned by UniX service and increment by 1', async () => {
     getSpy('123');
     const quote = await quoter.quote(QUOTE_REQUEST_DL);
     expect(quote?.toJSON()).toMatchObject({
       nonce: '124',
     });
-  });
-
-  it('generates random nonce if UniX service returns null', async () => {
-    getSpy();
-    const quote = (await quoter.quote(QUOTE_REQUEST_DL)) as DutchLimitQuote;
-    const nonce = BigNumber.from(quote?.toOrder().nonce);
-    expect(nonce.gt(0) && nonce.lt(ethers.constants.MaxUint256)).toBeTruthy();
   });
 });

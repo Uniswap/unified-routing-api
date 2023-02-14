@@ -1,8 +1,8 @@
 import { TradeType } from '@uniswap/sdk-core';
 import axios from 'axios';
 import Logger from 'bunyan';
+import { BigNumber } from 'ethers';
 
-import { ZERO_ADDRESS } from '../../constants';
 import { DutchLimitQuote, DutchLimitRequest, Quote, RoutingType } from '../../entities';
 import { Quoter, QuoterType } from './index';
 
@@ -28,26 +28,32 @@ export class RfqQuoter implements Quoter {
     }
 
     const offerer = request.config.offerer;
-    try {
-      const requests = [
-        axios.post(`${this.rfqUrl}quote`, {
-          chainId: request.info.tokenInChainId,
-          tokenIn: request.info.tokenIn,
-          amountIn: request.info.amount.toString(),
-          tokenOut: request.info.tokenOut,
-          offerer: offerer,
-        }),
-      ];
+    const requests = [
+      axios.post(`${this.rfqUrl}quote`, {
+        chainId: request.info.tokenInChainId,
+        tokenIn: request.info.tokenIn,
+        amountIn: request.info.amount.toString(),
+        tokenOut: request.info.tokenOut,
+        offerer: offerer,
+      }),
+      axios.get(`${this.serviceUrl}dutch-auction/nonce?address=${offerer}`),
+    ];
 
-      if (request.config.offerer != ZERO_ADDRESS) {
-        requests.push(axios.get(`${this.serviceUrl}dutch-auction/nonce?address=${offerer}`));
+    let quote: Quote | null = null;
+    await Promise.allSettled(requests).then((results) => {
+      if (results[0].status == 'rejected') {
+        this.log.error(results[0].reason, 'RfqQuoterErr');
+      } else if (results[1].status == 'rejected') {
+        this.log.debug(results[1].reason, 'RfqQuoterErr: GET nonce failed');
+        quote = DutchLimitQuote.fromResponseBody(request, results[0].value.data);
+      } else {
+        quote = DutchLimitQuote.fromResponseBody(
+          request,
+          results[0].value.data,
+          BigNumber.from(results[1].value.data.nonce).add(1).toString()
+        );
       }
-
-      const [response, nonceResponse] = await Promise.all(requests);
-      return DutchLimitQuote.fromResponseBody(request, response.data, nonceResponse?.data?.nonce);
-    } catch (e) {
-      this.log.error(e, 'RfqQuoterErr');
-      return null;
-    }
+    });
+    return quote;
   }
 }

@@ -2,9 +2,9 @@ import { DutchLimitOrderBuilder, DutchLimitOrderInfoJSON } from '@uniswap/gouda-
 import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber, ethers } from 'ethers';
 
-import { HUNDRED_PERCENT } from '../../constants';
-import { DutchLimitRequest, RoutingType } from '..';
 import { Quote, QuoteJSON } from '.';
+import { DutchLimitRequest, RoutingType } from '..';
+import { HUNDRED_PERCENT } from '../../constants';
 import { ClassicQuote } from './ClassicQuote';
 
 export type DutchLimitQuoteJSON = {
@@ -125,7 +125,7 @@ export class DutchLimitQuote implements Quote {
       .endTime(startTime + this.request.config.exclusivePeriodSecs + this.request.config.auctionPeriodSecs)
       .deadline(startTime + this.request.config.exclusivePeriodSecs + this.request.config.auctionPeriodSecs)
       .offerer(this.request.config.offerer)
-      .nonce(BigNumber.from(nonce).add(1))
+      .nonce(BigNumber.from(nonce))
       .input({
         token: this.tokenIn,
         startAmount: this.amountIn,
