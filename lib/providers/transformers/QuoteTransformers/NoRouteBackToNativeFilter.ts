@@ -2,15 +2,15 @@ import { TradeType } from '@uniswap/sdk-core';
 import Logger from 'bunyan';
 
 import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
+import { QuoteTransformer } from '..';
 import { Quote, QuoteRequest, RequestByRoutingType, RoutingType } from '../../../entities';
 import { ClassicQuote } from '../../../entities/quote/ClassicQuote';
-import { QuoteTransformer } from '..';
 
 export class NoRouteBackToNativeFilter implements QuoteTransformer {
   private log: Logger;
 
   constructor(_log: Logger) {
-    this.log = _log.child({ quoter: 'NoRouteBackToEthFilter' });
+    this.log = _log.child({ transformer: 'NoRouteBackToEthFilter' });
   }
 
   async transform(originalRequests: QuoteRequest[], quotes: Quote[]): Promise<Quote[]> {
