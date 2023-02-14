@@ -1,5 +1,7 @@
+import { TradeType } from '@uniswap/sdk-core';
 import axios from 'axios';
 import Logger from 'bunyan';
+import { BigNumber } from 'ethers';
 
 import { DutchLimitQuote, DutchLimitRequest, Quote, RoutingType } from '../../entities';
 import { Quoter, QuoterType } from './index';
@@ -8,7 +10,7 @@ export class RfqQuoter implements Quoter {
   static readonly type: QuoterType.GOUDA_RFQ;
   private log: Logger;
 
-  constructor(_log: Logger, private rfqUrl: string) {
+  constructor(_log: Logger, private rfqUrl: string, private serviceUrl: string) {
     this.log = _log.child({ quoter: 'RfqQuoter' });
   }
 
@@ -17,21 +19,41 @@ export class RfqQuoter implements Quoter {
     this.log.info(this.rfqUrl, 'rfqUrl');
 
     if (request.routingType !== RoutingType.DUTCH_LIMIT) {
-      throw new Error(`Invalid routing config type: ${request.routingType}`);
+      this.log.error(`Invalid routing config type: ${request.routingType}`);
+      return null;
+    }
+    if (request.info.type === TradeType.EXACT_OUTPUT) {
+      this.log.error(`Invalid trade type: ${request.info.type}`);
+      return null;
     }
 
-    try {
-      const response = await axios.post(`${this.rfqUrl}quote`, {
+    const offerer = request.config.offerer;
+    const requests = [
+      axios.post(`${this.rfqUrl}quote`, {
         chainId: request.info.tokenInChainId,
         tokenIn: request.info.tokenIn,
         amountIn: request.info.amount.toString(),
         tokenOut: request.info.tokenOut,
-        offerer: request.config.offerer,
-      });
-      return DutchLimitQuote.fromResponseBody(request, response.data);
-    } catch (e) {
-      this.log.error(e, 'RfqQuoterErr');
-      return null;
-    }
+        offerer: offerer,
+      }),
+      axios.get(`${this.serviceUrl}dutch-auction/nonce?address=${offerer}`),
+    ];
+
+    let quote: Quote | null = null;
+    await Promise.allSettled(requests).then((results) => {
+      if (results[0].status == 'rejected') {
+        this.log.error(results[0].reason, 'RfqQuoterErr');
+      } else if (results[1].status == 'rejected') {
+        this.log.debug(results[1].reason, 'RfqQuoterErr: GET nonce failed');
+        quote = DutchLimitQuote.fromResponseBody(request, results[0].value.data);
+      } else {
+        quote = DutchLimitQuote.fromResponseBody(
+          request,
+          results[0].value.data,
+          BigNumber.from(results[1].value.data.nonce).add(1).toString()
+        );
+      }
+    });
+    return quote;
   }
 }

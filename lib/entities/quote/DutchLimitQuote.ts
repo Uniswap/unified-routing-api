@@ -1,10 +1,10 @@
 import { DutchLimitOrderBuilder, DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
 import { TradeType } from '@uniswap/sdk-core';
-import { BigNumber } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 
-import { HUNDRED_PERCENT } from '../../constants';
-import { DutchLimitRequest, RoutingType } from '..';
 import { Quote, QuoteJSON } from '.';
+import { DutchLimitRequest, RoutingType } from '..';
+import { HUNDRED_PERCENT } from '../../constants';
 import { ClassicQuote } from './ClassicQuote';
 
 export type DutchLimitQuoteJSON = {
@@ -23,7 +23,11 @@ export class DutchLimitQuote implements Quote {
   public static improvementExactIn = BigNumber.from(10100);
   public static improvementExactOut = BigNumber.from(9900);
 
-  public static fromResponseBody(request: DutchLimitRequest, body: DutchLimitQuoteJSON): DutchLimitQuote {
+  public static fromResponseBody(
+    request: DutchLimitRequest,
+    body: DutchLimitQuoteJSON,
+    nonce?: string
+  ): DutchLimitQuote {
     return new DutchLimitQuote(
       request,
       body.chainId,
@@ -33,7 +37,8 @@ export class DutchLimitQuote implements Quote {
       body.tokenOut,
       BigNumber.from(body.amountOut),
       body.offerer,
-      body.filler
+      body.filler,
+      nonce
     );
   }
 
@@ -46,7 +51,8 @@ export class DutchLimitQuote implements Quote {
     public readonly tokenOut: string,
     public readonly amountOut: BigNumber,
     public readonly offerer: string,
-    public readonly filler?: string
+    public readonly filler?: string,
+    public readonly nonce?: string
   ) {}
 
   public static fromClassicQuote(request: DutchLimitRequest, quote: ClassicQuote): DutchLimitQuote {
@@ -112,15 +118,14 @@ export class DutchLimitQuote implements Quote {
   public toOrder(): DutchLimitOrderInfoJSON {
     const orderBuilder = new DutchLimitOrderBuilder(this.chainId);
     const startTime = Math.floor(Date.now() / 1000);
-    // TODO: get nonce from gouda-service to get gas benefit of same-word nonces
-    const nonce = BigNumber.from(Math.floor(Math.random() * 100000000000000));
+    const nonce = this.nonce ?? this.generateRandomNonce();
 
     const order = orderBuilder
       .startTime(startTime + this.request.config.exclusivePeriodSecs)
       .endTime(startTime + this.request.config.exclusivePeriodSecs + this.request.config.auctionPeriodSecs)
       .deadline(startTime + this.request.config.exclusivePeriodSecs + this.request.config.auctionPeriodSecs)
       .offerer(this.request.config.offerer)
-      .nonce(nonce)
+      .nonce(BigNumber.from(nonce))
       .input({
         token: this.tokenIn,
         startAmount: this.amountIn,
@@ -150,5 +155,9 @@ export class DutchLimitQuote implements Quote {
         .mul(HUNDRED_PERCENT.add(BigNumber.from(this.request.info.slippageTolerance)))
         .div(HUNDRED_PERCENT);
     }
+  }
+
+  private generateRandomNonce(): string {
+    return ethers.BigNumber.from(ethers.utils.randomBytes(31)).shl(8).toString();
   }
 }

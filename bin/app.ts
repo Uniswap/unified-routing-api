@@ -168,6 +168,7 @@ const app = new cdk.App();
 const envVars: { [key: string]: string } = {};
 envVars['PARAMETERIZATION_API_URL'] = process.env['PARAMETERIZATION_API_URL'] || '';
 envVars['ROUTING_API_URL'] = process.env['ROUTING_API_URL'] || '';
+envVars['SERVICE_URL'] = process.env['SERVICE_URL'] || '';
 
 new APIStack(app, `${SERVICE_NAME}Stack`, {
   provisionedConcurrency: process.env.PROVISION_CONCURRENCY ? parseInt(process.env.PROVISION_CONCURRENCY) : 0,
