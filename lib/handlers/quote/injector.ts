@@ -39,11 +39,12 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
 
     const paramApiUrl = checkDefined(process.env.PARAMETERIZATION_API_URL, 'PARAMETERIZATION_API_URL is not defined');
     const routingApiUrl = checkDefined(process.env.ROUTING_API_URL, 'ROUTING_API_URL is not defined');
+    const serviceUrl = checkDefined(process.env.SERVICE_URL, 'SERVICE_URL is not defined');
 
     // TODO: consider instantiating one quoter per routing type instead
     return {
       quoters: {
-        [RoutingType.DUTCH_LIMIT]: [new RfqQuoter(log, paramApiUrl)],
+        [RoutingType.DUTCH_LIMIT]: [new RfqQuoter(log, paramApiUrl, serviceUrl)],
         [RoutingType.CLASSIC]: [new RoutingApiQuoter(log, routingApiUrl)],
       },
       // transformer ordering matters! transformers should generally come before filters
