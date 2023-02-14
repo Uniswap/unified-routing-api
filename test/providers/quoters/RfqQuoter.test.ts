@@ -5,7 +5,7 @@ import { BigNumber, ethers } from 'ethers';
 import { DutchLimitQuote, DutchLimitQuoteJSON } from '../../../lib/entities/quote/DutchLimitQuote';
 import { RfqQuoter } from '../../../lib/providers/quoters/RfqQuoter';
 import { AMOUNT_IN, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../constants';
-import { QUOTE_REQUEST_DL } from '../../utils/fixtures';
+import { QUOTE_REQUEST_DL, QUOTE_REQUEST_DL_EXACT_OUT } from '../../utils/fixtures';
 
 describe('RfqQuoter test', () => {
   // silent logger in tests
@@ -28,6 +28,11 @@ describe('RfqQuoter test', () => {
       amountOut: AMOUNT_IN,
       offerer: OFFERER,
     });
+  });
+
+  it('returns null if requested trade type is EXACT_OUTPUT', async () => {
+    const quote = await quoter.quote(QUOTE_REQUEST_DL_EXACT_OUT);
+    expect(quote).toBeNull();
   });
 
   it('uses nonce returned by UniX service and increment by 1', async () => {

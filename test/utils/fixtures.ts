@@ -61,6 +61,7 @@ export function makeDutchLimitRequest(overrides: Partial<QuoteRequestBodyJSON>):
 }
 
 export const QUOTE_REQUEST_DL = makeDutchLimitRequest({});
+export const QUOTE_REQUEST_DL_EXACT_OUT = makeDutchLimitRequest({ type: 'EXACT_OUTPUT' });
 
 export const QUOTE_REQUEST_MULTI = parseQuoteRequests({
   ...BASE_REQUEST_INFO_EXACT_IN,

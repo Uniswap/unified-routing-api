@@ -1,3 +1,4 @@
+import { TradeType } from '@uniswap/sdk-core';
 import axios from 'axios';
 import Logger from 'bunyan';
 
@@ -18,7 +19,12 @@ export class RfqQuoter implements Quoter {
     this.log.info(this.rfqUrl, 'rfqUrl');
 
     if (request.routingType !== RoutingType.DUTCH_LIMIT) {
-      throw new Error(`Invalid routing config type: ${request.routingType}`);
+      this.log.error(`Invalid routing config type: ${request.routingType}`);
+      return null;
+    }
+    if (request.info.type === TradeType.EXACT_OUTPUT) {
+      this.log.error(`Invalid trade type: ${request.info.type}`);
+      return null;
     }
 
     const offerer = request.config.offerer;
