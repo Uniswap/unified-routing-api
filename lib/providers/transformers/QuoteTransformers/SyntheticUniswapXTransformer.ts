@@ -1,16 +1,16 @@
 import Logger from 'bunyan';
 
+import { QuoteTransformer } from '..';
 import { DutchLimitQuote, Quote, QuoteRequest } from '../../../entities';
 import { ClassicQuote } from '../../../entities/quote/ClassicQuote';
 import { DutchLimitRequest } from '../../../entities/request/DutchLimitRequest';
 import { RequestByRoutingType, RoutingType } from '../../../entities/request/index';
-import { QuoteTransformer } from '..';
 
 export class SyntheticUniswapXTransformer implements QuoteTransformer {
   private log: Logger;
 
   constructor(_log: Logger) {
-    this.log = _log.child({ quoter: 'SyntheticGoudaTransformer' });
+    this.log = _log.child({ transformer: 'SyntheticGoudaTransformer' });
   }
 
   async transform(requests: QuoteRequest[], quotes: Quote[]): Promise<Quote[]> {

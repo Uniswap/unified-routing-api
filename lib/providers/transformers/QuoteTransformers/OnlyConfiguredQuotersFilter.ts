@@ -1,7 +1,7 @@
 import Logger from 'bunyan';
 
-import { Quote, QuoteRequest, RequestByRoutingType } from '../../../entities';
 import { QuoteTransformer } from '..';
+import { Quote, QuoteRequest, RequestByRoutingType } from '../../../entities';
 
 // filters out any quote responses that came from unconfigured quoters
 // sometimes we have to receive quotes even when not requested by the user
@@ -11,7 +11,7 @@ export class OnlyConfiguredQuotersFilter implements QuoteTransformer {
   private log: Logger;
 
   constructor(_log: Logger) {
-    this.log = _log.child({ quoter: 'OnlyConfiguredQuotersFilter' });
+    this.log = _log.child({ transformer: 'OnlyConfiguredQuotersFilter' });
   }
 
   async transform(originalRequests: QuoteRequest[], quotes: Quote[]): Promise<Quote[]> {

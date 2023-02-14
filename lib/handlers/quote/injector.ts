@@ -1,6 +1,7 @@
 import { setGlobalLogger } from '@uniswap/smart-order-router';
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { default as bunyan, default as Logger } from 'bunyan';
+import { v4 as uuidv4 } from 'uuid';
 
 import { QuoteRequestBodyJSON, RoutingType } from '../../entities';
 import { Quoter, RfqQuoter, RoutingApiQuoter } from '../../providers/quoters';
@@ -74,7 +75,10 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
 
     log = log.child({
       serializers: bunyan.stdSerializers,
-      requestBody,
+      requestBody: {
+        ...requestBody,
+        requestId: uuidv4(),
+      },
       requestId,
     });
     setGlobalLogger(log);
