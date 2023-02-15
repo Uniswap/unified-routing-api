@@ -1,7 +1,6 @@
 import { Protocol } from '@uniswap/router-sdk';
 import { BigNumber } from 'ethers';
 
-import { DUMMY_GAS_WEI } from '../../constants';
 import { QuoteRequest, QuoteRequestInfo, RoutingType } from '.';
 import { DutchLimitRequest } from './DutchLimitRequest';
 
@@ -43,7 +42,7 @@ export class ClassicRequest implements QuoteRequest {
           }
         }),
         slippageTolerance: body.slippageTolerance,
-        gasPriceWei: body.gasPriceWei ?? DUMMY_GAS_WEI,
+        gasPriceWei: body.gasPriceWei,
         permitAmount: body.permitAmount ? BigNumber.from(body.permitAmount) : undefined,
       })
     );

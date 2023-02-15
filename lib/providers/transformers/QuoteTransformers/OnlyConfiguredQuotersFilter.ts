@@ -1,7 +1,7 @@
 import Logger from 'bunyan';
 
+import { Quote, QuoteRequest, RequestByRoutingType, requestInfoEquals } from '../../../entities';
 import { QuoteTransformer } from '..';
-import { Quote, QuoteRequest, RequestByRoutingType } from '../../../entities';
 
 // filters out any quote responses that came from unconfigured quoters
 // sometimes we have to receive quotes even when not requested by the user
@@ -27,12 +27,7 @@ export class OnlyConfiguredQuotersFilter implements QuoteTransformer {
 
       const requestInfo = request.info;
       const quoteInfo = quote.request.info;
-      if (
-        requestInfo.tokenIn !== quoteInfo.tokenIn ||
-        requestInfo.tokenOut !== quoteInfo.tokenOut ||
-        !requestInfo.amount.eq(quoteInfo.amount) ||
-        requestInfo.type !== quoteInfo.type
-      ) {
+      if (!requestInfoEquals(requestInfo, quoteInfo)) {
         this.log.debug('Removing quote from unconfigured quoter info', requestInfo, quoteInfo);
         return false;
       }

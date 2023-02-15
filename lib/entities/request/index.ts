@@ -65,3 +65,20 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON): QuoteRequest[] {
     return [];
   });
 }
+
+// compares two request infos, returning true if they are quoting the same thing
+// note requests of different types but over the same data would return true here
+export function requestInfoEquals(a: QuoteRequestInfo, b: QuoteRequestInfo): boolean {
+  return (
+    a.requestId === b.requestId &&
+    a.tokenInChainId === b.tokenInChainId &&
+    a.tokenOutChainId === b.tokenOutChainId &&
+    a.tokenIn === b.tokenIn &&
+    a.tokenOut === b.tokenOut &&
+    a.amount.eq(b.amount) &&
+    a.type === b.type
+  );
+
+  // TODO: slippage tolerance is currently formatted differently by type
+  // unify so we can add that check here as well
+}

@@ -22,12 +22,14 @@ describe('CompoundQuoteTransformer', () => {
   const logger = Logger.createLogger({ name: 'test' });
   logger.level(Logger.FATAL);
 
-  const transformer = new CompoundQuoteTransformer([
-    new NoRouteBackToNativeFilter(logger),
-    new SyntheticUniswapXTransformer(logger),
-    new UniswapXOrderSizeFilter(logger),
-    new OnlyConfiguredQuotersFilter(logger),
-  ]);
+  const transformer = new CompoundQuoteTransformer(
+    [new SyntheticUniswapXTransformer(logger)],
+    [
+      new NoRouteBackToNativeFilter(logger),
+      new UniswapXOrderSizeFilter(logger),
+      new OnlyConfiguredQuotersFilter(logger),
+    ]
+  );
 
   it('creates a winning uniswpaX order from routingAPI data', async () => {
     // classic quote exists and both classic uniswapX is configured
@@ -114,6 +116,25 @@ describe('CompoundQuoteTransformer', () => {
     const transformed = await transformer.transform([QUOTE_REQUEST_CLASSIC], [dutchQuote, classicQuote]);
     expect(transformed.length).toEqual(1);
     expect(transformed[0].routingType).toEqual(classicQuote.routingType);
+  });
+
+  it('Does not return synthetic quote with different data', async () => {
+    // classic quote exists and both classic uniswapX is configured
+    const dutchQuote = createDutchLimitQuote({ amountOut: ethers.utils.parseEther('2').toString() }, 'EXACT_INPUT');
+    const classicQuote = createClassicQuote(
+      {
+        quote: ethers.utils.parseEther('3').toString(),
+        quoteGasAdjusted: ethers.utils.parseEther('3').sub(2000).toString(),
+      },
+      'EXACT_INPUT'
+    );
+
+    // random token
+    classicQuote.request.info.tokenOut = '0x0000000000000000000000000000000000000000';
+
+    const transformed = await transformer.transform([QUOTE_REQUEST_DL], [dutchQuote, classicQuote]);
+    expect(transformed.length).toEqual(1);
+    expect(transformed[0].routingType).toEqual(dutchQuote.routingType);
   });
 
   it('Filters dutch quote if output token has no route back to ETH', async () => {

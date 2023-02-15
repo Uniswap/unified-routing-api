@@ -2,9 +2,9 @@ import { DutchLimitOrderBuilder, DutchLimitOrderInfoJSON } from '@uniswap/gouda-
 import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber, ethers } from 'ethers';
 
-import { Quote, QuoteJSON } from '.';
-import { DutchLimitRequest, RoutingType } from '..';
 import { HUNDRED_PERCENT } from '../../constants';
+import { DutchLimitRequest, RoutingType } from '..';
+import { Quote, QuoteJSON } from '.';
 import { ClassicQuote } from './ClassicQuote';
 
 export type DutchLimitQuoteJSON = {
@@ -78,34 +78,6 @@ export class DutchLimitQuote implements Quote {
         quote.request.info.tokenOut,
         request.info.amount, // fixed amountOut
         request.config.offerer,
-        ''
-      );
-    }
-  }
-
-  public transformWithClassicQuote(quote: ClassicQuote): DutchLimitQuote {
-    if (this.request.info.type === TradeType.EXACT_INPUT) {
-      return new DutchLimitQuote(
-        this.request,
-        this.chainId,
-        this.requestId,
-        this.tokenIn,
-        this.amountIn,
-        quote.request.info.tokenOut,
-        quote.amountOutGasAdjusted.mul(DutchLimitQuote.improvementExactIn).div(HUNDRED_PERCENT),
-        this.offerer,
-        ''
-      );
-    } else {
-      return new DutchLimitQuote(
-        this.request,
-        this.chainId,
-        this.requestId,
-        this.tokenIn,
-        quote.amountInGasAdjusted.mul(DutchLimitQuote.improvementExactOut).div(HUNDRED_PERCENT),
-        quote.request.info.tokenOut,
-        this.amountOut,
-        this.offerer,
         ''
       );
     }
