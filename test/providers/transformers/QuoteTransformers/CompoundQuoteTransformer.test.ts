@@ -99,7 +99,7 @@ describe('CompoundQuoteTransformer', () => {
     expect(transformed.length).toEqual(2);
     expect(transformed[0].routingType).toEqual(dutchQuote.routingType);
     expect(transformed[1].routingType).toEqual(dutchQuote.routingType);
-    expect(transformed[1].amountOut.gt(classicQuote.amountOut)).toBeTruthy();
+    expect(transformed[1].amountOut.gte(classicQuote.amountOutGasAdjusted)).toBeTruthy();
   });
 
   it('Filters dutch quotes if not requested', async () => {

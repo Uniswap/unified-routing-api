@@ -2,8 +2,8 @@ import { TradeType } from '@uniswap/sdk-core';
 import Logger from 'bunyan';
 import { BigNumber } from 'ethers';
 
-import { ClassicQuoteDataJSON, Quote, QuoteRequest, RoutingType } from '../../../entities';
 import { QuoteTransformer } from '..';
+import { ClassicQuoteDataJSON, Quote, QuoteRequest, RoutingType } from '../../../entities';
 
 // if the gas is greater than this proportion of the whole trade size
 // then we will not route the order
