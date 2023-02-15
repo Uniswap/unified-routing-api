@@ -47,7 +47,7 @@ export class RouteBackToNativeTransformer implements RequestTransformer {
         protocols: [Protocol.MIXED, Protocol.V2, Protocol.V3],
       }
     );
-    this.log.info({ synthClassicRequest: synthClassicRequest });
+    this.log.info({ synthClassicRequest: synthClassicRequest.info }, 'Adding synthetic classic request');
     return [...requests, synthClassicRequest];
   }
 }

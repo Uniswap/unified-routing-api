@@ -7,10 +7,10 @@ export class CompoundRequestTransformer implements RequestTransformer {
   transform(requests: QuoteRequest[]): QuoteRequest[] {
     let result: QuoteRequest[] = requests;
     for (const transformer of this.inserters) {
-      result = transformer.transform(requests);
+      result = transformer.transform(result);
     }
     for (const transformer of this.filters) {
-      result = transformer.transform(requests);
+      result = transformer.transform(result);
     }
     return result;
   }

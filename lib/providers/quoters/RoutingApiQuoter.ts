@@ -23,7 +23,6 @@ export class RoutingApiQuoter implements Quoter {
     }
     try {
       const req = this.buildRequest(request);
-      this.log.info(req, 'routingApiReq');
       const response = await axios.get(req);
       return ClassicQuote.fromResponseBody(request, response.data);
     } catch (e) {

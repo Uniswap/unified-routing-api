@@ -1,10 +1,10 @@
 import { Protocol } from '@uniswap/router-sdk';
 import Logger from 'bunyan';
 
+import { RequestTransformer } from '..';
 import { QuoteRequest, requestInfoEquals } from '../../../entities';
 import { ClassicRequest } from '../../../entities/request/ClassicRequest';
 import { RequestByRoutingType, RoutingType } from '../../../entities/request/index';
-import { RequestTransformer } from '..';
 
 /*
  * Adds a synthetic classic request if none given to compare against UniswapX RFQ quotes
@@ -37,7 +37,7 @@ export class ClassicQuoteInserter implements RequestTransformer {
     const classicRequest = new ClassicRequest(dutchLimitRequest.info, {
       protocols: [Protocol.MIXED, Protocol.V2, Protocol.V3],
     });
-    this.log.info({ classicRequest });
+    this.log.info({ classicRequest: classicRequest.info }, 'Adding synthetic classic request');
     return [...requests, classicRequest];
   }
 }
