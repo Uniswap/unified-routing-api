@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import * as cdk from 'aws-cdk-lib';
 import { CfnOutput, SecretValue, Stack, StackProps, Stage, StageProps } from 'aws-cdk-lib';
 import { BuildEnvironmentVariableType, BuildSpec } from 'aws-cdk-lib/aws-codebuild';
+import * as sm from 'aws-cdk-lib/aws-secretsmanager';
 import { CodeBuildStep, CodePipeline, CodePipelineSource } from 'aws-cdk-lib/pipelines';
 import { Construct } from 'constructs';
 import dotenv from 'dotenv';
@@ -43,7 +43,7 @@ export class APIPipeline extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const code = CodePipelineSource.gitHub('Uniswap/gouda-parameterization-api', 'main', {
+    const code = CodePipelineSource.gitHub('Uniswap/unified-routing-api', 'main', {
       authentication: SecretValue.secretsManager('github-token-2'),
     });
 
@@ -86,13 +86,21 @@ export class APIPipeline extends Stack {
       synth: synthStep,
     });
 
-    // Beta us-east-2
+    const urlSecrets = sm.Secret.fromSecretAttributes(this, 'urlSecrets', {
+      secretCompleteArn: 'arn:aws:secretsmanager:us-east-2:644039819003:secret:gouda-service-api-xCINOs',
+    });
 
+    // Beta us-east-2
     const betaUsEast2Stage = new APIStage(this, 'beta-us-east-2', {
-      env: { account: '801328487475', region: 'us-east-2' },
+      env: { account: '665191769009', region: 'us-east-2' },
       provisionedConcurrency: 2,
       stage: STAGE.BETA,
-      envVars: envVars,
+      envVars: {
+        ...envVars,
+        PARAMETERIZATION_API_URL: urlSecrets.secretValueFromJson('PARAM_API_BETA').toString(),
+        ROUTING_API_URL: urlSecrets.secretValueFromJson('ROUTING_API_BETA').toString(),
+        SERVICE_URL: urlSecrets.secretValueFromJson('GOUDA_SERVICE_BETA').toString(),
+      },
     });
 
     const betaUsEast2AppStage = pipeline.addStage(betaUsEast2Stage);
@@ -101,11 +109,16 @@ export class APIPipeline extends Stack {
 
     // Prod us-east-2
     const prodUsEast2Stage = new APIStage(this, 'prod-us-east-2', {
-      env: { account: '830217277613', region: 'us-east-2' },
+      env: { account: '652077092967', region: 'us-east-2' },
       provisionedConcurrency: 5,
       chatbotSNSArn: 'arn:aws:sns:us-east-2:644039819003:SlackChatbotTopic',
       stage: STAGE.PROD,
-      envVars: envVars,
+      envVars: {
+        ...envVars,
+        PARAMETERIZATION_API_URL: urlSecrets.secretValueFromJson('PARAM_API_PROD').toString(),
+        ROUTING_API_URL: urlSecrets.secretValueFromJson('ROUTING_API_PROD').toString(),
+        SERVICE_URL: urlSecrets.secretValueFromJson('GOUDA_SERVICE_PROD').toString(),
+      },
     });
 
     const prodUsEast2AppStage = pipeline.addStage(prodUsEast2Stage);
