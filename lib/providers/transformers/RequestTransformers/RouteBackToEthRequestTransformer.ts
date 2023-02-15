@@ -4,10 +4,10 @@ import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-ro
 import Logger from 'bunyan';
 import { parseEther } from 'ethers/lib/utils';
 
-import { RequestTransformer } from '..';
 import { QuoteRequest } from '../../../entities';
 import { ClassicRequest } from '../../../entities/request/ClassicRequest';
 import { DutchLimitRequest, RequestByRoutingType, RoutingType } from '../../../entities/request/index';
+import { RequestTransformer } from '..';
 
 /*
  * adds a synthetic classic request to check if the output token has route back to ETH

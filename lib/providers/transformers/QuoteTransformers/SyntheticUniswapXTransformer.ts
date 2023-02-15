@@ -4,8 +4,10 @@ import { QuoteTransformer } from '..';
 import { DutchLimitQuote, Quote, QuoteRequest } from '../../../entities';
 import { ClassicQuote } from '../../../entities/quote/ClassicQuote';
 import { DutchLimitRequest } from '../../../entities/request/DutchLimitRequest';
-import { RequestByRoutingType, RoutingType } from '../../../entities/request/index';
+import { requestInfoEquals, RoutingType } from '../../../entities/request/index';
 
+// if UniswapX is requested, makes competitive UniswapX quotes
+// from routing-API classic quote data
 export class SyntheticUniswapXTransformer implements QuoteTransformer {
   private log: Logger;
 
@@ -14,36 +16,32 @@ export class SyntheticUniswapXTransformer implements QuoteTransformer {
   }
 
   async transform(requests: QuoteRequest[], quotes: Quote[]): Promise<Quote[]> {
-    const quoteByRoutingType: { [key in RoutingType]?: Quote } = {};
-    const requestByRoutingType: RequestByRoutingType = {};
-    quotes.forEach((q) => (quoteByRoutingType[q.routingType] = q));
-    requests.forEach((r) => (requestByRoutingType[r.routingType] = r));
+    const dutchRequests: DutchLimitRequest[] = requests.filter(
+      (r) => r.routingType === RoutingType.DUTCH_LIMIT
+    ) as DutchLimitRequest[];
+    const classicQuotes: ClassicQuote[] = quotes.filter((q) => q.routingType === RoutingType.CLASSIC) as ClassicQuote[];
 
     // UniswapX not requested, don't do anything
-    if (!requestByRoutingType[RoutingType.DUTCH_LIMIT]) {
+    if (dutchRequests.length === 0) {
       this.log.info('UniswapX not requested, skipping transformer');
       return quotes;
     }
-    // should we throw at this point?
-    if (!quoteByRoutingType[RoutingType.CLASSIC]) {
+
+    if (classicQuotes.length === 0) {
       this.log.error('Classic quote not available, skipping transformer');
       return quotes;
     }
 
-    let synthUniXQuote: DutchLimitQuote;
-    const classicQuote = quoteByRoutingType[RoutingType.CLASSIC] as ClassicQuote;
-    if (!quoteByRoutingType[RoutingType.DUTCH_LIMIT]) {
-      synthUniXQuote = DutchLimitQuote.fromClassicQuote(
-        requestByRoutingType[RoutingType.DUTCH_LIMIT] as DutchLimitRequest,
-        classicQuote
-      );
-    } else {
-      synthUniXQuote = (quoteByRoutingType[RoutingType.DUTCH_LIMIT] as DutchLimitQuote).transformWithClassicQuote(
-        classicQuote
-      );
+    const syntheticQuotes = [];
+    // for each dutch request, create synthetic quotes for each _matching_ classic quote
+    for (const dutchRequest of dutchRequests) {
+      const matchingClassicQuotes = classicQuotes.filter((q) => requestInfoEquals(q.request.info, dutchRequest.info));
+      for (const quote of matchingClassicQuotes) {
+        syntheticQuotes.push(DutchLimitQuote.fromClassicQuote(dutchRequest, quote));
+      }
     }
 
-    this.log.info({ synthQuote: synthUniXQuote }, 'Synthetic UniswapX quote');
-    return [...quotes, synthUniXQuote];
+    this.log.info({ synthQuotes: syntheticQuotes }, 'Synthetic UniswapX quotes');
+    return [...quotes, ...syntheticQuotes];
   }
 }

@@ -1,10 +1,10 @@
 import { Protocol } from '@uniswap/router-sdk';
 import Logger from 'bunyan';
 
-import { RequestTransformer } from '..';
-import { QuoteRequest, QuoteRequestInfo } from '../../../entities';
+import { QuoteRequest, requestInfoEquals } from '../../../entities';
 import { ClassicRequest } from '../../../entities/request/ClassicRequest';
 import { RequestByRoutingType, RoutingType } from '../../../entities/request/index';
+import { RequestTransformer } from '..';
 
 /*
  * Adds a synthetic classic request if none given to compare against UniswapX RFQ quotes
@@ -40,15 +40,4 @@ export class ClassicQuoteInserter implements RequestTransformer {
     this.log.info({ classicRequest });
     return [...requests, classicRequest];
   }
-}
-
-function requestInfoEquals(a: QuoteRequestInfo, b: QuoteRequestInfo): boolean {
-  return (
-    a.tokenIn === b.tokenIn &&
-    a.tokenOut === b.tokenOut &&
-    a.tokenInChainId === b.tokenInChainId &&
-    a.tokenOutChainId === b.tokenOutChainId &&
-    a.amount.eq(b.amount) &&
-    a.type === b.type
-  );
 }
