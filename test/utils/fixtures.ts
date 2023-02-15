@@ -62,6 +62,9 @@ export function makeDutchLimitRequest(overrides: Partial<QuoteRequestBodyJSON>):
 
 export const QUOTE_REQUEST_DL = makeDutchLimitRequest({});
 export const QUOTE_REQUEST_DL_EXACT_OUT = makeDutchLimitRequest({ type: 'EXACT_OUTPUT' });
+export const QUOTE_REQUEST_DL_NATIVE_OUT = makeDutchLimitRequest({
+  tokenOut: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_OUT_ID)].address,
+});
 
 export const QUOTE_REQUEST_MULTI = parseQuoteRequests({
   ...BASE_REQUEST_INFO_EXACT_IN,
