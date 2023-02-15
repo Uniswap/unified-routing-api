@@ -1,7 +1,7 @@
 import Logger from 'bunyan';
 
-import { Quote, QuoteRequest, RequestByRoutingType, requestInfoEquals } from '../../../entities';
 import { QuoteTransformer } from '..';
+import { Quote, QuoteRequest, RequestByRoutingType, requestInfoEquals } from '../../../entities';
 
 // filters out any quote responses that came from unconfigured quoters
 // sometimes we have to receive quotes even when not requested by the user
