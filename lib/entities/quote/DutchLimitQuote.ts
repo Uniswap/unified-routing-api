@@ -20,8 +20,11 @@ export type DutchLimitQuoteJSON = {
 
 export class DutchLimitQuote implements Quote {
   public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
-  public static improvementExactIn = BigNumber.from(10100);
-  public static improvementExactOut = BigNumber.from(9900);
+  // TODO: replace with better values
+  // public static improvementExactIn = BigNumber.from(10100);
+  // public static improvementExactOut = BigNumber.from(9900);
+  public static improvementExactIn = BigNumber.from(10000);
+  public static improvementExactOut = BigNumber.from(10000);
 
   public static fromResponseBody(
     request: DutchLimitRequest,
