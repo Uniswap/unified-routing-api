@@ -4,7 +4,7 @@ import Logger from 'bunyan';
 import { ethers } from 'ethers';
 
 import { RouteBackToEthTransformer } from '../../../../lib/providers/transformers/RequestTransformers/RouteBackToEthRequestTransformer';
-import { QUOTE_REQUEST_CLASSIC, QUOTE_REQUEST_DL } from '../../../utils/fixtures';
+import { makeClassicRequest, makeDutchLimitRequest, QUOTE_REQUEST_DL } from '../../../utils/fixtures';
 
 describe('RouteBackToEthTransformer', () => {
   const logger = Logger.createLogger({ name: 'test' });
@@ -12,12 +12,18 @@ describe('RouteBackToEthTransformer', () => {
 
   const transformer = new RouteBackToEthTransformer(logger);
 
-  it('adds a synthetic classic request when UniswapX requested', async () => {
+  it('does not add a synthetic classic request when output is already WETH', async () => {
     const requests = transformer.transform([QUOTE_REQUEST_DL]);
+    expect(requests.length).toEqual(1);
+  });
+
+  it('adds a synthetic classic request when UniswapX is requested', async () => {
+    const quoteRequest = makeDutchLimitRequest({ tokenOut: ethers.constants.AddressZero });
+    const requests = transformer.transform([quoteRequest]);
     expect(requests.length).toEqual(2);
     expect(requests[1]).toMatchObject({
       info: {
-        tokenIn: QUOTE_REQUEST_CLASSIC.info.tokenOut,
+        tokenIn: quoteRequest.info.tokenOut,
         tokenOut: WRAPPED_NATIVE_CURRENCY[ChainId.MAINNET].address,
         type: TradeType.EXACT_OUTPUT,
         amount: ethers.utils.parseEther('1'),
@@ -29,7 +35,8 @@ describe('RouteBackToEthTransformer', () => {
   });
 
   it('does not add a synthetic classic request when UniswapX not requested', async () => {
-    const requests = transformer.transform([QUOTE_REQUEST_CLASSIC]);
+    const classicRequest = makeClassicRequest({ tokenOut: ethers.constants.AddressZero });
+    const requests = transformer.transform([classicRequest]);
     expect(requests.length).toEqual(1);
   });
 });

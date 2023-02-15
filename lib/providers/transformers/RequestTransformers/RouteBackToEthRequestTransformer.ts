@@ -4,10 +4,10 @@ import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-ro
 import Logger from 'bunyan';
 import { parseEther } from 'ethers/lib/utils';
 
+import { RequestTransformer } from '..';
 import { QuoteRequest } from '../../../entities';
 import { ClassicRequest } from '../../../entities/request/ClassicRequest';
 import { DutchLimitRequest, RequestByRoutingType, RoutingType } from '../../../entities/request/index';
-import { RequestTransformer } from '..';
 
 /*
  * adds a synthetic classic request to check if the output token has route back to ETH
@@ -29,13 +29,19 @@ export class RouteBackToEthTransformer implements RequestTransformer {
       return requests;
     }
 
+    const native = WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(dlRequest.info.tokenOutChainId)].address;
+    if (dlRequest.info.tokenOut === native) {
+      this.log.info('TokenOut is already wrapped native');
+      return requests;
+    }
+
     const synthClassicRequest = new ClassicRequest(
       {
         ...dlRequest.info,
         type: TradeType.EXACT_OUTPUT,
         tokenIn: dlRequest.info.tokenOut,
         amount: parseEther('1'),
-        tokenOut: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(dlRequest.info.tokenOutChainId)].address,
+        tokenOut: native,
       },
       {
         protocols: [Protocol.MIXED, Protocol.V2, Protocol.V3],
