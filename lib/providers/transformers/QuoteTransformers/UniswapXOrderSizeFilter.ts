@@ -7,7 +7,8 @@ import { ClassicQuoteDataJSON, Quote, QuoteRequest, RoutingType } from '../../..
 
 // if the gas is greater than this proportion of the whole trade size
 // then we will not route the order
-const GAS_PROPORTION_THRESHOLD_BPS = 1000;
+// TODO: lower threshold after bug bash
+const GAS_PROPORTION_THRESHOLD_BPS = 2000;
 const BPS = 10000;
 
 // filters out any UniswapX orders which are too small to be worth filling
