@@ -1,3 +1,3 @@
 export * from './ClassicQuoteInserter';
 export * from './CompoundRequestTransformer';
-export * from './RouteBackToEthRequestTransformer';
+export * from './RouteBackToNativeRequestTransformer';
