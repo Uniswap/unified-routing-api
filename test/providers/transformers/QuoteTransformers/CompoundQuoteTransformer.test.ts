@@ -22,12 +22,14 @@ describe('CompoundQuoteTransformer', () => {
   const logger = Logger.createLogger({ name: 'test' });
   logger.level(Logger.FATAL);
 
-  const transformer = new CompoundQuoteTransformer([
-    new NoRouteBackToNativeFilter(logger),
-    new SyntheticUniswapXTransformer(logger),
-    new UniswapXOrderSizeFilter(logger),
-    new OnlyConfiguredQuotersFilter(logger),
-  ]);
+  const transformer = new CompoundQuoteTransformer(
+    [new SyntheticUniswapXTransformer(logger)],
+    [
+      new NoRouteBackToNativeFilter(logger),
+      new UniswapXOrderSizeFilter(logger),
+      new OnlyConfiguredQuotersFilter(logger),
+    ]
+  );
 
   it('creates a winning uniswpaX order from routingAPI data', async () => {
     // classic quote exists and both classic uniswapX is configured

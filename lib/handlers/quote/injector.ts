@@ -49,17 +49,15 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
         [RoutingType.CLASSIC]: [new RoutingApiQuoter(log, routingApiUrl)],
       },
       // transformer ordering matters! transformers should generally come before filters
-      quoteTransformer: new CompoundQuoteTransformer([
-        new NoRouteBackToNativeFilter(log),
-        new SyntheticUniswapXTransformer(log),
-        new UniswapXOrderSizeFilter(log),
-        new OnlyConfiguredQuotersFilter(log),
-      ]),
+      quoteTransformer: new CompoundQuoteTransformer(
+        [new SyntheticUniswapXTransformer(log)],
+        [new NoRouteBackToNativeFilter(log), new UniswapXOrderSizeFilter(log), new OnlyConfiguredQuotersFilter(log)]
+      ),
 
-      requestTransformer: new CompoundRequestTransformer([
-        new ClassicQuoteInserter(log),
-        new RouteBackToEthTransformer(log),
-      ]),
+      requestTransformer: new CompoundRequestTransformer(
+        [new ClassicQuoteInserter(log)],
+        [new RouteBackToEthTransformer(log)]
+      ),
     };
   }
 
