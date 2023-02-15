@@ -12,7 +12,7 @@ import {
   OnlyConfiguredQuotersFilter,
   QuoteTransformer,
   RequestTransformer,
-  RouteBackToNativeTransformer,
+  RouteBackToNativeInserter,
   SyntheticUniswapXTransformer,
   UniswapXOrderSizeFilter,
 } from '../../providers/transformers';
@@ -55,8 +55,8 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
       ),
 
       requestTransformer: new CompoundRequestTransformer(
-        [new ClassicQuoteInserter(log)],
-        [new RouteBackToNativeTransformer(log)]
+        [new ClassicQuoteInserter(log), new RouteBackToNativeInserter(log)],
+        []
       ),
     };
   }

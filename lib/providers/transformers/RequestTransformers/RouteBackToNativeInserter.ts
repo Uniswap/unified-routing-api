@@ -12,7 +12,7 @@ import { DutchLimitRequest, RequestByRoutingType, RoutingType } from '../../../e
 /*
  * adds a synthetic classic request to check if the output token has route back to ETH
  */
-export class RouteBackToNativeTransformer implements RequestTransformer {
+export class RouteBackToNativeInserter implements RequestTransformer {
   private log: Logger;
 
   constructor(_log: Logger) {
@@ -47,7 +47,7 @@ export class RouteBackToNativeTransformer implements RequestTransformer {
         protocols: [Protocol.MIXED, Protocol.V2, Protocol.V3],
       }
     );
-    this.log.info({ synthClassicRequest: synthClassicRequest });
+    this.log.info({ synthClassicRequest: synthClassicRequest.info }, 'Adding synthetic back to native classic request');
     return [...requests, synthClassicRequest];
   }
 }
