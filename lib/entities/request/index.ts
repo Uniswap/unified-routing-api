@@ -1,7 +1,6 @@
 import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber } from 'ethers';
 
-import { SUPPORTED_CHAINS } from '../../config/chains';
 import { DEFAULT_SLIPPAGE_TOLERANCE } from '../../constants';
 import { ClassicConfig, ClassicConfigJSON, ClassicRequest } from './ClassicRequest';
 import { DutchLimitConfig, DutchLimitConfigJSON, DutchLimitRequest } from './DutchLimitRequest';
@@ -63,7 +62,7 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON): QuoteRequest[] {
     } else if (
       // can be a request filter instead but we know have second thoughts on that design so not worth adding
       config.routingType == RoutingType.DUTCH_LIMIT &&
-      SUPPORTED_CHAINS[RoutingType.DUTCH_LIMIT].includes(info.tokenInChainId) &&
+      info.tokenInChainId === 1 &&
       info.tokenInChainId === info.tokenOutChainId
     ) {
       return DutchLimitRequest.fromRequestBody(info, config as DutchLimitConfigJSON);
