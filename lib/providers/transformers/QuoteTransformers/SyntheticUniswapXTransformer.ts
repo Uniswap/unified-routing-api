@@ -2,6 +2,7 @@ import { TradeType } from '@uniswap/sdk-core';
 import Logger from 'bunyan';
 
 import { QuoteTransformer } from '..';
+import { SUPPORTED_CHAINS } from '../../../config/chains';
 import { DutchLimitQuote, Quote, QuoteRequest } from '../../../entities';
 import { ClassicQuote } from '../../../entities/quote/ClassicQuote';
 import { DutchLimitRequest } from '../../../entities/request/DutchLimitRequest';
@@ -31,6 +32,11 @@ export class SyntheticUniswapXTransformer implements QuoteTransformer {
     // TODO: remove this once rfq api can handle exact output
     if (dutchRequests.some((r) => r.info.type === TradeType.EXACT_OUTPUT)) {
       this.log.info('UniswapX does not support exact output, skipping transformer');
+      return quotes;
+    }
+
+    if (dutchRequests.some((r) => !SUPPORTED_CHAINS[RoutingType.DUTCH_LIMIT].includes(r.info.tokenInChainId))) {
+      this.log.info('UniswapX does not support tokenInChainId, skipping transformer');
       return quotes;
     }
 
