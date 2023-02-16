@@ -97,7 +97,7 @@ export class APIPipeline extends Stack {
       stage: STAGE.BETA,
       envVars: {
         ...envVars,
-        PARAMETERIZATION_API_URL: urlSecrets.secretValueFromJson('PARAM_API_BETA').toString(),
+        PARAMETERIZATION_API_URL: urlSecrets.secretValueFromJson('PARAMETERIZATION_API_BETA').toString(),
         ROUTING_API_URL: urlSecrets.secretValueFromJson('ROUTING_API_BETA').toString(),
         SERVICE_URL: urlSecrets.secretValueFromJson('GOUDA_SERVICE_BETA').toString(),
       },
@@ -115,7 +115,7 @@ export class APIPipeline extends Stack {
       stage: STAGE.PROD,
       envVars: {
         ...envVars,
-        PARAMETERIZATION_API_URL: urlSecrets.secretValueFromJson('PARAM_API_PROD').toString(),
+        PARAMETERIZATION_API_URL: urlSecrets.secretValueFromJson('PARAMETERIZATION_API_PROD').toString(),
         ROUTING_API_URL: urlSecrets.secretValueFromJson('ROUTING_API_PROD').toString(),
         SERVICE_URL: urlSecrets.secretValueFromJson('GOUDA_SERVICE_PROD').toString(),
       },
