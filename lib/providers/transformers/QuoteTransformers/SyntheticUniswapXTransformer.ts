@@ -1,3 +1,4 @@
+import { TradeType } from '@uniswap/sdk-core';
 import Logger from 'bunyan';
 
 import { QuoteTransformer } from '..';
@@ -24,6 +25,12 @@ export class SyntheticUniswapXTransformer implements QuoteTransformer {
     // UniswapX not requested, don't do anything
     if (dutchRequests.length === 0) {
       this.log.info('UniswapX not requested, skipping transformer');
+      return quotes;
+    }
+
+    // TODO: remove this once rfq api can handle exact output
+    if (dutchRequests.some((r) => r.info.type === TradeType.EXACT_OUTPUT)) {
+      this.log.info('UniswapX does not support exact output, skipping transformer');
       return quotes;
     }
 

@@ -174,15 +174,18 @@ export const DL_QUOTE_EXACT_OUT_BETTER = createDutchLimitQuote({ amountIn: '1' }
 export const DL_QUOTE_EXACT_OUT_WORSE = createDutchLimitQuote({ amountIn: '2' }, 'EXACT_OUTPUT');
 export const DL_QUOTE_EXACT_OUT_LARGE = createDutchLimitQuote({ amountOut: '10000' }, 'EXACT_INPUT');
 
-export const CLASSIC_QUOTE_EXACT_IN_BETTER = createClassicQuote({ quote: '2' }, 'EXACT_INPUT');
-export const CLASSIC_QUOTE_EXACT_IN_WORSE = createClassicQuote({ quote: '1' }, 'EXACT_INPUT');
+export const CLASSIC_QUOTE_EXACT_IN_BETTER = createClassicQuote({ quote: '2', quoteGasAdjusted: '2' }, 'EXACT_INPUT');
+export const CLASSIC_QUOTE_EXACT_IN_WORSE = createClassicQuote({ quote: '1', quoteGasAdjusted: '1' }, 'EXACT_INPUT');
 export const CLASSIC_QUOTE_EXACT_IN_LARGE = createClassicQuote(
   { quote: '10000', quoteGasAdjusted: '9000' },
   'EXACT_INPUT'
 );
-export const CLASSIC_QUOTE_EXACT_OUT_BETTER = createClassicQuote({ quote: '1' }, 'EXACT_OUTPUT');
-export const CLASSIC_QUOTE_EXACT_OUT_WORSE = createClassicQuote({ quote: '2' }, 'EXACT_OUTPUT');
-export const CLASSIC_QUOTE_EXACT_OUT_LARGE = createClassicQuote({ quote: '10000' }, 'EXACT_OUTPUT');
+export const CLASSIC_QUOTE_EXACT_OUT_BETTER = createClassicQuote({ quote: '1', quoteGasAdjusted: '1' }, 'EXACT_OUTPUT');
+export const CLASSIC_QUOTE_EXACT_OUT_WORSE = createClassicQuote({ quote: '2', quoteGasAdjusted: '2' }, 'EXACT_OUTPUT');
+export const CLASSIC_QUOTE_EXACT_OUT_LARGE = createClassicQuote(
+  { quote: '10000', quoteGasAdjusted: '10000' },
+  'EXACT_OUTPUT'
+);
 export const CLASSIC_QUOTE_HAS_ROUTE_TO_NATIVE = createRouteBackToNativeQuote(
   {
     quote: '100',

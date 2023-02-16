@@ -60,12 +60,12 @@ describe('UniswapXOrderSizeFilter', () => {
       expect(filtered.length).toEqual(2);
     });
 
-    it('filters if amountOut * 15% == gas used', async () => {
+    it('filters if amountOut * 25% == gas used', async () => {
       const amountOut = ethers.utils.parseEther('1');
-      const fivePercent = amountOut.mul(15).div(100);
+      const twentyFivePercent = amountOut.mul(25).div(100);
       const dutchQuote = createDutchLimitQuote({ amountOut: amountOut.toString() }, 'EXACT_INPUT');
       const classicQuote = createClassicQuote(
-        { quote: amountOut.toString(), quoteGasAdjusted: amountOut.sub(fivePercent).toString() },
+        { quote: amountOut.toString(), quoteGasAdjusted: amountOut.sub(twentyFivePercent).toString() },
         'EXACT_INPUT'
       );
       const filtered = await filter.transform(QUOTE_REQUEST_MULTI, [classicQuote, dutchQuote]);
@@ -120,12 +120,12 @@ describe('UniswapXOrderSizeFilter', () => {
       expect(filtered.length).toEqual(2);
     });
 
-    it('filters if amountOut + 15% == gas used', async () => {
+    it('filters if amountOut + 25% == gas used', async () => {
       const amountIn = ethers.utils.parseEther('1');
-      const fifteenPercent = amountIn.mul(15).div(100);
+      const twentyFivePercent = amountIn.mul(25).div(100);
       const dutchQuote = createDutchLimitQuote({ amountIn: amountIn.toString() }, 'EXACT_OUTPUT');
       const classicQuote = createClassicQuote(
-        { quote: amountIn.toString(), quoteGasAdjusted: amountIn.add(fifteenPercent).toString() },
+        { quote: amountIn.toString(), quoteGasAdjusted: amountIn.add(twentyFivePercent).toString() },
         'EXACT_OUTPUT'
       );
       const filtered = await filter.transform(QUOTE_REQUEST_MULTI, [classicQuote, dutchQuote]);

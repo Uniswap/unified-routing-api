@@ -1,7 +1,15 @@
 import { TradeType } from '@uniswap/sdk-core';
 import Joi from 'joi';
 
-import { parseQuoteRequests, Quote, QuoteJSON, QuoteRequest, QuoteRequestBodyJSON } from '../../entities';
+import {
+  ClassicQuote,
+  parseQuoteRequests,
+  Quote,
+  QuoteJSON,
+  QuoteRequest,
+  QuoteRequestBodyJSON,
+  RoutingType,
+} from '../../entities';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
 import { ContainerInjected, QuoterByRoutingType } from './injector';
@@ -33,6 +41,8 @@ export class QuoteHandler extends APIGLambdaHandler<
     const requestsTransformed = requestTransformer.transform(requests);
     const quotes = await getQuotes(quoters, requestsTransformed);
     const quotesTransformed = await quoteTransformer.transform(requests, quotes);
+
+    log.info({ quotesTransformed: quotesTransformed }, 'quotesTransformed');
 
     const bestQuote = await getBestQuote(quotesTransformed);
     if (!bestQuote) {
@@ -99,7 +109,17 @@ export function compareQuotes(lhs: Quote, rhs: Quote, tradeType: TradeType): boo
 }
 
 const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
-  return tradeType === TradeType.EXACT_INPUT ? quote.amountOut : quote.amountIn;
+  if (tradeType === TradeType.EXACT_INPUT) {
+    if (quote.routingType === RoutingType.CLASSIC) {
+      return (quote as ClassicQuote).amountOutGasAdjusted;
+    }
+    return (quote as Quote).amountOut;
+  } else {
+    if (quote.routingType === RoutingType.CLASSIC) {
+      return (quote as ClassicQuote).amountInGasAdjusted;
+    }
+    return (quote as Quote).amountIn;
+  }
 };
 
 export function quoteToResponse(quote: Quote): QuoteResponseJSON {

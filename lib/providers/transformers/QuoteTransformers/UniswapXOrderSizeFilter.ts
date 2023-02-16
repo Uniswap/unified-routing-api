@@ -30,6 +30,7 @@ export class UniswapXOrderSizeFilter implements QuoteTransformer {
     }
 
     const routingApiQuoteData = routingApiResponse.toJSON() as ClassicQuoteDataJSON;
+    this.log.info({ routingApiQuote: routingApiQuoteData }, 'Routing API quote data');
     const routingApiQuote = BigNumber.from(routingApiQuoteData.quote);
     const routingApiQuoteGasAdjusted = BigNumber.from(routingApiQuoteData.quoteGasAdjusted);
     // quote - quoteGasAdjusted = gas adjustement in output token if exactInput (gasAdjustment is less output)
@@ -56,7 +57,7 @@ export class UniswapXOrderSizeFilter implements QuoteTransformer {
       // the gas used is less than the threshold, so no filtering
       if (gasUsedQuote.gte(quoteGasThreshold)) {
         this.log.info(
-          { uniswapXQuote: uniswapXQuote, gasUsedQuote: gasUsedQuote },
+          { uniswapXQuote: uniswapXQuote.toString(), gasUsedQuote: gasUsedQuote.toString() },
           'Removing UniswapX quote due to gas cost'
         );
         return false;

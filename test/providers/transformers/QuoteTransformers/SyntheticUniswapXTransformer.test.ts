@@ -6,12 +6,9 @@ import { SyntheticUniswapXTransformer } from '../../../../lib/providers/transfor
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_IN_LARGE,
-  CLASSIC_QUOTE_EXACT_OUT_LARGE,
   DL_QUOTE_EXACT_IN_BETTER,
-  DL_QUOTE_EXACT_OUT_BETTER,
   QUOTE_REQUEST_CLASSIC,
   QUOTE_REQUEST_MULTI,
-  QUOTE_REQUEST_MULTI_EXACT_OUT,
 } from '../../../utils/fixtures';
 
 type QuoteByRoutingType = { [key in RoutingType]?: Quote };
@@ -60,34 +57,35 @@ describe('SyntheticUniswapXTransformer', () => {
     });
   });
 
-  describe('exactOut', () => {
-    it('adds a synthetic UniswapX quote if somehow RFQ service returned no quote', async () => {
-      const transformed = await transformer.transform(QUOTE_REQUEST_MULTI_EXACT_OUT, [CLASSIC_QUOTE_EXACT_OUT_LARGE]);
-      expect(transformed.length).toEqual(2);
-      const quoteByRoutingType: QuoteByRoutingType = {};
-      transformed.forEach((quote) => (quoteByRoutingType[quote.routingType] = quote));
-      expect(quoteByRoutingType[RoutingType.DUTCH_LIMIT]?.amountIn).toEqual(
-        CLASSIC_QUOTE_EXACT_OUT_LARGE.amountInGasAdjusted.mul(DutchLimitQuote.improvementExactOut).div(HUNDRED_PERCENT)
-      );
-    });
+  // TODO: enable once we add back support for EXACT_OUTPUT UniX quote
+  // describe('exactOut', () => {
+  //   it('adds a synthetic UniswapX quote if somehow RFQ service returned no quote', async () => {
+  //     const transformed = await transformer.transform(QUOTE_REQUEST_MULTI_EXACT_OUT, [CLASSIC_QUOTE_EXACT_OUT_LARGE]);
+  //     expect(transformed.length).toEqual(2);
+  //     const quoteByRoutingType: QuoteByRoutingType = {};
+  //     transformed.forEach((quote) => (quoteByRoutingType[quote.routingType] = quote));
+  //     expect(quoteByRoutingType[RoutingType.DUTCH_LIMIT]?.amountIn).toEqual(
+  //       CLASSIC_QUOTE_EXACT_OUT_LARGE.amountInGasAdjusted.mul(DutchLimitQuote.improvementExactOut).div(HUNDRED_PERCENT)
+  //     );
+  //   });
 
-    it('adds a synthetic UniswapX quote even if RFQ quote exists', async () => {
-      const transformed = await transformer.transform(QUOTE_REQUEST_MULTI_EXACT_OUT, [
-        DL_QUOTE_EXACT_OUT_BETTER,
-        CLASSIC_QUOTE_EXACT_OUT_LARGE,
-      ]);
-      expect(transformed.length).toEqual(3);
+  //   it('adds a synthetic UniswapX quote even if RFQ quote exists', async () => {
+  //     const transformed = await transformer.transform(QUOTE_REQUEST_MULTI_EXACT_OUT, [
+  //       DL_QUOTE_EXACT_OUT_BETTER,
+  //       CLASSIC_QUOTE_EXACT_OUT_LARGE,
+  //     ]);
+  //     expect(transformed.length).toEqual(3);
 
-      const outStartAmount = CLASSIC_QUOTE_EXACT_OUT_LARGE.amountInGasAdjusted
-        .mul(DutchLimitQuote.improvementExactOut)
-        .div(HUNDRED_PERCENT);
-      const outEndAmount = outStartAmount.mul(HUNDRED_PERCENT.add(50)).div(HUNDRED_PERCENT);
-      expect(transformed[2].toJSON()).toMatchObject({
-        input: {
-          startAmount: outStartAmount.toString(),
-          endAmount: outEndAmount.toString(),
-        },
-      });
-    });
-  });
+  //     const outStartAmount = CLASSIC_QUOTE_EXACT_OUT_LARGE.amountInGasAdjusted
+  //       .mul(DutchLimitQuote.improvementExactOut)
+  //       .div(HUNDRED_PERCENT);
+  //     const outEndAmount = outStartAmount.mul(HUNDRED_PERCENT.add(50)).div(HUNDRED_PERCENT);
+  //     expect(transformed[2].toJSON()).toMatchObject({
+  //       input: {
+  //         startAmount: outStartAmount.toString(),
+  //         endAmount: outEndAmount.toString(),
+  //       },
+  //     });
+  //   });
+  // });
 });
