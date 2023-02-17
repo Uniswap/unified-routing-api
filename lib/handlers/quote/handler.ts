@@ -37,7 +37,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     } = params;
 
     log.info({ requestBody: requestBody }, 'requestBody');
-    const requests = parseQuoteRequests(requestBody);
+    const requests = parseQuoteRequests(requestBody, log);
     const requestsTransformed = requestTransformer.transform(requests);
     const quotes = await getQuotes(quoters, requestsTransformed);
     const quotesTransformed = await quoteTransformer.transform(requests, quotes);

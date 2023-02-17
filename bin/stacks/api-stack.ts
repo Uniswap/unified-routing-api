@@ -11,6 +11,7 @@ import * as aws_waf from 'aws-cdk-lib/aws-wafv2';
 import { Construct } from 'constructs';
 import * as path from 'path';
 
+import { checkDefined } from '../../lib/util/preconditions';
 import { SERVICE_NAME } from '../constants';
 
 export class APIStack extends cdk.Stack {
@@ -163,6 +164,11 @@ export class APIStack extends cdk.Stack {
 
       quoteTarget.node.addDependency(quoteLambdaAlias);
     }
+
+    /* Subscription Filter */
+    new aws_logs.CfnSubscriptionFilter(this, 'RequestSub', {
+      destinationArn: checkDefined(props.envVars['REQUEST_']),
+    });
 
     const quoteLambdaIntegration = new aws_apigateway.LambdaIntegration(quoteLambdaAlias, {});
     const quote = api.root.addResource('quote', {
