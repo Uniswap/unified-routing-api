@@ -7,6 +7,9 @@ export interface AnalyticsStackProps extends cdk.NestedStackProps {
   envVars: Record<string, string>;
 }
 
+/*
+ * Send quote request and response logs to x-account firehose streams
+ */
 export class AnalyticsStack extends cdk.NestedStack {
   constructor(scope: Construct, id: string, props: AnalyticsStackProps) {
     super(scope, id, props);
