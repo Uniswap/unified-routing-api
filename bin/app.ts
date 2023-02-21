@@ -90,6 +90,7 @@ export class APIPipeline extends Stack {
       secretCompleteArn: 'arn:aws:secretsmanager:us-east-2:644039819003:secret:gouda-service-api-xCINOs',
     });
 
+    // TODO: after the param-api PR is merged and deployed, add new firehose destination ARN secrets
     // const arnSecrects = sm.Secret.fromSecretAttributes(this, 'arnSecrets', {
     // }
 
