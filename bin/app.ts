@@ -90,9 +90,9 @@ export class APIPipeline extends Stack {
       secretCompleteArn: 'arn:aws:secretsmanager:us-east-2:644039819003:secret:gouda-service-api-xCINOs',
     });
 
-    // TODO: after the param-api PR is merged and deployed, add new firehose destination ARN secrets
-    // const arnSecrects = sm.Secret.fromSecretAttributes(this, 'arnSecrets', {
-    // }
+    const arnSecrects = sm.Secret.fromSecretAttributes(this, 'arnSecrets', {
+      secretCompleteArn: 'arn:aws:secretsmanager:us-east-2:644039819003:secret:gouda-resource-arns-wF51FW',
+    });
 
     // Beta us-east-2
     const betaUsEast2Stage = new APIStage(this, 'beta-us-east-2', {
@@ -104,6 +104,8 @@ export class APIPipeline extends Stack {
         PARAMETERIZATION_API_URL: urlSecrets.secretValueFromJson('PARAMETERIZATION_API_BETA').toString(),
         ROUTING_API_URL: urlSecrets.secretValueFromJson('ROUTING_API_BETA').toString(),
         SERVICE_URL: urlSecrets.secretValueFromJson('GOUDA_SERVICE_BETA').toString(),
+        REQUEST_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_REQUEST_DESTINATION_BETA').toString(),
+        RESPONSE_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_RESPONSE_DESTINATION_BETA').toString(),
       },
     });
 
@@ -122,6 +124,8 @@ export class APIPipeline extends Stack {
         PARAMETERIZATION_API_URL: urlSecrets.secretValueFromJson('PARAMETERIZATION_API_PROD').toString(),
         ROUTING_API_URL: urlSecrets.secretValueFromJson('ROUTING_API_PROD').toString(),
         SERVICE_URL: urlSecrets.secretValueFromJson('GOUDA_SERVICE_PROD').toString(),
+        REQUEST_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_REQUEST_DESTINATION_PROD').toString(),
+        RESPONSE_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_RESPONSE_DESTINATION_PROD').toString(),
       },
     });
 
