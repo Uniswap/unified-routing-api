@@ -1,4 +1,5 @@
 import { TradeType } from '@uniswap/sdk-core';
+import Logger from 'bunyan';
 import Joi from 'joi';
 
 import { v4 as uuidv4 } from 'uuid';
@@ -59,13 +60,6 @@ export class QuoteHandler extends APIGLambdaHandler<
       };
     }
 
-    log.info({
-      eventType: 'UnifiedRoutingQuoteResponse',
-      body: {
-        ...bestQuote.toLog(),
-      },
-    });
-
     return {
       statusCode: 200,
       body: quoteToResponse(bestQuote),
@@ -101,8 +95,15 @@ export async function getQuotes(quotersByRoutingType: QuoterByRoutingType, reque
 }
 
 // determine and return the "best" quote of the given list
-export async function getBestQuote(quotes: Quote[]): Promise<Quote | null> {
+export async function getBestQuote(quotes: Quote[], log?: Logger): Promise<Quote | null> {
   return quotes.reduce((bestQuote: Quote | null, quote: Quote) => {
+    // log all valid quotes, so that we capture auto router prices at request time
+    log?.info({
+      eventType: 'UnifiedRoutingQuoteResponse',
+      body: {
+        ...quote.toLog(),
+      },
+    });
     if (!bestQuote || compareQuotes(quote, bestQuote, quote.request.info.type)) {
       return quote;
     }
