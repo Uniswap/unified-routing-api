@@ -1,9 +1,12 @@
 import { TradeType } from '@uniswap/sdk-core';
+import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { default as Logger } from 'bunyan';
 
-import { Quote } from '../../../../lib/entities';
-import { compareQuotes, getBestQuote, getQuotes } from '../../../../lib/handlers/quote/handler';
-import { QuoterByRoutingType } from '../../../../lib/handlers/quote/injector';
+import { DutchLimitQuote, Quote } from '../../../../lib/entities';
+import { QuoteRequestBodyJSON } from '../../../../lib/entities/request/index';
+import { ApiInjector, ApiRInj } from '../../../../lib/handlers/base';
+import { compareQuotes, getBestQuote, getQuotes, QuoteHandler } from '../../../../lib/handlers/quote/handler';
+import { ContainerInjected, QuoterByRoutingType } from '../../../../lib/handlers/quote/injector';
 import { Quoter } from '../../../../lib/providers/quoters';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
@@ -14,14 +17,102 @@ import {
   DL_QUOTE_EXACT_IN_WORSE,
   DL_QUOTE_EXACT_OUT_BETTER,
   DL_QUOTE_EXACT_OUT_WORSE,
+  QUOTE_REQUEST_BODY_MULTI,
   QUOTE_REQUEST_DL,
   QUOTE_REQUEST_MULTI,
 } from '../../../utils/fixtures';
 
 describe('QuoteHandler', () => {
-  // silent logger in tests
-  const logger = Logger.createLogger({ name: 'test' });
-  logger.level(Logger.FATAL);
+  describe('handler', () => {
+    const logger = {
+      info: jest.fn(),
+      error: jest.fn(),
+    };
+    const requestInjectedMock: Promise<ApiRInj> = new Promise(
+      (resolve) =>
+        resolve({
+          log: logger as unknown as Logger,
+          requestId: 'test',
+        }) as unknown as ApiRInj
+    );
+
+    const requestTransformerMock = {
+      transform: jest.fn().mockReturnValue([QUOTE_REQUEST_DL]),
+    };
+
+    const quoteTransformerMock = {
+      transform: jest.fn().mockResolvedValue([DL_QUOTE_EXACT_IN_BETTER]),
+    };
+
+    const injectorPromiseMock = (
+      quoters: Quoter[]
+    ): Promise<ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>> =>
+      new Promise((resolve) =>
+        resolve({
+          getContainerInjected: () => {
+            return {
+              quoters: quoters,
+              requestTransformer: requestTransformerMock,
+              quoteTransformer: quoteTransformerMock,
+            };
+          },
+          getRequestInjected: () => requestInjectedMock,
+        } as unknown as ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>)
+      );
+
+    const getQuoteHandler = (quoters: Quoter[]) => new QuoteHandler('quote', injectorPromiseMock(quoters));
+
+    const RfqQuoterMock = (dlQuote: DutchLimitQuote): Quoter => {
+      return {
+        quote: jest.fn().mockResolvedValue(dlQuote),
+      };
+    };
+    const getEvent = (request: QuoteRequestBodyJSON): APIGatewayProxyEvent =>
+      ({
+        body: JSON.stringify(request),
+      } as APIGatewayProxyEvent);
+
+    describe('logging test', () => {
+      it('logs the requests and response in correct format', async () => {
+        const quoters = [RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER)];
+        await getQuoteHandler(quoters).handler(getEvent(QUOTE_REQUEST_BODY_MULTI), {} as unknown as Context);
+        expect(logger.info).toHaveBeenCalledWith(
+          expect.objectContaining({
+            eventType: 'UnifiedRoutingQuoteRequest',
+            body: expect.objectContaining({
+              tokenInChainId: QUOTE_REQUEST_BODY_MULTI.tokenInChainId,
+              tokenOutChainId: QUOTE_REQUEST_BODY_MULTI.tokenOutChainId,
+              tokenIn: QUOTE_REQUEST_BODY_MULTI.tokenIn,
+              tokenOut: QUOTE_REQUEST_BODY_MULTI.tokenOut,
+              amount: QUOTE_REQUEST_BODY_MULTI.amount,
+              type: QUOTE_REQUEST_BODY_MULTI.type,
+              configs: 'DUTCH_LIMIT,CLASSIC',
+              createdAt: expect.any(String),
+            }),
+          })
+        );
+
+        expect(logger.info).toHaveBeenCalledWith(
+          expect.objectContaining({
+            eventType: 'UnifiedRoutingQuoteResponse',
+            body: expect.objectContaining({
+              tokenInChainId: QUOTE_REQUEST_BODY_MULTI.tokenInChainId,
+              tokenOutChainId: QUOTE_REQUEST_BODY_MULTI.tokenOutChainId,
+              quoteId: 'quoteId',
+              tokenIn: QUOTE_REQUEST_BODY_MULTI.tokenIn,
+              tokenOut: QUOTE_REQUEST_BODY_MULTI.tokenOut,
+              amountIn: DL_QUOTE_EXACT_IN_BETTER.amountIn.toString(),
+              amountOut: DL_QUOTE_EXACT_IN_BETTER.amountOut.toString(),
+              offerer: DL_QUOTE_EXACT_IN_BETTER.offerer,
+              filler: DL_QUOTE_EXACT_IN_BETTER.filler,
+              routing: DL_QUOTE_EXACT_IN_BETTER.routingType,
+              createdAt: expect.any(String),
+            }),
+          })
+        );
+      });
+    });
+  });
 
   describe('compareQuotes', () => {
     it('returns true if lhs is a better dutch limit quote than rhs', () => {

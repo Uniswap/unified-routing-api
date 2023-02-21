@@ -1,7 +1,9 @@
 import { TradeType } from '@uniswap/sdk-core';
+import Logger from 'bunyan';
 import { BigNumber } from 'ethers';
 
 import { DEFAULT_SLIPPAGE_TOLERANCE } from '../../constants';
+import { currentTimestampInSeconds } from '../../util/time';
 import { ClassicConfig, ClassicConfigJSON, ClassicRequest } from './ClassicRequest';
 import { DutchLimitConfig, DutchLimitConfigJSON, DutchLimitRequest } from './DutchLimitRequest';
 
@@ -44,7 +46,7 @@ export interface QuoteRequest {
   toJSON(): RoutingConfigJSON;
 }
 
-export function parseQuoteRequests(body: QuoteRequestBodyJSON): QuoteRequest[] {
+export function parseQuoteRequests(body: QuoteRequestBodyJSON, log?: Logger): QuoteRequest[] {
   const info: QuoteRequestInfo = {
     requestId: body.requestId,
     tokenInChainId: body.tokenInChainId,
@@ -56,7 +58,7 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON): QuoteRequest[] {
     slippageTolerance: body.slippageTolerance ?? DEFAULT_SLIPPAGE_TOLERANCE,
   };
 
-  return body.configs.flatMap((config) => {
+  const requests = body.configs.flatMap((config) => {
     if (config.routingType == RoutingType.CLASSIC) {
       return ClassicRequest.fromRequestBody(info, config as ClassicConfigJSON);
     } else if (
@@ -69,6 +71,23 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON): QuoteRequest[] {
     }
     return [];
   });
+
+  log?.info({
+    eventType: 'UnifiedRoutingQuoteRequest',
+    body: {
+      requestId: info.requestId,
+      tokenInChainId: info.tokenInChainId,
+      tokenOutChainId: info.tokenOutChainId,
+      tokenIn: info.tokenIn,
+      tokenOut: info.tokenOut,
+      amount: info.amount.toString(),
+      type: TradeType[info.type],
+      configs: requests.map((r) => r.routingType).join(','),
+      createdAt: currentTimestampInSeconds(),
+    },
+  });
+
+  return requests;
 }
 
 // compares two request infos, returning true if they are quoting the same thing

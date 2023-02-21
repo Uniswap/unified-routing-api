@@ -1,6 +1,8 @@
 import { TradeType } from '@uniswap/sdk-core';
+import Logger from 'bunyan';
 import Joi from 'joi';
 
+import { v4 as uuidv4 } from 'uuid';
 import {
   ClassicQuote,
   parseQuoteRequests,
@@ -36,15 +38,20 @@ export class QuoteHandler extends APIGLambdaHandler<
       containerInjected: { quoters, quoteTransformer, requestTransformer },
     } = params;
 
-    log.info({ requestBody: requestBody }, 'requestBody');
-    const requests = parseQuoteRequests(requestBody);
+    const request = {
+      ...requestBody,
+      requestId: uuidv4(),
+    };
+
+    log.info({ requestBody: request }, 'request');
+    const requests = parseQuoteRequests(request, log);
     const requestsTransformed = requestTransformer.transform(requests);
     const quotes = await getQuotes(quoters, requestsTransformed);
     const quotesTransformed = await quoteTransformer.transform(requests, quotes);
 
     log.info({ quotesTransformed: quotesTransformed }, 'quotesTransformed');
 
-    const bestQuote = await getBestQuote(quotesTransformed);
+    const bestQuote = await getBestQuote(quotesTransformed, log);
     if (!bestQuote) {
       return {
         statusCode: 404,
@@ -53,7 +60,6 @@ export class QuoteHandler extends APIGLambdaHandler<
       };
     }
 
-    log.info({ bestQuote: bestQuote }, 'bestQuote to response');
     return {
       statusCode: 200,
       body: quoteToResponse(bestQuote),
@@ -89,8 +95,15 @@ export async function getQuotes(quotersByRoutingType: QuoterByRoutingType, reque
 }
 
 // determine and return the "best" quote of the given list
-export async function getBestQuote(quotes: Quote[]): Promise<Quote | null> {
+export async function getBestQuote(quotes: Quote[], log?: Logger): Promise<Quote | null> {
   return quotes.reduce((bestQuote: Quote | null, quote: Quote) => {
+    // log all valid quotes, so that we capture auto router prices at request time
+    log?.info({
+      eventType: 'UnifiedRoutingQuoteResponse',
+      body: {
+        ...quote.toLog(),
+      },
+    });
     if (!bestQuote || compareQuotes(quote, bestQuote, quote.request.info.type)) {
       return quote;
     }

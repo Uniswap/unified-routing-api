@@ -10,7 +10,7 @@ import {
   RoutingType,
 } from '../../lib/entities';
 import { ClassicQuote, DutchLimitQuote, Quote } from '../../lib/entities/quote';
-import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, OFFERER, TOKEN_IN, TOKEN_OUT } from '../constants';
+import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, FILLER, OFFERER, TOKEN_IN, TOKEN_OUT } from '../constants';
 import { buildQuoteResponse } from './quoteResponse';
 
 export const BASE_REQUEST_INFO_EXACT_IN = {
@@ -26,6 +26,22 @@ export const BASE_REQUEST_INFO_EXACT_IN = {
 export const BASE_REQUEST_INFO_EXACT_OUT = {
   ...BASE_REQUEST_INFO_EXACT_IN,
   type: 'EXACT_OUTPUT',
+};
+
+export const QUOTE_REQUEST_BODY_MULTI = {
+  ...BASE_REQUEST_INFO_EXACT_IN,
+  configs: [
+    {
+      routingType: RoutingType.DUTCH_LIMIT,
+      offerer: OFFERER,
+      exclusivePeriodSecs: 12,
+      auctionPeriodSecs: 60,
+    },
+    {
+      routingType: RoutingType.CLASSIC,
+      protocols: ['V3', 'V2', 'MIXED'],
+    },
+  ],
 };
 
 export function makeClassicRequest(overrides: Partial<QuoteRequestBodyJSON>): ClassicRequest {
@@ -105,11 +121,13 @@ const DL_QUOTE_DATA = {
   quote: {
     chainId: 1,
     requestId: 'requestId',
+    quoteId: 'quoteId',
     tokenIn: TOKEN_IN,
     amountIn: '1',
     tokenOut: TOKEN_OUT,
     amountOut: '1',
     offerer: OFFERER,
+    filler: FILLER,
   },
 };
 

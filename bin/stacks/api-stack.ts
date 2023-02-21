@@ -12,6 +12,7 @@ import { Construct } from 'constructs';
 import * as path from 'path';
 
 import { SERVICE_NAME } from '../constants';
+import { AnalyticsStack } from './analytics-stack';
 
 export class APIStack extends cdk.Stack {
   public readonly url: CfnOutput;
@@ -163,6 +164,12 @@ export class APIStack extends cdk.Stack {
 
       quoteTarget.node.addDependency(quoteLambdaAlias);
     }
+
+    /* Analytics */
+    new AnalyticsStack(this, 'AnalyticsStack', {
+      quoteLambda,
+      envVars: props.envVars,
+    });
 
     const quoteLambdaIntegration = new aws_apigateway.LambdaIntegration(quoteLambdaAlias, {});
     const quote = api.root.addResource('quote', {
