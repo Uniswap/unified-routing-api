@@ -51,7 +51,7 @@ export class QuoteHandler extends APIGLambdaHandler<
 
     log.info({ quotesTransformed: quotesTransformed }, 'quotesTransformed');
 
-    const bestQuote = await getBestQuote(quotesTransformed);
+    const bestQuote = await getBestQuote(quotesTransformed, log);
     if (!bestQuote) {
       return {
         statusCode: 404,
