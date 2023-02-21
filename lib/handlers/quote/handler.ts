@@ -1,6 +1,7 @@
 import { TradeType } from '@uniswap/sdk-core';
 import Joi from 'joi';
 
+import { v4 as uuidv4 } from 'uuid';
 import {
   ClassicQuote,
   parseQuoteRequests,
@@ -36,8 +37,13 @@ export class QuoteHandler extends APIGLambdaHandler<
       containerInjected: { quoters, quoteTransformer, requestTransformer },
     } = params;
 
-    log.info({ requestBody: requestBody }, 'requestBody');
-    const requests = parseQuoteRequests(requestBody, log);
+    const request = {
+      ...requestBody,
+      requestId: uuidv4(),
+    };
+
+    log.info({ requestBody: request }, 'request');
+    const requests = parseQuoteRequests(request, log);
     const requestsTransformed = requestTransformer.transform(requests);
     const quotes = await getQuotes(quoters, requestsTransformed);
     const quotesTransformed = await quoteTransformer.transform(requests, quotes);
@@ -53,7 +59,13 @@ export class QuoteHandler extends APIGLambdaHandler<
       };
     }
 
-    log.info({ bestQuote: bestQuote }, 'bestQuote to response');
+    log.info({
+      eventType: 'UnifiedRoutingQuoteResponse',
+      body: {
+        ...bestQuote.toLog(),
+      },
+    });
+
     return {
       statusCode: 200,
       body: quoteToResponse(bestQuote),

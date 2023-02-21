@@ -11,8 +11,8 @@ import * as aws_waf from 'aws-cdk-lib/aws-wafv2';
 import { Construct } from 'constructs';
 import * as path from 'path';
 
-import { checkDefined } from '../../lib/util/preconditions';
 import { SERVICE_NAME } from '../constants';
+import { AnalyticsStack } from './analytics-stack';
 
 export class APIStack extends cdk.Stack {
   public readonly url: CfnOutput;
@@ -165,9 +165,10 @@ export class APIStack extends cdk.Stack {
       quoteTarget.node.addDependency(quoteLambdaAlias);
     }
 
-    /* Subscription Filter */
-    new aws_logs.CfnSubscriptionFilter(this, 'RequestSub', {
-      destinationArn: checkDefined(props.envVars['REQUEST_']),
+    /* Analytics */
+    new AnalyticsStack(this, 'AnalyticsStack', {
+      quoteLambda,
+      envVars: props.envVars,
     });
 
     const quoteLambdaIntegration = new aws_apigateway.LambdaIntegration(quoteLambdaAlias, {});

@@ -3,6 +3,7 @@ import Logger from 'bunyan';
 import { BigNumber } from 'ethers';
 
 import { DEFAULT_SLIPPAGE_TOLERANCE } from '../../constants';
+import { currentTimestampInSeconds } from '../../util/time';
 import { ClassicConfig, ClassicConfigJSON, ClassicRequest } from './ClassicRequest';
 import { DutchLimitConfig, DutchLimitConfigJSON, DutchLimitRequest } from './DutchLimitRequest';
 
@@ -72,7 +73,7 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON, log?: Logger): Qu
   });
 
   log?.info({
-    eventType: 'UnifiedRoutingRequest',
+    eventType: 'UnifiedRoutingQuoteRequest',
     body: {
       requestId: info.requestId,
       tokenInChainId: info.tokenInChainId,
@@ -80,9 +81,9 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON, log?: Logger): Qu
       tokenIn: info.tokenIn,
       tokenOut: info.tokenOut,
       amount: info.amount.toString(),
-      type: info.type,
-      routing: requests.map((r) => r.routingType).join(','),
-      createdAt: new Date().getTime(), // epoch timstamp in seconds
+      type: TradeType[info.type],
+      configs: requests.map((r) => r.routingType).join(','),
+      createdAt: currentTimestampInSeconds(),
     },
   });
 

@@ -3,6 +3,8 @@ import { MethodParameters } from '@uniswap/smart-order-router';
 import { BigNumber } from 'ethers';
 
 import { Quote, QuoteRequest, RoutingType } from '..';
+import { currentTimestampInSeconds } from '../../util/time';
+import { LogJSON } from './index';
 
 export type V2ReserveJSON = {
   token: TokenInRouteJSON;
@@ -63,15 +65,40 @@ export type ClassicQuoteDataJSON = {
 
 export class ClassicQuote implements Quote {
   public routingType: RoutingType.CLASSIC = RoutingType.CLASSIC;
+  public createdAt: string;
 
   public static fromResponseBody(request: QuoteRequest, body: ClassicQuoteDataJSON): ClassicQuote {
     return new ClassicQuote(request, body);
   }
 
-  constructor(public request: QuoteRequest, private quoteData: ClassicQuoteDataJSON) {}
+  constructor(
+    public request: QuoteRequest,
+    private quoteData: ClassicQuoteDataJSON,
+    createdAt: string = currentTimestampInSeconds()
+  ) {
+    this.createdAt = createdAt;
+  }
 
   public toJSON(): ClassicQuoteDataJSON {
     return this.quoteData;
+  }
+
+  public toLog(): LogJSON {
+    return {
+      quoteId: '',
+      requestId: this.request.info.requestId,
+      tokenInChainId: this.request.info.tokenInChainId,
+      tokenOutChainId: this.request.info.tokenOutChainId,
+      tokenIn: this.request.info.tokenIn,
+      tokenOut: this.request.info.tokenOut,
+      amountIn: this.amountIn.toString(),
+      amountOut: this.amountOut.toString(),
+      amountInGasAdjusted: this.amountInGasAdjusted.toString(),
+      amountOutGasAdjusted: this.amountOutGasAdjusted.toString(),
+      offerer: '',
+      routing: RoutingType[this.routingType],
+      createdAt: this.createdAt,
+    };
   }
 
   public get amountOut(): BigNumber {

@@ -22,6 +22,7 @@ describe('RfqQuoter test', () => {
     postSpy({
       chainId: 1,
       requestId: '123',
+      quoteId: '321',
       tokenIn: TOKEN_IN,
       amountIn: AMOUNT_IN,
       tokenOut: TOKEN_OUT,

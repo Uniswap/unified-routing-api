@@ -30,14 +30,19 @@ export class RfqQuoter implements Quoter {
     const offerer = request.config.offerer;
     const requests = [
       axios.post(`${this.rfqUrl}quote`, {
-        chainId: request.info.tokenInChainId,
+        tokenInChainId: request.info.tokenInChainId,
+        tokenOutChainId: request.info.tokenOutChainId,
         tokenIn: request.info.tokenIn,
-        amountIn: request.info.amount.toString(),
         tokenOut: request.info.tokenOut,
+        amount: request.info.amount.toString(),
         offerer: offerer,
+        requestId: request.info.requestId,
+        type: TradeType[request.info.type],
       }),
       axios.get(`${this.serviceUrl}dutch-auction/nonce?address=${offerer}`),
     ];
+
+    this.log.info({ requests: requests }, 'axios requests');
 
     let quote: Quote | null = null;
     await Promise.allSettled(requests).then((results) => {

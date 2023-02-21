@@ -13,6 +13,7 @@ import { CLASSIC_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_OUT_BETTER, QUOTE_RE
 const DL_QUOTE_JSON: DutchLimitQuoteJSON = {
   chainId: CHAIN_IN_ID,
   requestId: '0xrequestId',
+  quoteId: '0xquoteId',
   tokenIn: TOKEN_IN,
   amountIn: AMOUNT_IN,
   tokenOut: TOKEN_OUT,
@@ -60,7 +61,7 @@ describe('QuoteResponse', () => {
         {
           token: TOKEN_OUT,
           startAmount: AMOUNT_IN,
-          endAmount: BigNumber.from(AMOUNT_IN).mul(995).div(1000).toString(), // default 0.5% slippage
+          endAmount: BigNumber.from(AMOUNT_IN).mul(980).div(1000).toString(), // default 2% slippage
           recipient: OFFERER,
           isFeeOutput: false,
         },
