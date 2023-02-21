@@ -86,7 +86,7 @@ describe('QuoteHandler', () => {
               tokenOut: QUOTE_REQUEST_BODY_MULTI.tokenOut,
               amount: QUOTE_REQUEST_BODY_MULTI.amount,
               type: QUOTE_REQUEST_BODY_MULTI.type,
-              routing: 'DUTCH_LIMIT,CLASSIC',
+              configs: 'DUTCH_LIMIT,CLASSIC',
               createdAt: expect.any(String),
             }),
           })

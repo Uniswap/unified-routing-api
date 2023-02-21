@@ -35,6 +35,7 @@ export class DutchLimitQuote implements Quote {
     nonce?: string
   ): DutchLimitQuote {
     return new DutchLimitQuote(
+      currentTimestampInSeconds(),
       request,
       body.chainId,
       body.requestId,
@@ -50,6 +51,7 @@ export class DutchLimitQuote implements Quote {
   }
 
   constructor(
+    public readonly createdAt: string,
     public readonly request: DutchLimitRequest,
     public readonly chainId: number,
     public readonly requestId: string,
@@ -59,7 +61,6 @@ export class DutchLimitQuote implements Quote {
     public readonly tokenOut: string,
     public readonly amountOut: BigNumber,
     public readonly offerer: string,
-    public readonly createdAt: string,
     public readonly filler?: string,
     public readonly nonce?: string
   ) {
@@ -69,6 +70,7 @@ export class DutchLimitQuote implements Quote {
   public static fromClassicQuote(request: DutchLimitRequest, quote: ClassicQuote): DutchLimitQuote {
     if (request.info.type === TradeType.EXACT_INPUT) {
       return new DutchLimitQuote(
+        quote.createdAt,
         request,
         request.info.tokenInChainId,
         request.info.requestId,
@@ -79,11 +81,11 @@ export class DutchLimitQuote implements Quote {
         quote.amountOutGasAdjusted.mul(DutchLimitQuote.improvementExactIn).div(HUNDRED_PERCENT),
         request.config.offerer,
         '', // synthetic quote has no filler
-        undefined, // synthetic quote has no nonce
-        quote.createdAt
+        undefined // synthetic quote has no nonce
       );
     } else {
       return new DutchLimitQuote(
+        quote.createdAt,
         request,
         request.info.tokenInChainId,
         request.info.requestId,
@@ -94,8 +96,7 @@ export class DutchLimitQuote implements Quote {
         request.info.amount, // fixed amountOut
         request.config.offerer,
         '', // synthetic quote has no filler
-        undefined, // synthetic quote has no nonce
-        quote.createdAt
+        undefined // synthetic quote has no nonce
       );
     }
   }
