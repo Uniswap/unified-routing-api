@@ -24,6 +24,7 @@ export type LogJSON = {
   routing: string;
   createdAt: string;
   filler?: string;
+  gasPriceWei?: string;
 };
 
 export interface Quote {
