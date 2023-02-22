@@ -98,6 +98,7 @@ export class ClassicQuote implements Quote {
       offerer: '',
       routing: RoutingType[this.routingType],
       createdAt: this.createdAt,
+      gasPriceWei: this.gasPriceWei,
     };
   }
 
@@ -123,5 +124,9 @@ export class ClassicQuote implements Quote {
     return this.request.info.type === TradeType.EXACT_OUTPUT
       ? BigNumber.from(this.quoteData.quoteGasAdjusted)
       : BigNumber.from(this.quoteData.amount);
+  }
+
+  public get gasPriceWei(): string {
+    return this.quoteData.gasPriceWei;
   }
 }
