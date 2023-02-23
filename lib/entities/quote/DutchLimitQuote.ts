@@ -1,4 +1,4 @@
-import { DutchLimitOrderBuilder, DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
+import { DutchLimitOrderBuilder, DutchLimitOrderInfoJSON, encodeExclusiveFillerData } from '@uniswap/gouda-sdk';
 import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber, ethers } from 'ethers';
 
@@ -109,11 +109,12 @@ export class DutchLimitQuote implements Quote {
     const orderBuilder = new DutchLimitOrderBuilder(this.chainId);
     const startTime = Math.floor(Date.now() / 1000);
     const nonce = this.nonce ?? this.generateRandomNonce();
+    const decayStartTime = startTime + this.request.config.exclusivePeriodSecs;
 
-    const order = orderBuilder
-      .startTime(startTime + this.request.config.exclusivePeriodSecs)
-      .endTime(startTime + this.request.config.exclusivePeriodSecs + this.request.config.auctionPeriodSecs)
-      .deadline(startTime + this.request.config.exclusivePeriodSecs + this.request.config.auctionPeriodSecs)
+    const builder = orderBuilder
+      .startTime(decayStartTime)
+      .endTime(decayStartTime + this.request.config.auctionPeriodSecs)
+      .deadline(decayStartTime + this.request.config.auctionPeriodSecs)
       .offerer(this.request.config.offerer)
       .nonce(BigNumber.from(nonce))
       .input({
@@ -129,8 +130,13 @@ export class DutchLimitQuote implements Quote {
           this.request.info.type === TradeType.EXACT_INPUT ? this.calculateEndAmountFromSlippage() : this.amountOut,
         recipient: this.request.config.offerer,
         isFeeOutput: false,
-      })
-      .build();
+      });
+
+    if (this.filler) {
+      builder.validation(encodeExclusiveFillerData(this.filler, decayStartTime, this.chainId));
+    }
+
+    const order = builder.build();
 
     return order.toJSON();
   }

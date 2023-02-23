@@ -62,7 +62,7 @@
     "dotenv": "^16.0.3",
     "dynamodb-toolbox": "^0.6.1",
     "esm": "^3.2.25",
-    "@uniswap/gouda-sdk": "0.4.2",
+    "@uniswap/gouda-sdk": "0.7.0",
     "joi": "^17.7.0",
     "node-cache": "^5.1.2",
     "source-map-support": "^0.5.21",
