@@ -1,3 +1,4 @@
+import { DutchLimitOrder, parseValidation, ValidationType } from '@uniswap/gouda-sdk';
 import { BigNumber } from 'ethers';
 
 import {
@@ -67,6 +68,37 @@ describe('QuoteResponse', () => {
         },
       ],
     });
+    const order = DutchLimitOrder.fromJSON(quote.toOrder(), quote.chainId);
+    const parsedValidation = parseValidation(order.info);
+    expect(parsedValidation.type).toEqual(ValidationType.ExclusiveFiller);
+    expect(parsedValidation.data!.filler).toEqual(FILLER);
+    expect(parsedValidation.data!.lastExclusiveTimestamp).toBeGreaterThan(Date.now() / 1000);
+
+    expect(BigNumber.from(quote.toOrder().nonce).gt(0)).toBeTruthy();
+  });
+
+  it('produces dutch limit order info from param-api respone and config without filler', () => {
+    const quote = DutchLimitQuote.fromResponseBody(config, Object.assign({}, DL_QUOTE_JSON, { filler: undefined }));
+    expect(quote.toOrder()).toMatchObject({
+      offerer: OFFERER,
+      input: {
+        token: TOKEN_IN,
+        startAmount: AMOUNT_IN,
+        endAmount: AMOUNT_IN,
+      },
+      outputs: [
+        {
+          token: TOKEN_OUT,
+          startAmount: AMOUNT_IN,
+          endAmount: BigNumber.from(AMOUNT_IN).mul(950).div(1000).toString(), // default 0.5% slippage
+          recipient: OFFERER,
+          isFeeOutput: false,
+        },
+      ],
+    });
+    const order = DutchLimitOrder.fromJSON(quote.toOrder(), quote.chainId);
+    const parsedValidation = parseValidation(order.info);
+    expect(parsedValidation.type).toEqual(ValidationType.None);
 
     expect(BigNumber.from(quote.toOrder().nonce).gt(0)).toBeTruthy();
   });
