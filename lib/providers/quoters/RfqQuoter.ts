@@ -42,16 +42,16 @@ export class RfqQuoter implements Quoter {
       axios.get(`${this.serviceUrl}dutch-auction/nonce?address=${offerer}`),
     ];
 
-    this.log.info({ requests: requests }, 'axios requests');
-
     let quote: Quote | null = null;
     await Promise.allSettled(requests).then((results) => {
       if (results[0].status == 'rejected') {
         this.log.error(results[0].reason, 'RfqQuoterErr');
       } else if (results[1].status == 'rejected') {
         this.log.debug(results[1].reason, 'RfqQuoterErr: GET nonce failed');
+        this.log.info(results[0].value.data, 'RfqQuoter: POST quote request success');
         quote = DutchLimitQuote.fromResponseBody(request, results[0].value.data);
       } else {
+        this.log.info(results[1].value.data, 'RfqQuoter: GET nonce success');
         quote = DutchLimitQuote.fromResponseBody(
           request,
           results[0].value.data,

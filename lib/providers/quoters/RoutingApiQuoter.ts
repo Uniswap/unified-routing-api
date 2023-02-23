@@ -15,9 +15,6 @@ export class RoutingApiQuoter implements Quoter {
   }
 
   async quote(request: ClassicRequest): Promise<Quote | null> {
-    this.log.info(request, 'quoteRequest');
-    this.log.info(this.routingApiUrl, 'routingApiUrl');
-
     if (request.routingType !== RoutingType.CLASSIC) {
       throw new Error(`Invalid routing config type: ${request.routingType}`);
     }

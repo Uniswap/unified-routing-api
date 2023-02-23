@@ -45,7 +45,7 @@ describe('SyntheticUniswapXTransformer', () => {
       const outStartAmount = CLASSIC_QUOTE_EXACT_IN_LARGE.amountOutGasAdjusted
         .mul(DutchLimitQuote.improvementExactIn)
         .div(HUNDRED_PERCENT);
-      const outEndAmount = outStartAmount.mul(HUNDRED_PERCENT.sub(200)).div(HUNDRED_PERCENT);
+      const outEndAmount = outStartAmount.mul(HUNDRED_PERCENT.sub(500)).div(HUNDRED_PERCENT);
       expect(transformed[2].toJSON()).toMatchObject({
         outputs: [
           {
