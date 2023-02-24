@@ -2,6 +2,7 @@ import { DutchLimitOrderBuilder, DutchLimitOrderInfoJSON, encodeExclusiveFillerD
 import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber, ethers } from 'ethers';
 
+import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteJSON } from '.';
 import { DutchLimitRequest, RoutingType } from '..';
 import { HUNDRED_PERCENT } from '../../constants';
@@ -74,7 +75,7 @@ export class DutchLimitQuote implements Quote {
         request,
         request.info.tokenInChainId,
         request.info.requestId,
-        '', // synthetic quote has no quoteId
+        uuidv4(), // synthetic quote doesn't receive a quoteId from RFQ api, so generate one
         request.info.tokenIn,
         request.info.amount, // fixed amountIn
         quote.request.info.tokenOut,
@@ -89,7 +90,7 @@ export class DutchLimitQuote implements Quote {
         request,
         request.info.tokenInChainId,
         request.info.requestId,
-        '',
+        uuidv4(), // synthetic quote doesn't receive a quoteId from RFQ api, so generate one
         request.info.tokenIn,
         quote.amountInGasAdjusted.mul(DutchLimitQuote.improvementExactOut).div(HUNDRED_PERCENT),
         quote.request.info.tokenOut,
@@ -102,7 +103,10 @@ export class DutchLimitQuote implements Quote {
   }
 
   public toJSON(): QuoteJSON {
-    return this.toOrder();
+    return {
+      ...this.toOrder(),
+      quoteId: this.quoteId,
+    };
   }
 
   public toOrder(): DutchLimitOrderInfoJSON {

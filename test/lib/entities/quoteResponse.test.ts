@@ -105,14 +105,14 @@ describe('QuoteResponse', () => {
 
   it('parses classic quote exactInput', () => {
     const quote = ClassicQuote.fromResponseBody(CLASSIC_QUOTE_EXACT_IN_BETTER.request, CLASSIC_QUOTE_JSON);
-    expect(quote.toJSON()).toEqual(CLASSIC_QUOTE_JSON);
+    expect(quote.toJSON()).toMatchObject({ ...CLASSIC_QUOTE_JSON, quoteId: expect.any(String) });
     expect(quote.amountIn.toString()).toEqual(CLASSIC_QUOTE_JSON.amount);
     expect(quote.amountOut.toString()).toEqual(CLASSIC_QUOTE_JSON.quote);
   });
 
   it('parses classic quote exactOutput', () => {
     const quote = ClassicQuote.fromResponseBody(CLASSIC_QUOTE_EXACT_OUT_BETTER.request, CLASSIC_QUOTE_JSON);
-    expect(quote.toJSON()).toEqual(CLASSIC_QUOTE_JSON);
+    expect(quote.toJSON()).toMatchObject({ ...CLASSIC_QUOTE_JSON, quoteId: expect.any(String) });
     expect(quote.amountIn.toString()).toEqual(CLASSIC_QUOTE_JSON.quote);
     expect(quote.amountOut.toString()).toEqual(CLASSIC_QUOTE_JSON.amount);
   });
