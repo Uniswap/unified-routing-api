@@ -2,6 +2,7 @@ import { TradeType } from '@uniswap/sdk-core';
 import { MethodParameters } from '@uniswap/smart-order-router';
 import { BigNumber } from 'ethers';
 
+import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteRequest, RoutingType } from '..';
 import { currentTimestampInSeconds } from '../../util/time';
 import { LogJSON } from './index';
@@ -66,6 +67,7 @@ export type ClassicQuoteDataJSON = {
 export class ClassicQuote implements Quote {
   public routingType: RoutingType.CLASSIC = RoutingType.CLASSIC;
   public createdAt: string;
+  public readonly quoteId: string = uuidv4();
 
   public static fromResponseBody(request: QuoteRequest, body: ClassicQuoteDataJSON): ClassicQuote {
     return new ClassicQuote(request, body);
@@ -80,12 +82,15 @@ export class ClassicQuote implements Quote {
   }
 
   public toJSON(): ClassicQuoteDataJSON {
-    return this.quoteData;
+    return {
+      ...this.quoteData,
+      quoteId: this.quoteId,
+    };
   }
 
   public toLog(): LogJSON {
     return {
-      quoteId: '',
+      quoteId: this.quoteId,
       requestId: this.request.info.requestId,
       tokenInChainId: this.request.info.tokenInChainId,
       tokenOutChainId: this.request.info.tokenOutChainId,
