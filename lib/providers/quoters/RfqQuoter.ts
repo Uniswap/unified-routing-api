@@ -52,6 +52,7 @@ export class RfqQuoter implements Quoter {
         quote = DutchLimitQuote.fromResponseBody(request, results[0].value.data);
       } else {
         this.log.info(results[1].value.data, 'RfqQuoter: GET nonce success');
+        this.log.info(results[0].value.data, 'RfqQuoter: POST quote request success');
         quote = DutchLimitQuote.fromResponseBody(
           request,
           results[0].value.data,
