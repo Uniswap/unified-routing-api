@@ -23,6 +23,7 @@ export type LogJSON = {
   offerer: string;
   routing: string;
   createdAt: string;
+  slippage: number;
   filler?: string;
   gasPriceWei?: string;
 };

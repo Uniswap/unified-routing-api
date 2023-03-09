@@ -160,6 +160,7 @@ export class DutchLimitQuote implements Quote {
       offerer: this.offerer,
       filler: this.filler,
       routing: RoutingType[this.routingType],
+      slippage: this.request.info.slippageTolerance ? parseFloat(this.request.info.slippageTolerance) : -1,
       createdAt: this.createdAt,
     };
   }
