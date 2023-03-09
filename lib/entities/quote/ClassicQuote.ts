@@ -102,6 +102,7 @@ export class ClassicQuote implements Quote {
       amountOutGasAdjusted: this.amountOutGasAdjusted.toString(),
       offerer: '',
       routing: RoutingType[this.routingType],
+      slippage: this.request.info.slippageTolerance ? parseFloat(this.request.info.slippageTolerance) : -1,
       createdAt: this.createdAt,
       gasPriceWei: this.gasPriceWei,
     };
