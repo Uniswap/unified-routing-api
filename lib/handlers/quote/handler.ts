@@ -51,7 +51,7 @@ export class QuoteHandler extends APIGLambdaHandler<
 
     log.info({ quotesTransformed: quotesTransformed }, 'quotesTransformed');
 
-    const bestQuote = await getBestQuote(quotesTransformed, log);
+    const bestQuote = await getBestQuote(quotesTransformed, requests.length > 1, log);
     if (!bestQuote) {
       return {
         statusCode: 404,
@@ -95,15 +95,18 @@ export async function getQuotes(quotersByRoutingType: QuoterByRoutingType, reque
 }
 
 // determine and return the "best" quote of the given list
-export async function getBestQuote(quotes: Quote[], log?: Logger): Promise<Quote | null> {
+export async function getBestQuote(quotes: Quote[], uniswapXRequested?: boolean, log?: Logger): Promise<Quote | null> {
   return quotes.reduce((bestQuote: Quote | null, quote: Quote) => {
     // log all valid quotes, so that we capture auto router prices at request time
-    log?.info({
-      eventType: 'UnifiedRoutingQuoteResponse',
-      body: {
-        ...quote.toLog(),
-      },
-    });
+    // skip logging in only classic requested
+    if (uniswapXRequested) {
+      log?.info({
+        eventType: 'UnifiedRoutingQuoteResponse',
+        body: {
+          ...quote.toLog(),
+        },
+      });
+    }
     if (!bestQuote || compareQuotes(quote, bestQuote, quote.request.info.type)) {
       return quote;
     }
