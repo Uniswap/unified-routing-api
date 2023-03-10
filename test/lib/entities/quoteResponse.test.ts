@@ -62,7 +62,7 @@ describe('QuoteResponse', () => {
         {
           token: TOKEN_OUT,
           startAmount: AMOUNT_IN,
-          endAmount: BigNumber.from(AMOUNT_IN).mul(950).div(1000).toString(), // default 5% slippage
+          endAmount: BigNumber.from(AMOUNT_IN).mul(995).div(1000).toString(), // default 5% slippage
           recipient: OFFERER,
           isFeeOutput: false,
         },
@@ -90,7 +90,7 @@ describe('QuoteResponse', () => {
         {
           token: TOKEN_OUT,
           startAmount: AMOUNT_IN,
-          endAmount: BigNumber.from(AMOUNT_IN).mul(950).div(1000).toString(), // default 0.5% slippage
+          endAmount: BigNumber.from(AMOUNT_IN).mul(995).div(1000).toString(), // default 0.5% slippage
           recipient: OFFERER,
           isFeeOutput: false,
         },
