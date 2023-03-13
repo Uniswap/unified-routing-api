@@ -29,6 +29,8 @@ export class DutchLimitQuote implements Quote {
   // public static improvementExactOut = BigNumber.from(9900);
   public static improvementExactIn = BigNumber.from(10010);
   public static improvementExactOut = BigNumber.from(9990);
+  public readonly endAmountIn: BigNumber;
+  public readonly endAmountOut: BigNumber;
 
   public static fromResponseBody(
     request: DutchLimitRequest,
@@ -66,6 +68,10 @@ export class DutchLimitQuote implements Quote {
     public readonly nonce?: string
   ) {
     this.createdAt = createdAt || currentTimestampInSeconds();
+    this.endAmountIn =
+      request.info.type === TradeType.EXACT_INPUT ? this.amountIn : this.calculateEndAmountFromSlippage();
+    this.endAmountOut =
+      request.info.type === TradeType.EXACT_INPUT ? this.calculateEndAmountFromSlippage() : this.amountOut;
   }
 
   public static fromClassicQuote(request: DutchLimitRequest, quote: ClassicQuote): DutchLimitQuote {
@@ -155,6 +161,8 @@ export class DutchLimitQuote implements Quote {
       tokenOut: this.tokenOut,
       amountIn: this.amountIn.toString(),
       amountOut: this.amountOut.toString(),
+      endAmountIn: this.endAmountIn.toString(),
+      endAmountOut: this.endAmountOut.toString(),
       amountInGasAdjusted: this.amountIn.toString(),
       amountOutGasAdjusted: this.amountOut.toString(),
       offerer: this.offerer,
