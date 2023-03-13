@@ -29,8 +29,8 @@ export class DutchLimitQuote implements Quote {
   // public static improvementExactOut = BigNumber.from(9900);
   public static improvementExactIn = BigNumber.from(10010);
   public static improvementExactOut = BigNumber.from(9990);
-  public readonly endAmountIn: BigNumber;
-  public readonly endAmountOut: BigNumber;
+  public endAmountIn: BigNumber;
+  public endAmountOut: BigNumber;
 
   public static fromResponseBody(
     request: DutchLimitRequest,

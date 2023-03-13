@@ -12,6 +12,8 @@ import {
   QuoteRequestBodyJSON,
   RoutingType,
 } from '../../entities';
+import { DutchLimitQuote } from '../../entities/quote/DutchLimitQuote';
+import { QuotesByRoutingType } from '../../entities/quote/index';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
 import { ContainerInjected, QuoterByRoutingType } from './injector';
@@ -46,8 +48,27 @@ export class QuoteHandler extends APIGLambdaHandler<
     log.info({ requestBody: request }, 'request');
     const requests = parseQuoteRequests(request, log);
     const requestsTransformed = requestTransformer.transform(requests);
-    const quotes = await getQuotes(quoters, requestsTransformed);
+    const quotesByRequestType: QuotesByRoutingType = {};
+    const quotes = await getQuotes(quoters, requestsTransformed, quotesByRequestType);
     const quotesTransformed = await quoteTransformer.transform(requests, quotes);
+
+    // hack: set endAmount of dutch limit quotes to that of auto router quote gas adjusted
+    if (
+      requests.length > 1 &&
+      quotesByRequestType[RoutingType.CLASSIC] &&
+      quotesByRequestType[RoutingType.CLASSIC].length > 0
+    ) {
+      // UniswapX requested
+      const classicQuote = quotesByRequestType[RoutingType.CLASSIC][0] as ClassicQuote; // assuming only one classic quote
+      quotesTransformed.forEach((quote) => {
+        if (quote.routingType === RoutingType.DUTCH_LIMIT) {
+          (quote as DutchLimitQuote).endAmountIn =
+            quote.request.info.type === TradeType.EXACT_INPUT ? quote.amountIn : classicQuote.amountInGasAdjusted;
+          (quote as DutchLimitQuote).endAmountOut =
+            quote.request.info.type === TradeType.EXACT_INPUT ? classicQuote.amountOutGasAdjusted : quote.amountOut;
+        }
+      });
+    }
 
     log.info({ quotesTransformed: quotesTransformed }, 'quotesTransformed');
 
@@ -81,7 +102,11 @@ export class QuoteHandler extends APIGLambdaHandler<
 }
 
 // fetch quotes for all quote requests using the configured quoters
-export async function getQuotes(quotersByRoutingType: QuoterByRoutingType, requests: QuoteRequest[]): Promise<Quote[]> {
+export async function getQuotes(
+  quotersByRoutingType: QuoterByRoutingType,
+  requests: QuoteRequest[],
+  quotesByRoutingType: QuotesByRoutingType
+): Promise<Quote[]> {
   const quotes = await Promise.all(
     requests.flatMap((request) => {
       const quoters = quotersByRoutingType[request.routingType];
@@ -91,7 +116,14 @@ export async function getQuotes(quotersByRoutingType: QuoterByRoutingType, reque
       return quoters.map((q) => q.quote(request));
     })
   );
-  return quotes.filter((q): q is Quote => !!q);
+  const filtered = quotes.filter((q): q is Quote => !!q);
+  filtered.forEach((quote) => {
+    if (!quotesByRoutingType[quote.routingType]) {
+      quotesByRoutingType[quote.routingType] = [];
+    }
+    quotesByRoutingType[quote.routingType]?.push(quote);
+  });
+  return filtered;
 }
 
 // determine and return the "best" quote of the given list
