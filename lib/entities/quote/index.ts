@@ -16,6 +16,8 @@ export type LogJSON = {
   tokenOut: string;
   amountIn: string;
   amountOut: string;
+  endAmountIn: string;
+  endAmountOut: string;
   amountInGasAdjusted?: string;
   amountOutGasAdjusted?: string;
   tokenInChainId: number;
