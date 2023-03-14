@@ -9,6 +9,10 @@ export * from './DutchLimitQuote';
 
 export type QuoteJSON = (DutchLimitOrderInfoJSON & { quoteId: string }) | ClassicQuoteDataJSON;
 
+export type QuoteByRoutingType = { [key in RoutingType]?: Quote };
+
+export type QuotesByRoutingType = { [key in RoutingType]?: Quote[] };
+
 export type LogJSON = {
   quoteId: string;
   requestId: string;

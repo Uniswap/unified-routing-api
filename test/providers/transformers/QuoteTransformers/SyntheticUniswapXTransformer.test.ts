@@ -1,7 +1,7 @@
 import Logger from 'bunyan';
 
 import { HUNDRED_PERCENT } from '../../../../lib/constants';
-import { DutchLimitQuote, Quote, RoutingType } from '../../../../lib/entities';
+import { DutchLimitQuote, QuoteByRoutingType, RoutingType } from '../../../../lib/entities';
 import { SyntheticUniswapXTransformer } from '../../../../lib/providers/transformers';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
@@ -10,8 +10,6 @@ import {
   QUOTE_REQUEST_CLASSIC,
   QUOTE_REQUEST_MULTI,
 } from '../../../utils/fixtures';
-
-type QuoteByRoutingType = { [key in RoutingType]?: Quote };
 
 describe('SyntheticUniswapXTransformer', () => {
   const logger = Logger.createLogger({ name: 'test' });
