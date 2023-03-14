@@ -63,9 +63,17 @@ export class QuoteHandler extends APIGLambdaHandler<
       quotesTransformed.forEach((quote) => {
         if (quote.routingType === RoutingType.DUTCH_LIMIT) {
           (quote as DutchLimitQuote).endAmountIn =
-            quote.request.info.type === TradeType.EXACT_INPUT ? quote.amountIn : classicQuote.amountInGasAdjusted;
+            quote.request.info.type === TradeType.EXACT_INPUT
+              ? quote.amountIn
+              : quote.amountIn.lte(classicQuote.amountInGasAdjusted)
+              ? classicQuote.amountInGasAdjusted
+              : quote.amountIn;
           (quote as DutchLimitQuote).endAmountOut =
-            quote.request.info.type === TradeType.EXACT_INPUT ? classicQuote.amountOutGasAdjusted : quote.amountOut;
+            quote.request.info.type === TradeType.EXACT_INPUT
+              ? classicQuote.amountOutGasAdjusted
+              : quote.amountOut.lte(classicQuote.amountOutGasAdjusted)
+              ? classicQuote.amountOutGasAdjusted
+              : quote.amountOut;
         }
       });
     }

@@ -46,7 +46,8 @@ describe('QuoteHandler', () => {
     };
 
     const injectorPromiseMock = (
-      quoters: Quoter[]
+      quoters: Quoter[],
+      quoteTransformerMockOverride?: any
     ): Promise<ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>> =>
       new Promise((resolve) =>
         resolve({
@@ -54,14 +55,15 @@ describe('QuoteHandler', () => {
             return {
               quoters: quoters,
               requestTransformer: requestTransformerMock,
-              quoteTransformer: quoteTransformerMock,
+              quoteTransformer: quoteTransformerMockOverride ?? quoteTransformerMock,
             };
           },
           getRequestInjected: () => requestInjectedMock,
         } as unknown as ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>)
       );
 
-    const getQuoteHandler = (quoters: Quoter[]) => new QuoteHandler('quote', injectorPromiseMock(quoters));
+    const getQuoteHandler = (quoters: Quoter[], quoteTransformerMock?: any) =>
+      new QuoteHandler('quote', injectorPromiseMock(quoters, quoteTransformerMock));
 
     const RfqQuoterMock = (dlQuote: DutchLimitQuote): Quoter => {
       return {
@@ -80,8 +82,11 @@ describe('QuoteHandler', () => {
 
     describe('handler test', () => {
       it('sets the DL quote endAmount using classic quote', async () => {
+        const quoteTransformerMockOverride = {
+          transform: jest.fn().mockResolvedValue([DL_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_IN_WORSE]),
+        };
         const quoters = [RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER), ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE)];
-        const res = await getQuoteHandler(quoters).handler(
+        const res = await getQuoteHandler(quoters, quoteTransformerMockOverride).handler(
           getEvent(QUOTE_REQUEST_BODY_MULTI),
           {} as unknown as Context
         );

@@ -130,14 +130,12 @@ export class DutchLimitQuote implements Quote {
       .input({
         token: this.tokenIn,
         startAmount: this.amountIn,
-        endAmount:
-          this.request.info.type === TradeType.EXACT_INPUT ? this.amountIn : this.calculateEndAmountFromSlippage(),
+        endAmount: this.endAmountIn,
       })
       .output({
         token: this.tokenOut,
         startAmount: this.amountOut,
-        endAmount:
-          this.request.info.type === TradeType.EXACT_INPUT ? this.calculateEndAmountFromSlippage() : this.amountOut,
+        endAmount: this.endAmountOut,
         recipient: this.request.config.offerer,
         isFeeOutput: false,
       });
