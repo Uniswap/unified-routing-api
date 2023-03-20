@@ -183,13 +183,13 @@ export class QuoteSession implements QuoteSessionData {
 
     const validQuotes = [];
 
-    if (this.uniswapXRequested && !this.gasUsageTooHigh()) {
+    if (this.uniswapXRequested && !this.gasUsageTooHigh() && this.hasRouteBackToNative()) {
       if (this.quotesByRoutingType.DUTCH_LIMIT.original) {
         validQuotes.push(this.quotesByRoutingType.DUTCH_LIMIT.original);
       }
       // adds synthetic DL quote
       if (
-        this.hasRouteBackToNative() &&
+        !this.quotesByRoutingType.DUTCH_LIMIT.original &&
         SUPPORTED_CHAINS[RoutingType.DUTCH_LIMIT].includes(this.tokenInChainId) &&
         SUPPORTED_CHAINS[RoutingType.DUTCH_LIMIT].includes(this.tokenOutChainId) &&
         (this.quotesByRoutingType.CLASSIC.original || this.quotesByRoutingType.CLASSIC.synthetic)

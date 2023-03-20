@@ -11,6 +11,7 @@ import {
   Quote,
   QuoteRequestBodyJSON,
 } from '../../lib/entities';
+import { Quoter } from '../../lib/providers/quoters';
 import { RoutingType } from '../../lib/util/types';
 import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, FILLER, OFFERER, TOKEN_IN, TOKEN_OUT } from '../constants';
 import { buildQuoteResponse } from './quoteResponse';
@@ -44,6 +45,15 @@ export const QUOTE_REQUEST_BODY_MULTI = {
       protocols: ['V3', 'V2', 'MIXED'],
     },
   ],
+};
+
+export const classicQuoterMock = (quote: Quote, second?: Quote): Quoter => {
+  return {
+    quote: jest
+      .fn()
+      .mockResolvedValueOnce(quote)
+      .mockResolvedValueOnce(second ?? CLASSIC_QUOTE_HAS_ROUTE_TO_NATIVE),
+  };
 };
 
 export function makeClassicRequest(overrides: Partial<QuoteRequestBodyJSON>): ClassicRequest {

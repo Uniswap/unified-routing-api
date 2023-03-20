@@ -3,11 +3,12 @@ import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { default as Logger } from 'bunyan';
 
 import { DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
-import { ClassicQuote, DutchLimitQuote, QuoteRequestBodyJSON } from '../../../../lib/entities';
+import { DutchLimitQuote, QuoteRequestBodyJSON } from '../../../../lib/entities';
 import { ApiInjector, ApiRInj } from '../../../../lib/handlers/base';
 import { compareQuotes, ContainerInjected, QuoteHandler, QuoterByRoutingType } from '../../../../lib/handlers/quote';
 import { Quoter } from '../../../../lib/providers/quoters';
 import {
+  classicQuoterMock,
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_IN_WORSE,
   CLASSIC_QUOTE_EXACT_OUT_BETTER,
@@ -55,11 +56,6 @@ describe('QuoteHandler', () => {
         quote: jest.fn().mockResolvedValue(dlQuote),
       };
     };
-    const ClassicQuoterMock = (classicQuote: ClassicQuote): Quoter => {
-      return {
-        quote: jest.fn().mockResolvedValue(classicQuote),
-      };
-    };
     const getEvent = (request: QuoteRequestBodyJSON): APIGatewayProxyEvent =>
       ({
         body: JSON.stringify(request),
@@ -68,7 +64,7 @@ describe('QuoteHandler', () => {
     describe('handler test', () => {
       it('sets the DL quote endAmount using classic quote', async () => {
         const quoters: QuoterByRoutingType = {
-          CLASSIC: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
+          CLASSIC: classicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
           DUTCH_LIMIT: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),
         };
 
