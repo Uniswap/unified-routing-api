@@ -4,9 +4,10 @@ import { BigNumber, ethers } from 'ethers';
 
 import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteJSON } from '.';
-import { DutchLimitRequest, RoutingType } from '..';
+import { DutchLimitRequest } from '..';
 import { HUNDRED_PERCENT } from '../../constants';
 import { currentTimestampInSeconds } from '../../util/time';
+import { RoutingType } from '../../util/types';
 import { ClassicQuote } from './ClassicQuote';
 import { LogJSON } from './index';
 

@@ -1,22 +1,11 @@
 import { TradeType } from '@uniswap/sdk-core';
-import Logger from 'bunyan';
 import Joi from 'joi';
 
 import { v4 as uuidv4 } from 'uuid';
-import {
-  ClassicQuote,
-  parseQuoteRequests,
-  Quote,
-  QuoteJSON,
-  QuoteRequest,
-  QuoteRequestBodyJSON,
-  RoutingType,
-} from '../../entities';
-import { DutchLimitQuote } from '../../entities/quote/DutchLimitQuote';
-import { QuotesByRoutingType } from '../../entities/quote/index';
-import { APIGLambdaHandler } from '../base';
-import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
-import { ContainerInjected, QuoterByRoutingType } from './injector';
+import { ClassicQuote, parseQuoteRequests, Quote, QuoteJSON, QuoteRequestBodyJSON, QuoteSession } from '../../entities';
+import { RoutingType } from '../../util/types';
+import { APIGLambdaHandler, APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base';
+import { ContainerInjected } from './injector';
 import { PostQuoteRequestBodyJoi } from './schema';
 
 export interface QuoteResponseJSON {
@@ -37,7 +26,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     const {
       requestInjected: { log },
       requestBody,
-      containerInjected: { quoters, quoteTransformer, requestTransformer },
+      containerInjected: { quoters },
     } = params;
 
     const request = {
@@ -47,40 +36,16 @@ export class QuoteHandler extends APIGLambdaHandler<
 
     log.info({ requestBody: request }, 'request');
     const requests = parseQuoteRequests(request, log);
-    const requestsTransformed = requestTransformer.transform(requests);
-    const quotesByRequestType: QuotesByRoutingType = {};
-    const quotes = await getQuotes(quoters, requestsTransformed, quotesByRequestType);
-    const quotesTransformed = await quoteTransformer.transform(requests, quotes);
-
-    // hack: set endAmount of dutch limit quotes to that of auto router quote gas adjusted
-    if (
-      requests.length > 1 &&
-      quotesByRequestType[RoutingType.CLASSIC] &&
-      quotesByRequestType[RoutingType.CLASSIC].length > 0
-    ) {
-      // UniswapX requested
-      const classicQuote = quotesByRequestType[RoutingType.CLASSIC][0] as ClassicQuote; // assuming only one classic quote
-      quotesTransformed.forEach((quote) => {
-        if (quote.routingType === RoutingType.DUTCH_LIMIT) {
-          (quote as DutchLimitQuote).endAmountIn =
-            quote.request.info.type === TradeType.EXACT_INPUT
-              ? quote.amountIn
-              : quote.amountIn.lte(classicQuote.amountInGasAdjusted)
-              ? classicQuote.amountInGasAdjusted
-              : quote.amountIn;
-          (quote as DutchLimitQuote).endAmountOut =
-            quote.request.info.type === TradeType.EXACT_INPUT
-              ? classicQuote.amountOutGasAdjusted
-              : quote.amountOut.lte(classicQuote.amountOutGasAdjusted)
-              ? classicQuote.amountOutGasAdjusted
-              : quote.amountOut;
-        }
-      });
+    if (requests.length == 0) {
+      return {
+        statusCode: 400,
+        detail: 'No valid requests',
+      };
     }
 
-    log.info({ quotesTransformed: quotesTransformed }, 'quotesTransformed');
+    const quoteSession = new QuoteSession(requests, log);
 
-    const bestQuote = await getBestQuote(quotesTransformed, requests.length > 1, log);
+    const bestQuote = await quoteSession.getBestQuote(quoters);
     if (!bestQuote) {
       return {
         statusCode: 404,
@@ -107,51 +72,6 @@ export class QuoteHandler extends APIGLambdaHandler<
   protected responseBodySchema(): Joi.ObjectSchema | null {
     return null;
   }
-}
-
-// fetch quotes for all quote requests using the configured quoters
-export async function getQuotes(
-  quotersByRoutingType: QuoterByRoutingType,
-  requests: QuoteRequest[],
-  quotesByRoutingType: QuotesByRoutingType
-): Promise<Quote[]> {
-  const quotes = await Promise.all(
-    requests.flatMap((request) => {
-      const quoters = quotersByRoutingType[request.routingType];
-      if (!quoters) {
-        return [];
-      }
-      return quoters.map((q) => q.quote(request));
-    })
-  );
-  const filtered = quotes.filter((q): q is Quote => !!q);
-  filtered.forEach((quote) => {
-    if (!quotesByRoutingType[quote.routingType]) {
-      quotesByRoutingType[quote.routingType] = [];
-    }
-    quotesByRoutingType[quote.routingType]?.push(quote);
-  });
-  return filtered;
-}
-
-// determine and return the "best" quote of the given list
-export async function getBestQuote(quotes: Quote[], uniswapXRequested?: boolean, log?: Logger): Promise<Quote | null> {
-  return quotes.reduce((bestQuote: Quote | null, quote: Quote) => {
-    // log all valid quotes, so that we capture auto router prices at request time
-    // skip logging in only classic requested
-    if (uniswapXRequested) {
-      log?.info({
-        eventType: 'UnifiedRoutingQuoteResponse',
-        body: {
-          ...quote.toLog(),
-        },
-      });
-    }
-    if (!bestQuote || compareQuotes(quote, bestQuote, quote.request.info.type)) {
-      return quote;
-    }
-    return bestQuote;
-  }, null);
 }
 
 // compares two quotes of any type and returns the best one based on tradeType

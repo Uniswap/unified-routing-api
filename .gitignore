@@ -67,3 +67,4 @@ typings/
 dist/
 cdk.out/
 idea/
+test_backup/

@@ -1,4 +1,4 @@
-const ts_preset = require('ts-jest/jest-preset')
+const ts_preset = require('ts-jest/jest-preset');
 
 /** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {

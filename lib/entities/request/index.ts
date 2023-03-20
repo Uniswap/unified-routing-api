@@ -4,18 +4,24 @@ import { BigNumber } from 'ethers';
 
 import { DEFAULT_SLIPPAGE_TOLERANCE } from '../../constants';
 import { currentTimestampInSeconds } from '../../util/time';
+import { RoutingType } from '../../util/types';
 import { ClassicConfig, ClassicConfigJSON, ClassicRequest } from './ClassicRequest';
 import { DutchLimitConfig, DutchLimitConfigJSON, DutchLimitRequest } from './DutchLimitRequest';
 
 export * from './ClassicRequest';
 export * from './DutchLimitRequest';
 
-export enum RoutingType {
-  CLASSIC = 'CLASSIC',
-  DUTCH_LIMIT = 'DUTCH_LIMIT',
-}
-
-export type RequestByRoutingType = { [routingType in RoutingType]?: QuoteRequest };
+export type RequestsByRoutingType = {
+  CLASSIC: {
+    original?: ClassicRequest;
+    synthetic?: ClassicRequest;
+    backToNative?: ClassicRequest;
+  };
+  DUTCH_LIMIT: {
+    original?: DutchLimitRequest;
+    synthetic?: DutchLimitRequest;
+  };
+};
 
 // config specific to the given routing type
 export type RoutingConfig = DutchLimitConfig | ClassicConfig;

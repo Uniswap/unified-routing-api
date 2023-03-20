@@ -1,6 +1,5 @@
 import { ChainId } from '@uniswap/smart-order-router';
-
-import { RoutingType } from '../entities';
+import { RoutingType } from '../util/types';
 
 export const SUPPORTED_CHAINS = {
   [RoutingType.CLASSIC]: [

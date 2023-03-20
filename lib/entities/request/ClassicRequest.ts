@@ -1,7 +1,8 @@
 import { Protocol } from '@uniswap/router-sdk';
 import { BigNumber } from 'ethers';
 
-import { QuoteRequest, QuoteRequestInfo, RoutingType } from '.';
+import { QuoteRequest, QuoteRequestInfo } from '.';
+import { RoutingType } from '../../util/types';
 import { DutchLimitRequest } from './DutchLimitRequest';
 
 export interface ClassicConfig {

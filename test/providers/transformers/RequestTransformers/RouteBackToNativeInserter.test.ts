@@ -3,7 +3,8 @@ import { ChainId, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
 import Logger from 'bunyan';
 import { ethers } from 'ethers';
 
-import { RouteBackToNativeInserter } from '../../../../lib/providers/transformers/RequestTransformers/RouteBackToNativeInserter';
+import { RequestsByRoutingType } from '../../../../lib/entities';
+import { RouteBackToNativeInserter } from '../../../../lib/providers/transformers';
 import { makeDutchLimitRequest, QUOTE_REQUEST_CLASSIC, QUOTE_REQUEST_DL_NATIVE_OUT } from '../../../utils/fixtures';
 
 describe('RouteBackToEthTransformer', () => {
@@ -12,11 +13,16 @@ describe('RouteBackToEthTransformer', () => {
 
   const transformer = new RouteBackToNativeInserter(logger);
 
-  it('adds a synthetic classic request when UniswapX requested', async () => {
+  it('adds a backToNaive classic request when UniswapX requested', async () => {
     const quoteRequest = makeDutchLimitRequest({ tokenOut: ethers.constants.AddressZero });
-    const requests = transformer.transform([quoteRequest]);
-    expect(requests.length).toEqual(2);
-    expect(requests[1]).toMatchObject({
+    const requests: RequestsByRoutingType = {
+      DUTCH_LIMIT: { original: quoteRequest },
+      CLASSIC: {},
+    };
+
+    transformer.transform(requests);
+
+    expect(requests.CLASSIC.backToNative).toMatchObject({
       info: {
         tokenIn: quoteRequest.info.tokenOut,
         tokenOut: WRAPPED_NATIVE_CURRENCY[ChainId.MAINNET].address,
@@ -30,12 +36,22 @@ describe('RouteBackToEthTransformer', () => {
   });
 
   it('does not add a synthetic classic request when UniswapX not requested', async () => {
-    const requests = transformer.transform([QUOTE_REQUEST_CLASSIC]);
-    expect(requests.length).toEqual(1);
+    const requests: RequestsByRoutingType = {
+      DUTCH_LIMIT: {},
+      CLASSIC: { original: QUOTE_REQUEST_CLASSIC },
+    };
+    transformer.transform(requests);
+    expect(requests.CLASSIC.backToNative).toBeUndefined();
+    expect(requests.CLASSIC.synthetic).toBeUndefined();
+    expect(requests.CLASSIC.original).toEqual(QUOTE_REQUEST_CLASSIC);
   });
 
   it('does not add a synthetic classic request when output token is native token', async () => {
-    const requests = transformer.transform([QUOTE_REQUEST_DL_NATIVE_OUT]);
-    expect(requests.length).toEqual(1);
+    const requests: RequestsByRoutingType = {
+      DUTCH_LIMIT: { original: QUOTE_REQUEST_DL_NATIVE_OUT },
+      CLASSIC: {},
+    };
+    transformer.transform(requests);
+    expect(requests.CLASSIC.backToNative).toBeUndefined();
   });
 });

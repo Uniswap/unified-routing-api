@@ -1,7 +1,8 @@
 import Logger from 'bunyan';
+import { RequestsByRoutingType } from '../../../../lib/entities';
 
 import { ClassicQuoteInserter } from '../../../../lib/providers/transformers';
-import { QUOTE_REQUEST_CLASSIC, QUOTE_REQUEST_DL } from '../../../utils/fixtures';
+import { QUOTE_REQUEST_DL } from '../../../utils/fixtures';
 
 describe('ClassicQuoteInserter', () => {
   const logger = Logger.createLogger({ name: 'test' });
@@ -10,9 +11,13 @@ describe('ClassicQuoteInserter', () => {
   const transformer = new ClassicQuoteInserter(logger);
 
   it('adds a classic request when UniswapX requested', async () => {
-    const requests = transformer.transform([QUOTE_REQUEST_DL]);
-    expect(requests.length).toEqual(2);
-    expect(requests[1]).toMatchObject({
+    const requests: RequestsByRoutingType = {
+      DUTCH_LIMIT: { original: QUOTE_REQUEST_DL },
+      CLASSIC: {},
+    };
+    transformer.transform(requests);
+    expect(requests.CLASSIC.synthetic).toBeDefined();
+    expect(requests.CLASSIC.synthetic).toMatchObject({
       info: {
         tokenIn: QUOTE_REQUEST_DL.info.tokenIn,
         tokenOut: QUOTE_REQUEST_DL.info.tokenOut,
@@ -23,15 +28,5 @@ describe('ClassicQuoteInserter', () => {
         protocols: ['MIXED', 'V2', 'V3'],
       },
     });
-  });
-
-  it('does not add a classic request when UniswapX not requested', async () => {
-    const requests = transformer.transform([QUOTE_REQUEST_CLASSIC]);
-    expect(requests.length).toEqual(1);
-  });
-
-  it('does not add a classic request when already exists', async () => {
-    const requests = transformer.transform([QUOTE_REQUEST_CLASSIC, QUOTE_REQUEST_DL]);
-    expect(requests.length).toEqual(2);
   });
 });

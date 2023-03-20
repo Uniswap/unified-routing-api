@@ -1,15 +1,17 @@
 import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
 
 import {
+  ClassicQuote,
   ClassicQuoteDataJSON,
   ClassicRequest,
+  DutchLimitQuote,
   DutchLimitQuoteJSON,
   DutchLimitRequest,
   parseQuoteRequests,
+  Quote,
   QuoteRequestBodyJSON,
-  RoutingType,
 } from '../../lib/entities';
-import { ClassicQuote, DutchLimitQuote, Quote } from '../../lib/entities/quote';
+import { RoutingType } from '../../lib/util/types';
 import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, FILLER, OFFERER, TOKEN_IN, TOKEN_OUT } from '../constants';
 import { buildQuoteResponse } from './quoteResponse';
 

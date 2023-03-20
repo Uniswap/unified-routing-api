@@ -3,8 +3,9 @@ import { MethodParameters } from '@uniswap/smart-order-router';
 import { BigNumber } from 'ethers';
 
 import { v4 as uuidv4 } from 'uuid';
-import { Quote, QuoteRequest, RoutingType } from '..';
+import { Quote, QuoteRequest } from '..';
 import { currentTimestampInSeconds } from '../../util/time';
+import { RoutingType } from '../../util/types';
 import { LogJSON } from './index';
 
 export type V2ReserveJSON = {

@@ -5,9 +5,9 @@ import Logger from 'bunyan';
 import { parseEther } from 'ethers/lib/utils';
 
 import { RequestTransformer } from '..';
-import { QuoteRequest } from '../../../entities';
+import { RequestsByRoutingType } from '../../../entities';
 import { ClassicRequest } from '../../../entities/request/ClassicRequest';
-import { DutchLimitRequest, RequestByRoutingType, RoutingType } from '../../../entities/request/index';
+import { RoutingType } from '../../../util/types';
 
 /*
  * adds a synthetic classic request to check if the output token has route back to ETH
@@ -19,20 +19,16 @@ export class RouteBackToNativeInserter implements RequestTransformer {
     this.log = _log.child({ transformer: 'RouteBackToEthTransformer' });
   }
 
-  transform(requests: QuoteRequest[]): QuoteRequest[] {
-    const requestByRoutingType: RequestByRoutingType = {};
-    requests.forEach((r) => (requestByRoutingType[r.routingType] = r));
-
-    const dlRequest = requestByRoutingType[RoutingType.DUTCH_LIMIT] as DutchLimitRequest;
+  transform(requests: RequestsByRoutingType) {
+    const dlRequest = requests[RoutingType.DUTCH_LIMIT].original;
     if (!dlRequest) {
-      this.log.info('UniswapX not requested, skipping transformer');
-      return requests;
+      this.log.info({ requests: requests }, 'No Dutch limit request, skipping transformer');
+      return;
     }
-
     const native = WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(dlRequest.info.tokenOutChainId)].address;
     if (dlRequest.info.tokenOut === native) {
       this.log.info('Original output token is (wrapped) native token, skipping transformer');
-      return requests;
+      return;
     }
 
     const synthClassicRequest = new ClassicRequest(
@@ -47,7 +43,7 @@ export class RouteBackToNativeInserter implements RequestTransformer {
         protocols: [Protocol.MIXED, Protocol.V2, Protocol.V3],
       }
     );
-    this.log.info({ synthClassicRequest: synthClassicRequest.info }, 'Adding synthetic back to native classic request');
-    return [...requests, synthClassicRequest];
+    this.log.info({ backToNativeClassicRequest: synthClassicRequest.info }, 'Adding back to native classic request');
+    requests.CLASSIC.backToNative = synthClassicRequest;
   }
 }

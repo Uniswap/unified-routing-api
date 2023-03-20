@@ -3,7 +3,8 @@ import axios from 'axios';
 import Logger from 'bunyan';
 import { BigNumber } from 'ethers';
 
-import { DutchLimitQuote, DutchLimitRequest, Quote, RoutingType } from '../../entities';
+import { DutchLimitQuote, DutchLimitRequest, Quote } from '../../entities';
+import { RoutingType } from '../../util/types';
 import { Quoter, QuoterType } from './index';
 
 export class RfqQuoter implements Quoter {

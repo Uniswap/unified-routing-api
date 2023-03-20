@@ -2,30 +2,24 @@ import { setGlobalLogger } from '@uniswap/smart-order-router';
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { default as bunyan, default as Logger } from 'bunyan';
 
-import { QuoteRequestBodyJSON, RoutingType } from '../../entities';
+import { QuoteRequestBodyJSON } from '../../entities';
 import { Quoter, RfqQuoter, RoutingApiQuoter } from '../../providers/quoters';
 import {
   ClassicQuoteInserter,
-  CompoundQuoteTransformer,
   CompoundRequestTransformer,
-  OnlyConfiguredQuotersFilter,
-  QuoteTransformer,
   RequestTransformer,
   RouteBackToNativeInserter,
-  SyntheticUniswapXTransformer,
-  UniswapXOrderSizeFilter,
 } from '../../providers/transformers';
-import { NoRouteBackToNativeFilter } from '../../providers/transformers/QuoteTransformers/NoRouteBackToNativeFilter';
 import { checkDefined } from '../../util/preconditions';
-import { ApiInjector, ApiRInj } from '../base/api-handler';
+import { RoutingType } from '../../util/types';
+import { ApiInjector, ApiRInj } from '../base';
 
 export type QuoterByRoutingType = {
-  [key in RoutingType]?: Quoter[];
+  [key in RoutingType]?: Quoter;
 };
 
 export interface ContainerInjected {
   quoters: QuoterByRoutingType;
-  quoteTransformer: QuoteTransformer;
   requestTransformer: RequestTransformer;
 }
 
@@ -44,15 +38,9 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
     // TODO: consider instantiating one quoter per routing type instead
     return {
       quoters: {
-        [RoutingType.DUTCH_LIMIT]: [new RfqQuoter(log, paramApiUrl, serviceUrl)],
-        [RoutingType.CLASSIC]: [new RoutingApiQuoter(log, routingApiUrl)],
+        [RoutingType.DUTCH_LIMIT]: new RfqQuoter(log, paramApiUrl, serviceUrl),
+        [RoutingType.CLASSIC]: new RoutingApiQuoter(log, routingApiUrl),
       },
-      // transformer ordering matters! transformers should generally come before filters
-      quoteTransformer: new CompoundQuoteTransformer(
-        [new SyntheticUniswapXTransformer(log)],
-        [new NoRouteBackToNativeFilter(log), new UniswapXOrderSizeFilter(log), new OnlyConfiguredQuotersFilter(log)]
-      ),
-
       requestTransformer: new CompoundRequestTransformer(
         [new ClassicQuoteInserter(log), new RouteBackToNativeInserter(log)],
         []

@@ -1,6 +1,5 @@
-import { Quote, QuoteRequest } from '../../entities';
+import { Quote, QuoteRequest, RequestsByRoutingType } from '../../entities';
 
-export * from './QuoteTransformers';
 export * from './RequestTransformers';
 
 export interface QuoteTransformer {
@@ -8,5 +7,5 @@ export interface QuoteTransformer {
 }
 
 export interface RequestTransformer {
-  transform(requests: QuoteRequest[]): QuoteRequest[];
+  transform(requests: RequestsByRoutingType): void;
 }
