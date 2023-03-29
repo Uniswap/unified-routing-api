@@ -1,11 +1,11 @@
 import { DutchLimitOrderBuilder, DutchLimitOrderInfoJSON, encodeExclusiveFillerData } from '@uniswap/gouda-sdk';
 import { TradeType } from '@uniswap/sdk-core';
-import { BigNumber, ethers } from 'ethers';
+import { BigNumber, FixedNumber, ethers } from 'ethers';
 
 import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteJSON } from '.';
 import { DutchLimitRequest, RoutingType } from '..';
-import { HUNDRED_PERCENT } from '../../constants';
+import { HUNDRED_PERCENT, WETH_WRAP_GAS, ZERO_ADDRESS } from '../../constants';
 import { currentTimestampInSeconds } from '../../util/time';
 import { ClassicQuote } from './ClassicQuote';
 import { LogJSON } from './index';
@@ -85,7 +85,7 @@ export class DutchLimitQuote implements Quote {
         request.info.tokenIn,
         request.info.amount, // fixed amountIn
         quote.request.info.tokenOut,
-        quote.amountOutGasAdjusted.mul(DutchLimitQuote.improvementExactIn).div(HUNDRED_PERCENT),
+        applyWETHGasAdjustment(request.info.tokenIn, quote, quote.amountOutGasAdjusted).mul(DutchLimitQuote.improvementExactIn).div(HUNDRED_PERCENT),
         request.config.offerer,
         '', // synthetic quote has no filler
         undefined // synthetic quote has no nonce
@@ -98,7 +98,7 @@ export class DutchLimitQuote implements Quote {
         request.info.requestId,
         uuidv4(), // synthetic quote doesn't receive a quoteId from RFQ api, so generate one
         request.info.tokenIn,
-        quote.amountInGasAdjusted.mul(DutchLimitQuote.improvementExactOut).div(HUNDRED_PERCENT),
+        applyWETHGasAdjustment(request.info.tokenIn, quote, quote.amountInGasAdjusted).mul(DutchLimitQuote.improvementExactOut).div(HUNDRED_PERCENT),
         quote.request.info.tokenOut,
         request.info.amount, // fixed amountOut
         request.config.offerer,
@@ -186,4 +186,16 @@ export class DutchLimitQuote implements Quote {
   private generateRandomNonce(): string {
     return ethers.BigNumber.from(ethers.utils.randomBytes(31)).shl(8).toString();
   }
+}
+
+// Returns a new quoteGasAdjusted taking into account the gas used to wrap ETH
+function applyWETHGasAdjustment(tokenIn: string, quote: ClassicQuote, amountGasAdjusted: BigNumber): BigNumber {
+  if(tokenIn !== ZERO_ADDRESS) {
+    return amountGasAdjusted;
+  }
+  // get ratio of gas used to gas used with WETH wrap
+  const gasUseRatioFixed = FixedNumber.from(quote.quoteData.gasUseEstimate);
+  const gasUseRatio = gasUseRatioFixed.addUnsafe(FixedNumber.from(WETH_WRAP_GAS)).divUnsafe(gasUseRatioFixed).toUnsafeFloat();
+  // apply ratio to quote
+  return quote.amountOut.sub(BigNumber.from(quote.quoteData.gasUseEstimateQuote).mul(gasUseRatio));
 }

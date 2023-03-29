@@ -75,7 +75,7 @@ export class ClassicQuote implements Quote {
 
   constructor(
     public request: QuoteRequest,
-    private quoteData: ClassicQuoteDataJSON,
+    public quoteData: ClassicQuoteDataJSON,
     createdAt: string = currentTimestampInSeconds()
   ) {
     this.createdAt = createdAt;
