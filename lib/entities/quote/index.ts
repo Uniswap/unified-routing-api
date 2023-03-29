@@ -83,8 +83,14 @@ export class QuoteSession implements QuoteSessionData {
     this.quotesByRoutingType = { DUTCH_LIMIT: {}, CLASSIC: {} };
     requests.forEach((request) => {
       if (request.routingType === RoutingType.CLASSIC) {
+        if (this.requestsByRoutingType.CLASSIC.original != null) {
+          throw new Error('Multiple classic requests not supported');
+        }
         this.requestsByRoutingType.CLASSIC.original = request as ClassicRequest;
       } else if (request.routingType === RoutingType.DUTCH_LIMIT) {
+        if (this.requestsByRoutingType.DUTCH_LIMIT.original != null) {
+          throw new Error('Multiple dutch limit requests not supported');
+        }
         this.requestsByRoutingType.DUTCH_LIMIT.original = request as DutchLimitRequest;
       }
     });
