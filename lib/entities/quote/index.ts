@@ -98,6 +98,9 @@ export class QuoteSession implements QuoteSessionData {
     this.log = log;
     this.uniswapXRequested = this.requestsByRoutingType.DUTCH_LIMIT.original != null;
     this.classicRequested = this.requestsByRoutingType.CLASSIC.original != null;
+    if (!this.uniswapXRequested && !this.classicRequested) {
+      throw new Error('No requests provided');
+    }
     this.tradeType = (this.requestsByRoutingType.CLASSIC.original?.info.type ??
       this.requestsByRoutingType.DUTCH_LIMIT.original?.info.type) as TradeType;
 
@@ -187,26 +190,9 @@ export class QuoteSession implements QuoteSessionData {
     await this.getQuotes(quoterByRoutingType);
     this.postprocess();
 
-    const validQuotes = [];
+    const validQuotes: Quote[] = [];
 
-    if (this.uniswapXRequested && !this.gasUsageTooHigh() && this.hasRouteBackToNative()) {
-      if (this.quotesByRoutingType.DUTCH_LIMIT.original) {
-        validQuotes.push(this.quotesByRoutingType.DUTCH_LIMIT.original);
-      }
-      // adds synthetic DL quote
-      if (
-        !this.quotesByRoutingType.DUTCH_LIMIT.original &&
-        SUPPORTED_CHAINS[RoutingType.DUTCH_LIMIT].includes(this.tokenInChainId) &&
-        SUPPORTED_CHAINS[RoutingType.DUTCH_LIMIT].includes(this.tokenOutChainId) &&
-        (this.quotesByRoutingType.CLASSIC.original || this.quotesByRoutingType.CLASSIC.synthetic)
-      ) {
-        this.quotesByRoutingType.DUTCH_LIMIT.synthetic = DutchLimitQuote.fromClassicQuote(
-          this.requestsByRoutingType.DUTCH_LIMIT.original as DutchLimitRequest,
-          (this.quotesByRoutingType.CLASSIC.original ?? this.quotesByRoutingType.CLASSIC.synthetic) as ClassicQuote
-        );
-        validQuotes.push(this.quotesByRoutingType.DUTCH_LIMIT.synthetic);
-      }
-    }
+    this.addDutchLimitQuotes(validQuotes);
 
     if (this.classicRequested && this.quotesByRoutingType.CLASSIC.original) {
       validQuotes.push(this.quotesByRoutingType.CLASSIC.original);
@@ -263,6 +249,27 @@ export class QuoteSession implements QuoteSessionData {
       return true;
     }
     return false;
+  }
+
+  private addDutchLimitQuotes(validQuotes: Quote[]): void {
+    if (this.uniswapXRequested && !this.gasUsageTooHigh() && this.hasRouteBackToNative()) {
+      if (this.quotesByRoutingType.DUTCH_LIMIT.original) {
+        validQuotes.push(this.quotesByRoutingType.DUTCH_LIMIT.original);
+      }
+      // adds synthetic DL quote
+      if (
+        !this.quotesByRoutingType.DUTCH_LIMIT.original &&
+        SUPPORTED_CHAINS[RoutingType.DUTCH_LIMIT].includes(this.tokenInChainId) &&
+        SUPPORTED_CHAINS[RoutingType.DUTCH_LIMIT].includes(this.tokenOutChainId) &&
+        (this.quotesByRoutingType.CLASSIC.original || this.quotesByRoutingType.CLASSIC.synthetic)
+      ) {
+        this.quotesByRoutingType.DUTCH_LIMIT.synthetic = DutchLimitQuote.fromClassicQuote(
+          this.requestsByRoutingType.DUTCH_LIMIT.original as DutchLimitRequest,
+          (this.quotesByRoutingType.CLASSIC.original ?? this.quotesByRoutingType.CLASSIC.synthetic) as ClassicQuote
+        );
+        validQuotes.push(this.quotesByRoutingType.DUTCH_LIMIT.synthetic);
+      }
+    }
   }
 
   get estimatedGasUsage() {
