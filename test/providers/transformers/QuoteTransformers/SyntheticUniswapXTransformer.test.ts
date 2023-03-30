@@ -1,17 +1,18 @@
 import Logger from 'bunyan';
 
-import { HUNDRED_PERCENT } from '../../../../lib/constants';
-import { DutchLimitQuote, QuoteByRoutingType, RoutingType } from '../../../../lib/entities';
+import { HUNDRED_PERCENT, ZERO_ADDRESS } from '../../../../lib/constants';
+import { applyWETHGasAdjustment, DutchLimitQuote, QuoteByRoutingType, RoutingType } from '../../../../lib/entities';
 import { SyntheticUniswapXTransformer } from '../../../../lib/providers/transformers';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_IN_LARGE,
   DL_QUOTE_EXACT_IN_BETTER,
+  DL_QUOTE_NATIVE_EXACT_IN_BETTER,
   QUOTE_REQUEST_CLASSIC,
   QUOTE_REQUEST_MULTI,
 } from '../../../utils/fixtures';
 
-describe('SyntheticUniswapXTransformer', () => {
+describe.only('SyntheticUniswapXTransformer', () => {
   const logger = Logger.createLogger({ name: 'test' });
   logger.level(Logger.FATAL);
   const transformer = new SyntheticUniswapXTransformer(logger);
@@ -52,6 +53,25 @@ describe('SyntheticUniswapXTransformer', () => {
           },
         ],
       });
+    });
+
+    it('creates the synthetic quote accouting for weth wrap costs if RFQ is ETH in', async () => {
+      const localQuoteRequestMulti = [...QUOTE_REQUEST_MULTI];
+      localQuoteRequestMulti[0].info.tokenIn = ZERO_ADDRESS;
+      localQuoteRequestMulti[1].info.tokenIn = ZERO_ADDRESS;
+
+      const transformed = await transformer.transform(localQuoteRequestMulti, [
+        DL_QUOTE_NATIVE_EXACT_IN_BETTER,
+        CLASSIC_QUOTE_EXACT_IN_LARGE,
+      ]);
+      expect(transformed.length).toEqual(2);
+      const quoteByRoutingType: QuoteByRoutingType = {};
+      transformed.forEach((quote) => (quoteByRoutingType[quote.routingType] = quote));
+      expect(quoteByRoutingType[RoutingType.DUTCH_LIMIT]?.amountOut).toEqual(
+        applyWETHGasAdjustment(localQuoteRequestMulti[0].info.tokenIn, CLASSIC_QUOTE_EXACT_IN_LARGE)
+          .mul(DutchLimitQuote.improvementExactIn)
+          .div(HUNDRED_PERCENT)
+      );
     });
   });
 

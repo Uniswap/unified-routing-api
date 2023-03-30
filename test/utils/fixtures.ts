@@ -1,4 +1,5 @@
 import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
+import { ZERO_ADDRESS } from '../../lib/constants';
 
 import {
   ClassicQuoteDataJSON,
@@ -21,6 +22,11 @@ export const BASE_REQUEST_INFO_EXACT_IN = {
   tokenOut: TOKEN_OUT,
   amount: AMOUNT_IN,
   type: 'EXACT_INPUT',
+};
+
+export const REQUEST_INFO_ETH_EXACT_IN = {
+  ...BASE_REQUEST_INFO_EXACT_IN,
+  tokenIn: ZERO_ADDRESS,
 };
 
 export const BASE_REQUEST_INFO_EXACT_OUT = {
@@ -78,6 +84,9 @@ export function makeDutchLimitRequest(overrides: Partial<QuoteRequestBodyJSON>):
 
 export const QUOTE_REQUEST_DL = makeDutchLimitRequest({});
 export const QUOTE_REQUEST_DL_EXACT_OUT = makeDutchLimitRequest({ type: 'EXACT_OUTPUT' });
+export const QUOTE_REQUEST_DL_NATIVE_IN = makeDutchLimitRequest({
+  tokenIn: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_IN_ID)].address,
+});
 export const QUOTE_REQUEST_DL_NATIVE_OUT = makeDutchLimitRequest({
   tokenOut: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_OUT_ID)].address,
 });
@@ -186,6 +195,10 @@ export function createRouteBackToNativeQuote(overrides: Partial<ClassicQuoteData
 }
 
 export const DL_QUOTE_EXACT_IN_BETTER = createDutchLimitQuote({ amountOut: '2' }, 'EXACT_INPUT');
+export const DL_QUOTE_NATIVE_EXACT_IN_BETTER = createDutchLimitQuote(
+  { amountOut: '2', tokenIn: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_OUT_ID)].address },
+  'EXACT_INPUT'
+);
 export const DL_QUOTE_EXACT_IN_WORSE = createDutchLimitQuote({ amountOut: '1' }, 'EXACT_INPUT');
 export const DL_QUOTE_EXACT_IN_LARGE = createDutchLimitQuote({ amountOut: '10000' }, 'EXACT_INPUT');
 export const DL_QUOTE_EXACT_OUT_BETTER = createDutchLimitQuote({ amountIn: '1' }, 'EXACT_OUTPUT');

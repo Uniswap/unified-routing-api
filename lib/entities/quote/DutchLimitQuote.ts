@@ -1,6 +1,6 @@
 import { DutchLimitOrderBuilder, DutchLimitOrderInfoJSON, encodeExclusiveFillerData } from '@uniswap/gouda-sdk';
 import { TradeType } from '@uniswap/sdk-core';
-import { BigNumber, FixedNumber, ethers } from 'ethers';
+import { BigNumber, ethers, FixedNumber } from 'ethers';
 
 import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteJSON } from '.';
@@ -85,7 +85,9 @@ export class DutchLimitQuote implements Quote {
         request.info.tokenIn,
         request.info.amount, // fixed amountIn
         quote.request.info.tokenOut,
-        applyWETHGasAdjustment(request.info.tokenIn, quote, quote.amountOutGasAdjusted).mul(DutchLimitQuote.improvementExactIn).div(HUNDRED_PERCENT),
+        applyWETHGasAdjustment(request.info.tokenIn, quote)
+          .mul(DutchLimitQuote.improvementExactIn)
+          .div(HUNDRED_PERCENT),
         request.config.offerer,
         '', // synthetic quote has no filler
         undefined // synthetic quote has no nonce
@@ -98,7 +100,9 @@ export class DutchLimitQuote implements Quote {
         request.info.requestId,
         uuidv4(), // synthetic quote doesn't receive a quoteId from RFQ api, so generate one
         request.info.tokenIn,
-        applyWETHGasAdjustment(request.info.tokenIn, quote, quote.amountInGasAdjusted).mul(DutchLimitQuote.improvementExactOut).div(HUNDRED_PERCENT),
+        applyWETHGasAdjustment(request.info.tokenOut, quote)
+          .mul(DutchLimitQuote.improvementExactOut)
+          .div(HUNDRED_PERCENT),
         quote.request.info.tokenOut,
         request.info.amount, // fixed amountOut
         request.config.offerer,
@@ -189,13 +193,21 @@ export class DutchLimitQuote implements Quote {
 }
 
 // Returns a new quoteGasAdjusted taking into account the gas used to wrap ETH
-function applyWETHGasAdjustment(tokenIn: string, quote: ClassicQuote, amountGasAdjusted: BigNumber): BigNumber {
-  if(tokenIn !== ZERO_ADDRESS) {
-    return amountGasAdjusted;
+// Can't get tokenIn/tokenOut from classicQuote because it's auto convered to WETH by routing-api
+export function applyWETHGasAdjustment(token: string, classicQuote: ClassicQuote): BigNumber {
+  // ETH address
+  const wrappedNativeCurrencyAddress = ZERO_ADDRESS;
+  const needToWrapUnwrap = token == wrappedNativeCurrencyAddress;
+  if (!needToWrapUnwrap) {
+    // amountOutGasAdjusted automatically switches for TradeType
+    return classicQuote.amountOutGasAdjusted;
   }
   // get ratio of gas used to gas used with WETH wrap
-  const gasUseRatioFixed = FixedNumber.from(quote.quoteData.gasUseEstimate);
-  const gasUseRatio = gasUseRatioFixed.addUnsafe(FixedNumber.from(WETH_WRAP_GAS)).divUnsafe(gasUseRatioFixed).toUnsafeFloat();
-  // apply ratio to quote
-  return quote.amountOut.sub(BigNumber.from(quote.quoteData.gasUseEstimateQuote).mul(gasUseRatio));
+  const gasUseRatioFixed = FixedNumber.from(classicQuote.quoteData.gasUseEstimate);
+  const gasUseRatio = gasUseRatioFixed
+    .addUnsafe(FixedNumber.from(WETH_WRAP_GAS))
+    .divUnsafe(gasUseRatioFixed)
+    .toUnsafeFloat();
+  // apply ratio to quote // TODO: make sure this works for exact output
+  return classicQuote.amountOut.sub(BigNumber.from(classicQuote.quoteData.gasUseEstimateQuote).mul(gasUseRatio));
 }
