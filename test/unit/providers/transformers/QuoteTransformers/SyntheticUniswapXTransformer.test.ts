@@ -1,15 +1,15 @@
 import Logger from 'bunyan';
 
-import { HUNDRED_PERCENT } from '../../../../lib/constants';
-import { DutchLimitQuote, QuoteByRoutingType, RoutingType } from '../../../../lib/entities';
-import { SyntheticUniswapXTransformer } from '../../../../lib/providers/transformers';
+import { HUNDRED_PERCENT } from '../../../../../lib/constants';
+import { DutchLimitQuote, QuoteByRoutingType, RoutingType } from '../../../../../lib/entities';
+import { SyntheticUniswapXTransformer } from '../../../../../lib/providers/transformers';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_IN_LARGE,
   DL_QUOTE_EXACT_IN_BETTER,
   QUOTE_REQUEST_CLASSIC,
   QUOTE_REQUEST_MULTI,
-} from '../../../utils/fixtures';
+} from '../../../../utils/fixtures';
 
 describe('SyntheticUniswapXTransformer', () => {
   const logger = Logger.createLogger({ name: 'test' });

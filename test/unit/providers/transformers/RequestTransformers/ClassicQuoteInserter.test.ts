@@ -1,7 +1,7 @@
 import Logger from 'bunyan';
 
-import { ClassicQuoteInserter } from '../../../../lib/providers/transformers';
-import { QUOTE_REQUEST_CLASSIC, QUOTE_REQUEST_DL } from '../../../utils/fixtures';
+import { ClassicQuoteInserter } from '../../../../../lib/providers/transformers';
+import { QUOTE_REQUEST_CLASSIC, QUOTE_REQUEST_DL } from '../../../../utils/fixtures';
 
 describe('ClassicQuoteInserter', () => {
   const logger = Logger.createLogger({ name: 'test' });

@@ -34,7 +34,7 @@ export class FieldValidator {
     .integer()
     .valid(...SUPPORTED_CHAINS.DUTCH_LIMIT);
 
-  public static readonly tradeType = Joi.string().valid('EXACT_INPUT', 'EXACT_OUTPUT');
+  public static readonly tradeType = Joi.string().valid('EXACT_INPUT', 'EXACT_OUTPUT', 'exactIn', 'exactOut');
 
   public static readonly routingType = Joi.string().valid('CLASSIC', 'DUTCH_LIMIT');
 
@@ -69,6 +69,7 @@ export class FieldValidator {
     protocols: FieldValidator.protocols.required(),
     gasPriceWei: FieldValidator.gasPriceWei.optional(),
     simulateFromAddress: FieldValidator.address.optional(),
+    recipient: FieldValidator.address.optional(),
     permitSignature: FieldValidator.permitSignature.optional(),
     permitNonce: FieldValidator.permitNonce.optional(),
     permitExpiration: FieldValidator.positiveNumber.optional(),

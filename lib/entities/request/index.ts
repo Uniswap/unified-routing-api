@@ -54,7 +54,7 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON, log?: Logger): Qu
     tokenIn: body.tokenIn,
     tokenOut: body.tokenOut,
     amount: BigNumber.from(body.amount),
-    type: TradeType[body.type as keyof typeof TradeType],
+    type: parseTradeType(body.type),
     slippageTolerance: body.slippageTolerance ?? DEFAULT_SLIPPAGE_TOLERANCE,
   };
 
@@ -88,6 +88,16 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON, log?: Logger): Qu
   });
 
   return requests;
+}
+
+function parseTradeType(tradeType: string): TradeType {
+  if (tradeType === 'exactIn' || tradeType === 'EXACT_INPUT') {
+    return TradeType.EXACT_INPUT;
+  } else if (tradeType === 'exactOut' || tradeType === 'EXACT_OUTPUT') {
+    return TradeType.EXACT_OUTPUT;
+  } else {
+    throw new Error(`Invalid trade type: ${tradeType}`);
+  }
 }
 
 // compares two request infos, returning true if they are quoting the same thing

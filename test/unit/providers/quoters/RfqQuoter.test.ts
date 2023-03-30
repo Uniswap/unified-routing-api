@@ -2,10 +2,10 @@ import axios from 'axios';
 import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
 
-import { DutchLimitQuote, DutchLimitQuoteJSON } from '../../../lib/entities/quote/DutchLimitQuote';
-import { RfqQuoter } from '../../../lib/providers/quoters/RfqQuoter';
-import { AMOUNT_IN, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../constants';
-import { QUOTE_REQUEST_DL, QUOTE_REQUEST_DL_EXACT_OUT } from '../../utils/fixtures';
+import { DutchLimitQuote, DutchLimitQuoteJSON } from '../../../../lib/entities/quote/DutchLimitQuote';
+import { RfqQuoter } from '../../../../lib/providers/quoters/RfqQuoter';
+import { AMOUNT_IN, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
+import { QUOTE_REQUEST_DL, QUOTE_REQUEST_DL_EXACT_OUT } from '../../../utils/fixtures';
 
 describe('RfqQuoter test', () => {
   // silent logger in tests
