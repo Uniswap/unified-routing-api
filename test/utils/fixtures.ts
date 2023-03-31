@@ -211,6 +211,12 @@ export const CLASSIC_QUOTE_EXACT_IN_LARGE = createClassicQuote(
   { quote: '10000', quoteGasAdjusted: '9000' },
   'EXACT_INPUT'
 );
+export const CLASSIC_QUOTE_ETH_EXACT_IN_LARGE = createClassicQuote(
+  // quote: 1 ETH, quoteGasAdjusted: 0.9 ETH, gasUseEstimate: 100000, gasUseEstimateQuote: 0.1 ETH
+  { quote: '10000000000000000000000', quoteGasAdjusted: '9000000000000000000000', gasUseEstimate: '100000', gasUseEstimateQuote: '1000000000000000000000' },
+  'EXACT_INPUT'
+);
+
 export const CLASSIC_QUOTE_EXACT_OUT_BETTER = createClassicQuote({ quote: '1', quoteGasAdjusted: '1' }, 'EXACT_OUTPUT');
 export const CLASSIC_QUOTE_EXACT_OUT_WORSE = createClassicQuote({ quote: '2', quoteGasAdjusted: '2' }, 'EXACT_OUTPUT');
 export const CLASSIC_QUOTE_EXACT_OUT_LARGE = createClassicQuote(

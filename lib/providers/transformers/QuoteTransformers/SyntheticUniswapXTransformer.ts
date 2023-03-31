@@ -53,7 +53,7 @@ export class SyntheticUniswapXTransformer implements QuoteTransformer {
         syntheticQuotes.push(DutchLimitQuote.fromClassicQuote(dutchRequest, quote));
       }
     }
-
+    
     this.log.info({ synthQuotes: syntheticQuotes }, 'Synthetic UniswapX quotes');
     return [...quotes, ...syntheticQuotes];
   }

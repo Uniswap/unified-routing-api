@@ -3,7 +3,9 @@ import Logger from 'bunyan';
 import { HUNDRED_PERCENT, ZERO_ADDRESS } from '../../../../lib/constants';
 import { applyWETHGasAdjustment, DutchLimitQuote, QuoteByRoutingType, RoutingType } from '../../../../lib/entities';
 import { SyntheticUniswapXTransformer } from '../../../../lib/providers/transformers';
+import { TOKEN_IN } from '../../../constants';
 import {
+  CLASSIC_QUOTE_ETH_EXACT_IN_LARGE,
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_IN_LARGE,
   DL_QUOTE_EXACT_IN_BETTER,
@@ -12,7 +14,7 @@ import {
   QUOTE_REQUEST_MULTI,
 } from '../../../utils/fixtures';
 
-describe.only('SyntheticUniswapXTransformer', () => {
+describe('SyntheticUniswapXTransformer', () => {
   const logger = Logger.createLogger({ name: 'test' });
   logger.level(Logger.FATAL);
   const transformer = new SyntheticUniswapXTransformer(logger);
@@ -58,20 +60,36 @@ describe.only('SyntheticUniswapXTransformer', () => {
     it('creates the synthetic quote accouting for weth wrap costs if RFQ is ETH in', async () => {
       const localQuoteRequestMulti = [...QUOTE_REQUEST_MULTI];
       localQuoteRequestMulti[0].info.tokenIn = ZERO_ADDRESS;
+      localQuoteRequestMulti[0].info.tokenOut = TOKEN_IN;
       localQuoteRequestMulti[1].info.tokenIn = ZERO_ADDRESS;
+      localQuoteRequestMulti[1].info.tokenOut = TOKEN_IN;
+
+      CLASSIC_QUOTE_ETH_EXACT_IN_LARGE.request.info.tokenIn = ZERO_ADDRESS;
+      CLASSIC_QUOTE_ETH_EXACT_IN_LARGE.request.info.tokenOut = TOKEN_IN;
 
       const transformed = await transformer.transform(localQuoteRequestMulti, [
         DL_QUOTE_NATIVE_EXACT_IN_BETTER,
-        CLASSIC_QUOTE_EXACT_IN_LARGE,
+        CLASSIC_QUOTE_ETH_EXACT_IN_LARGE,
       ]);
-      expect(transformed.length).toEqual(2);
+
+      expect(transformed.length).toEqual(3);
+      
       const quoteByRoutingType: QuoteByRoutingType = {};
       transformed.forEach((quote) => (quoteByRoutingType[quote.routingType] = quote));
-      expect(quoteByRoutingType[RoutingType.DUTCH_LIMIT]?.amountOut).toEqual(
-        applyWETHGasAdjustment(localQuoteRequestMulti[0].info.tokenIn, CLASSIC_QUOTE_EXACT_IN_LARGE)
-          .mul(DutchLimitQuote.improvementExactIn)
-          .div(HUNDRED_PERCENT)
-      );
+
+      const outStartAmount = applyWETHGasAdjustment(ZERO_ADDRESS, CLASSIC_QUOTE_ETH_EXACT_IN_LARGE)
+        .mul(DutchLimitQuote.improvementExactIn)
+        .div(HUNDRED_PERCENT);
+      const outEndAmount = outStartAmount.mul(HUNDRED_PERCENT.sub(50)).div(HUNDRED_PERCENT);
+
+      expect(transformed[2].toJSON()).toMatchObject({
+        outputs: [
+          {
+            startAmount: outStartAmount.toString(),
+            endAmount: outEndAmount.toString(),
+          },
+        ],
+      })
     });
   });
 
