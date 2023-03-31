@@ -195,23 +195,23 @@ export class DutchLimitQuote implements Quote {
 // Returns a new quoteGasAdjusted taking into account the gas used to wrap ETH
 // Can't get tokenIn/tokenOut from classicQuote because it's auto convered to WETH by routing-api
 export function applyWETHGasAdjustment(token: string, classicQuote: ClassicQuote): BigNumber {
-  // ETH address
   const needToWrapUnwrap = token == ZERO_ADDRESS;
   if (!needToWrapUnwrap) {
-    // amountOutGasAdjusted automatically switches for TradeType
     return classicQuote.amountOutGasAdjusted;
   }
   // get ratio of gas used to gas used with WETH wrap
-  const gasUseFixed = BigNumber.from(classicQuote.quoteData.gasUseEstimate);
-  const gasUseRatio = gasUseFixed
+  const gasUseEstimate = BigNumber.from(classicQuote.quoteData.gasUseEstimate);
+  const gasUseRatio = gasUseEstimate
     .add(WETH_WRAP_GAS)
     .mul(100)
-    .div(gasUseFixed)
+    .div(gasUseEstimate)
 
+  // multiply the original gasUseEstimate in quoteToken by the ratio
   const newGasUseEstimateQuote = BigNumber.from(
     classicQuote.quoteData.gasUseEstimateQuote
   ).mul(gasUseRatio).div(100)
 
   // TODO: make sure this works for exact output
+  // subtract the new gasUseEstimateQuote from the original amountOut to get a new quoteGasAdjusted
   return classicQuote.amountOut.sub(newGasUseEstimateQuote);
 }
