@@ -27,6 +27,7 @@ export const BASE_REQUEST_INFO_EXACT_IN = {
 export const REQUEST_INFO_ETH_EXACT_IN = {
   ...BASE_REQUEST_INFO_EXACT_IN,
   tokenIn: ZERO_ADDRESS,
+  tokenOut: TOKEN_IN, // Uni
 };
 
 export const BASE_REQUEST_INFO_EXACT_OUT = {
@@ -93,6 +94,23 @@ export const QUOTE_REQUEST_DL_NATIVE_OUT = makeDutchLimitRequest({
 
 export const QUOTE_REQUEST_MULTI = parseQuoteRequests({
   ...BASE_REQUEST_INFO_EXACT_IN,
+  configs: [
+    {
+      routingType: RoutingType.DUTCH_LIMIT,
+      offerer: OFFERER,
+      exclusivePeriodSecs: 12,
+      auctionPeriodSecs: 60,
+    },
+    {
+      routingType: RoutingType.CLASSIC,
+      protocols: ['v3', 'v2', 'mixed'],
+      gasPriceWei: '12',
+    },
+  ],
+});
+
+export const QUOTE_REQUEST_ETH_IN_MULTI = parseQuoteRequests({
+  ...REQUEST_INFO_ETH_EXACT_IN,
   configs: [
     {
       routingType: RoutingType.DUTCH_LIMIT,
@@ -211,7 +229,7 @@ export const CLASSIC_QUOTE_EXACT_IN_LARGE = createClassicQuote(
   { quote: '10000', quoteGasAdjusted: '9000' },
   'EXACT_INPUT'
 );
-export const CLASSIC_QUOTE_ETH_EXACT_IN_LARGE = createClassicQuote(
+export const CLASSIC_QUOTE_EXACT_IN_LARGE_GAS = createClassicQuote(
   // quote: 1 ETH, quoteGasAdjusted: 0.9 ETH, gasUseEstimate: 100000, gasUseEstimateQuote: 0.1 ETH
   { quote: '10000000000000000000000', quoteGasAdjusted: '9000000000000000000000', gasUseEstimate: '100000', gasUseEstimateQuote: '1000000000000000000000' },
   'EXACT_INPUT'

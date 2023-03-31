@@ -5,12 +5,13 @@ import { applyWETHGasAdjustment, DutchLimitQuote, QuoteByRoutingType, RoutingTyp
 import { SyntheticUniswapXTransformer } from '../../../../lib/providers/transformers';
 import { TOKEN_IN } from '../../../constants';
 import {
-  CLASSIC_QUOTE_ETH_EXACT_IN_LARGE,
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_IN_LARGE,
+  CLASSIC_QUOTE_EXACT_IN_LARGE_GAS,
   DL_QUOTE_EXACT_IN_BETTER,
   DL_QUOTE_NATIVE_EXACT_IN_BETTER,
   QUOTE_REQUEST_CLASSIC,
+  QUOTE_REQUEST_ETH_IN_MULTI,
   QUOTE_REQUEST_MULTI,
 } from '../../../utils/fixtures';
 
@@ -58,18 +59,12 @@ describe('SyntheticUniswapXTransformer', () => {
     });
 
     it('creates the synthetic quote accouting for weth wrap costs if RFQ is ETH in', async () => {
-      const localQuoteRequestMulti = [...QUOTE_REQUEST_MULTI];
-      localQuoteRequestMulti[0].info.tokenIn = ZERO_ADDRESS;
-      localQuoteRequestMulti[0].info.tokenOut = TOKEN_IN;
-      localQuoteRequestMulti[1].info.tokenIn = ZERO_ADDRESS;
-      localQuoteRequestMulti[1].info.tokenOut = TOKEN_IN;
+      CLASSIC_QUOTE_EXACT_IN_LARGE_GAS.request.info.tokenIn = ZERO_ADDRESS;
+      CLASSIC_QUOTE_EXACT_IN_LARGE_GAS.request.info.tokenOut = TOKEN_IN;
 
-      CLASSIC_QUOTE_ETH_EXACT_IN_LARGE.request.info.tokenIn = ZERO_ADDRESS;
-      CLASSIC_QUOTE_ETH_EXACT_IN_LARGE.request.info.tokenOut = TOKEN_IN;
-
-      const transformed = await transformer.transform(localQuoteRequestMulti, [
+      const transformed = await transformer.transform(QUOTE_REQUEST_ETH_IN_MULTI, [
         DL_QUOTE_NATIVE_EXACT_IN_BETTER,
-        CLASSIC_QUOTE_ETH_EXACT_IN_LARGE,
+        CLASSIC_QUOTE_EXACT_IN_LARGE_GAS,
       ]);
 
       expect(transformed.length).toEqual(3);
@@ -77,7 +72,10 @@ describe('SyntheticUniswapXTransformer', () => {
       const quoteByRoutingType: QuoteByRoutingType = {};
       transformed.forEach((quote) => (quoteByRoutingType[quote.routingType] = quote));
 
-      const outStartAmount = applyWETHGasAdjustment(ZERO_ADDRESS, CLASSIC_QUOTE_ETH_EXACT_IN_LARGE)
+      // No change to the RFQ quote
+      expect(transformed[0].amountOut).toEqual(DL_QUOTE_NATIVE_EXACT_IN_BETTER.amountOut)
+
+      const outStartAmount = applyWETHGasAdjustment(ZERO_ADDRESS, CLASSIC_QUOTE_EXACT_IN_LARGE_GAS)
         .mul(DutchLimitQuote.improvementExactIn)
         .div(HUNDRED_PERCENT);
       const outEndAmount = outStartAmount.mul(HUNDRED_PERCENT.sub(50)).div(HUNDRED_PERCENT);
