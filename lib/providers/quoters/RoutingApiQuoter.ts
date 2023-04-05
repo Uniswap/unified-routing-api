@@ -20,6 +20,7 @@ export class RoutingApiQuoter implements Quoter {
     }
     try {
       const req = this.buildRequest(request);
+      this.log.info(req);
       const response = await axios.get(req);
       return ClassicQuote.fromResponseBody(request, response.data);
     } catch (e) {
@@ -41,13 +42,19 @@ export class RoutingApiQuoter implements Quoter {
         tokenOutChainId: request.info.tokenOutChainId,
         amount: request.info.amount.toString(),
         type: tradeType,
-        ...(config.protocols.length && { protocols: config.protocols.map((p) => p.toLowerCase()).join(',') }),
+        ...(config.protocols &&
+          config.protocols.length && { protocols: config.protocols.map((p) => p.toLowerCase()).join(',') }),
         ...(config.gasPriceWei !== undefined && { gasPriceWei: config.gasPriceWei }),
-        ...(config.slippageTolerance !== undefined && { slippageTolerance: config.slippageTolerance }),
+        // routing-api only accepts slippage tolerance if deadline and recipient are provided
+        // we have default slippage tolerances in URA so need these extra checks
+        ...(request.info.slippageTolerance !== undefined &&
+          config.recipient &&
+          config.deadline && { slippageTolerance: request.info.slippageTolerance }),
         ...(config.minSplits !== undefined && { minSplits: config.minSplits }),
         ...(config.forceCrossProtocol !== undefined && { forceCrossProtocol: config.forceCrossProtocol }),
         ...(config.forceMixedRoutes !== undefined && { forceMixedRoutes: config.forceMixedRoutes }),
         ...(config.deadline !== undefined && { deadline: config.deadline }),
+        ...(config.algorithm !== undefined && { algorithm: config.algorithm }),
         ...(config.simulateFromAddress !== undefined && { simulateFromAddress: config.simulateFromAddress }),
         ...(config.permitSignature !== undefined && { permitSignature: config.permitSignature }),
         ...(config.permitNonce !== undefined && { permitNonce: config.permitNonce }),
@@ -55,6 +62,7 @@ export class RoutingApiQuoter implements Quoter {
         ...(config.permitAmount !== undefined && { permitAmount: config.permitAmount.toString() }),
         ...(config.permitSigDeadline !== undefined && { permitSigDeadline: config.permitSigDeadline }),
         ...(config.enableUniversalRouter !== undefined && { enableUniversalRouter: config.enableUniversalRouter }),
+        ...(config.recipient !== undefined && { recipient: config.recipient }),
       })
     );
   }

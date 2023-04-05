@@ -5,16 +5,17 @@ import { QuoteRequest, QuoteRequestInfo, RoutingType } from '.';
 import { DutchLimitRequest } from './DutchLimitRequest';
 
 export interface ClassicConfig {
-  protocols: Protocol[];
+  protocols?: Protocol[];
   gasPriceWei?: string;
   simulateFromAddress?: string;
   permitSignature?: string;
   permitNonce?: string;
   permitExpiration?: string;
   permitAmount?: BigNumber;
-  permitSigDeadline?: number;
+  permitSigDeadline?: string;
   enableUniversalRouter?: boolean;
-  slippageTolerance?: number;
+  recipient?: string;
+  algorithm?: string;
   deadline?: number;
   minSplits?: number;
   forceCrossProtocol?: boolean;
@@ -23,7 +24,7 @@ export interface ClassicConfig {
 
 export interface ClassicConfigJSON extends Omit<ClassicConfig, 'protocols' | 'permitAmount'> {
   routingType: RoutingType;
-  protocols: string[];
+  protocols?: string[];
   permitAmount?: string;
 }
 
@@ -34,14 +35,7 @@ export class ClassicRequest implements QuoteRequest {
     return new ClassicRequest(
       info,
       Object.assign({}, body, {
-        protocols: body.protocols.flatMap((p: string) => {
-          if (p in Protocol) {
-            return Protocol[p as keyof typeof Protocol];
-          } else {
-            return [];
-          }
-        }),
-        slippageTolerance: body.slippageTolerance,
+        protocols: body.protocols?.flatMap((p: string) => parseProtocol(p)),
         gasPriceWei: body.gasPriceWei,
         permitAmount: body.permitAmount ? BigNumber.from(body.permitAmount) : undefined,
       })
@@ -59,8 +53,21 @@ export class ClassicRequest implements QuoteRequest {
   public toJSON(): ClassicConfigJSON {
     return Object.assign({}, this.config, {
       routingType: RoutingType.CLASSIC,
-      protocols: this.config.protocols.map((p: Protocol) => p.toString()),
-      permitAmount: this.config.permitAmount?.toString(),
+      protocols: this.config.protocols?.map((p: Protocol) => p.toString()),
+      ...(this.config.permitAmount !== undefined && { permitAmount: this.config.permitAmount.toString() }),
     });
+  }
+}
+
+function parseProtocol(protocol: string): Protocol {
+  switch (protocol.toLowerCase()) {
+    case 'v2':
+      return Protocol.V2;
+    case 'v3':
+      return Protocol.V3;
+    case 'mixed':
+      return Protocol.MIXED;
+    default:
+      throw new Error(`Invalid protocol: ${protocol}`);
   }
 }

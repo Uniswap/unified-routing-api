@@ -7,9 +7,13 @@ import {
   DutchLimitQuote,
   DutchLimitQuoteJSON,
   DutchLimitRequest,
-} from '../../../lib/entities';
-import { AMOUNT_IN, CHAIN_IN_ID, FILLER, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../constants';
-import { CLASSIC_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_OUT_BETTER, QUOTE_REQUEST_DL } from '../../utils/fixtures';
+} from '../../../../lib/entities';
+import { AMOUNT_IN, CHAIN_IN_ID, FILLER, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
+import {
+  CLASSIC_QUOTE_EXACT_IN_BETTER,
+  CLASSIC_QUOTE_EXACT_OUT_BETTER,
+  QUOTE_REQUEST_DL,
+} from '../../../utils/fixtures';
 
 const DL_QUOTE_JSON: DutchLimitQuoteJSON = {
   chainId: CHAIN_IN_ID,

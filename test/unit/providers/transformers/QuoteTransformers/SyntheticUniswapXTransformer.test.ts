@@ -1,9 +1,9 @@
 import Logger from 'bunyan';
 
-import { HUNDRED_PERCENT, ZERO_ADDRESS } from '../../../../lib/constants';
-import { applyWETHGasAdjustment, DutchLimitQuote, QuoteByRoutingType, RoutingType } from '../../../../lib/entities';
-import { SyntheticUniswapXTransformer } from '../../../../lib/providers/transformers';
-import { TOKEN_IN } from '../../../constants';
+import { HUNDRED_PERCENT, NATIVE_ADDRESS } from '../../../../../lib/constants';
+import { applyWETHGasAdjustment, DutchLimitQuote, QuoteByRoutingType, RoutingType } from '../../../../../lib/entities';
+import { SyntheticUniswapXTransformer } from '../../../../../lib/providers/transformers';
+import { TOKEN_IN } from '../../../../constants';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_IN_LARGE,
@@ -13,7 +13,7 @@ import {
   QUOTE_REQUEST_CLASSIC,
   QUOTE_REQUEST_ETH_IN_MULTI,
   QUOTE_REQUEST_MULTI,
-} from '../../../utils/fixtures';
+} from '../../../../utils/fixtures';
 
 describe('SyntheticUniswapXTransformer', () => {
   const logger = Logger.createLogger({ name: 'test' });
@@ -59,7 +59,7 @@ describe('SyntheticUniswapXTransformer', () => {
     });
 
     it('creates the synthetic quote accouting for weth wrap costs if RFQ is ETH in', async () => {
-      CLASSIC_QUOTE_EXACT_IN_LARGE_GAS.request.info.tokenIn = ZERO_ADDRESS;
+      CLASSIC_QUOTE_EXACT_IN_LARGE_GAS.request.info.tokenIn = NATIVE_ADDRESS;
       CLASSIC_QUOTE_EXACT_IN_LARGE_GAS.request.info.tokenOut = TOKEN_IN;
 
       const transformed = await transformer.transform(QUOTE_REQUEST_ETH_IN_MULTI, [
@@ -75,7 +75,7 @@ describe('SyntheticUniswapXTransformer', () => {
       // No change to the RFQ quote
       expect(transformed[0].amountOut).toEqual(DL_QUOTE_NATIVE_EXACT_IN_BETTER.amountOut)
 
-      const outStartAmount = applyWETHGasAdjustment(ZERO_ADDRESS, CLASSIC_QUOTE_EXACT_IN_LARGE_GAS)
+      const outStartAmount = applyWETHGasAdjustment(NATIVE_ADDRESS, CLASSIC_QUOTE_EXACT_IN_LARGE_GAS)
         .mul(DutchLimitQuote.improvementExactIn)
         .div(HUNDRED_PERCENT);
       const outEndAmount = outStartAmount.mul(HUNDRED_PERCENT.sub(50)).div(HUNDRED_PERCENT);
