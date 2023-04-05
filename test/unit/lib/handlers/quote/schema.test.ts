@@ -1,5 +1,5 @@
-import { PostQuoteRequestBodyJoi } from '../../../../lib/handlers/quote';
-import { FieldValidator } from '../../../../lib/util/validator';
+import { PostQuoteRequestBodyJoi } from '../../../../../lib/handlers/quote';
+import { FieldValidator } from '../../../../../lib/util/validator';
 import {
   AMOUNT_IN,
   CHAIN_IN_ID,
@@ -8,7 +8,7 @@ import {
   DL_CONFIG,
   TOKEN_IN,
   TOKEN_OUT,
-} from '../../../constants';
+} from '../../../../constants';
 
 const DL_CONFIG_JSON = {
   ...DL_CONFIG,
@@ -163,7 +163,7 @@ describe('Post quote request validation', () => {
   it('should reject invalid tokenIn', () => {
     const { error } = PostQuoteRequestBodyJoi.validate({
       ...BASE_REQUEST_BODY,
-      tokenIn: '0x',
+      tokenIn: '0xzzz#',
     });
     expect(error).toBeDefined();
   });
@@ -171,7 +171,7 @@ describe('Post quote request validation', () => {
   it('should reject invalid tokenOut', () => {
     const { error } = PostQuoteRequestBodyJoi.validate({
       ...BASE_REQUEST_BODY,
-      tokenOut: '0x',
+      tokenOut: '0xzzz#',
     });
     expect(error).toBeDefined();
   });
@@ -190,5 +190,18 @@ describe('Post quote request validation', () => {
       type: 'INVALID',
     });
     expect(error).toBeDefined();
+  });
+
+  it('should reject missing tokenIn', () => {
+    const { error } = PostQuoteRequestBodyJoi.validate({
+      tokenInChainId: CHAIN_IN_ID,
+      tokenOutChainId: CHAIN_OUT_ID,
+      tokenOut: TOKEN_OUT,
+      amount: AMOUNT_IN,
+      type: 'EXACT_INPUT',
+      configs: [DL_CONFIG_JSON, CLASSIC_CONFIG_JSON],
+    });
+    expect(error).toBeDefined();
+    expect(error?.details[0].message).toEqual('"tokenIn" is required');
   });
 });

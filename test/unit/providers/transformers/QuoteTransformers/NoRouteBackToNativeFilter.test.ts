@@ -1,13 +1,13 @@
 import Logger from 'bunyan';
 
-import { NoRouteBackToNativeFilter } from '../../../../lib/providers/transformers';
+import { NoRouteBackToNativeFilter } from '../../../../../lib/providers/transformers';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_HAS_ROUTE_TO_NATIVE,
   CLASSIC_QUOTE_NO_ROUTE_TO_NATIVE,
   DL_QUOTE_EXACT_IN_BETTER,
   QUOTE_REQUEST_MULTI,
-} from '../../../utils/fixtures';
+} from '../../../../utils/fixtures';
 
 describe('NoRouteBackToEthFilter', () => {
   const logger = Logger.createLogger({ name: 'test' });

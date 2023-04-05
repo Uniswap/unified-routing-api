@@ -274,36 +274,35 @@ export abstract class APIGLambdaHandler<
       queryParams = queryParamsValidation.value as ReqQueryParams;
     }
 
-    // const bodySchema = this.requestBodySchema();
+    const bodySchema = this.requestBodySchema();
 
-    // let body: ReqBody | undefined;
-    // if (bodyRaw && bodySchema) {
-    //   const bodyValidation = bodySchema.validate(bodyRaw, {
-    //     allowUnknown: true, // Makes API schema changes and rollbacks easier.
-    //     // TODO: flip below when confi validation is added
-    //     stripUnknown: false,
-    //   });
+    let body: ReqBody | undefined;
+    if (bodyRaw && bodySchema) {
+      const bodyValidation = bodySchema.validate(bodyRaw, {
+        allowUnknown: true, // Makes API schema changes and rollbacks easier.
+        stripUnknown: false,
+      });
 
-    //   if (bodyValidation.error) {
-    //     log.info({ bodyValidation }, 'Request failed validation');
-    //     return {
-    //       state: 'invalid',
-    //       errorResponse: {
-    //         statusCode: 400,
-    //         body: JSON.stringify({
-    //           detail: bodyValidation.error.message,
-    //           errorCode: 'VALIDATION_ERROR',
-    //         }),
-    //       },
-    //     };
-    //   }
+      if (bodyValidation.error) {
+        log.info({ bodyValidation }, 'Request failed validation');
+        return {
+          state: 'invalid',
+          errorResponse: {
+            statusCode: 400,
+            body: JSON.stringify({
+              detail: bodyValidation.error.message,
+              errorCode: 'VALIDATION_ERROR',
+            }),
+          },
+        };
+      }
 
-    //  body = bodyValidation.value;
-    // }
+      body = bodyValidation.value;
+    }
 
     return {
       state: 'valid',
-      requestBody: bodyRaw,
+      requestBody: body as ReqBody,
       requestQueryParams: queryParams as ReqQueryParams,
     };
   }

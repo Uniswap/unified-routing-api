@@ -1,7 +1,7 @@
 import Logger from 'bunyan';
 import { ethers } from 'ethers';
 
-import { OnlyConfiguredQuotersFilter } from '../../../../lib/providers/transformers';
+import { OnlyConfiguredQuotersFilter } from '../../../../../lib/providers/transformers';
 import {
   CLASSIC_QUOTE_DATA,
   CLASSIC_QUOTE_EXACT_IN_BETTER,
@@ -10,8 +10,8 @@ import {
   QUOTE_REQUEST_CLASSIC,
   QUOTE_REQUEST_DL,
   QUOTE_REQUEST_MULTI,
-} from '../../../utils/fixtures';
-import { buildQuoteResponse } from '../../../utils/quoteResponse';
+} from '../../../../utils/fixtures';
+import { buildQuoteResponse } from '../../../../utils/quoteResponse';
 
 describe('OnlyConfiguredQuotersFilter', () => {
   const logger = Logger.createLogger({ name: 'test' });

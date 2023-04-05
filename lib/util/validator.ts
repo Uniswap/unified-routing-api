@@ -69,6 +69,7 @@ export class FieldValidator {
     protocols: FieldValidator.protocols.required(),
     gasPriceWei: FieldValidator.gasPriceWei.optional(),
     simulateFromAddress: FieldValidator.address.optional(),
+    recipient: FieldValidator.address.optional(),
     permitSignature: FieldValidator.permitSignature.optional(),
     permitNonce: FieldValidator.permitNonce.optional(),
     permitExpiration: FieldValidator.positiveNumber.optional(),

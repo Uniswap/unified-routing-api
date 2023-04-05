@@ -3,12 +3,12 @@ import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { default as Logger } from 'bunyan';
 
 import { DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
-import { ClassicQuote, DutchLimitQuote, Quote } from '../../../../lib/entities';
-import { QuoteRequestBodyJSON } from '../../../../lib/entities/request';
-import { ApiInjector, ApiRInj } from '../../../../lib/handlers/base';
-import { compareQuotes, getBestQuote, getQuotes, QuoteHandler } from '../../../../lib/handlers/quote/handler';
-import { ContainerInjected, QuoterByRoutingType } from '../../../../lib/handlers/quote/injector';
-import { Quoter } from '../../../../lib/providers/quoters';
+import { ClassicQuote, DutchLimitQuote, Quote } from '../../../../../lib/entities';
+import { QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index';
+import { ApiInjector, ApiRInj } from '../../../../../lib/handlers/base';
+import { compareQuotes, getBestQuote, getQuotes, QuoteHandler } from '../../../../../lib/handlers/quote/handler';
+import { ContainerInjected, QuoterByRoutingType } from '../../../../../lib/handlers/quote/injector';
+import { Quoter } from '../../../../../lib/providers/quoters';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_IN_WORSE,
@@ -21,7 +21,7 @@ import {
   QUOTE_REQUEST_BODY_MULTI,
   QUOTE_REQUEST_DL,
   QUOTE_REQUEST_MULTI,
-} from '../../../utils/fixtures';
+} from '../../../../utils/fixtures';
 
 describe('QuoteHandler', () => {
   describe('handler', () => {

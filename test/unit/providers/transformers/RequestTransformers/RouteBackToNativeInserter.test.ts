@@ -3,8 +3,8 @@ import { ChainId, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
 import Logger from 'bunyan';
 import { ethers } from 'ethers';
 
-import { RouteBackToNativeInserter } from '../../../../lib/providers/transformers/RequestTransformers/RouteBackToNativeInserter';
-import { makeDutchLimitRequest, QUOTE_REQUEST_CLASSIC, QUOTE_REQUEST_DL_NATIVE_OUT } from '../../../utils/fixtures';
+import { RouteBackToNativeInserter } from '../../../../../lib/providers/transformers/RequestTransformers/RouteBackToNativeInserter';
+import { makeDutchLimitRequest, QUOTE_REQUEST_CLASSIC, QUOTE_REQUEST_DL_NATIVE_OUT } from '../../../../utils/fixtures';
 
 describe('RouteBackToEthTransformer', () => {
   const logger = Logger.createLogger({ name: 'test' });

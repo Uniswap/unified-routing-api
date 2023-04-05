@@ -7,15 +7,15 @@ import {
   OnlyConfiguredQuotersFilter,
   SyntheticUniswapXTransformer,
   UniswapXOrderSizeFilter,
-} from '../../../../lib/providers/transformers';
-import { NoRouteBackToNativeFilter } from '../../../../lib/providers/transformers/QuoteTransformers/NoRouteBackToNativeFilter';
+} from '../../../../../lib/providers/transformers';
+import { NoRouteBackToNativeFilter } from '../../../../../lib/providers/transformers/QuoteTransformers/NoRouteBackToNativeFilter';
 import {
   createClassicQuote,
   createDutchLimitQuote,
   QUOTE_REQUEST_CLASSIC,
   QUOTE_REQUEST_DL,
   QUOTE_REQUEST_MULTI,
-} from '../../../utils/fixtures';
+} from '../../../../utils/fixtures';
 
 // tests several transformers in tandem using the compound transformer
 describe('CompoundQuoteTransformer', () => {
