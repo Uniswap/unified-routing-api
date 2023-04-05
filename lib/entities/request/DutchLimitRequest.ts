@@ -3,7 +3,7 @@ import {
   DEFAULT_AUCTION_PERIOD_SECS,
   DEFAULT_EXCLUSIVE_PERIOD_SECS,
   DEFAULT_SLIPPAGE_TOLERANCE,
-  ZERO_ADDRESS,
+  NATIVE_ADDRESS,
 } from '../../constants';
 
 export * from './ClassicRequest';
@@ -30,7 +30,7 @@ export class DutchLimitRequest implements QuoteRequest {
         slippageTolerance: convertedSlippage,
       },
       {
-        offerer: body.offerer ?? ZERO_ADDRESS,
+        offerer: body.offerer ?? NATIVE_ADDRESS,
         exclusivePeriodSecs: body.exclusivePeriodSecs ?? DEFAULT_EXCLUSIVE_PERIOD_SECS,
         auctionPeriodSecs: body.auctionPeriodSecs ?? DEFAULT_AUCTION_PERIOD_SECS,
       }

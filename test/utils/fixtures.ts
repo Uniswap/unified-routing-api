@@ -1,5 +1,5 @@
 import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
-import { ZERO_ADDRESS } from '../../lib/constants';
+import { NATIVE_ADDRESS } from '../../lib/constants';
 
 import {
   ClassicQuoteDataJSON,
@@ -26,7 +26,7 @@ export const BASE_REQUEST_INFO_EXACT_IN = {
 
 export const REQUEST_INFO_ETH_EXACT_IN = {
   ...BASE_REQUEST_INFO_EXACT_IN,
-  tokenIn: ZERO_ADDRESS,
+  tokenIn: NATIVE_ADDRESS,
   tokenOut: TOKEN_IN, // Uni
 };
 
