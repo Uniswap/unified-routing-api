@@ -5,7 +5,7 @@ import { BigNumber, ethers } from 'ethers';
 import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteJSON } from '.';
 import { DutchLimitRequest, RoutingType } from '..';
-import { HUNDRED_PERCENT, WETH_WRAP_GAS, ZERO_ADDRESS } from '../../constants';
+import { HUNDRED_PERCENT, WETH_WRAP_GAS, ZERO_ADDRESS as NATIVE_ADDRESS } from '../../constants';
 import { currentTimestampInSeconds } from '../../util/time';
 import { ClassicQuote } from './ClassicQuote';
 import { LogJSON } from './index';
@@ -195,12 +195,12 @@ export class DutchLimitQuote implements Quote {
 // Returns a new quoteGasAdjusted taking into account the gas used to wrap ETH
 // Can't get tokenIn/tokenOut from classicQuote because it's auto convered to WETH by routing-api
 export function applyWETHGasAdjustment(token: string, classicQuote: ClassicQuote): BigNumber {
-  const needToWrapUnwrap = token == ZERO_ADDRESS;
+  const needToWrapUnwrap = token == NATIVE_ADDRESS;
   if (!needToWrapUnwrap) {
     return classicQuote.amountOutGasAdjusted;
   }
   // get ratio of gas used to gas used with WETH wrap
-  const gasUseEstimate = BigNumber.from(classicQuote.quoteData.gasUseEstimate);
+  const gasUseEstimate = BigNumber.from(classicQuote.toJSON().gasUseEstimate);
   const gasUseRatio = gasUseEstimate
     .add(WETH_WRAP_GAS)
     .mul(100)
@@ -208,7 +208,7 @@ export function applyWETHGasAdjustment(token: string, classicQuote: ClassicQuote
 
   // multiply the original gasUseEstimate in quoteToken by the ratio
   const newGasUseEstimateQuote = BigNumber.from(
-    classicQuote.quoteData.gasUseEstimateQuote
+    classicQuote.toJSON().gasUseEstimateQuote
   ).mul(gasUseRatio).div(100)
 
   // TODO: make sure this works for exact output
