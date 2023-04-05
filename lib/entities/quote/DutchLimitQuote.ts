@@ -5,7 +5,7 @@ import { BigNumber, ethers } from 'ethers';
 import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteJSON } from '.';
 import { DutchLimitRequest, RoutingType } from '..';
-import { HUNDRED_PERCENT, WETH_WRAP_GAS, NATIVE_ADDRESS } from '../../constants';
+import { HUNDRED_PERCENT, NATIVE_ADDRESS, WETH_WRAP_GAS } from '../../constants';
 import { currentTimestampInSeconds } from '../../util/time';
 import { ClassicQuote } from './ClassicQuote';
 import { LogJSON } from './index';
@@ -201,15 +201,10 @@ export function applyWETHGasAdjustment(token: string, classicQuote: ClassicQuote
   }
   // get ratio of gas used to gas used with WETH wrap
   const gasUseEstimate = BigNumber.from(classicQuote.toJSON().gasUseEstimate);
-  const gasUseRatio = gasUseEstimate
-    .add(WETH_WRAP_GAS)
-    .mul(100)
-    .div(gasUseEstimate)
+  const gasUseRatio = gasUseEstimate.add(WETH_WRAP_GAS).mul(100).div(gasUseEstimate);
 
   // multiply the original gasUseEstimate in quoteToken by the ratio
-  const newGasUseEstimateQuote = BigNumber.from(
-    classicQuote.toJSON().gasUseEstimateQuote
-  ).mul(gasUseRatio).div(100)
+  const newGasUseEstimateQuote = BigNumber.from(classicQuote.toJSON().gasUseEstimateQuote).mul(gasUseRatio).div(100);
 
   // TODO: make sure this works for exact output
   // subtract the new gasUseEstimateQuote from the original amountOut to get a new quoteGasAdjusted
