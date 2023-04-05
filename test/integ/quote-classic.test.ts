@@ -655,8 +655,8 @@ describe('quote', function () {
               tokenOutChainId: 1,
               amount:
                 type == 'EXACT_INPUT'
-                  ? await getAmount(1, type, 'ETH', 'UNI', '10')
-                  : await getAmount(1, type, 'ETH', 'UNI', '10000'),
+                  ? await getAmount(1, type, 'ETH', 'UNI', '1')
+                  : await getAmount(1, type, 'ETH', 'UNI', '100'),
               type,
               slippageTolerance: SLIPPAGE,
               configs: [
@@ -1506,8 +1506,8 @@ describe('quote', function () {
                 tokenOutChainId: 1,
                 amount:
                   type == 'EXACT_INPUT'
-                    ? await getAmount(1, type, 'ETH', 'UNI', '10')
-                    : await getAmount(1, type, 'ETH', 'UNI', '10000'),
+                    ? await getAmount(1, type, 'ETH', 'UNI', '1')
+                    : await getAmount(1, type, 'ETH', 'UNI', '100'),
                 type,
                 slippageTolerance: SLIPPAGE,
                 configs: [
