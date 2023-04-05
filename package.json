@@ -13,7 +13,7 @@
     "clean": "rm -rf dist cdk.out",
     "watch": "tsc -w",
     "test": "jest --testPathPattern test/unit --detectOpenHandles --forceExit",
-    "test:integ": "ts-mocha -p tsconfig.cdk.json -r dotenv/config test/integ/**/*.test.ts",
+    "test:integ": "ts-mocha -p ./tsconfig.cdk.json -r dotenv/config test/integ/**/*.test.ts",
     "fix": "run-s fix:*",
     "fix:prettier": "prettier \"lib/**/*.ts\" --write",
     "fix:prettiertest": "prettier \"test/**/*.ts\" --write",
@@ -84,7 +84,7 @@
     "node-cache": "^5.1.2",
     "source-map-support": "^0.5.21",
     "tiny-invariant": "^1.3.1",
-    "ts-mocha": "^8.0.0",
+    "ts-mocha": "^10.0.0",
     "typechain": "^5.0.0",
     "uuid": "^9.0.0"
   },
