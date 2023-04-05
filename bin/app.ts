@@ -158,12 +158,17 @@ export class APIPipeline extends Stack {
             value: 'github-token-2',
             type: BuildEnvironmentVariableType.SECRETS_MANAGER,
           },
+          ARCHIVE_NODE_RPC: {
+            value: 'archive-node-rpc-url-default-kms',
+            type: BuildEnvironmentVariableType.SECRETS_MANAGER,
+          },
         },
       },
       commands: [
         'git config --global url."https://${GH_TOKEN}@github.com/".insteadOf ssh://git@github.com/',
         'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc',
         'echo "UNISWAP_API=${UNISWAP_API}" > .env',
+        'echo "ARCHIVE_NODE_RPC=${ARCHIVE_NODE_RPC}" >> .env',
         'yarn install --frozen-lockfile --network-concurrency 1',
         'yarn build',
         'yarn test:integ',
