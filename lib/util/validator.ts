@@ -34,7 +34,7 @@ export class FieldValidator {
     .integer()
     .valid(...SUPPORTED_CHAINS.DUTCH_LIMIT);
 
-  public static readonly tradeType = Joi.string().valid('EXACT_INPUT', 'EXACT_OUTPUT', 'exactIn', 'exactOut');
+  public static readonly tradeType = Joi.string().valid('EXACT_INPUT', 'EXACT_OUTPUT');
 
   public static readonly routingType = Joi.string().valid('CLASSIC', 'DUTCH_LIMIT');
 

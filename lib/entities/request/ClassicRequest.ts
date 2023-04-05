@@ -53,7 +53,7 @@ export class ClassicRequest implements QuoteRequest {
   public toJSON(): ClassicConfigJSON {
     return Object.assign({}, this.config, {
       routingType: RoutingType.CLASSIC,
-      protocols: this.config?.protocols?.map((p: Protocol) => p.toString()),
+      protocols: this.config.protocols?.map((p: Protocol) => p.toString()),
       ...(this.config.permitAmount !== undefined && { permitAmount: this.config.permitAmount.toString() }),
     });
   }

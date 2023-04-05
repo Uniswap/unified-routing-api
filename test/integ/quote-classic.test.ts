@@ -75,7 +75,7 @@ const checkQuoteToken = (
   after: CurrencyAmount<Currency>,
   tokensQuoted: CurrencyAmount<Currency>
 ) => {
-  // Check which is bigger to support exactIn and exactOut
+  // Check which is bigger to support EXACT_INPUT and EXACT_OUTPUT
   const tokensSwapped = after.greaterThan(before) ? after.subtract(before) : before.subtract(after);
 
   const tokensDiff = tokensQuoted.greaterThan(tokensSwapped)
@@ -178,8 +178,8 @@ describe('quote', function () {
       tokenInChainId: 1,
       tokenOut: 'USDT',
       tokenOutChainId: 1,
-      amount: await getAmount(1, 'exactIn', 'USDC', 'USDT', '100'),
-      type: 'exactIn',
+      amount: await getAmount(1, 'EXACT_INPUT', 'USDC', 'USDT', '100'),
+      type: 'EXACT_INPUT',
       configs: [
         {
           routingType: RoutingType.CLASSIC,
@@ -205,7 +205,7 @@ describe('quote', function () {
   });
 
   for (const algorithm of ['alpha']) {
-    for (const type of ['exactIn', 'exactOut']) {
+    for (const type of ['EXACT_INPUT', 'EXACT_OUTPUT']) {
       describe(`${ID_TO_NETWORK_NAME(1)} ${algorithm} ${type} 2xx`, () => {
         describe(`+ Execute Swap`, () => {
           it(`erc20 -> erc20`, async () => {
@@ -241,7 +241,7 @@ describe('quote', function () {
             expect(parseFloat(quoteDecimals)).to.be.greaterThan(90);
             expect(parseFloat(quoteDecimals)).to.be.lessThan(110);
 
-            if (type == 'exactIn') {
+            if (type == 'EXACT_INPUT') {
               expect(parseFloat(quoteGasAdjustedDecimals)).to.be.lessThanOrEqual(parseFloat(quoteDecimals));
             } else {
               expect(parseFloat(quoteGasAdjustedDecimals)).to.be.greaterThanOrEqual(parseFloat(quoteDecimals));
@@ -256,7 +256,7 @@ describe('quote', function () {
               USDT_MAINNET
             );
 
-            if (type == 'exactIn') {
+            if (type == 'EXACT_INPUT') {
               expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('100');
               checkQuoteToken(tokenOutBefore, tokenOutAfter, CurrencyAmount.fromRawAmount(USDT_MAINNET, quote));
             } else {
@@ -297,7 +297,7 @@ describe('quote', function () {
             expect(parseFloat(quoteDecimals)).to.be.greaterThan(90);
             expect(parseFloat(quoteDecimals)).to.be.lessThan(110);
 
-            if (type == 'exactIn') {
+            if (type == 'EXACT_INPUT') {
               expect(parseFloat(quoteGasAdjustedDecimals)).to.be.lessThanOrEqual(parseFloat(quoteDecimals));
             } else {
               expect(parseFloat(quoteGasAdjustedDecimals)).to.be.greaterThanOrEqual(parseFloat(quoteDecimals));
@@ -312,7 +312,7 @@ describe('quote', function () {
               USDT_MAINNET
             );
 
-            if (type == 'exactIn') {
+            if (type == 'EXACT_INPUT') {
               expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('100');
               checkQuoteToken(tokenOutBefore, tokenOutAfter, CurrencyAmount.fromRawAmount(USDT_MAINNET, quote));
             } else {
@@ -378,7 +378,7 @@ describe('quote', function () {
             expect(parseFloat(quoteDecimals)).to.be.greaterThan(9);
             expect(parseFloat(quoteDecimals)).to.be.lessThan(11);
 
-            if (type == 'exactIn') {
+            if (type == 'EXACT_INPUT') {
               expect(parseFloat(quoteGasAdjustedDecimals)).to.be.lessThanOrEqual(parseFloat(quoteDecimals));
             } else {
               expect(parseFloat(quoteGasAdjustedDecimals)).to.be.greaterThanOrEqual(parseFloat(quoteDecimals));
@@ -394,7 +394,7 @@ describe('quote', function () {
               true
             );
 
-            if (type == 'exactIn') {
+            if (type == 'EXACT_INPUT') {
               expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('10');
               checkQuoteToken(tokenOutBefore, tokenOutAfter, CurrencyAmount.fromRawAmount(USDT_MAINNET, quote));
             } else {
@@ -410,7 +410,7 @@ describe('quote', function () {
               tokenInChainId: 1,
               tokenOut: 'ETH',
               tokenOutChainId: 1,
-              amount: await getAmount(1, type, 'USDC', 'ETH', type == 'exactIn' ? '1000000' : '10'),
+              amount: await getAmount(1, type, 'USDC', 'ETH', type == 'EXACT_INPUT' ? '1000000' : '10'),
               type,
               slippageTolerance: SLIPPAGE,
               configs: [
@@ -440,7 +440,7 @@ describe('quote', function () {
               Ether.onChain(1)
             );
 
-            if (type == 'exactIn') {
+            if (type == 'EXACT_INPUT') {
               expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('1000000');
               checkQuoteToken(tokenOutBefore, tokenOutAfter, CurrencyAmount.fromRawAmount(Ether.onChain(1), quote));
             } else {
@@ -458,7 +458,7 @@ describe('quote', function () {
               tokenOut: 'ETH',
               tokenOutChainId: 1,
               amount:
-                type == 'exactIn'
+                type == 'EXACT_INPUT'
                   ? await getAmount(1, type, 'USDC', 'ETH', '1000000')
                   : await getAmount(1, type, 'USDC', 'ETH', '100'),
               type,
@@ -505,7 +505,7 @@ describe('quote', function () {
               Ether.onChain(1)
             );
 
-            if (type == 'exactIn') {
+            if (type == 'EXACT_INPUT') {
               expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('1000000');
               checkQuoteToken(
                 tokenOutBefore,
@@ -522,7 +522,7 @@ describe('quote', function () {
             const nonce = nextPermitNonce();
 
             const amount =
-              type == 'exactIn'
+              type == 'EXACT_INPUT'
                 ? await getAmount(1, type, 'USDC', 'ETH', '1000000')
                 : await getAmount(1, type, 'USDC', 'ETH', '100');
 
@@ -582,7 +582,7 @@ describe('quote', function () {
               true
             );
 
-            if (type == 'exactIn') {
+            if (type == 'EXACT_INPUT') {
               expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('1000000');
               checkQuoteToken(
                 tokenOutBefore,
@@ -603,7 +603,7 @@ describe('quote', function () {
               tokenOut: 'UNI',
               tokenOutChainId: 1,
               amount:
-                type == 'exactIn'
+                type == 'EXACT_INPUT'
                   ? await getAmount(1, type, 'ETH', 'UNI', '10')
                   : await getAmount(1, type, 'ETH', 'UNI', '10000'),
               type,
@@ -632,7 +632,7 @@ describe('quote', function () {
               UNI_MAINNET
             );
 
-            if (type == 'exactIn') {
+            if (type == 'EXACT_INPUT') {
               // We've swapped 10 ETH + gas costs
               expect(tokenInBefore.subtract(tokenInAfter).greaterThan(parseAmount('10', Ether.onChain(1)))).to.be.true;
               checkQuoteToken(
@@ -654,7 +654,7 @@ describe('quote', function () {
               tokenOut: 'UNI',
               tokenOutChainId: 1,
               amount:
-                type == 'exactIn'
+                type == 'EXACT_INPUT'
                   ? await getAmount(1, type, 'ETH', 'UNI', '10')
                   : await getAmount(1, type, 'ETH', 'UNI', '10000'),
               type,
@@ -684,7 +684,7 @@ describe('quote', function () {
               UNI_MAINNET
             );
 
-            if (type == 'exactIn') {
+            if (type == 'EXACT_INPUT') {
               // We've swapped 10 ETH + gas costs
               expect(tokenInBefore.subtract(tokenInAfter).greaterThan(parseAmount('10', Ether.onChain(1)))).to.be.true;
               checkQuoteToken(
@@ -732,7 +732,7 @@ describe('quote', function () {
               DAI_MAINNET
             );
 
-            if (type == 'exactIn') {
+            if (type == 'EXACT_INPUT') {
               expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('100');
               checkQuoteToken(
                 tokenOutBefore,
@@ -779,7 +779,7 @@ describe('quote', function () {
               WETH9[1]!
             );
 
-            if (type == 'exactIn') {
+            if (type == 'EXACT_INPUT') {
               expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('100');
               checkQuoteToken(tokenOutBefore, tokenOutAfter, CurrencyAmount.fromRawAmount(WETH9[1], quoteJSON.quote));
             } else {
@@ -826,7 +826,7 @@ describe('quote', function () {
               expect(parseFloat(quoteDecimals)).to.be.greaterThan(90);
               expect(parseFloat(quoteDecimals)).to.be.lessThan(110);
 
-              if (type == 'exactIn') {
+              if (type == 'EXACT_INPUT') {
                 expect(parseFloat(quoteGasAdjustedDecimals)).to.be.lessThanOrEqual(parseFloat(quoteDecimals));
               } else {
                 expect(parseFloat(quoteGasAdjustedDecimals)).to.be.greaterThanOrEqual(parseFloat(quoteDecimals));
@@ -846,7 +846,7 @@ describe('quote', function () {
                 USDT_MAINNET!
               );
 
-              if (type == 'exactIn') {
+              if (type == 'EXACT_INPUT') {
                 expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('100');
                 checkQuoteToken(tokenOutBefore, tokenOutAfter, CurrencyAmount.fromRawAmount(USDT_MAINNET, quote));
               } else {
@@ -892,7 +892,7 @@ describe('quote', function () {
               expect(parseFloat(quoteDecimals)).to.be.greaterThan(90);
               expect(parseFloat(quoteDecimals)).to.be.lessThan(110);
 
-              if (type == 'exactIn') {
+              if (type == 'EXACT_INPUT') {
                 expect(parseFloat(quoteGasAdjustedDecimals)).to.be.lessThanOrEqual(parseFloat(quoteDecimals));
               } else {
                 expect(parseFloat(quoteGasAdjustedDecimals)).to.be.greaterThanOrEqual(parseFloat(quoteDecimals));
@@ -912,7 +912,7 @@ describe('quote', function () {
                 USDT_MAINNET!
               );
 
-              if (type == 'exactIn') {
+              if (type == 'EXACT_INPUT') {
                 expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('100');
                 checkQuoteToken(tokenOutBefore, tokenOutAfter, CurrencyAmount.fromRawAmount(USDT_MAINNET, quote));
               } else {
@@ -958,7 +958,7 @@ describe('quote', function () {
               expect(parseFloat(quoteDecimals)).to.be.greaterThan(90);
               expect(parseFloat(quoteDecimals)).to.be.lessThan(110);
 
-              if (type == 'exactIn') {
+              if (type == 'EXACT_INPUT') {
                 expect(parseFloat(quoteGasAdjustedDecimals)).to.be.lessThanOrEqual(parseFloat(quoteDecimals));
               } else {
                 expect(parseFloat(quoteGasAdjustedDecimals)).to.be.greaterThanOrEqual(parseFloat(quoteDecimals));
@@ -987,7 +987,7 @@ describe('quote', function () {
                 USDT_MAINNET!
               );
 
-              if (type == 'exactIn') {
+              if (type == 'EXACT_INPUT') {
                 expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('100');
                 checkQuoteToken(tokenOutBefore, tokenOutAfter, CurrencyAmount.fromRawAmount(USDT_MAINNET, quote));
               } else {
@@ -997,7 +997,7 @@ describe('quote', function () {
             });
 
             /// Tests for routes likely to result in MixedRoutes being returned
-            if (type === 'exactIn') {
+            if (type === 'EXACT_INPUT') {
               it(`erc20 -> erc20 forceMixedRoutes not specified for v2,v3 does not return mixed route even when it is better`, async () => {
                 const quoteReq: QuoteRequestBodyJSON = {
                   requestId: 'id',
@@ -1033,7 +1033,7 @@ describe('quote', function () {
 
                 expect(status).to.equal(200);
 
-                if (type == 'exactIn') {
+                if (type == 'EXACT_INPUT') {
                   expect(parseFloat(quoteGasAdjustedDecimals)).to.be.lessThanOrEqual(parseFloat(quoteDecimals));
                 } else {
                   expect(parseFloat(quoteGasAdjustedDecimals)).to.be.greaterThanOrEqual(parseFloat(quoteDecimals));
@@ -1112,7 +1112,7 @@ describe('quote', function () {
 
                 expect(status).to.equal(200);
 
-                if (type == 'exactIn') {
+                if (type == 'EXACT_INPUT') {
                   expect(parseFloat(quoteGasAdjustedDecimals)).to.be.lessThanOrEqual(parseFloat(quoteDecimals));
                 } else {
                   expect(parseFloat(quoteGasAdjustedDecimals)).to.be.greaterThanOrEqual(parseFloat(quoteDecimals));
@@ -1167,7 +1167,7 @@ describe('quote', function () {
               expect(parseFloat(quoteDecimals)).to.be.greaterThan(90);
               expect(parseFloat(quoteDecimals)).to.be.lessThan(110);
 
-              if (type == 'exactIn') {
+              if (type == 'EXACT_INPUT') {
                 expect(parseFloat(quoteGasAdjustedDecimals)).to.be.lessThanOrEqual(parseFloat(quoteDecimals));
               } else {
                 expect(parseFloat(quoteGasAdjustedDecimals)).to.be.greaterThanOrEqual(parseFloat(quoteDecimals));
@@ -1181,7 +1181,7 @@ describe('quote', function () {
                 USDT_MAINNET
               );
 
-              if (type == 'exactIn') {
+              if (type == 'EXACT_INPUT') {
                 expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('100');
                 checkQuoteToken(tokenOutBefore, tokenOutAfter, CurrencyAmount.fromRawAmount(USDT_MAINNET, quote));
               } else {
@@ -1227,7 +1227,7 @@ describe('quote', function () {
               expect(parseFloat(quoteDecimals)).to.be.greaterThan(90);
               expect(parseFloat(quoteDecimals)).to.be.lessThan(110);
 
-              if (type == 'exactIn') {
+              if (type == 'EXACT_INPUT') {
                 expect(parseFloat(quoteGasAdjustedDecimals)).to.be.lessThanOrEqual(parseFloat(quoteDecimals));
               } else {
                 expect(parseFloat(quoteGasAdjustedDecimals)).to.be.greaterThanOrEqual(parseFloat(quoteDecimals));
@@ -1242,7 +1242,7 @@ describe('quote', function () {
                 USDT_MAINNET
               );
 
-              if (type == 'exactIn') {
+              if (type == 'EXACT_INPUT') {
                 expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('100');
                 checkQuoteToken(tokenOutBefore, tokenOutAfter, CurrencyAmount.fromRawAmount(USDT_MAINNET, quote));
               } else {
@@ -1319,7 +1319,7 @@ describe('quote', function () {
                 expect(parseFloat(quoteDecimals)).to.be.greaterThan(9);
                 expect(parseFloat(quoteDecimals)).to.be.lessThan(11);
 
-                if (type == 'exactIn') {
+                if (type == 'EXACT_INPUT') {
                   expect(parseFloat(quoteGasAdjustedDecimals)).to.be.lessThanOrEqual(parseFloat(quoteDecimals));
                 } else {
                   expect(parseFloat(quoteGasAdjustedDecimals)).to.be.greaterThanOrEqual(parseFloat(quoteDecimals));
@@ -1336,7 +1336,7 @@ describe('quote', function () {
                 tokenInChainId: 1,
                 tokenOut: 'ETH',
                 tokenOutChainId: 1,
-                amount: await getAmount(1, type, 'USDC', 'ETH', type == 'exactIn' ? '1000000' : '10'),
+                amount: await getAmount(1, type, 'USDC', 'ETH', type == 'EXACT_INPUT' ? '1000000' : '10'),
                 type,
                 slippageTolerance: SLIPPAGE,
                 configs: [
@@ -1368,7 +1368,7 @@ describe('quote', function () {
                 Ether.onChain(1)
               );
 
-              if (type == 'exactIn') {
+              if (type == 'EXACT_INPUT') {
                 expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('1000000');
                 checkQuoteToken(tokenOutBefore, tokenOutAfter, CurrencyAmount.fromRawAmount(Ether.onChain(1), quote));
               } else {
@@ -1386,7 +1386,7 @@ describe('quote', function () {
                 tokenOut: 'ETH',
                 tokenOutChainId: 1,
                 amount:
-                  type == 'exactIn'
+                  type == 'EXACT_INPUT'
                     ? await getAmount(1, type, 'USDC', 'ETH', '1000000')
                     : await getAmount(1, type, 'USDC', 'ETH', '100'),
                 type,
@@ -1435,7 +1435,7 @@ describe('quote', function () {
                 Ether.onChain(1)
               );
 
-              if (type == 'exactIn') {
+              if (type == 'EXACT_INPUT') {
                 expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('1000000');
                 checkQuoteToken(
                   tokenOutBefore,
@@ -1456,7 +1456,7 @@ describe('quote', function () {
                 tokenOut: 'UNI',
                 tokenOutChainId: 1,
                 amount:
-                  type == 'exactIn'
+                  type == 'EXACT_INPUT'
                     ? await getAmount(1, type, 'ETH', 'UNI', '10')
                     : await getAmount(1, type, 'ETH', 'UNI', '10000'),
                 type,
@@ -1486,7 +1486,7 @@ describe('quote', function () {
                 UNI_MAINNET
               );
 
-              if (type == 'exactIn') {
+              if (type == 'EXACT_INPUT') {
                 // We've swapped 10 ETH + gas costs
                 expect(tokenInBefore.subtract(tokenInAfter).greaterThan(parseAmount('10', Ether.onChain(1)))).to.be
                   .true;
@@ -1505,7 +1505,7 @@ describe('quote', function () {
                 tokenOut: 'UNI',
                 tokenOutChainId: 1,
                 amount:
-                  type == 'exactIn'
+                  type == 'EXACT_INPUT'
                     ? await getAmount(1, type, 'ETH', 'UNI', '10')
                     : await getAmount(1, type, 'ETH', 'UNI', '10000'),
                 type,
@@ -1535,7 +1535,7 @@ describe('quote', function () {
                 UNI_MAINNET
               );
 
-              if (type == 'exactIn') {
+              if (type == 'EXACT_INPUT') {
                 // We've swapped 10 ETH + gas costs
                 expect(tokenInBefore.subtract(tokenInAfter).greaterThan(parseAmount('10', Ether.onChain(1)))).to.be
                   .true;
@@ -1581,7 +1581,7 @@ describe('quote', function () {
                 DAI_MAINNET
               );
 
-              if (type == 'exactIn') {
+              if (type == 'EXACT_INPUT') {
                 expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('100');
                 checkQuoteToken(tokenOutBefore, tokenOutAfter, CurrencyAmount.fromRawAmount(DAI_MAINNET, quote.quote));
               } else {
@@ -1625,7 +1625,7 @@ describe('quote', function () {
                 WETH9[1]!
               );
 
-              if (type == 'exactIn') {
+              if (type == 'EXACT_INPUT') {
                 expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('100');
                 checkQuoteToken(tokenOutBefore, tokenOutAfter, CurrencyAmount.fromRawAmount(WETH9[1], quote.quote));
               } else {
@@ -1664,7 +1664,7 @@ describe('quote', function () {
           expect(parseFloat(quoteDecimals)).to.be.greaterThan(90);
           expect(parseFloat(quoteDecimals)).to.be.lessThan(110);
 
-          if (type == 'exactIn') {
+          if (type == 'EXACT_INPUT') {
             expect(parseFloat(quoteGasAdjustedDecimals)).to.be.lessThanOrEqual(parseFloat(quoteDecimals));
           } else {
             expect(parseFloat(quoteGasAdjustedDecimals)).to.be.greaterThanOrEqual(parseFloat(quoteDecimals));
@@ -1709,7 +1709,7 @@ describe('quote', function () {
           expect(parseFloat(quoteDecimals)).to.be.greaterThan(90);
           expect(parseFloat(quoteDecimals)).to.be.lessThan(110);
 
-          if (type == 'exactIn') {
+          if (type == 'EXACT_INPUT') {
             expect(parseFloat(quoteGasAdjustedDecimals)).to.be.lessThanOrEqual(parseFloat(quoteDecimals));
           } else {
             expect(parseFloat(quoteGasAdjustedDecimals)).to.be.greaterThanOrEqual(parseFloat(quoteDecimals));
@@ -1750,7 +1750,7 @@ describe('quote', function () {
           expect(status).to.equal(200);
           expect(parseFloat(quoteDecimals)).to.be.greaterThan(90);
 
-          if (type == 'exactIn') {
+          if (type == 'EXACT_INPUT') {
             expect(parseFloat(quoteGasAdjustedDecimals)).to.be.lessThanOrEqual(parseFloat(quoteDecimals));
           } else {
             expect(parseFloat(quoteGasAdjustedDecimals)).to.be.greaterThanOrEqual(parseFloat(quoteDecimals));
@@ -1790,7 +1790,7 @@ describe('quote', function () {
           expect(status).to.equal(200);
           expect(parseFloat(quoteDecimals)).to.be.greaterThan(90);
 
-          if (type == 'exactIn') {
+          if (type == 'EXACT_INPUT') {
             expect(parseFloat(quoteGasAdjustedDecimals)).to.be.lessThanOrEqual(parseFloat(quoteDecimals));
           } else {
             expect(parseFloat(quoteGasAdjustedDecimals)).to.be.greaterThanOrEqual(parseFloat(quoteDecimals));
@@ -2258,7 +2258,7 @@ describe('quote', function () {
       c != ChainId.ROPSTEN &&
       c != ChainId.GÖRLI
   )) {
-    for (const type of ['exactIn', 'exactOut']) {
+    for (const type of ['EXACT_INPUT', 'EXACT_OUTPUT']) {
       const erc1 = TEST_ERC20_1[chain];
       const erc2 = TEST_ERC20_2[chain];
 
@@ -2376,7 +2376,7 @@ describe('quote', function () {
             expect(status).to.equal(200);
 
             // check for quotes to be gas adjusted
-            if (type == 'exactIn') {
+            if (type == 'EXACT_INPUT') {
               expect(parseFloat(quoteGasAdjustedDecimals)).to.be.lessThanOrEqual(parseFloat(quoteDecimals));
             } else {
               expect(parseFloat(quoteGasAdjustedDecimals)).to.be.greaterThanOrEqual(parseFloat(quoteDecimals));
