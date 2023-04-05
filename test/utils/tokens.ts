@@ -52,13 +52,13 @@ export const getTokenListProvider = (id: ChainId) => {
 
 export const getAmount = async (id: ChainId, type: string, symbolIn: string, symbolOut: string, amount: string) => {
   const tokenListProvider = getTokenListProvider(id);
-  const decimals = (await tokenListProvider.getTokenBySymbol(type == 'exactIn' ? symbolIn : symbolOut))!.decimals;
+  const decimals = (await tokenListProvider.getTokenBySymbol(type == 'EXACT_INPUT' ? symbolIn : symbolOut))!.decimals;
   log.info(decimals);
   return ethers.utils.parseUnits(amount, decimals).toString();
 };
 
 export const getAmountFromToken = async (type: string, tokenIn: Token, tokenOut: Token, amount: string) => {
-  const decimals = (type == 'exactIn' ? tokenIn : tokenOut).decimals;
+  const decimals = (type == 'EXACT_INPUT' ? tokenIn : tokenOut).decimals;
   return ethers.utils.parseUnits(amount, decimals).toString();
 };
 
