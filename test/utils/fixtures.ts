@@ -1,4 +1,5 @@
 import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
+import { NATIVE_ADDRESS } from '../../lib/constants';
 
 import {
   ClassicQuoteDataJSON,
@@ -21,6 +22,12 @@ export const BASE_REQUEST_INFO_EXACT_IN = {
   tokenOut: TOKEN_OUT,
   amount: AMOUNT_IN,
   type: 'EXACT_INPUT',
+};
+
+export const REQUEST_INFO_ETH_EXACT_IN = {
+  ...BASE_REQUEST_INFO_EXACT_IN,
+  tokenIn: NATIVE_ADDRESS,
+  tokenOut: TOKEN_IN, // Uni
 };
 
 export const BASE_REQUEST_INFO_EXACT_OUT = {
@@ -78,12 +85,32 @@ export function makeDutchLimitRequest(overrides: Partial<QuoteRequestBodyJSON>):
 
 export const QUOTE_REQUEST_DL = makeDutchLimitRequest({});
 export const QUOTE_REQUEST_DL_EXACT_OUT = makeDutchLimitRequest({ type: 'EXACT_OUTPUT' });
+export const QUOTE_REQUEST_DL_NATIVE_IN = makeDutchLimitRequest({
+  tokenIn: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_IN_ID)].address,
+});
 export const QUOTE_REQUEST_DL_NATIVE_OUT = makeDutchLimitRequest({
   tokenOut: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_OUT_ID)].address,
 });
 
 export const QUOTE_REQUEST_MULTI = parseQuoteRequests({
   ...BASE_REQUEST_INFO_EXACT_IN,
+  configs: [
+    {
+      routingType: RoutingType.DUTCH_LIMIT,
+      offerer: OFFERER,
+      exclusivePeriodSecs: 12,
+      auctionPeriodSecs: 60,
+    },
+    {
+      routingType: RoutingType.CLASSIC,
+      protocols: ['v3', 'v2', 'mixed'],
+      gasPriceWei: '12',
+    },
+  ],
+});
+
+export const QUOTE_REQUEST_ETH_IN_MULTI = parseQuoteRequests({
+  ...REQUEST_INFO_ETH_EXACT_IN,
   configs: [
     {
       routingType: RoutingType.DUTCH_LIMIT,
@@ -186,6 +213,10 @@ export function createRouteBackToNativeQuote(overrides: Partial<ClassicQuoteData
 }
 
 export const DL_QUOTE_EXACT_IN_BETTER = createDutchLimitQuote({ amountOut: '2' }, 'EXACT_INPUT');
+export const DL_QUOTE_NATIVE_EXACT_IN_BETTER = createDutchLimitQuote(
+  { amountOut: '2', tokenIn: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_OUT_ID)].address },
+  'EXACT_INPUT'
+);
 export const DL_QUOTE_EXACT_IN_WORSE = createDutchLimitQuote({ amountOut: '1' }, 'EXACT_INPUT');
 export const DL_QUOTE_EXACT_IN_LARGE = createDutchLimitQuote({ amountOut: '10000' }, 'EXACT_INPUT');
 export const DL_QUOTE_EXACT_OUT_BETTER = createDutchLimitQuote({ amountIn: '1' }, 'EXACT_OUTPUT');
@@ -198,6 +229,12 @@ export const CLASSIC_QUOTE_EXACT_IN_LARGE = createClassicQuote(
   { quote: '10000', quoteGasAdjusted: '9000' },
   'EXACT_INPUT'
 );
+export const CLASSIC_QUOTE_EXACT_IN_LARGE_GAS = createClassicQuote(
+  // quote: 1 ETH, quoteGasAdjusted: 0.9 ETH, gasUseEstimate: 100000, gasUseEstimateQuote: 0.1 ETH
+  { quote: '10000000000000000000000', quoteGasAdjusted: '9000000000000000000000', gasUseEstimate: '100000', gasUseEstimateQuote: '1000000000000000000000' },
+  'EXACT_INPUT'
+);
+
 export const CLASSIC_QUOTE_EXACT_OUT_BETTER = createClassicQuote({ quote: '1', quoteGasAdjusted: '1' }, 'EXACT_OUTPUT');
 export const CLASSIC_QUOTE_EXACT_OUT_WORSE = createClassicQuote({ quote: '2', quoteGasAdjusted: '2' }, 'EXACT_OUTPUT');
 export const CLASSIC_QUOTE_EXACT_OUT_LARGE = createClassicQuote(

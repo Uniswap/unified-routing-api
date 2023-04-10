@@ -1,9 +1,9 @@
 import Logger from 'bunyan';
 
-import { HUNDRED_PERCENT, NATIVE_ADDRESS } from '../../../../../lib/constants';
-import { applyWETHGasAdjustment, DutchLimitQuote, QuoteByRoutingType, RoutingType } from '../../../../../lib/entities';
-import { SyntheticUniswapXTransformer } from '../../../../../lib/providers/transformers';
-import { TOKEN_IN } from '../../../../constants';
+import { HUNDRED_PERCENT, NATIVE_ADDRESS } from '../../../../lib/constants';
+import { applyWETHGasAdjustment, DutchLimitQuote, QuoteByRoutingType, RoutingType } from '../../../../lib/entities';
+import { SyntheticUniswapXTransformer } from '../../../../lib/providers/transformers';
+import { TOKEN_IN } from '../../../constants';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_IN_LARGE,
@@ -13,7 +13,7 @@ import {
   QUOTE_REQUEST_CLASSIC,
   QUOTE_REQUEST_ETH_IN_MULTI,
   QUOTE_REQUEST_MULTI,
-} from '../../../../utils/fixtures';
+} from '../../../utils/fixtures';
 
 describe('SyntheticUniswapXTransformer', () => {
   const logger = Logger.createLogger({ name: 'test' });

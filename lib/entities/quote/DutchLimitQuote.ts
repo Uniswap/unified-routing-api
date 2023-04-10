@@ -5,7 +5,7 @@ import { BigNumber, ethers } from 'ethers';
 import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteJSON } from '.';
 import { DutchLimitRequest, RoutingType } from '..';
-import { HUNDRED_PERCENT } from '../../constants';
+import { HUNDRED_PERCENT, NATIVE_ADDRESS, WETH_WRAP_GAS } from '../../constants';
 import { currentTimestampInSeconds } from '../../util/time';
 import { ClassicQuote } from './ClassicQuote';
 import { LogJSON } from './index';
@@ -85,7 +85,9 @@ export class DutchLimitQuote implements Quote {
         request.info.tokenIn,
         request.info.amount, // fixed amountIn
         quote.request.info.tokenOut,
-        quote.amountOutGasAdjusted.mul(DutchLimitQuote.improvementExactIn).div(HUNDRED_PERCENT),
+        applyWETHGasAdjustment(request.info.tokenIn, quote)
+          .mul(DutchLimitQuote.improvementExactIn)
+          .div(HUNDRED_PERCENT),
         request.config.offerer,
         '', // synthetic quote has no filler
         undefined // synthetic quote has no nonce
@@ -98,7 +100,9 @@ export class DutchLimitQuote implements Quote {
         request.info.requestId,
         uuidv4(), // synthetic quote doesn't receive a quoteId from RFQ api, so generate one
         request.info.tokenIn,
-        quote.amountInGasAdjusted.mul(DutchLimitQuote.improvementExactOut).div(HUNDRED_PERCENT),
+        applyWETHGasAdjustment(request.info.tokenOut, quote)
+          .mul(DutchLimitQuote.improvementExactOut)
+          .div(HUNDRED_PERCENT),
         quote.request.info.tokenOut,
         request.info.amount, // fixed amountOut
         request.config.offerer,
@@ -186,4 +190,23 @@ export class DutchLimitQuote implements Quote {
   private generateRandomNonce(): string {
     return ethers.BigNumber.from(ethers.utils.randomBytes(31)).shl(8).toString();
   }
+}
+
+// Returns a new quoteGasAdjusted taking into account the gas used to wrap ETH
+// Can't get tokenIn/tokenOut from classicQuote because it's auto convered to WETH by routing-api
+export function applyWETHGasAdjustment(token: string, classicQuote: ClassicQuote): BigNumber {
+  const needToWrapUnwrap = token == NATIVE_ADDRESS;
+  if (!needToWrapUnwrap) {
+    return classicQuote.amountOutGasAdjusted;
+  }
+  // get ratio of gas used to gas used with WETH wrap
+  const gasUseEstimate = BigNumber.from(classicQuote.toJSON().gasUseEstimate);
+  const gasUseRatio = gasUseEstimate.add(WETH_WRAP_GAS).mul(100).div(gasUseEstimate);
+
+  // multiply the original gasUseEstimate in quoteToken by the ratio
+  const newGasUseEstimateQuote = BigNumber.from(classicQuote.toJSON().gasUseEstimateQuote).mul(gasUseRatio).div(100);
+
+  // TODO: make sure this works for exact output
+  // subtract the new gasUseEstimateQuote from the original amountOut to get a new quoteGasAdjusted
+  return classicQuote.amountOut.sub(newGasUseEstimateQuote);
 }
