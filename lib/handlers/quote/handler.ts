@@ -80,7 +80,8 @@ export class QuoteHandler extends APIGLambdaHandler<
 
     log.info({ quotesTransformed: quotesTransformed }, 'quotesTransformed');
 
-    const bestQuote = await getBestQuote(quotesTransformed, requests.length > 1, log);
+    const uniswapXRequested = requests.filter((request) => request.routingType === RoutingType.DUTCH_LIMIT).length > 0;
+    const bestQuote = await getBestQuote(quotesTransformed, uniswapXRequested, log);
     if (!bestQuote) {
       return {
         statusCode: 404,
