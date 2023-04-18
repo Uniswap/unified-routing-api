@@ -72,6 +72,8 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON, log?: Logger): Qu
     return [];
   });
 
+  const offerer = (requests.find((r) => r.routingType === RoutingType.DUTCH_LIMIT)?.config as DutchLimitConfig)
+    ?.offerer;
   log?.info({
     eventType: 'UnifiedRoutingQuoteRequest',
     body: {
@@ -84,6 +86,8 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON, log?: Logger): Qu
       type: TradeType[info.type],
       configs: requests.map((r) => r.routingType).join(','),
       createdAt: currentTimestampInSeconds(),
+      // only log offerer if it's a dutch limit request
+      ...(offerer && { offerer: offerer }),
     },
   });
 
