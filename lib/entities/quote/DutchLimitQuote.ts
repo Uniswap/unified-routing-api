@@ -141,7 +141,6 @@ export class DutchLimitQuote implements Quote {
         startAmount: this.amountOut,
         endAmount: this.endAmountOut,
         recipient: this.request.config.offerer,
-        isFeeOutput: false,
       });
 
     if (this.filler) {

@@ -1710,10 +1710,10 @@
   resolved "https://registry.yarnpkg.com/@uniswap/default-token-list/-/default-token-list-9.3.0.tgz#2df724b0d2d73451af7676544d8b4f4e999bad00"
   integrity sha512-owiBfYspHJxbJuX5B8Ht4KfgmtBfs+xBVUxTY96ZKCmrGxR7FenxFWL58KEaI7N03htSx7/l3m5vy6fnqJF8Ag==
 
-"@uniswap/gouda-sdk@0.7.0":
-  version "0.7.0"
-  resolved "https://registry.yarnpkg.com/@uniswap/gouda-sdk/-/gouda-sdk-0.7.0.tgz#caaa14be2ca60ed3b7adef2a4cb2a8aa9eb4e09c"
-  integrity sha512-fUz97XrL0mzlHJwNn+8K0AbiCkYIyEakG8BrHPC+OXzxF1prpRobtQJwa8ZYPwuHkod+m7v7JQir310vga23Tw==
+"@uniswap/gouda-sdk@0.9.0":
+  version "0.9.0"
+  resolved "https://registry.yarnpkg.com/@uniswap/gouda-sdk/-/gouda-sdk-0.9.0.tgz#34557e2a1ff508b274fbe7dbc33af2d2f46a324c"
+  integrity sha512-eNAH+P0zdQMVQEEB2h/YNXnGPrcRgj+zmhIs+WJV44nOe81xPYdTtD37Kj14Xgw5jViP6h1Ow+DtiovDr+LDYw==
   dependencies:
     "@ethersproject/bytes" "^5.7.0"
     "@ethersproject/providers" "^5.7.0"
