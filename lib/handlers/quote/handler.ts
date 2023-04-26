@@ -9,8 +9,7 @@ import {
   Quote,
   QuoteJSON,
   QuoteRequest,
-  QuoteRequestBodyJSON,
-  RoutingType,
+  QuoteRequestBodyJSON
 } from '../../entities';
 import { DutchLimitQuote } from '../../entities/quote/DutchLimitQuote';
 import { QuotesByRoutingType } from '../../entities/quote/index';
@@ -18,6 +17,7 @@ import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
 import { ContainerInjected, QuoterByRoutingType } from './injector';
 import { PostQuoteRequestBodyJoi } from './schema';
+import { RoutingType } from '../../constants';
 
 export interface QuoteResponseJSON {
   routing: string;

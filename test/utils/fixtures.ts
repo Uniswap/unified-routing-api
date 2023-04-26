@@ -1,5 +1,5 @@
 import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
-import { NATIVE_ADDRESS } from '../../lib/constants';
+import { NATIVE_ADDRESS, RoutingType } from '../../lib/constants';
 
 import {
   ClassicQuoteDataJSON,
@@ -8,7 +8,6 @@ import {
   DutchLimitRequest,
   parseQuoteRequests,
   QuoteRequestBodyJSON,
-  RoutingType,
 } from '../../lib/entities';
 import { ClassicQuote, DutchLimitQuote, Quote } from '../../lib/entities/quote';
 import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, FILLER, OFFERER, TOKEN_IN, TOKEN_OUT } from '../constants';

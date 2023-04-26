@@ -3,18 +3,13 @@ import Logger from 'bunyan';
 import { BigNumber } from 'ethers';
 
 import { SUPPORTED_CHAINS } from '../../config/chains';
-import { DEFAULT_SLIPPAGE_TOLERANCE } from '../../constants';
+import { DEFAULT_SLIPPAGE_TOLERANCE, RoutingType } from '../../constants';
 import { currentTimestampInSeconds } from '../../util/time';
 import { ClassicConfig, ClassicConfigJSON, ClassicRequest } from './ClassicRequest';
 import { DutchLimitConfig, DutchLimitConfigJSON, DutchLimitRequest } from './DutchLimitRequest';
 
 export * from './ClassicRequest';
 export * from './DutchLimitRequest';
-
-export enum RoutingType {
-  CLASSIC = 'CLASSIC',
-  DUTCH_LIMIT = 'DUTCH_LIMIT',
-}
 
 export type RequestByRoutingType = { [routingType in RoutingType]?: QuoteRequest };
 

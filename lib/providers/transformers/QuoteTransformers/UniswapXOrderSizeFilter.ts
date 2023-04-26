@@ -3,7 +3,8 @@ import Logger from 'bunyan';
 import { BigNumber } from 'ethers';
 
 import { QuoteTransformer } from '..';
-import { ClassicQuoteDataJSON, Quote, QuoteRequest, RoutingType } from '../../../entities';
+import { ClassicQuoteDataJSON, Quote, QuoteRequest } from '../../../entities';
+import { RoutingType } from '../../../constants';
 
 // if the gas is greater than this proportion of the whole trade size
 // then we will not route the order

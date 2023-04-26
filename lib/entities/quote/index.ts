@@ -1,8 +1,9 @@
 import { DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
 import { BigNumber } from 'ethers';
 
-import { QuoteRequest, RoutingType } from '..';
+import { QuoteRequest } from '..';
 import { ClassicQuoteDataJSON } from './ClassicQuote';
+import { RoutingType } from '../../constants';
 
 export * from './ClassicQuote';
 export * from './DutchLimitQuote';

@@ -7,7 +7,8 @@ import { parseEther } from 'ethers/lib/utils';
 import { RequestTransformer } from '..';
 import { QuoteRequest } from '../../../entities';
 import { ClassicRequest } from '../../../entities/request/ClassicRequest';
-import { DutchLimitRequest, RequestByRoutingType, RoutingType } from '../../../entities/request/index';
+import { DutchLimitRequest, RequestByRoutingType } from '../../../entities/request/index';
+import { RoutingType } from '../../../constants';
 
 /*
  * adds a synthetic classic request to check if the output token has route back to ETH
