@@ -2,11 +2,11 @@ import { TradeType } from '@uniswap/sdk-core';
 import Logger from 'bunyan';
 import { BigNumber } from 'ethers';
 
+import { SUPPORTED_CHAINS } from '../../config/chains';
 import { DEFAULT_SLIPPAGE_TOLERANCE } from '../../constants';
 import { currentTimestampInSeconds } from '../../util/time';
 import { ClassicConfig, ClassicConfigJSON, ClassicRequest } from './ClassicRequest';
 import { DutchLimitConfig, DutchLimitConfigJSON, DutchLimitRequest } from './DutchLimitRequest';
-import { SUPPORTED_CHAINS } from '../../config/chains';
 
 export * from './ClassicRequest';
 export * from './DutchLimitRequest';
