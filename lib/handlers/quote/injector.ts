@@ -2,6 +2,7 @@ import { setGlobalLogger } from '@uniswap/smart-order-router';
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { default as bunyan, default as Logger } from 'bunyan';
 
+import { RoutingType } from '../../constants';
 import { QuoteRequestBodyJSON } from '../../entities';
 import { Quoter, RfqQuoter, RoutingApiQuoter } from '../../providers/quoters';
 import {
@@ -18,7 +19,6 @@ import {
 import { NoRouteBackToNativeFilter } from '../../providers/transformers/QuoteTransformers/NoRouteBackToNativeFilter';
 import { checkDefined } from '../../util/preconditions';
 import { ApiInjector, ApiRInj } from '../base/api-handler';
-import { RoutingType } from '../../constants';
 
 export type QuoterByRoutingType = {
   [key in RoutingType]?: Quoter[];

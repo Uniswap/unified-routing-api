@@ -3,9 +3,9 @@ import axios from 'axios';
 import Logger from 'bunyan';
 import querystring from 'querystring';
 
+import { RoutingType } from '../../constants';
 import { ClassicQuote, ClassicRequest, Quote } from '../../entities';
 import { Quoter, QuoterType } from './index';
-import { RoutingType } from '../../constants';
 
 export class RoutingApiQuoter implements Quoter {
   static readonly type: QuoterType.ROUTING_API;

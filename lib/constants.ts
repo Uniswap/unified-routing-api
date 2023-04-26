@@ -8,6 +8,6 @@ export const WETH_WRAP_GAS = 27938; // 27,938 warm deposit, 45,038 cold deposit
 export const DEFAULT_EXCLUSIVITY_OVERRIDE_BPS = BigNumber.from(30); // non-exclusive fillers must override price by this much
 
 export enum RoutingType {
-    CLASSIC = 'CLASSIC',
-    DUTCH_LIMIT = 'DUTCH_LIMIT',
+  CLASSIC = 'CLASSIC',
+  DUTCH_LIMIT = 'DUTCH_LIMIT',
 }

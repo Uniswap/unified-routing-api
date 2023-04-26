@@ -3,9 +3,9 @@ import axios from 'axios';
 import Logger from 'bunyan';
 import { BigNumber } from 'ethers';
 
+import { RoutingType } from '../../constants';
 import { DutchLimitQuote, DutchLimitRequest, Quote } from '../../entities';
 import { Quoter, QuoterType } from './index';
-import { RoutingType } from '../../constants';
 
 export class RfqQuoter implements Quoter {
   static readonly type: QuoterType.GOUDA_RFQ;

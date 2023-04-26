@@ -3,9 +3,9 @@ import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-ro
 import Logger from 'bunyan';
 
 import { QuoteTransformer } from '..';
+import { RoutingType } from '../../../constants';
 import { Quote, QuoteRequest, RequestByRoutingType } from '../../../entities';
 import { ClassicQuote } from '../../../entities/quote/ClassicQuote';
-import { RoutingType } from '../../../constants';
 
 export class NoRouteBackToNativeFilter implements QuoteTransformer {
   private log: Logger;

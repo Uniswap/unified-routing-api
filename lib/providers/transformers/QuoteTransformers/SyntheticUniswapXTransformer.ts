@@ -3,11 +3,11 @@ import Logger from 'bunyan';
 
 import { QuoteTransformer } from '..';
 import { SUPPORTED_CHAINS } from '../../../config/chains';
+import { RoutingType } from '../../../constants';
 import { DutchLimitQuote, Quote, QuoteRequest } from '../../../entities';
 import { ClassicQuote } from '../../../entities/quote/ClassicQuote';
 import { DutchLimitRequest } from '../../../entities/request/DutchLimitRequest';
 import { requestInfoEquals } from '../../../entities/request/index';
-import { RoutingType } from '../../../constants';
 
 // if UniswapX is requested, makes competitive UniswapX quotes
 // from routing-API classic quote data

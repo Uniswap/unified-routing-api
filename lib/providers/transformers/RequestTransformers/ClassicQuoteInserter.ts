@@ -2,10 +2,10 @@ import { Protocol } from '@uniswap/router-sdk';
 import Logger from 'bunyan';
 
 import { RequestTransformer } from '..';
+import { RoutingType } from '../../../constants';
 import { QuoteRequest, requestInfoEquals } from '../../../entities';
 import { ClassicRequest } from '../../../entities/request/ClassicRequest';
 import { RequestByRoutingType } from '../../../entities/request/index';
-import { RoutingType } from '../../../constants';
 
 /*
  * Adds a synthetic classic request if none given to compare against UniswapX RFQ quotes
