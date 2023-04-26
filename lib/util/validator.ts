@@ -54,6 +54,8 @@ export class FieldValidator {
 
   public static readonly slippageTolerance = Joi.number().min(0).max(20); // 20%
 
+  public static readonly exclusivityOverrideBps = Joi.number().min(0).max(10000); // 0 to 100%
+
   public static readonly deadline = Joi.number().greater(0).max(10800); // 180 mins, same as interface max;
 
   public static readonly minSplits = Joi.number().max(7);
@@ -86,7 +88,7 @@ export class FieldValidator {
   public static readonly dutchLimitConfig = Joi.object({
     routingType: FieldValidator.routingType.required(),
     offerer: FieldValidator.address.optional(),
-    exclusivePeriodSecs: FieldValidator.positiveNumber.optional(),
+    exclusivityOverrideBps: FieldValidator.positiveNumber.optional(),
     auctionPeriodSecs: FieldValidator.positiveNumber.optional(),
     slippageTolerance: FieldValidator.slippageTolerance.optional(),
   });
