@@ -1,4 +1,4 @@
-import { DutchLimitOrderBuilder, DutchLimitOrderInfoJSON, encodeExclusiveFillerData } from '@uniswap/gouda-sdk';
+import { DutchLimitOrderBuilder, DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
 import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber, ethers } from 'ethers';
 
@@ -123,7 +123,7 @@ export class DutchLimitQuote implements Quote {
     const orderBuilder = new DutchLimitOrderBuilder(this.chainId);
     const startTime = Math.floor(Date.now() / 1000);
     const nonce = this.nonce ?? this.generateRandomNonce();
-    const decayStartTime = startTime + this.request.config.exclusivePeriodSecs;
+    const decayStartTime = startTime;
 
     const builder = orderBuilder
       .startTime(decayStartTime)
@@ -144,7 +144,7 @@ export class DutchLimitQuote implements Quote {
       });
 
     if (this.filler) {
-      builder.validation(encodeExclusiveFillerData(this.filler, decayStartTime, this.chainId));
+      builder.exclusiveFiller(this.filler, BigNumber.from(this.request.config.exclusivityOverrideBps));
     }
 
     const order = builder.build();

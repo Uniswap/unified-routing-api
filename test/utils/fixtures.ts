@@ -41,7 +41,7 @@ export const QUOTE_REQUEST_BODY_MULTI = {
     {
       routingType: RoutingType.DUTCH_LIMIT,
       offerer: OFFERER,
-      exclusivePeriodSecs: 12,
+      exclusivityOverrideBps: 12,
       auctionPeriodSecs: 60,
     },
     {
@@ -76,7 +76,7 @@ export function makeDutchLimitRequest(overrides: Partial<QuoteRequestBodyJSON>):
       {
         routingType: RoutingType.DUTCH_LIMIT,
         offerer: OFFERER,
-        exclusivePeriodSecs: 12,
+        exclusivityOverrideBps: 12,
         auctionPeriodSecs: 60,
       },
     ],
@@ -98,7 +98,7 @@ export const QUOTE_REQUEST_MULTI = parseQuoteRequests({
     {
       routingType: RoutingType.DUTCH_LIMIT,
       offerer: OFFERER,
-      exclusivePeriodSecs: 12,
+      exclusivityOverrideBps: 12,
       auctionPeriodSecs: 60,
     },
     {
@@ -115,7 +115,7 @@ export const QUOTE_REQUEST_ETH_IN_MULTI = parseQuoteRequests({
     {
       routingType: RoutingType.DUTCH_LIMIT,
       offerer: OFFERER,
-      exclusivePeriodSecs: 12,
+      exclusivityOverrideBps: 12,
       auctionPeriodSecs: 60,
     },
     {
@@ -132,7 +132,7 @@ export const QUOTE_REQUEST_MULTI_EXACT_OUT = parseQuoteRequests({
     {
       routingType: RoutingType.DUTCH_LIMIT,
       offerer: OFFERER,
-      exclusivePeriodSecs: 12,
+      exclusivityOverrideBps: 12,
       auctionPeriodSecs: 60,
     },
     {
@@ -231,7 +231,12 @@ export const CLASSIC_QUOTE_EXACT_IN_LARGE = createClassicQuote(
 );
 export const CLASSIC_QUOTE_EXACT_IN_LARGE_GAS = createClassicQuote(
   // quote: 1 ETH, quoteGasAdjusted: 0.9 ETH, gasUseEstimate: 100000, gasUseEstimateQuote: 0.1 ETH
-  { quote: '10000000000000000000000', quoteGasAdjusted: '9000000000000000000000', gasUseEstimate: '100000', gasUseEstimateQuote: '1000000000000000000000' },
+  {
+    quote: '10000000000000000000000',
+    quoteGasAdjusted: '9000000000000000000000',
+    gasUseEstimate: '100000',
+    gasUseEstimateQuote: '1000000000000000000000',
+  },
   'EXACT_INPUT'
 );
 

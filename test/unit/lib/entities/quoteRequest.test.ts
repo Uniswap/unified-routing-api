@@ -4,7 +4,7 @@ import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, OFFERER, TOKEN_IN, TOKEN_OUT } fr
 const MOCK_DL_CONFIG_JSON = {
   routingType: RoutingType.DUTCH_LIMIT,
   offerer: OFFERER,
-  exclusivePeriodSecs: 24,
+  exclusivityOverrideBps: 24,
   auctionPeriodSecs: 60,
 };
 

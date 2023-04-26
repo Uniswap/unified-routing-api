@@ -68,12 +68,12 @@ describe('SyntheticUniswapXTransformer', () => {
       ]);
 
       expect(transformed.length).toEqual(3);
-      
+
       const quoteByRoutingType: QuoteByRoutingType = {};
       transformed.forEach((quote) => (quoteByRoutingType[quote.routingType] = quote));
 
       // No change to the RFQ quote
-      expect(transformed[0].amountOut).toEqual(DL_QUOTE_NATIVE_EXACT_IN_BETTER.amountOut)
+      expect(transformed[0].amountOut).toEqual(DL_QUOTE_NATIVE_EXACT_IN_BETTER.amountOut);
 
       const outStartAmount = applyWETHGasAdjustment(NATIVE_ADDRESS, CLASSIC_QUOTE_EXACT_IN_LARGE_GAS)
         .mul(DutchLimitQuote.improvementExactIn)
@@ -87,7 +87,7 @@ describe('SyntheticUniswapXTransformer', () => {
             endAmount: outEndAmount.toString(),
           },
         ],
-      })
+      });
     });
   });
 

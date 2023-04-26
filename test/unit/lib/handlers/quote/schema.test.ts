@@ -184,6 +184,20 @@ describe('Post quote request validation', () => {
     expect(error).toBeDefined();
   });
 
+  it('should reject invalid exclusivity', () => {
+    let { error } = PostQuoteRequestBodyJoi.validate({
+      ...BASE_REQUEST_BODY,
+      exclusivityOverrideBps: 10001,
+    });
+    expect(error).toBeDefined();
+
+    ({ error } = PostQuoteRequestBodyJoi.validate({
+      ...BASE_REQUEST_BODY,
+      exclusivityOverrideBps: -1,
+    }));
+    expect(error).toBeDefined();
+  });
+
   it('should reject invalid type', () => {
     const { error } = PostQuoteRequestBodyJoi.validate({
       ...BASE_REQUEST_BODY,

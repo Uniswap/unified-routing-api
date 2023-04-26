@@ -1,7 +1,7 @@
 import { QuoteRequest, QuoteRequestInfo, RoutingType } from '.';
 import {
   DEFAULT_AUCTION_PERIOD_SECS,
-  DEFAULT_EXCLUSIVE_PERIOD_SECS,
+  DEFAULT_EXCLUSIVITY_OVERRIDE_BPS,
   DEFAULT_SLIPPAGE_TOLERANCE,
   NATIVE_ADDRESS,
 } from '../../constants';
@@ -11,7 +11,7 @@ export * from './DutchLimitRequest';
 
 export interface DutchLimitConfig {
   offerer: string;
-  exclusivePeriodSecs: number;
+  exclusivityOverrideBps: number;
   auctionPeriodSecs: number;
 }
 
@@ -31,7 +31,7 @@ export class DutchLimitRequest implements QuoteRequest {
       },
       {
         offerer: body.offerer ?? NATIVE_ADDRESS,
-        exclusivePeriodSecs: body.exclusivePeriodSecs ?? DEFAULT_EXCLUSIVE_PERIOD_SECS,
+        exclusivityOverrideBps: body.exclusivityOverrideBps ?? DEFAULT_EXCLUSIVITY_OVERRIDE_BPS,
         auctionPeriodSecs: body.auctionPeriodSecs ?? DEFAULT_AUCTION_PERIOD_SECS,
       }
     );

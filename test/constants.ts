@@ -13,7 +13,7 @@ export const FILLER = '0x0000000000000000000000000000000000000000';
 export const DL_CONFIG = {
   routingType: RoutingType.DUTCH_LIMIT,
   offerer: OFFERER,
-  exclusivePeriodSecs: 24,
+  exclusivityOverrideBps: 24,
   auctionPeriodSecs: 60,
 };
 

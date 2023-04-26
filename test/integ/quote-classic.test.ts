@@ -1537,8 +1537,7 @@ describe('quote', function () {
 
               if (type == 'EXACT_INPUT') {
                 // We've swapped 10 ETH + gas costs
-                expect(tokenInBefore.subtract(tokenInAfter).greaterThan(parseAmount('1', Ether.onChain(1)))).to.be
-                  .true;
+                expect(tokenInBefore.subtract(tokenInAfter).greaterThan(parseAmount('1', Ether.onChain(1)))).to.be.true;
                 checkQuoteToken(tokenOutBefore, tokenOutAfter, CurrencyAmount.fromRawAmount(UNI_MAINNET, quote.quote));
               } else {
                 expect(tokenOutAfter.subtract(tokenOutBefore).toExact()).to.equal('100');

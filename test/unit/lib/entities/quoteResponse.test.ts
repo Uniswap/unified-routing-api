@@ -72,10 +72,8 @@ describe('QuoteResponse', () => {
       ],
     });
     const order = DutchLimitOrder.fromJSON(quote.toOrder(), quote.chainId);
-    const parsedValidation = parseValidation(order.info);
-    expect(parsedValidation.type).toEqual(ValidationType.ExclusiveFiller);
-    expect(parsedValidation.data!.filler).toEqual(FILLER);
-    expect(parsedValidation.data!.lastExclusiveTimestamp).toBeGreaterThan(Date.now() / 1000);
+    expect(order.info.exclusiveFiller).toEqual(FILLER);
+    expect(order.info.exclusivityOverrideBps.toString()).toEqual('12');
 
     expect(BigNumber.from(quote.toOrder().nonce).gt(0)).toBeTruthy();
   });
