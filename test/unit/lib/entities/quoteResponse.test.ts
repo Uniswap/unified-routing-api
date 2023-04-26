@@ -68,7 +68,6 @@ describe('QuoteResponse', () => {
           startAmount: AMOUNT_IN,
           endAmount: BigNumber.from(AMOUNT_IN).mul(995).div(1000).toString(), // default 5% slippage
           recipient: OFFERER,
-          isFeeOutput: false,
         },
       ],
     });
@@ -96,7 +95,6 @@ describe('QuoteResponse', () => {
           startAmount: AMOUNT_IN,
           endAmount: BigNumber.from(AMOUNT_IN).mul(995).div(1000).toString(), // default 0.5% slippage
           recipient: OFFERER,
-          isFeeOutput: false,
         },
       ],
     });
