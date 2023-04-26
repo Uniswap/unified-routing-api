@@ -19,5 +19,5 @@ export const SUPPORTED_CHAINS = {
     ChainId.CELO,
     ChainId.CELO_ALFAJORES,
   ],
-  [RoutingType.DUTCH_LIMIT]: [ChainId.MAINNET, ChainId.GÖRLI],
+  [RoutingType.DUTCH_LIMIT]: [ChainId.MAINNET, ChainId.POLYGON, ChainId.GÖRLI],
 };
