@@ -4,8 +4,8 @@ import { BigNumber, ethers } from 'ethers';
 
 import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteJSON } from '.';
-import { DutchLimitRequest, RoutingType } from '..';
-import { HUNDRED_PERCENT, NATIVE_ADDRESS, WETH_WRAP_GAS } from '../../constants';
+import { DutchLimitRequest } from '..';
+import { HUNDRED_PERCENT, NATIVE_ADDRESS, RoutingType, WETH_WRAP_GAS } from '../../constants';
 import { currentTimestampInSeconds } from '../../util/time';
 import { ClassicQuote } from './ClassicQuote';
 import { LogJSON } from './index';

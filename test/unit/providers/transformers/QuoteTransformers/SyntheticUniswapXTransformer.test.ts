@@ -1,7 +1,7 @@
 import Logger from 'bunyan';
 
-import { HUNDRED_PERCENT, NATIVE_ADDRESS } from '../../../../../lib/constants';
-import { applyWETHGasAdjustment, DutchLimitQuote, QuoteByRoutingType, RoutingType } from '../../../../../lib/entities';
+import { HUNDRED_PERCENT, NATIVE_ADDRESS, RoutingType } from '../../../../../lib/constants';
+import { applyWETHGasAdjustment, DutchLimitQuote, QuoteByRoutingType } from '../../../../../lib/entities';
 import { SyntheticUniswapXTransformer } from '../../../../../lib/providers/transformers';
 import { TOKEN_IN } from '../../../../constants';
 import {

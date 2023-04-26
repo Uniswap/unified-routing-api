@@ -3,7 +3,8 @@ import { MethodParameters } from '@uniswap/smart-order-router';
 import { BigNumber } from 'ethers';
 
 import { v4 as uuidv4 } from 'uuid';
-import { Quote, QuoteRequest, RoutingType } from '..';
+import { Quote, QuoteRequest } from '..';
+import { RoutingType } from '../../constants';
 import { currentTimestampInSeconds } from '../../util/time';
 import { LogJSON } from './index';
 

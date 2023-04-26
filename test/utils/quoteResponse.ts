@@ -1,3 +1,4 @@
+import { RoutingType } from '../../lib/constants';
 import {
   ClassicQuote,
   ClassicQuoteDataJSON,
@@ -6,7 +7,6 @@ import {
   DutchLimitRequest,
   Quote,
   QuoteRequest,
-  RoutingType,
 } from '../../lib/entities';
 
 type ReceivedQuoteData = DutchLimitQuoteJSON | ClassicQuoteDataJSON;

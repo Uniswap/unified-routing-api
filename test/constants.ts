@@ -1,5 +1,5 @@
 import { getAddress } from 'ethers/lib/utils';
-import { RoutingType } from '../lib/entities';
+import { RoutingType } from '../lib/constants';
 
 export const CHAIN_IN_ID = 1;
 export const CHAIN_OUT_ID = 1;

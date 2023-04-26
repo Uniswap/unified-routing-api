@@ -5,9 +5,10 @@ import Logger from 'bunyan';
 import { parseEther } from 'ethers/lib/utils';
 
 import { RequestTransformer } from '..';
+import { RoutingType } from '../../../constants';
 import { QuoteRequest } from '../../../entities';
 import { ClassicRequest } from '../../../entities/request/ClassicRequest';
-import { DutchLimitRequest, RequestByRoutingType, RoutingType } from '../../../entities/request/index';
+import { DutchLimitRequest, RequestByRoutingType } from '../../../entities/request/index';
 
 /*
  * adds a synthetic classic request to check if the output token has route back to ETH

@@ -1,4 +1,5 @@
-import { ClassicRequest, DutchLimitRequest, parseQuoteRequests, RoutingType } from '../../../../lib/entities';
+import { RoutingType } from '../../../../lib/constants';
+import { ClassicRequest, DutchLimitRequest, parseQuoteRequests } from '../../../../lib/entities';
 import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
 
 const MOCK_DL_CONFIG_JSON = {
