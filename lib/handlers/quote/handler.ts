@@ -4,7 +4,15 @@ import Joi from 'joi';
 
 import { v4 as uuidv4 } from 'uuid';
 import { RoutingType } from '../../constants';
-import { ClassicQuote, parseQuoteRequests, Quote, QuoteJSON, QuoteRequest, QuoteRequestBodyJSON } from '../../entities';
+import {
+  ClassicQuote,
+  parseQuoteRequests,
+  prepareQuoteRequests,
+  Quote,
+  QuoteJSON,
+  QuoteRequest,
+  QuoteRequestBodyJSON,
+} from '../../entities';
 import { DutchLimitQuote } from '../../entities/quote/DutchLimitQuote';
 import { QuotesByRoutingType } from '../../entities/quote/index';
 import { APIGLambdaHandler } from '../base';
@@ -39,7 +47,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     };
 
     log.info({ requestBody: request }, 'request');
-    const requests = parseQuoteRequests(request, log);
+    const requests = parseQuoteRequests(await prepareQuoteRequests(request), log);
     const requestsTransformed = requestTransformer.transform(requests);
     const quotesByRequestType: QuotesByRoutingType = {};
     const quotes = await getQuotes(quoters, requestsTransformed, quotesByRequestType);

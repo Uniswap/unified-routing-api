@@ -74,7 +74,7 @@ const checkQuoteToken = (
   expect(percentDiff.lessThan(new Fraction(parseInt(SLIPPAGE), 100))).to.be.true;
 };
 
-describe('quoteGouda', function () {
+describe.only('quoteGouda', function () {
   // Help with test flakiness by retrying.
   this.retries(0);
 
@@ -242,6 +242,52 @@ describe('quoteGouda', function () {
               errorCode: 'QUOTE_ERROR',
             },
           });
+        });
+
+        it(`erc20 -> erc20 by name`, async () => {
+          const quoteReq: QuoteRequestBodyJSON = {
+            requestId: 'id',
+            tokenIn: 'USDC',
+            tokenInChainId: 1,
+            tokenOut: 'USDT',
+            tokenOutChainId: 1,
+            amount: await getAmount(1, type, 'USDC', 'USDT', '100'),
+            type,
+            slippageTolerance: SLIPPAGE,
+            configs: [
+              {
+                routingType: RoutingType.DUTCH_LIMIT,
+                offerer: alice.address,
+              },
+            ],
+          };
+
+          const response: AxiosResponse<QuoteResponseJSON> = await axios.post<QuoteResponseJSON>(`${API}`, quoteReq);
+          const {
+            data: { quote },
+            status,
+          } = response;
+
+          const order = new DutchLimitOrder(quote as any, 1);
+          expect(status).to.equal(200);
+
+          expect(order.info.offerer).to.equal(alice.address);
+          expect(order.info.outputs.length).to.equal(1);
+          expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.greaterThan(90000000);
+          expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.lessThan(110000000);
+
+          const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+            order,
+            USDC_MAINNET,
+            USDT_MAINNET
+          );
+
+          expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('100');
+          checkQuoteToken(
+            tokenOutBefore,
+            tokenOutAfter,
+            CurrencyAmount.fromRawAmount(USDT_MAINNET, order.info.outputs[0].startAmount.toString())
+          );
         });
 
         it(`Params: invalid exclusivity override`, async () => {
