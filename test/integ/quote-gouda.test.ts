@@ -169,7 +169,7 @@ describe('quoteGouda', function () {
 
   // TODO: add exactOutput when we support it
   for (const type of ['EXACT_INPUT']) {
-    describe(`${ID_TO_NETWORK_NAME(1)} ${type} 2xx`, () => {
+    describe.only(`${ID_TO_NETWORK_NAME(1)} ${type} 2xx`, () => {
       describe(`+ Execute Swap`, () => {
         it(`erc20 -> erc20`, async () => {
           const quoteReq: QuoteRequestBodyJSON = {
@@ -215,6 +215,80 @@ describe('quoteGouda', function () {
             tokenOutAfter,
             CurrencyAmount.fromRawAmount(USDT_MAINNET, order.info.outputs[0].startAmount.toString())
           );
+        });
+
+        it(`erc20 -> erc20 by name`, async () => {
+          const quoteReq: QuoteRequestBodyJSON = {
+            requestId: 'id',
+            tokenIn: 'USDC',
+            tokenInChainId: 1,
+            tokenOut: 'USDT',
+            tokenOutChainId: 1,
+            amount: await getAmount(1, type, 'USDC', 'USDT', '100'),
+            type,
+            slippageTolerance: SLIPPAGE,
+            configs: [
+              {
+                routingType: RoutingType.DUTCH_LIMIT,
+                offerer: alice.address,
+              },
+            ],
+          };
+
+          const response: AxiosResponse<QuoteResponseJSON> = await axios.post<QuoteResponseJSON>(`${API}`, quoteReq);
+
+          const {
+            data: { quote },
+            status,
+          } = response;
+
+          const order = new DutchLimitOrder(quote as any, 1);
+          expect(status).to.equal(200);
+
+          expect(order.info.offerer).to.equal(alice.address);
+          expect(order.info.outputs.length).to.equal(1);
+          expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.greaterThan(90000000);
+          expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.lessThan(110000000);
+
+          const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+            order,
+            USDC_MAINNET,
+            USDT_MAINNET
+          );
+
+          expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('100');
+          checkQuoteToken(
+            tokenOutBefore,
+            tokenOutAfter,
+            CurrencyAmount.fromRawAmount(USDT_MAINNET, order.info.outputs[0].startAmount.toString())
+          );
+        });
+
+        it(`Unknown symbol`, async () => {
+          const quoteReq: QuoteRequestBodyJSON = {
+            requestId: 'id',
+            tokenIn: 'ASDF',
+            tokenInChainId: 1,
+            tokenOut: 'USDT',
+            tokenOutChainId: 1,
+            amount: await getAmount(1, type, 'USDC', 'USDT', '100'),
+            type,
+            slippageTolerance: SLIPPAGE,
+            configs: [
+              {
+                routingType: RoutingType.DUTCH_LIMIT,
+                offerer: alice.address,
+              },
+            ],
+          };
+
+          await callAndExpectFail(quoteReq, {
+            status: 400,
+            data: {
+              detail: 'Could not find token with symbol ASDF',
+              errorCode: 'VALIDATION_ERROR',
+            },
+          });
         });
 
         it(`Fails on small size`, async () => {

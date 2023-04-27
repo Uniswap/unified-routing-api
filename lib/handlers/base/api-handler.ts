@@ -7,6 +7,7 @@ import {
 import { default as bunyan, default as Logger } from 'bunyan';
 import Joi from 'joi';
 
+import { ValidationError } from '../../util/errors';
 import { BaseHandleRequestParams, BaseInjector, BaseLambdaHandler, BaseRInj } from './base';
 
 const INTERNAL_ERROR = (id?: string) => {
@@ -179,6 +180,10 @@ export abstract class APIGLambdaHandler<
         }
       } catch (err) {
         log.error({ err }, 'Unexpected error in handler');
+        if (err instanceof ValidationError) {
+          return err.toJSON(id);
+        }
+
         return INTERNAL_ERROR(id);
       }
 
