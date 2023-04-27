@@ -74,7 +74,7 @@ const checkQuoteToken = (
   expect(percentDiff.lessThan(new Fraction(parseInt(SLIPPAGE), 100))).to.be.true;
 };
 
-describe.only('quoteGouda', function () {
+describe('quoteGouda', function () {
   // Help with test flakiness by retrying.
   this.retries(0);
 

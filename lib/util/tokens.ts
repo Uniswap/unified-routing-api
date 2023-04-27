@@ -14,6 +14,11 @@ export const getAddress = async (id: ChainId, symbolOrAddress: string): Promise<
   } catch {
     // if invalid, try to parse as symbol
     const tokenListProvider = getTokenListProvider(id);
-    return (await tokenListProvider.getTokenBySymbol(symbolOrAddress))!.address;
+    const token = await tokenListProvider.getTokenBySymbol(symbolOrAddress);
+    // if the token is not defined then throw
+    if (token === undefined) {
+      throw new Error(`Could not find token with symbol ${symbolOrAddress}`);
+    }
+    return token.address;
   }
 };
