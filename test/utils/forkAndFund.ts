@@ -41,6 +41,15 @@ export const resetAndFundAtBlock = async (
     ],
   });
 
+  await fund(alice, currencyAmounts);
+
+  return alice;
+};
+
+export const fund = async (
+  alice: SignerWithAddress,
+  currencyAmounts: CurrencyAmount<Currency>[]
+): Promise<SignerWithAddress> => {
   for (const whale of WHALES) {
     await hre.network.provider.request({
       method: 'hardhat_impersonateAccount',

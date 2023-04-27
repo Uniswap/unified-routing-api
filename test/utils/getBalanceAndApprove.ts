@@ -1,7 +1,9 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { MaxAllowanceExpiration, MaxAllowanceTransferAmount } from '@uniswap/permit2-sdk';
 import { Currency, CurrencyAmount, Token } from '@uniswap/sdk-core';
+import { PERMIT2_ADDRESS } from '@uniswap/universal-router-sdk';
 import { constants } from 'ethers';
-import { Erc20 } from '../../lib/types/ext/Erc20';
+import { Erc20, Permit2__factory } from '../../lib/types/ext';
 import { Erc20__factory } from '../../lib/types/ext/factories/Erc20__factory';
 
 export const getBalance = async (alice: SignerWithAddress, currency: Currency): Promise<CurrencyAmount<Currency>> => {
@@ -37,6 +39,21 @@ export const getBalanceAndApprove = async (
       await (await aliceTokenIn.approve(approveTarget, 0)).wait();
     }
     await (await aliceTokenIn.approve(approveTarget, constants.MaxUint256)).wait();
+  }
+
+  return getBalance(alice, currency);
+};
+
+export const getBalanceAndApprovePermit2 = async (
+  alice: SignerWithAddress,
+  approveTarget: string,
+  currency: Currency
+): Promise<CurrencyAmount<Currency>> => {
+  const permit2 = Permit2__factory.connect(PERMIT2_ADDRESS, alice);
+  if (currency.isToken) {
+    await (
+      await permit2.approve(currency.address, approveTarget, MaxAllowanceTransferAmount, MaxAllowanceExpiration)
+    ).wait();
   }
 
   return getBalance(alice, currency);
