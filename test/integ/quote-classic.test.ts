@@ -31,6 +31,7 @@ import { BigNumber, providers, Wallet } from 'ethers';
 import hre from 'hardhat';
 import _ from 'lodash';
 import { SUPPORTED_CHAINS } from '../../lib/config/chains';
+import { RoutingType } from '../../lib/constants';
 import { ClassicQuoteDataJSON } from '../../lib/entities/quote';
 import { QuoteRequestBodyJSON } from '../../lib/entities/request';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
@@ -38,7 +39,6 @@ import { Permit2__factory } from '../../lib/types/ext';
 import { resetAndFundAtBlock } from '../utils/forkAndFund';
 import { getBalance, getBalanceAndApprove } from '../utils/getBalanceAndApprove';
 import { DAI_ON, getAmount, getAmountFromToken, UNI_MAINNET, USDC_ON, USDT_ON, WNATIVE_ON } from '../utils/tokens';
-import { RoutingType } from '../../lib/constants';
 
 const { ethers } = hre;
 
