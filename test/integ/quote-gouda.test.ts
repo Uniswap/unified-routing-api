@@ -391,7 +391,7 @@ describe('quoteGouda', function () {
           );
         });
 
-        it(`stable -> no liq token; should return no route`, async () => {
+        it(`stable -> no liq token; should return no quote`, async () => {
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
             tokenIn: USDC_MAINNET.address,
