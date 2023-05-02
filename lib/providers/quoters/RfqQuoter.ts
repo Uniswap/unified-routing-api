@@ -16,9 +16,6 @@ export class RfqQuoter implements Quoter {
   }
 
   async quote(request: DutchLimitRequest): Promise<Quote | null> {
-    this.log.info(request, 'quoteRequest');
-    this.log.info(this.rfqUrl, 'rfqUrl');
-
     if (request.routingType !== RoutingType.DUTCH_LIMIT) {
       this.log.error(`Invalid routing config type: ${request.routingType}`);
       return null;

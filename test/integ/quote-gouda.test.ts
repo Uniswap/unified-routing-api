@@ -44,6 +44,8 @@ const API = `${process.env.UNISWAP_API!}quote`;
 const SLIPPAGE = '5';
 
 const axios = axiosStatic.create();
+axios.defaults.timeout = 10000;
+
 axiosRetry(axios, {
   retries: 10,
   retryCondition: (err) => err.response?.status == 429,
@@ -171,14 +173,14 @@ describe('quoteGouda', function () {
   for (const type of ['EXACT_INPUT']) {
     describe.only(`${ID_TO_NETWORK_NAME(1)} ${type} 2xx`, () => {
       describe(`+ Execute Swap`, () => {
-        it(`erc20 -> erc20`, async () => {
+        it(`erc20 -> erc20, large trade`, async () => {
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
             tokenIn: USDC_MAINNET.address,
             tokenInChainId: 1,
             tokenOut: USDT_MAINNET.address,
             tokenOutChainId: 1,
-            amount: await getAmount(1, type, 'USDC', 'USDT', '100'),
+            amount: await getAmount(1, type, 'USDC', 'USDT', '10000'),
             type,
             slippageTolerance: SLIPPAGE,
             configs: [
@@ -200,8 +202,8 @@ describe('quoteGouda', function () {
 
           expect(order.info.offerer).to.equal(alice.address);
           expect(order.info.outputs.length).to.equal(1);
-          expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.greaterThan(90000000);
-          expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.lessThan(110000000);
+          expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.greaterThan(9000000000);
+          expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.lessThan(11000000000);
 
           const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
             order,
@@ -209,7 +211,7 @@ describe('quoteGouda', function () {
             USDT_MAINNET
           );
 
-          expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('100');
+          expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('10000');
           checkQuoteToken(
             tokenOutBefore,
             tokenOutAfter,
@@ -217,14 +219,14 @@ describe('quoteGouda', function () {
           );
         });
 
-        it(`erc20 -> erc20 by name`, async () => {
+        it(`erc20 -> erc20 by name, large trade`, async () => {
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
             tokenIn: 'USDC',
             tokenInChainId: 1,
             tokenOut: 'USDT',
             tokenOutChainId: 1,
-            amount: await getAmount(1, type, 'USDC', 'USDT', '100'),
+            amount: await getAmount(1, type, 'USDC', 'USDT', '10000'),
             type,
             slippageTolerance: SLIPPAGE,
             configs: [
@@ -247,8 +249,8 @@ describe('quoteGouda', function () {
 
           expect(order.info.offerer).to.equal(alice.address);
           expect(order.info.outputs.length).to.equal(1);
-          expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.greaterThan(90000000);
-          expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.lessThan(110000000);
+          expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.greaterThan(9000000000);
+          expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.lessThan(11000000000);
 
           const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
             order,
@@ -256,7 +258,7 @@ describe('quoteGouda', function () {
             USDT_MAINNET
           );
 
-          expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('100');
+          expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('10000');
           checkQuoteToken(
             tokenOutBefore,
             tokenOutAfter,
