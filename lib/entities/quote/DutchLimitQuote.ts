@@ -5,7 +5,14 @@ import { BigNumber, ethers } from 'ethers';
 import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteJSON } from '.';
 import { DutchLimitRequest } from '..';
-import { HUNDRED_PERCENT, NATIVE_ADDRESS, RoutingType, WETH_WRAP_GAS } from '../../constants';
+import {
+  GOUDA_BASE_GAS,
+  HUNDRED_PERCENT,
+  NATIVE_ADDRESS,
+  RoutingType,
+  WETH_UNWRAP_GAS,
+  WETH_WRAP_GAS,
+} from '../../constants';
 import { currentTimestampInSeconds } from '../../util/time';
 import { ClassicQuote } from './ClassicQuote';
 import { LogJSON } from './index';
@@ -75,41 +82,21 @@ export class DutchLimitQuote implements Quote {
   }
 
   public static fromClassicQuote(request: DutchLimitRequest, quote: ClassicQuote): DutchLimitQuote {
-    if (request.info.type === TradeType.EXACT_INPUT) {
-      return new DutchLimitQuote(
-        quote.createdAt,
-        request,
-        request.info.tokenInChainId,
-        request.info.requestId,
-        uuidv4(), // synthetic quote doesn't receive a quoteId from RFQ api, so generate one
-        request.info.tokenIn,
-        request.info.amount, // fixed amountIn
-        quote.request.info.tokenOut,
-        applyWETHGasAdjustment(request.info.tokenIn, quote)
-          .mul(DutchLimitQuote.improvementExactIn)
-          .div(HUNDRED_PERCENT),
-        request.config.offerer,
-        '', // synthetic quote has no filler
-        undefined // synthetic quote has no nonce
-      );
-    } else {
-      return new DutchLimitQuote(
-        quote.createdAt,
-        request,
-        request.info.tokenInChainId,
-        request.info.requestId,
-        uuidv4(), // synthetic quote doesn't receive a quoteId from RFQ api, so generate one
-        request.info.tokenIn,
-        applyWETHGasAdjustment(request.info.tokenOut, quote)
-          .mul(DutchLimitQuote.improvementExactOut)
-          .div(HUNDRED_PERCENT),
-        quote.request.info.tokenOut,
-        request.info.amount, // fixed amountOut
-        request.config.offerer,
-        '', // synthetic quote has no filler
-        undefined // synthetic quote has no nonce
-      );
-    }
+    const { amountIn, amountOut } = applyGasAdjustment(quote);
+    return new DutchLimitQuote(
+      quote.createdAt,
+      request,
+      request.info.tokenInChainId,
+      request.info.requestId,
+      uuidv4(), // synthetic quote doesn't receive a quoteId from RFQ api, so generate one
+      request.info.tokenIn,
+      amountIn,
+      quote.request.info.tokenOut,
+      amountOut,
+      request.config.offerer,
+      '', // synthetic quote has no filler
+      undefined // synthetic quote has no nonce
+    );
   }
 
   public toJSON(): QuoteJSON {
@@ -191,21 +178,58 @@ export class DutchLimitQuote implements Quote {
   }
 }
 
-// Returns a new quoteGasAdjusted taking into account the gas used to wrap ETH
-// Can't get tokenIn/tokenOut from classicQuote because it's auto convered to WETH by routing-api
-export function applyWETHGasAdjustment(token: string, classicQuote: ClassicQuote): BigNumber {
-  const needToWrapUnwrap = token == NATIVE_ADDRESS;
-  if (!needToWrapUnwrap) {
-    return classicQuote.amountOutGasAdjusted;
-  }
+// Calculates the gas adjustment for the given quote if processed through Gouda
+export function applyGasAdjustment(classicQuote: ClassicQuote): { amountIn: BigNumber; amountOut: BigNumber } {
+  const info = classicQuote.request.info;
+  const gasAdjustment = getGasAdjustment(classicQuote);
+
   // get ratio of gas used to gas used with WETH wrap
   const gasUseEstimate = BigNumber.from(classicQuote.toJSON().gasUseEstimate);
-  const gasUseRatio = gasUseEstimate.add(WETH_WRAP_GAS).mul(100).div(gasUseEstimate);
+  const gasUseRatio = gasUseEstimate.add(gasAdjustment).mul(100).div(gasUseEstimate);
 
   // multiply the original gasUseEstimate in quoteToken by the ratio
   const newGasUseEstimateQuote = BigNumber.from(classicQuote.toJSON().gasUseEstimateQuote).mul(gasUseRatio).div(100);
 
-  // TODO: make sure this works for exact output
-  // subtract the new gasUseEstimateQuote from the original amountOut to get a new quoteGasAdjusted
-  return classicQuote.amountOut.sub(newGasUseEstimateQuote);
+  if (info.type === TradeType.EXACT_INPUT) {
+    const amountOut = newGasUseEstimateQuote.gt(classicQuote.amountOut)
+      ? BigNumber.from(0)
+      : classicQuote.amountOut.sub(newGasUseEstimateQuote).mul(DutchLimitQuote.improvementExactIn).div(HUNDRED_PERCENT);
+    return {
+      amountIn: info.amount,
+      amountOut: amountOut.lt(0) ? BigNumber.from(0) : amountOut,
+    };
+  } else {
+    return {
+      amountIn: classicQuote.amountIn
+        .add(newGasUseEstimateQuote)
+        .mul(DutchLimitQuote.improvementExactOut)
+        .div(HUNDRED_PERCENT),
+      amountOut: info.amount,
+    };
+  }
+}
+
+// Returns the number of gas units extra required to execute this quote through Gouda
+export function getGasAdjustment(classicQuote: ClassicQuote): BigNumber {
+  const wethAdjustment = getWETHGasAdjustment(classicQuote);
+  return wethAdjustment.add(GOUDA_BASE_GAS);
+}
+
+// Returns the number of gas units to wrap ETH if required
+export function getWETHGasAdjustment(quote: ClassicQuote): BigNumber {
+  const info = quote.request.info;
+  let result = BigNumber.from(0);
+
+  // gouda does not naturally support ETH input, but user still has to wrap it
+  // so should be considered in the quote pricing
+  if (info.tokenIn === NATIVE_ADDRESS) {
+    result = result.add(WETH_WRAP_GAS);
+  }
+
+  // fill contract must unwrap WETH output tokens
+  if (info.tokenOut === NATIVE_ADDRESS) {
+    result = result.add(WETH_UNWRAP_GAS);
+  }
+
+  return result;
 }
