@@ -191,21 +191,19 @@ export function applyGasAdjustment(classicQuote: ClassicQuote): { amountIn: BigN
   const newGasUseEstimateQuote = BigNumber.from(classicQuote.toJSON().gasUseEstimateQuote).mul(gasUseRatio).div(100);
 
   if (info.type === TradeType.EXACT_INPUT) {
-    const amountOut = classicQuote.amountOut
-      .sub(newGasUseEstimateQuote)
-      .mul(DutchLimitQuote.improvementExactIn)
-      .div(HUNDRED_PERCENT);
+    const amountOut = newGasUseEstimateQuote.gt(classicQuote.amountOut)
+      ? BigNumber.from(0)
+      : classicQuote.amountOut.sub(newGasUseEstimateQuote).mul(DutchLimitQuote.improvementExactIn).div(HUNDRED_PERCENT);
     return {
       amountIn: info.amount,
       amountOut: amountOut.lt(0) ? BigNumber.from(0) : amountOut,
     };
   } else {
-    const amountIn = classicQuote.amountIn
-      .add(newGasUseEstimateQuote)
-      .mul(DutchLimitQuote.improvementExactOut)
-      .div(HUNDRED_PERCENT);
     return {
-      amountIn: amountIn.lt(0) ? BigNumber.from(0) : amountIn,
+      amountIn: classicQuote.amountIn
+        .add(newGasUseEstimateQuote)
+        .mul(DutchLimitQuote.improvementExactOut)
+        .div(HUNDRED_PERCENT),
       amountOut: info.amount,
     };
   }
