@@ -239,6 +239,19 @@ export const CLASSIC_QUOTE_EXACT_IN_LARGE_GAS = createClassicQuote(
   'EXACT_INPUT'
 );
 
+export const CLASSIC_QUOTE_EXACT_IN_NATIVE = buildQuoteResponse(
+  Object.assign({}, CLASSIC_QUOTE_DATA, {
+    quote: {
+      ...CLASSIC_QUOTE_DATA.quote,
+      quote: '10000000000000000000000',
+      quoteGasAdjusted: '9000000000000000000000',
+      gasUseEstimate: '100000',
+      gasUseEstimateQuote: '1000000000000000000000',
+    },
+  }),
+  makeClassicRequest({ type: 'EXACT_INPUT', tokenIn: NATIVE_ADDRESS, tokenOut: TOKEN_IN })
+);
+
 export const CLASSIC_QUOTE_EXACT_OUT_BETTER = createClassicQuote({ quote: '1', quoteGasAdjusted: '1' }, 'EXACT_OUTPUT');
 export const CLASSIC_QUOTE_EXACT_OUT_WORSE = createClassicQuote({ quote: '2', quoteGasAdjusted: '2' }, 'EXACT_OUTPUT');
 export const CLASSIC_QUOTE_EXACT_OUT_LARGE = createClassicQuote(
