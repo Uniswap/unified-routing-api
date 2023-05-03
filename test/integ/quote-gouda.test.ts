@@ -17,8 +17,10 @@ import axiosRetry from 'axios-retry';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import chaiSubset from 'chai-subset';
+import { BigNumber } from 'ethers';
 import hre from 'hardhat';
 import _ from 'lodash';
+import qs from 'qs';
 import { RoutingType } from '../../lib/constants';
 import { ClassicQuoteDataJSON } from '../../lib/entities/quote';
 import { QuoteRequestBodyJSON } from '../../lib/entities/request';
@@ -26,6 +28,7 @@ import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { ExclusiveDutchLimitOrderReactor__factory } from '../../lib/types/ext';
 import { fund, resetAndFundAtBlock } from '../utils/forkAndFund';
 import { getBalance, getBalanceAndApprove, getBalanceAndApprovePermit2 } from '../utils/getBalanceAndApprove';
+import { RoutingApiQuoteResponse } from '../utils/quoteResponse';
 import { getAmount } from '../utils/tokens';
 
 const { ethers } = hre;
@@ -34,17 +37,19 @@ chai.use(chaiAsPromised);
 chai.use(chaiSubset);
 
 const DIRECT_TAKER = '0x0000000000000000000000000000000000000001';
+const NO_LIQ_TOKEN = '0x69b148395Ce0015C13e36BFfBAd63f49EF874E03';
 
-if (!process.env.UNISWAP_API || !process.env.ARCHIVE_NODE_RPC) {
-  throw new Error('Must set UNISWAP_API and ARCHIVE_NODE_RPC env variables for integ tests. See README');
+if (!process.env.UNISWAP_API || !process.env.ARCHIVE_NODE_RPC || !process.env.ROUTING_API) {
+  throw new Error('Must set [UNISWAP_API, ARCHIVE_NODE_RPC, ROUTING_API] env variables for integ tests. See README');
 }
 
 const API = `${process.env.UNISWAP_API!}quote`;
+const ROUTING_API = `${process.env.ROUTING_API!}quote`;
 
 const SLIPPAGE = '5';
 
 const axios = axiosStatic.create();
-axios.defaults.timeout = 10000;
+axios.defaults.timeout = 20000;
 
 axiosRetry(axios, {
   retries: 10,
@@ -173,7 +178,33 @@ describe('quoteGouda', function () {
   for (const type of ['EXACT_INPUT']) {
     describe.only(`${ID_TO_NETWORK_NAME(1)} ${type} 2xx`, () => {
       describe(`+ Execute Swap`, () => {
-        it(`erc20 -> erc20, large trade`, async () => {
+        it(`stable -> stable, tiny trade should be filterd out due to gas`, async () => {
+          const quoteReq: QuoteRequestBodyJSON = {
+            requestId: 'id',
+            tokenIn: USDC_MAINNET.address,
+            tokenInChainId: 1,
+            tokenOut: USDT_MAINNET.address,
+            tokenOutChainId: 1,
+            amount: await getAmount(1, type, 'USDC', 'USDT', '0.1'),
+            type,
+            slippageTolerance: SLIPPAGE,
+            configs: [
+              {
+                routingType: RoutingType.DUTCH_LIMIT,
+                offerer: alice.address,
+              },
+            ],
+          };
+          await callAndExpectFail(quoteReq, {
+            status: 404,
+            data: {
+              detail: 'No quotes available',
+              errorCode: 'QUOTE_ERROR',
+            },
+          });
+        });
+
+        it(`stable -> stable, large trade should return valid quote`, async () => {
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
             tokenIn: USDC_MAINNET.address,
@@ -219,7 +250,34 @@ describe('quoteGouda', function () {
           );
         });
 
-        it(`erc20 -> erc20 by name, large trade`, async () => {
+        it(`stable -> stable by name, tiny trade should be filtered out due to gas`, async () => {
+          const quoteReq: QuoteRequestBodyJSON = {
+            requestId: 'id',
+            tokenIn: 'USDC',
+            tokenInChainId: 1,
+            tokenOut: 'USDT',
+            tokenOutChainId: 1,
+            amount: await getAmount(1, type, 'USDC', 'FOO', '100'),
+            type,
+            slippageTolerance: SLIPPAGE,
+            configs: [
+              {
+                routingType: RoutingType.DUTCH_LIMIT,
+                offerer: alice.address,
+              },
+            ],
+          };
+
+          await callAndExpectFail(quoteReq, {
+            status: 404,
+            data: {
+              detail: 'No quotes available',
+              errorCode: 'QUOTE_ERROR',
+            },
+          });
+        });
+
+        it(`stable -> stable by name, large trade should return value quote`, async () => {
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
             tokenIn: 'USDC',
@@ -266,14 +324,15 @@ describe('quoteGouda', function () {
           );
         });
 
-        it(`Unknown symbol`, async () => {
+        it(`stable -> large cap, large trade should return valid quote`, async () => {
+          const amount = await getAmount(1, type, 'USDC', 'UNI', '1000');
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
-            tokenIn: 'ASDF',
+            tokenIn: USDC_MAINNET.address,
             tokenInChainId: 1,
-            tokenOut: 'USDT',
+            tokenOut: UNI_MAINNET.address,
             tokenOutChainId: 1,
-            amount: await getAmount(1, type, 'USDC', 'USDT', '100'),
+            amount: amount,
             type,
             slippageTolerance: SLIPPAGE,
             configs: [
@@ -284,23 +343,62 @@ describe('quoteGouda', function () {
             ],
           };
 
-          await callAndExpectFail(quoteReq, {
-            status: 400,
-            data: {
-              detail: 'Could not find token with symbol ASDF',
-              errorCode: 'VALIDATION_ERROR',
-            },
-          });
+          const response = await axios.post<QuoteResponseJSON>(`${API}`, quoteReq);
+          const {
+            data: { quote },
+            status,
+          } = response;
+
+          const routingResponse = await axios.get<RoutingApiQuoteResponse>(
+            `${ROUTING_API}?${qs.stringify({
+              tokenInAddress: USDC_MAINNET.address,
+              tokenOutAddress: UNI_MAINNET.address,
+              tokenInChainId: 1,
+              tokenOutChainId: 1,
+              amount: amount,
+              type: 'exactIn',
+              recipient: alice.address,
+              slippageTolerance: SLIPPAGE,
+              deadline: '360',
+              algorithm: 'alpha',
+              enableUniversalRouter: true,
+            })}`
+          );
+          expect(routingResponse.status).to.equal(200);
+
+          const order = new DutchLimitOrder(quote as any, 1);
+          expect(status).to.equal(200);
+          const routingQuote = routingResponse.data.quoteGasAdjusted;
+
+          expect(order.info.offerer).to.equal(alice.address);
+          expect(order.info.outputs.length).to.equal(1);
+          expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.gte(parseInt(routingQuote));
+          expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.lt(
+            parseInt(BigNumber.from(routingQuote).mul(2).toString())
+          );
+
+          const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+            order,
+            USDC_MAINNET,
+            UNI_MAINNET
+          );
+
+          expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('1000');
+          checkQuoteToken(
+            tokenOutBefore,
+            tokenOutAfter,
+            CurrencyAmount.fromRawAmount(UNI_MAINNET, order.info.outputs[0].startAmount.toString())
+          );
         });
 
-        it(`Fails on small size`, async () => {
+        it(`stable -> no liq token; should return no quote`, async () => {
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
             tokenIn: USDC_MAINNET.address,
             tokenInChainId: 1,
-            tokenOut: USDT_MAINNET.address,
+            tokenOut: NO_LIQ_TOKEN,
             tokenOutChainId: 1,
-            amount: await getAmount(1, type, 'USDC', 'USDT', '0.00001'),
+            amount: await getAmount(1, type, 'USDC', 'USDT', '0.1'),
             type,
             slippageTolerance: SLIPPAGE,
             configs: [
@@ -374,6 +472,33 @@ describe('quoteGouda', function () {
               errorCode: 'VALIDATION_ERROR',
             },
           });
+        });
+      });
+
+      it(`Unknown symbol`, async () => {
+        const quoteReq: QuoteRequestBodyJSON = {
+          requestId: 'id',
+          tokenIn: 'ASDF',
+          tokenInChainId: 1,
+          tokenOut: 'USDT',
+          tokenOutChainId: 1,
+          amount: await getAmount(1, type, 'USDC', 'USDT', '100'),
+          type,
+          slippageTolerance: SLIPPAGE,
+          configs: [
+            {
+              routingType: RoutingType.DUTCH_LIMIT,
+              offerer: alice.address,
+            },
+          ],
+        };
+
+        await callAndExpectFail(quoteReq, {
+          status: 400,
+          data: {
+            detail: 'Could not find token with symbol ASDF',
+            errorCode: 'VALIDATION_ERROR',
+          },
         });
       });
     });
