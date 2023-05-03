@@ -174,6 +174,10 @@ export class APIPipeline extends Stack {
             value: 'archive-node-rpc-url-default-kms',
             type: BuildEnvironmentVariableType.SECRETS_MANAGER,
           },
+          ROUTING_API: {
+            value: 'routing-api-beta-us-east-2',
+            type: BuildEnvironmentVariableType.SECRETS_MANAGER,
+          },
         },
       },
       commands: [
@@ -181,6 +185,7 @@ export class APIPipeline extends Stack {
         'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc',
         'echo "UNISWAP_API=${UNISWAP_API}" > .env',
         'echo "ARCHIVE_NODE_RPC=${ARCHIVE_NODE_RPC}" >> .env',
+        'echo "ROUTING_API=${ROUTING_API}" > .env',
         'yarn install --frozen-lockfile --network-concurrency 1',
         'yarn build',
         'yarn test:integ',
