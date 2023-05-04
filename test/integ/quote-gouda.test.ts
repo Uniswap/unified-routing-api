@@ -176,7 +176,7 @@ describe('quoteGouda', function () {
 
   // TODO: add exactOutput when we support it
   for (const type of ['EXACT_INPUT']) {
-    describe.only(`${ID_TO_NETWORK_NAME(1)} ${type} 2xx`, () => {
+    describe(`${ID_TO_NETWORK_NAME(1)} ${type} 2xx`, () => {
       describe(`+ Execute Swap`, () => {
         it(`stable -> stable, tiny trade should be filterd out due to gas`, async () => {
           const quoteReq: QuoteRequestBodyJSON = {
