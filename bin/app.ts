@@ -114,7 +114,7 @@ export class APIPipeline extends Stack {
 
     const betaUsEast2AppStage = pipeline.addStage(betaUsEast2Stage);
 
-    this.addIntegTests(code, betaUsEast2Stage, betaUsEast2AppStage);
+    this.addIntegTests(code, betaUsEast2Stage, betaUsEast2AppStage, STAGE.BETA);
 
     // Prod us-east-2
     const prodUsEast2Stage = new APIStage(this, 'prod-us-east-2', {
@@ -134,7 +134,7 @@ export class APIPipeline extends Stack {
 
     const prodUsEast2AppStage = pipeline.addStage(prodUsEast2Stage);
 
-    this.addIntegTests(code, prodUsEast2Stage, prodUsEast2AppStage);
+    this.addIntegTests(code, prodUsEast2Stage, prodUsEast2AppStage, STAGE.PROD);
 
     const slackChannel = chatbot.SlackChannelConfiguration.fromSlackChannelConfigurationArn(
       this,
@@ -151,7 +151,8 @@ export class APIPipeline extends Stack {
   private addIntegTests(
     sourceArtifact: cdk.pipelines.CodePipelineSource,
     apiStage: APIStage,
-    applicationStage: cdk.pipelines.StageDeployment
+    applicationStage: cdk.pipelines.StageDeployment,
+    stage: STAGE
   ) {
     const testAction = new CodeBuildStep(`${SERVICE_NAME}-IntegTests-${apiStage.stageName}`, {
       projectName: `${SERVICE_NAME}-IntegTests-${apiStage.stageName}`,
@@ -171,11 +172,11 @@ export class APIPipeline extends Stack {
             type: BuildEnvironmentVariableType.SECRETS_MANAGER,
           },
           ARCHIVE_NODE_RPC: {
-            value: 'archive-node-rpc-url',
+            value: 'archive-node-rpc-url-default-kms',
             type: BuildEnvironmentVariableType.SECRETS_MANAGER,
           },
           ROUTING_API: {
-            value: 'routing-api-beta-us-east-2',
+            value: `${stage}/rouging-api/url`,
             type: BuildEnvironmentVariableType.SECRETS_MANAGER,
           },
         },
@@ -184,6 +185,8 @@ export class APIPipeline extends Stack {
         'git config --global url."https://${GH_TOKEN}@github.com/".insteadOf ssh://git@github.com/',
         'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc',
         'echo "UNISWAP_API=${UNISWAP_API}" > .env',
+        'echo "ROUTING_API=${ROUTING_API}" > .env',
+        'echo "ARCHIVE_NODE_RPC=${ARCHIVE_NODE_RPC}" > .env',
         'yarn install --frozen-lockfile --network-concurrency 1',
         'yarn build',
         'yarn test:integ',
