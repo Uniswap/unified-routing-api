@@ -13,7 +13,7 @@
     "clean": "rm -rf dist cdk.out",
     "watch": "tsc -w",
     "test": "jest --testPathPattern test/unit --detectOpenHandles --forceExit",
-    "test:integ": "ts-mocha -p tsconfig.cdk.json -r dotenv/config 'test/integ/**/*.test.ts'",
+    "test:integ": "ts-mocha -p tsconfig.cdk.json -r dotenv/config test/integ/**/*.test.ts",
     "fix": "run-s fix:*",
     "fix:prettier": "prettier \"lib/**/*.ts\" --write",
     "fix:prettiertest": "prettier \"test/**/*.ts\" --write",
