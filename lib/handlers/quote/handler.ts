@@ -13,7 +13,6 @@ import {
   QuoteRequest,
   QuoteRequestBodyJSON,
 } from '../../entities';
-import { DutchLimitQuote } from '../../entities/quote/DutchLimitQuote';
 import { QuotesByRoutingType } from '../../entities/quote/index';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
@@ -52,32 +51,6 @@ export class QuoteHandler extends APIGLambdaHandler<
     const quotesByRequestType: QuotesByRoutingType = {};
     const quotes = await getQuotes(quoters, requestsTransformed, quotesByRequestType);
     const quotesTransformed = await quoteTransformer.transform(requests, quotes);
-
-    // hack: set endAmount of dutch limit quotes to that of auto router quote gas adjusted
-    if (
-      requests.length > 1 &&
-      quotesByRequestType[RoutingType.CLASSIC] &&
-      quotesByRequestType[RoutingType.CLASSIC].length > 0
-    ) {
-      // UniswapX requested
-      const classicQuote = quotesByRequestType[RoutingType.CLASSIC][0] as ClassicQuote; // assuming only one classic quote
-      quotesTransformed.forEach((quote) => {
-        if (quote.routingType === RoutingType.DUTCH_LIMIT) {
-          (quote as DutchLimitQuote).endAmountIn =
-            quote.request.info.type === TradeType.EXACT_INPUT
-              ? quote.amountIn
-              : quote.amountIn.lte(classicQuote.amountInGasAdjusted)
-              ? classicQuote.amountInGasAdjusted
-              : quote.amountIn;
-          (quote as DutchLimitQuote).endAmountOut =
-            quote.request.info.type === TradeType.EXACT_INPUT
-              ? classicQuote.amountOutGasAdjusted
-              : quote.amountOut.lte(classicQuote.amountOutGasAdjusted)
-              ? classicQuote.amountOutGasAdjusted
-              : quote.amountOut;
-        }
-      });
-    }
 
     log.info({ quotesTransformed: quotesTransformed }, 'quotesTransformed');
 
