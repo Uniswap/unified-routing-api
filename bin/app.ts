@@ -1,11 +1,13 @@
 import * as cdk from 'aws-cdk-lib';
 import { CfnOutput, SecretValue, Stack, StackProps, Stage, StageProps } from 'aws-cdk-lib';
+import * as chatbot from 'aws-cdk-lib/aws-chatbot';
 import { BuildEnvironmentVariableType, BuildSpec } from 'aws-cdk-lib/aws-codebuild';
 import * as sm from 'aws-cdk-lib/aws-secretsmanager';
 import { CodeBuildStep, CodePipeline, CodePipelineSource } from 'aws-cdk-lib/pipelines';
 import { Construct } from 'constructs';
 import dotenv from 'dotenv';
 
+import { PipelineNotificationEvents } from 'aws-cdk-lib/aws-codepipeline';
 import { STAGE } from '../lib/util/stage';
 import { SERVICE_NAME } from './constants';
 import { APIStack } from './stacks/api-stack';
@@ -99,6 +101,7 @@ export class APIPipeline extends Stack {
       env: { account: '665191769009', region: 'us-east-2' },
       provisionedConcurrency: 2,
       stage: STAGE.BETA,
+      chatbotSNSArn: 'arn:aws:sns:us-east-2:644039819003:SlackChatbotTopic',
       envVars: {
         ...envVars,
         PARAMETERIZATION_API_URL: urlSecrets.secretValueFromJson('PARAMETERIZATION_API_BETA').toString(),
@@ -133,7 +136,16 @@ export class APIPipeline extends Stack {
 
     this.addIntegTests(code, prodUsEast2Stage, prodUsEast2AppStage);
 
+    const slackChannel = chatbot.SlackChannelConfiguration.fromSlackChannelConfigurationArn(
+      this,
+      'SlackChannel',
+      'arn:aws:chatbot::644039819003:chat-configuration/slack-channel/eng-ops-slack-chatbot'
+    );
+
     pipeline.buildPipeline();
+    pipeline.pipeline.notifyOn('NotifySlack', slackChannel, {
+      events: [PipelineNotificationEvents.PIPELINE_EXECUTION_FAILED],
+    });
   }
 
   private addIntegTests(
@@ -162,6 +174,10 @@ export class APIPipeline extends Stack {
             value: 'archive-node-rpc-url-default-kms',
             type: BuildEnvironmentVariableType.SECRETS_MANAGER,
           },
+          ROUTING_API: {
+            value: 'routing-api-beta-us-east-2',
+            type: BuildEnvironmentVariableType.SECRETS_MANAGER,
+          },
         },
       },
       commands: [
@@ -169,6 +185,7 @@ export class APIPipeline extends Stack {
         'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc',
         'echo "UNISWAP_API=${UNISWAP_API}" > .env',
         'echo "ARCHIVE_NODE_RPC=${ARCHIVE_NODE_RPC}" >> .env',
+        'echo "ROUTING_API=${ROUTING_API}" > .env',
         'yarn install --frozen-lockfile --network-concurrency 1',
         'yarn build',
         'yarn test:integ',

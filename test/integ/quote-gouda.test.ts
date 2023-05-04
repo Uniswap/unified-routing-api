@@ -44,7 +44,7 @@ if (!process.env.UNISWAP_API || !process.env.ARCHIVE_NODE_RPC || !process.env.RO
 }
 
 const API = `${process.env.UNISWAP_API!}quote`;
-const ROUTING_API = `${process.env.ROUTING_API!}quote`;
+const ROUTING_API = `${process.env.ROUTING_API!}/quote`;
 
 const SLIPPAGE = '5';
 
