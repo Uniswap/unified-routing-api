@@ -8,14 +8,14 @@
     ],
     "info": {
       "version": "1.0.0",
-      "title": "Fungibles",
+      "title": "Routing",
       "description": "Rest API for orders."
     },
     "paths": {
-      "/prod/quote": {
+      "/quote": {
         "post": {
           "tags": [
-            "Routing"
+            "Unified Router"
           ],
           "summary": "Get quote",
           "description": "Retrieves a quote for the confuration passed.",
