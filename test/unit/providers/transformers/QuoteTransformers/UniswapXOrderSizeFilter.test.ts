@@ -72,6 +72,23 @@ describe('UniswapXOrderSizeFilter', () => {
       expect(filtered.length).toEqual(1);
       expect(filtered[0]).toEqual(classicQuote);
     });
+
+    it('does not filter if exclusive filler is set', async () => {
+      const amountOut = ethers.utils.parseEther('1');
+      const twentyFivePercent = amountOut.mul(25).div(100);
+      const dutchQuote = createDutchLimitQuote(
+        { amountOut: amountOut.toString(), filler: '0x0000000000000000000000000000000000000001' },
+        'EXACT_INPUT'
+      );
+      const classicQuote = createClassicQuote(
+        { quote: amountOut.toString(), quoteGasAdjusted: amountOut.sub(twentyFivePercent).toString() },
+        'EXACT_INPUT'
+      );
+      const filtered = await filter.transform(QUOTE_REQUEST_MULTI, [classicQuote, dutchQuote]);
+      expect(filtered.length).toEqual(2);
+      expect(filtered[0]).toEqual(classicQuote);
+      expect(filtered[1]).toEqual(dutchQuote);
+    });
   });
 
   describe('ExactOut', () => {
