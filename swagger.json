@@ -81,8 +81,39 @@
           },
           "auctionPeriodSecs": {
             "type": "number"
+          },
+          "requestId": {
+            "type": "string"
+          },
+          "tokenInChainId": {
+            "type": "number"
+          },
+          "tokenOutChainId": {
+            "type": "number"
+          },
+          "tokenIn": {
+            "type": "string"
+          },
+          "tokenOut": {
+            "type": "string"
+          },
+          "slippageTolerance": {
+            "type": "string"
           }
-        }
+        },
+        "required": [
+          "requestId",
+          "tokenInChainId",
+          "tokenOutChainId",
+          "tokenIn",
+          "tokenOut",
+          "amount",
+          "type",
+          "routingType",
+          "offerer",
+          "exclusivityOverrideBps",
+          "auctionPeriodSecs"
+        ]
       },
       "ClassicConfig": {
         "type": "object",
