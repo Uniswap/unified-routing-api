@@ -1,435 +1,434 @@
 {
-    "openapi": "3.0.0",
-    "servers": [
-      {
-        "description": "Uniswap Trade APIs",
-        "url": "https://beta.api.uniswap.org/v1"
-      }
-    ],
-    "info": {
-      "version": "1.0.0",
-      "title": "Routing",
-      "description": "Rest API for orders."
-    },
-    "paths": {
-      "/quote": {
-        "post": {
-          "tags": [
-            "Unified Router"
-          ],
-          "summary": "Get quote",
-          "description": "Retrieves a quote for the confuration passed.",
-          "requestBody": {
+  "openapi": "3.0.0",
+  "servers": [
+    {
+      "description": "Uniswap Trade APIs",
+      "url": "https://beta.api.uniswap.org/v1"
+    }
+  ],
+  "info": {
+    "version": "1.0.0",
+    "title": "Routing",
+    "description": "Rest API for orders."
+  },
+  "paths": {
+    "/quote": {
+      "post": {
+        "tags": [
+          "Unified Router"
+        ],
+        "summary": "Get quote",
+        "description": "Retrieves a quote for the confuration passed.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuoteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Quote request successful.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuoteRequest"
+                  "$ref": "#/components/schemas/QuoteResponse"
                 }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Quote request successful.",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/QuoteResponse"
-                  }
-                }
-              }
-            },
-            "404": {
-              "$ref": "#/components/responses/404NotFound"
-            }
-          }
-        }
-      }
-    },
-    "components": {
-      "responses": {
-        "404NotFound": {
-          "description": "The specified resource was not found."
-        }
-      },
-      "schemas": {
-        "ChainId": {
-          "type": "number",
-          "enum": [
-            1,
-            137
-          ]
-        },
-        "RoutingType": {
-          "type": "string",
-          "enum": [
-            "CLASSIC",
-            "DUTCH_LIMIT"
-          ]
-        },
-        "DutchLimitConfig": {
-          "type": "object",
-          "properties": {
-            "routingType": {
-              "$ref": "#/components/schemas/RoutingType"
-            },
-            "offerer": {
-              "type": "string",
-              "pattern": "^(0x)?[0-9a-fA-F]{40}$"
-            },
-            "exclusivityOverrideBps": {
-              "type": "number"
-            },
-            "auctionPeriodSecs": {
-              "type": "number"
-            }
-          }
-        },
-        "ClassicConfig": {
-          "type": "object",
-          "properties": {
-            "routingType": {
-              "$ref": "#/components/schemas/RoutingType"
-            },
-            "permitAmount": {
-              "type": "string"
-            },
-            "protocols": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "pattern": "^(0x)?[0-9a-fA-F]{40}$"
-              }
-            },
-            "gasPriceWei": {
-              "type": "string"
-            },
-            "simulateFromAddress": {
-              "type": "string",
-              "pattern": "^(0x)?[0-9a-fA-F]{40}$"
-            },
-            "permitSignature": {
-              "type": "string"
-            },
-            "permitNonce": {
-              "type": "string"
-            },
-            "permitExpiration": {
-              "type": "string"
-            },
-            "permitSigDeadline": {
-              "type": "string"
-            },
-            "enableUniversalRouter": {
-              "type": "boolean"
-            },
-            "recipient": {
-              "type": "string",
-              "pattern": "^(0x)?[0-9a-fA-F]{40}$"
-            },
-            "algorithm": {
-              "type": "string"
-            },
-            "deadline": {
-              "type": "string"
-            },
-            "minSplits": {
-              "type": "number"
-            },
-            "forceCrossProtocol": {
-              "type": "boolean"
-            },
-            "forceMixedRoutes": {
-              "type": "boolean"
-            }
-          },
-          "required": [
-            "routingType"
-          ]
-        },
-        "RoutingConfig": {
-          "oneOf": [
-            {
-              "$ref": "#/components/schemas/DutchLimitConfig"
-            },
-            {
-              "$ref": "#/components/schemas/ClassicConfig"
-            }
-          ]
-        },
-        "QuoteResponse": {
-          "type": "object",
-          "properties": {
-            "routing": {
-              "type": "string"
-            },
-            "quote": {
-              "$ref": "#/components/schemas/Quote"
-            }
-          }
-        },
-        "DutchInput": {
-          "type": "object",
-          "properties": {
-            "startAmount": {
-              "type": "string"
-            },
-            "endAmount": {
-              "type": "string"
-            },
-            "token": {
-              "type": "string"
-            }
-          }
-        },
-        "DutchOutput": {
-          "type": "object",
-          "properties": {
-            "startAmount": {
-              "type": "string"
-            },
-            "endAmount": {
-              "type": "string"
-            },
-            "token": {
-              "type": "string"
-            },
-            "recipient": {
-              "type": "string"
-            }
-          }
-        },
-        "DutchQuote": {
-          "type": "object",
-          "properties": {
-            "quoteId": {
-              "type": "string"
-            },
-            "nonce": {
-              "type": "string"
-            },
-            "exclusivityOverrideBps": {
-              "type": "string"
-            },
-            "input": {
-              "$ref": "#/components/schemas/DutchInput"
-            },
-            "output": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/DutchOutput"
-              }
-            }
-          }
-        },
-        "ClassicQuote": {
-          "type": "object",
-          "properties": {
-            "quoteId": {
-              "type": "string"
-            },
-            "amount": {
-              "type": "string"
-            },
-            "amountDecimals": {
-              "type": "string"
-            },
-            "quote": {
-              "type": "string"
-            },
-            "quoteDecimals": {
-              "type": "string"
-            },
-            "quoteGasAdjusted": {
-              "type": "string"
-            },
-            "quoteGasAdjustedDecimals": {
-              "type": "string"
-            },
-            "gasUseEstimate": {
-              "type": "string"
-            },
-            "gasUseEstimateQuote": {
-              "type": "string"
-            },
-            "gasUseEstimateQuoteDecimals": {
-              "type": "string"
-            },
-            "gasUseEstimateUSD": {
-              "type": "string"
-            },
-            "simulationError?": {
-              "type": "boolean"
-            },
-            "simulationStatus": {
-              "type": "string"
-            },
-            "gasPriceWei": {
-              "type": "string"
-            },
-            "blockNumber": {
-              "type": "string"
-            },
-            "route": {
-              "type": "array",
-              "items": {
-                "oneOf": [
-                  {
-                    "$ref": "#/components/schemas/V3PoolInRoute"
-                  },
-                  {
-                    "$ref": "#/components/schemas/V2PoolInRoute"
-                  }
-                ]
-              }
-            },
-            "routeString": {
-              "type": "string"
-            },
-            "methodParameters?": {
-              "$ref": "#/components/schemas/MethodParameters"
-            }
-          }
-        },
-        "TokenInRoute": {
-          "type": "object",
-          "properties": {
-            "address": {
-              "type": "string",
-              "pattern": "^(0x)?[0-9a-fA-F]{40}$"
-            },
-            "chainId": {
-              "$ref": "#/components/schemas/ChainId"
-            },
-            "symbol": {
-              "type": "string"
-            },
-            "decimals": {
-              "type": "string"
-            }
-          }
-        },
-        "V2Reserve": {
-          "type": "object",
-          "properties": {
-            "token": {
-              "$ref": "#/components/schemas/TokenInRoute"
-            },
-            "quotient": {
-              "type": "string"
-            }
-          }
-        },
-        "V2PoolInRoute": {
-          "type": "object",
-          "properties": {
-            "type": {
-              "type": "string",
-              "default": "v2-pool"
-            },
-            "address": {
-              "type": "string",
-              "pattern": "^(0x)?[0-9a-fA-F]{40}$"
-            },
-            "tokenIn": {
-              "$ref": "#/components/schemas/TokenInRoute"
-            },
-            "tokenOut": {
-              "$ref": "#/components/schemas/TokenInRoute"
-            },
-            "reserve0": {
-              "$ref": "#/components/schemas/V2Reserve"
-            },
-            "reserve1": {
-              "$ref": "#/components/schemas/V2Reserve"
-            },
-            "amountIn?": {
-              "type": "string"
-            },
-            "amountOut?": {
-              "type": "string"
-            }
-          }
-        },
-        "V3PoolInRoute": {
-          "type": "object",
-          "properties": {
-            "type": {
-              "type": "string",
-              "default": "v3-pool"
-            },
-            "address": {
-              "type": "string",
-              "pattern": "^(0x)?[0-9a-fA-F]{40}$"
-            },
-            "tokenIn": {
-              "$ref": "#/components/schemas/TokenInRoute"
-            },
-            "tokenOut": {
-              "$ref": "#/components/schemas/TokenInRoute"
-            },
-            "sqrtRatioX96": {
-              "type": "string"
-            },
-            "liquidity": {
-              "type": "string"
-            },
-            "tickCurrent": {
-              "type": "string"
-            },
-            "fee": {
-              "type": "string"
-            },
-            "amountIn?": {
-              "type": "string"
-            },
-            "amountOut?": {
-              "type": "string"
-            }
-          }
-        },
-        "MethodParameters": {
-          "type": "object",
-          "properties": {
-            "to": {
-              "type": "string",
-              "pattern": "^(0x)?[0-9a-fA-F]{40}$"
-            },
-            "calldata": {
-              "type": "string"
-            },
-            "value": {
-              "type": "string"
-            }
-          }
-        },
-        "Quote": {
-          "oneOf": [
-            {
-              "$ref": "#/components/schemas/DutchQuote"
-            },
-            {
-              "$ref": "#/components/schemas/ClassicQuote"
-            }
-          ]
-        },
-        "QuoteRequest": {
-          "type": "object",
-          "properties": {
-            "type": {
-              "type": "string"
-            },
-            "amount": {
-              "type": "string"
-            },
-            "configs": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/RoutingConfig"
               }
             }
           }
         }
       }
     }
+  },
+  "components": {
+    "schemas": {
+      "ChainId": {
+        "type": "number",
+        "enum": [
+          1,
+          137
+        ]
+      },
+      "RoutingType": {
+        "type": "string",
+        "enum": [
+          "CLASSIC",
+          "DUTCH_LIMIT"
+        ]
+      },
+      "DutchLimitConfig": {
+        "type": "object",
+        "properties": {
+          "routingType": {
+            "$ref": "#/components/schemas/RoutingType"
+          },
+          "offerer": {
+            "type": "string",
+            "pattern": "^(0x)?[0-9a-fA-F]{40}$"
+          },
+          "exclusivityOverrideBps": {
+            "type": "number"
+          },
+          "auctionPeriodSecs": {
+            "type": "number"
+          }
+        }
+      },
+      "ClassicConfig": {
+        "type": "object",
+        "properties": {
+          "routingType": {
+            "$ref": "#/components/schemas/RoutingType"
+          },
+          "permitAmount": {
+            "type": "string"
+          },
+          "protocols": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(0x)?[0-9a-fA-F]{40}$"
+            }
+          },
+          "gasPriceWei": {
+            "type": "string"
+          },
+          "simulateFromAddress": {
+            "type": "string",
+            "pattern": "^(0x)?[0-9a-fA-F]{40}$"
+          },
+          "permitSignature": {
+            "type": "string"
+          },
+          "permitNonce": {
+            "type": "string"
+          },
+          "permitExpiration": {
+            "type": "string"
+          },
+          "permitSigDeadline": {
+            "type": "string"
+          },
+          "enableUniversalRouter": {
+            "type": "boolean"
+          },
+          "recipient": {
+            "type": "string",
+            "pattern": "^(0x)?[0-9a-fA-F]{40}$"
+          },
+          "algorithm": {
+            "type": "string"
+          },
+          "deadline": {
+            "type": "string"
+          },
+          "minSplits": {
+            "type": "number"
+          },
+          "forceCrossProtocol": {
+            "type": "boolean"
+          },
+          "forceMixedRoutes": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "routingType"
+        ]
+      },
+      "RoutingConfig": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/DutchLimitConfig"
+          },
+          {
+            "$ref": "#/components/schemas/ClassicConfig"
+          }
+        ]
+      },
+      "QuoteResponse": {
+        "type": "object",
+        "properties": {
+          "routing": {
+            "type": "string"
+          },
+          "quote": {
+            "$ref": "#/components/schemas/Quote"
+          }
+        }
+      },
+      "DutchInput": {
+        "type": "object",
+        "properties": {
+          "startAmount": {
+            "type": "string"
+          },
+          "endAmount": {
+            "type": "string"
+          },
+          "token": {
+            "type": "string"
+          }
+        }
+      },
+      "DutchOutput": {
+        "type": "object",
+        "properties": {
+          "startAmount": {
+            "type": "string"
+          },
+          "endAmount": {
+            "type": "string"
+          },
+          "token": {
+            "type": "string"
+          },
+          "recipient": {
+            "type": "string"
+          }
+        }
+      },
+      "DutchQuote": {
+        "type": "object",
+        "properties": {
+          "quoteId": {
+            "type": "string"
+          },
+          "nonce": {
+            "type": "string"
+          },
+          "exclusivityOverrideBps": {
+            "type": "string"
+          },
+          "input": {
+            "$ref": "#/components/schemas/DutchInput"
+          },
+          "output": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DutchOutput"
+            }
+          }
+        }
+      },
+      "ClassicQuote": {
+        "type": "object",
+        "properties": {
+          "quoteId": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string"
+          },
+          "amountDecimals": {
+            "type": "string"
+          },
+          "quote": {
+            "type": "string"
+          },
+          "quoteDecimals": {
+            "type": "string"
+          },
+          "quoteGasAdjusted": {
+            "type": "string"
+          },
+          "quoteGasAdjustedDecimals": {
+            "type": "string"
+          },
+          "gasUseEstimate": {
+            "type": "string"
+          },
+          "gasUseEstimateQuote": {
+            "type": "string"
+          },
+          "gasUseEstimateQuoteDecimals": {
+            "type": "string"
+          },
+          "gasUseEstimateUSD": {
+            "type": "string"
+          },
+          "simulationError?": {
+            "type": "boolean"
+          },
+          "simulationStatus": {
+            "type": "string"
+          },
+          "gasPriceWei": {
+            "type": "string"
+          },
+          "blockNumber": {
+            "type": "string"
+          },
+          "route": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/V3PoolInRoute"
+                },
+                {
+                  "$ref": "#/components/schemas/V2PoolInRoute"
+                }
+              ]
+            }
+          },
+          "routeString": {
+            "type": "string"
+          },
+          "methodParameters?": {
+            "$ref": "#/components/schemas/MethodParameters"
+          }
+        }
+      },
+      "TokenInRoute": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "pattern": "^(0x)?[0-9a-fA-F]{40}$"
+          },
+          "chainId": {
+            "$ref": "#/components/schemas/ChainId"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "decimals": {
+            "type": "string"
+          }
+        }
+      },
+      "V2Reserve": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "$ref": "#/components/schemas/TokenInRoute"
+          },
+          "quotient": {
+            "type": "string"
+          }
+        }
+      },
+      "V2PoolInRoute": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "default": "v2-pool"
+          },
+          "address": {
+            "type": "string",
+            "pattern": "^(0x)?[0-9a-fA-F]{40}$"
+          },
+          "tokenIn": {
+            "$ref": "#/components/schemas/TokenInRoute"
+          },
+          "tokenOut": {
+            "$ref": "#/components/schemas/TokenInRoute"
+          },
+          "reserve0": {
+            "$ref": "#/components/schemas/V2Reserve"
+          },
+          "reserve1": {
+            "$ref": "#/components/schemas/V2Reserve"
+          },
+          "amountIn?": {
+            "type": "string"
+          },
+          "amountOut?": {
+            "type": "string"
+          }
+        }
+      },
+      "V3PoolInRoute": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "default": "v3-pool"
+          },
+          "address": {
+            "type": "string",
+            "pattern": "^(0x)?[0-9a-fA-F]{40}$"
+          },
+          "tokenIn": {
+            "$ref": "#/components/schemas/TokenInRoute"
+          },
+          "tokenOut": {
+            "$ref": "#/components/schemas/TokenInRoute"
+          },
+          "sqrtRatioX96": {
+            "type": "string"
+          },
+          "liquidity": {
+            "type": "string"
+          },
+          "tickCurrent": {
+            "type": "string"
+          },
+          "fee": {
+            "type": "string"
+          },
+          "amountIn?": {
+            "type": "string"
+          },
+          "amountOut?": {
+            "type": "string"
+          }
+        }
+      },
+      "MethodParameters": {
+        "type": "object",
+        "properties": {
+          "to": {
+            "type": "string",
+            "pattern": "^(0x)?[0-9a-fA-F]{40}$"
+          },
+          "calldata": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      },
+      "TradeType": {
+        "type": "string",
+        "enum": [
+          "EXACT_INPUT",
+          "EXACT_OUTPUT"
+        ]
+      },
+      "Quote": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/DutchQuote"
+          },
+          {
+            "$ref": "#/components/schemas/ClassicQuote"
+          }
+        ]
+      },
+      "QuoteRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/TradeType"
+          },
+          "amount": {
+            "type": "string"
+          },
+          "configs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoutingConfig"
+            }
+          }
+        }
+      }
+    }
   }
+}
