@@ -63,7 +63,14 @@
         "type": "object",
         "properties": {
           "routingType": {
-            "$ref": "#/components/schemas/RoutingType"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RoutingType"
+              },
+              {
+                "default": "DUTCH_LIMIT"
+              }
+            ]
           },
           "offerer": {
             "type": "string",
@@ -81,7 +88,14 @@
         "type": "object",
         "properties": {
           "routingType": {
-            "$ref": "#/components/schemas/RoutingType"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RoutingType"
+              },
+              {
+                "default": "CLASSIC"
+              }
+            ]
           },
           "permitAmount": {
             "type": "string"
