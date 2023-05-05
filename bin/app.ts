@@ -176,7 +176,7 @@ export class APIPipeline extends Stack {
             type: BuildEnvironmentVariableType.SECRETS_MANAGER,
           },
           ROUTING_API: {
-            value: `${stage}/rouging-api/url`,
+            value: `${stage}/routing-api/url`,
             type: BuildEnvironmentVariableType.SECRETS_MANAGER,
           },
         },
