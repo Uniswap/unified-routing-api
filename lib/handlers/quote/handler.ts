@@ -19,6 +19,11 @@ import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../bas
 import { ContainerInjected, QuoterByRoutingType } from './injector';
 import { PostQuoteRequestBodyJoi } from './schema';
 
+// number of bps per whole
+const BPS = 10000;
+// amount of price preference for dutch limit orders
+const DUTCH_LIMIT_PREFERENCE_BUFFER_BPS = 500;
+
 export interface QuoteResponseJSON {
   routing: string;
   quote: QuoteJSON;
@@ -143,11 +148,15 @@ const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
   if (tradeType === TradeType.EXACT_INPUT) {
     if (quote.routingType === RoutingType.CLASSIC) {
       return (quote as ClassicQuote).amountOutGasAdjusted;
+    } else if (quote.routingType === RoutingType.DUTCH_LIMIT) {
+      return (quote as Quote).amountOut.mul(BPS + DUTCH_LIMIT_PREFERENCE_BUFFER_BPS).div(BPS);
     }
     return (quote as Quote).amountOut;
   } else {
     if (quote.routingType === RoutingType.CLASSIC) {
       return (quote as ClassicQuote).amountInGasAdjusted;
+    } else if (quote.routingType === RoutingType.DUTCH_LIMIT) {
+      return (quote as Quote).amountIn.mul(BPS - DUTCH_LIMIT_PREFERENCE_BUFFER_BPS).div(BPS);
     }
     return (quote as Quote).amountIn;
   }
