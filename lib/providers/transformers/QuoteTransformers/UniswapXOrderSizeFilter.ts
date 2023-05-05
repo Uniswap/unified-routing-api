@@ -1,6 +1,7 @@
+import { DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
 import { TradeType } from '@uniswap/sdk-core';
 import Logger from 'bunyan';
-import { BigNumber } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 
 import { QuoteTransformer } from '..';
 import { RoutingType } from '../../../constants';
@@ -49,6 +50,10 @@ export class UniswapXOrderSizeFilter implements QuoteTransformer {
     // filter any dutch quotes that are too small relative to gas
     return quotes.filter((quote) => {
       if (quote.routingType !== RoutingType.DUTCH_LIMIT) {
+        return true;
+      }
+
+      if ((quote.toJSON() as DutchLimitOrderInfoJSON).exclusiveFiller !== ethers.constants.AddressZero) {
         return true;
       }
 
