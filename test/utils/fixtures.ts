@@ -216,12 +216,17 @@ export const DL_QUOTE_NATIVE_EXACT_IN_BETTER = createDutchLimitQuote(
   { amountOut: '2', tokenIn: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_OUT_ID)].address },
   'EXACT_INPUT'
 );
+export const DL_QUOTE_EXACT_IN_WORSE_PREFERENCE = createDutchLimitQuote({ amountOut: '100000' }, 'EXACT_INPUT');
 export const DL_QUOTE_EXACT_IN_WORSE = createDutchLimitQuote({ amountOut: '1' }, 'EXACT_INPUT');
 export const DL_QUOTE_EXACT_IN_LARGE = createDutchLimitQuote({ amountOut: '10000' }, 'EXACT_INPUT');
 export const DL_QUOTE_EXACT_OUT_BETTER = createDutchLimitQuote({ amountIn: '1' }, 'EXACT_OUTPUT');
 export const DL_QUOTE_EXACT_OUT_WORSE = createDutchLimitQuote({ amountIn: '2' }, 'EXACT_OUTPUT');
 export const DL_QUOTE_EXACT_OUT_LARGE = createDutchLimitQuote({ amountOut: '10000' }, 'EXACT_INPUT');
 
+export const CLASSIC_QUOTE_EXACT_IN_BETTER_PREFERENCE = createClassicQuote(
+  { quote: '100100', quoteGasAdjusted: '100100' },
+  'EXACT_INPUT'
+);
 export const CLASSIC_QUOTE_EXACT_IN_BETTER = createClassicQuote({ quote: '2', quoteGasAdjusted: '2' }, 'EXACT_INPUT');
 export const CLASSIC_QUOTE_EXACT_IN_WORSE = createClassicQuote({ quote: '1', quoteGasAdjusted: '1' }, 'EXACT_INPUT');
 export const CLASSIC_QUOTE_EXACT_IN_LARGE = createClassicQuote(

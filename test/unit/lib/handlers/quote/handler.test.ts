@@ -12,11 +12,13 @@ import { Quoter } from '../../../../../lib/providers/quoters';
 import { CHECKSUM_OFFERER } from '../../../../constants';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
+  CLASSIC_QUOTE_EXACT_IN_BETTER_PREFERENCE,
   CLASSIC_QUOTE_EXACT_IN_WORSE,
   CLASSIC_QUOTE_EXACT_OUT_BETTER,
   CLASSIC_QUOTE_EXACT_OUT_WORSE,
   DL_QUOTE_EXACT_IN_BETTER,
   DL_QUOTE_EXACT_IN_WORSE,
+  DL_QUOTE_EXACT_IN_WORSE_PREFERENCE,
   DL_QUOTE_EXACT_OUT_BETTER,
   DL_QUOTE_EXACT_OUT_WORSE,
   QUOTE_REQUEST_BODY_MULTI,
@@ -175,9 +177,34 @@ describe('QuoteHandler', () => {
       expect(compareQuotes(DL_QUOTE_EXACT_OUT_BETTER, CLASSIC_QUOTE_EXACT_OUT_WORSE, TradeType.EXACT_OUTPUT)).toBe(
         true
       );
+    });
+
+    it('returns false if lhs is better but rhs dutch limit preference overcomes', () => {
       expect(compareQuotes(CLASSIC_QUOTE_EXACT_OUT_BETTER, DL_QUOTE_EXACT_OUT_WORSE, TradeType.EXACT_OUTPUT)).toBe(
-        true
+        false
       );
+
+      expect(
+        compareQuotes(
+          CLASSIC_QUOTE_EXACT_IN_BETTER_PREFERENCE,
+          DL_QUOTE_EXACT_IN_WORSE_PREFERENCE,
+          TradeType.EXACT_INPUT
+        )
+      ).toBe(false);
+    });
+
+    it('returns true if rhs is better but lhs dutch limit preference overcomes', () => {
+      expect(compareQuotes(DL_QUOTE_EXACT_OUT_WORSE, CLASSIC_QUOTE_EXACT_OUT_BETTER, TradeType.EXACT_OUTPUT)).toBe(
+        false
+      );
+
+      expect(
+        compareQuotes(
+          CLASSIC_QUOTE_EXACT_IN_BETTER_PREFERENCE,
+          DL_QUOTE_EXACT_IN_WORSE_PREFERENCE,
+          TradeType.EXACT_INPUT
+        )
+      ).toBe(false);
     });
 
     it('returns false if lhs is a worse mixed type', () => {
