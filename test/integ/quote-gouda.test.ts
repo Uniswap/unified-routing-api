@@ -259,7 +259,7 @@ describe('quoteGouda', function () {
             tokenInChainId: 1,
             tokenOut: 'USDT',
             tokenOutChainId: 1,
-            amount: await getAmount(1, type, 'USDC', 'FOO', '100'),
+            amount: await getAmount(1, type, 'USDC', 'USDT', '0.1'),
             type,
             slippageTolerance: SLIPPAGE,
             configs: [
@@ -490,7 +490,7 @@ describe('quoteGouda', function () {
           tokenInChainId: 1,
           tokenOut: 'USDT',
           tokenOutChainId: 1,
-          amount: await getAmount(1, type, 'USDC', 'USDT', '100'),
+          amount: '1000',
           type,
           slippageTolerance: SLIPPAGE,
           configs: [
