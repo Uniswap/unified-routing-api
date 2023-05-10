@@ -4,8 +4,7 @@ import Joi from 'joi';
 
 import { v4 as uuidv4 } from 'uuid';
 import { RoutingType } from '../../constants';
-import { ClassicQuote, parseQuoteRequests, Quote, QuoteJSON, QuoteRequest, QuoteRequestBodyJSON } from '../../entities';
-import { QuotesByRoutingType } from '../../entities/quote/index';
+import { ClassicQuote, parseQuoteRequests, Quote, QuoteJSON, QuoteRequest, QuoteRequestBodyJSON, QuoteContextHandler, parseQuoteContexts } from '../../entities';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
 import { ContainerInjected, QuoterByRoutingType } from './injector';
@@ -34,7 +33,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     const {
       requestInjected: { log },
       requestBody,
-      containerInjected: { quoters, quoteTransformer, requestTransformer },
+      containerInjected: { quoters },
     } = params;
 
     const request = {
@@ -43,16 +42,17 @@ export class QuoteHandler extends APIGLambdaHandler<
     };
 
     log.info({ requestBody: request }, 'request');
-    const requests = parseQuoteRequests(request, log);
-    const requestsTransformed = requestTransformer.transform(requests);
-    const quotesByRequestType: QuotesByRoutingType = {};
-    const quotes = await getQuotes(quoters, requestsTransformed, quotesByRequestType);
-    const quotesTransformed = await quoteTransformer.transform(requests, quotes);
+    const contextHandler = new QuoteContextHandler(parseQuoteContexts(log, parseQuoteRequests(request, log)));
+    const requests = contextHandler.getRequests();
+    log.info({ requests }, 'requests');
+    const quotes = await getQuotes(quoters, requests);
+    log.info({ rawQuotes: quotes }, 'quotes');
 
-    log.info({ quotesTransformed: quotesTransformed }, 'quotesTransformed');
+    const resolvedQuotes = contextHandler.resolveQuotes(quotes);
+    log.info({ resolvedQuotes: quotes }, 'resolvedQuotes');
 
     const uniswapXRequested = requests.filter((request) => request.routingType === RoutingType.DUTCH_LIMIT).length > 0;
-    const bestQuote = await getBestQuote(quotesTransformed, uniswapXRequested, log);
+    const bestQuote = await getBestQuote(resolvedQuotes, uniswapXRequested, log);
     if (!bestQuote) {
       return {
         statusCode: 404,
@@ -83,27 +83,19 @@ export class QuoteHandler extends APIGLambdaHandler<
 
 // fetch quotes for all quote requests using the configured quoters
 export async function getQuotes(
-  quotersByRoutingType: QuoterByRoutingType,
+  quoterByRoutingType: QuoterByRoutingType,
   requests: QuoteRequest[],
-  quotesByRoutingType: QuotesByRoutingType
 ): Promise<Quote[]> {
   const quotes = await Promise.all(
     requests.flatMap((request) => {
-      const quoters = quotersByRoutingType[request.routingType];
-      if (!quoters) {
+      const quoter = quoterByRoutingType[request.routingType];
+      if (!quoter) {
         return [];
       }
-      return quoters.map((q) => q.quote(request));
+      return quoter.quote(request)
     })
   );
-  const filtered = quotes.filter((q): q is Quote => !!q);
-  filtered.forEach((quote) => {
-    if (!quotesByRoutingType[quote.routingType]) {
-      quotesByRoutingType[quote.routingType] = [];
-    }
-    quotesByRoutingType[quote.routingType]?.push(quote);
-  });
-  return filtered;
+  return quotes.filter((q): q is Quote => !!q);
 }
 
 // determine and return the "best" quote of the given list
