@@ -1,5 +1,6 @@
 import { RoutingType } from '../../../../lib/constants';
 import { ClassicRequest, DutchLimitRequest, parseQuoteRequests } from '../../../../lib/entities';
+import { ValidationError } from '../../../../lib/util/errors';
 import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
 
 const MOCK_DL_CONFIG_JSON = {
@@ -26,6 +27,17 @@ const MOCK_REQUEST_JSON = {
   configs: [MOCK_DL_CONFIG_JSON, CLASSIC_CONFIG_JSON],
 };
 
+const DUPLICATE_REQUEST_JSON = {
+  requestId: 'requestId',
+  tokenInChainId: CHAIN_IN_ID,
+  tokenOutChainId: CHAIN_OUT_ID,
+  tokenIn: TOKEN_IN,
+  tokenOut: TOKEN_OUT,
+  amount: AMOUNT_IN,
+  type: 'EXACT_INPUT',
+  configs: [MOCK_DL_CONFIG_JSON, CLASSIC_CONFIG_JSON, MOCK_DL_CONFIG_JSON],
+};
+
 describe('QuoteRequest', () => {
   it('parses dutch limit order config properly', () => {
     const requests = parseQuoteRequests(MOCK_REQUEST_JSON);
@@ -49,5 +61,19 @@ describe('QuoteRequest', () => {
     expect(requests.length).toEqual(2);
     expect(requests[0].toJSON()).toMatchObject(MOCK_DL_CONFIG_JSON);
     expect(requests[1].toJSON()).toMatchObject(CLASSIC_CONFIG_JSON);
+  });
+
+  it('throws if more than one of the same type', () => {
+    let threw = false;
+    try {
+      parseQuoteRequests(DUPLICATE_REQUEST_JSON);
+    } catch (e) {
+      threw = true;
+      expect(e instanceof ValidationError).toBeTruthy();
+      if (e instanceof ValidationError) {
+        expect(e.message).toEqual('Duplicate routing type: DUTCH_LIMIT');
+      }
+    }
+    expect(threw).toBeTruthy();
   });
 });
