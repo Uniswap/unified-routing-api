@@ -13,4 +13,5 @@ export const PostQuoteRequestBodyJoi = Joi.object({
   amount: FieldValidator.amount.required(),
   type: FieldValidator.tradeType.required(),
   configs: Joi.array().items(FieldValidator.classicConfig, FieldValidator.dutchLimitConfig).required(),
+  checkApproval: Joi.boolean().optional(),
 });
