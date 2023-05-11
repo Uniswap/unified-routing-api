@@ -1,5 +1,6 @@
 import { DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
 import Logger from 'bunyan';
+import { ethers } from 'ethers';
 
 import { RoutingType } from '../../../../../lib/constants';
 import { DutchQuoteContext } from '../../../../../lib/entities';
@@ -95,6 +96,76 @@ describe('DutchQuoteContext', () => {
 
       const quote = context.resolve([rfqQuote, classicQuote, classicQuote]);
       expect(quote).toMatchObject(rfqQuote);
+    });
+  });
+
+  describe('hasOrderSizeForsynthetic', () => {
+    describe('exactIn', () => {
+      it('returns false if amountOut == gas used', async () => {
+        const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL);
+        const amountOut = ethers.utils.parseEther('1');
+        const classicQuote = createClassicQuote({ quote: amountOut.toString(), quoteGasAdjusted: '1' }, 'EXACT_INPUT');
+        const hasSize = context.hasOrderSizeForSynthetic(logger, classicQuote);
+        expect(hasSize).toEqual(false);
+      });
+
+      it('returns true if amountOut * 5% == gas used', async () => {
+        const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL);
+
+        const amountOut = ethers.utils.parseEther('1');
+        const fivePercent = amountOut.mul(5).div(100);
+        const classicQuote = createClassicQuote(
+          { quote: amountOut.toString(), quoteGasAdjusted: amountOut.sub(fivePercent).toString() },
+          'EXACT_INPUT'
+        );
+
+        const hasSize = context.hasOrderSizeForSynthetic(logger, classicQuote);
+        expect(hasSize).toEqual(true);
+      });
+
+      it('returns false if amountOut * 25% == gas used', async () => {
+        const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL);
+
+        const amountOut = ethers.utils.parseEther('1');
+        const fivePercent = amountOut.mul(25).div(100);
+        const classicQuote = createClassicQuote(
+          { quote: amountOut.toString(), quoteGasAdjusted: amountOut.sub(fivePercent).toString() },
+          'EXACT_INPUT'
+        );
+
+        const hasSize = context.hasOrderSizeForSynthetic(logger, classicQuote);
+        expect(hasSize).toEqual(false);
+      });
+    });
+
+    describe('exactOut', () => {
+      it('returns true if amountIn * 5% == gas used', async () => {
+        const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL);
+
+        const amountIn = ethers.utils.parseEther('1');
+        const fivePercent = amountIn.mul(5).div(100);
+        const classicQuote = createClassicQuote(
+          { quote: amountIn.toString(), quoteGasAdjusted: amountIn.add(fivePercent).toString() },
+          'EXACT_OUTPUT'
+        );
+
+        const hasSize = context.hasOrderSizeForSynthetic(logger, classicQuote);
+        expect(hasSize).toEqual(true);
+      });
+
+      it('returns false if amountIn * 25% == gas used', async () => {
+        const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL);
+
+        const amountIn = ethers.utils.parseEther('1');
+        const fivePercent = amountIn.mul(25).div(100);
+        const classicQuote = createClassicQuote(
+          { quote: amountIn.toString(), quoteGasAdjusted: amountIn.add(fivePercent).toString() },
+          'EXACT_OUTPUT'
+        );
+
+        const hasSize = context.hasOrderSizeForSynthetic(logger, classicQuote);
+        expect(hasSize).toEqual(false);
+      });
     });
   });
 });
