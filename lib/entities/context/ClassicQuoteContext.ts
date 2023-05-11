@@ -1,17 +1,18 @@
+import Logger from 'bunyan';
 import { QuoteContext } from '.';
 import { ClassicRequest, Quote, QuoteRequest } from '../../entities';
 
 // manages context around a single top level classic quote request
 export class ClassicQuoteContext implements QuoteContext {
-  constructor(public request: ClassicRequest) {}
+  constructor(public log: Logger, public request: ClassicRequest) {}
 
   // classic quotes have no explicit dependencies and can be resolved by themselves
-  // other than their original one
   dependencies(): QuoteRequest[] {
     return [];
   }
 
   resolve(dependencies: (Quote | null)[]): Quote | null {
+    this.log.info({ dependencies }, 'Resolving classic quote');
     if (dependencies.length !== 1) {
       throw new Error(`Invalid quote result: ${dependencies}`);
     }

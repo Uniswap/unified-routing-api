@@ -26,7 +26,7 @@ export class QuoteContextHandler {
   // dependencies for each quote context
   private dependencies: QuoteRequest[][];
 
-  constructor(private contexts: QuoteContext[]) {
+  constructor(public log: Logger, public contexts: QuoteContext[]) {
     this.dependencies = [];
     for (const context of contexts) {
       this.dependencies.push(context.dependencies());
@@ -62,20 +62,23 @@ export class QuoteContextHandler {
       requestSet.add(key);
       result.push(request);
     }
+    this.log.info({ requests: result }, `Context requests`);
 
     return result;
   }
 
   // resolve quotes from quote contexts using quoted dependencies
   resolveQuotes(quotes: Quote[]): Quote[] {
+    this.log.info({ quotes }, `Context quotes`);
     const quoteMap: { [key: string]: Quote } = {};
     for (const quote of quotes) {
       quoteMap[getRequestKey(quote.request)] = quote;
     }
 
+    this.log.info({ deps: this.dependencies }, `deps`);
     return this.contexts
       .map((context, i) => {
-        const deps = this.dependencies[i].map((dep) => {
+        const deps = [context.request, ...this.dependencies[i]].map((dep) => {
           const key = getRequestKey(dep);
           return quoteMap[key] ?? null;
         });
@@ -86,11 +89,13 @@ export class QuoteContextHandler {
   }
 }
 
+// TODO: maybe have key as getter on request
+// so diff request types can specify their own key
 export function getRequestKey(request: QuoteRequest): string {
   // specify request key as the shared info and routing type
   // so we make have multiple requests with different configs
   return JSON.stringify({
-   ...request.info,
+    ...request.info,
     routingType: request.routingType,
     // overwrite request id which is irrelevant to deduplication
     requestId: '',
@@ -103,7 +108,7 @@ export function parseQuoteContexts(log: Logger, requests: QuoteRequest[]): Quote
       case RoutingType.DUTCH_LIMIT:
         return new DutchQuoteContext(log, request as DutchLimitRequest);
       case RoutingType.CLASSIC:
-        return new ClassicQuoteContext(request as ClassicRequest);
+        return new ClassicQuoteContext(log, request as ClassicRequest);
       default:
         throw new Error(`Unsupported routing type: ${request.routingType}`);
     }

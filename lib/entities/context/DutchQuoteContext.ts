@@ -22,14 +22,9 @@ const BPS = 10000;
 
 // manages context around a single top level classic quote request
 export class DutchQuoteContext implements QuoteContext {
-  private log: Logger;
+  constructor(private log: Logger, public request: DutchLimitRequest) {}
 
-  constructor(_log: Logger, public request: DutchLimitRequest) {
-    this.log = _log.child({ transformer: 'DutchQuoteContext' });
-  }
-
-  // Dutch quotes have three external dependencies:
-  // - Dutch RFQ request
+  // Dutch quotes have two external dependencies:
   // - classic request to compare with
   // - classic request to check for route back to ETH
   dependencies(): QuoteRequest[] {
@@ -62,8 +57,9 @@ export class DutchQuoteContext implements QuoteContext {
 
   // return either the rfq quote or a synthetic quote from the classic dependency
   resolve(dependencies: (Quote | null)[]): Quote | null {
+    this.log.info({ dependencies }, 'Resolving classic quote');
     if (dependencies.length !== 3) {
-      throw new Error(`Invalid quote result: ${dependencies}`);
+      throw new Error(`Invalid quote result: ${JSON.stringify(dependencies)}`);
     }
 
     const [quote, classicQuote, routeBackToNative] = dependencies;
@@ -81,7 +77,7 @@ export class DutchQuoteContext implements QuoteContext {
 
     // return the better of the two
     if (this.request.info.type === TradeType.EXACT_INPUT) {
-      return quote;
+      return quote.amountOut.gte(syntheticQuote.amountOut) ? quote : syntheticQuote;
     } else {
       return quote.amountIn.lte(syntheticQuote.amountIn) ? quote : syntheticQuote;
     }
@@ -89,10 +85,7 @@ export class DutchQuoteContext implements QuoteContext {
 
   // transform a classic quote into a synthetic dutch quote
   // if it makes sense to do so
-  getSyntheticQuote(
-    classicQuote: Quote | null,
-    routeBackToNative: Quote | null
-  ): DutchLimitQuote | null {
+  getSyntheticQuote(classicQuote: Quote | null, routeBackToNative: Quote | null): DutchLimitQuote | null {
     // no classic quote to build synthetic from
     if (classicQuote === null) {
       this.log.info('No classic quote, skipping synthetic');

@@ -4,7 +4,16 @@ import Joi from 'joi';
 
 import { v4 as uuidv4 } from 'uuid';
 import { RoutingType } from '../../constants';
-import { ClassicQuote, parseQuoteRequests, Quote, QuoteJSON, QuoteRequest, QuoteRequestBodyJSON, QuoteContextHandler, parseQuoteContexts } from '../../entities';
+import {
+  ClassicQuote,
+  parseQuoteContexts,
+  parseQuoteRequests,
+  Quote,
+  QuoteContextHandler,
+  QuoteJSON,
+  QuoteRequest,
+  QuoteRequestBodyJSON,
+} from '../../entities';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
 import { ContainerInjected, QuoterByRoutingType } from './injector';
@@ -42,7 +51,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     };
 
     log.info({ requestBody: request }, 'request');
-    const contextHandler = new QuoteContextHandler(parseQuoteContexts(log, parseQuoteRequests(request, log)));
+    const contextHandler = new QuoteContextHandler(log, parseQuoteContexts(log, parseQuoteRequests(request, log)));
     const requests = contextHandler.getRequests();
     log.info({ requests }, 'requests');
     const quotes = await getQuotes(quoters, requests);
@@ -82,17 +91,14 @@ export class QuoteHandler extends APIGLambdaHandler<
 }
 
 // fetch quotes for all quote requests using the configured quoters
-export async function getQuotes(
-  quoterByRoutingType: QuoterByRoutingType,
-  requests: QuoteRequest[],
-): Promise<Quote[]> {
+export async function getQuotes(quoterByRoutingType: QuoterByRoutingType, requests: QuoteRequest[]): Promise<Quote[]> {
   const quotes = await Promise.all(
     requests.flatMap((request) => {
       const quoter = quoterByRoutingType[request.routingType];
       if (!quoter) {
         return [];
       }
-      return quoter.quote(request)
+      return quoter.quote(request);
     })
   );
   return quotes.filter((q): q is Quote => !!q);

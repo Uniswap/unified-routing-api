@@ -50,6 +50,28 @@ export const QUOTE_REQUEST_BODY_MULTI = {
   ],
 };
 
+export const DL_REQUEST_BODY = {
+  ...BASE_REQUEST_INFO_EXACT_IN,
+  configs: [
+    {
+      routingType: RoutingType.DUTCH_LIMIT,
+      offerer: OFFERER,
+      exclusivityOverrideBps: 12,
+      auctionPeriodSecs: 60,
+    },
+  ],
+};
+
+export const CLASSIC_REQUEST_BODY = {
+  ...BASE_REQUEST_INFO_EXACT_IN,
+  configs: [
+    {
+      routingType: RoutingType.CLASSIC,
+      protocols: ['V3', 'V2', 'MIXED'],
+    },
+  ],
+};
+
 export function makeClassicRequest(overrides: Partial<QuoteRequestBodyJSON>): ClassicRequest {
   const requestInfo = Object.assign({}, BASE_REQUEST_INFO_EXACT_IN, overrides);
 
