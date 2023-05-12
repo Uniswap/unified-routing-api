@@ -4,7 +4,7 @@ import { BigNumber, ethers } from 'ethers';
 
 import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteJSON } from '.';
-import { DutchLimitRequest } from '..';
+import { DutchLimitRequest, QuoteRequestInfo } from '..';
 import {
   GOUDA_BASE_GAS,
   HUNDRED_PERCENT,
@@ -36,14 +36,18 @@ export class DutchLimitQuote implements Quote {
   // public static improvementExactOut = BigNumber.from(9900);
   public static improvementExactIn = BigNumber.from(10010);
   public static improvementExactOut = BigNumber.from(9990);
-  public endAmountIn: BigNumber;
-  public endAmountOut: BigNumber;
 
+  // build a dutch quote from an RFQ response
   public static fromResponseBody(
     request: DutchLimitRequest,
     body: DutchLimitQuoteJSON,
     nonce?: string
   ): DutchLimitQuote {
+    const { amountIn: amountInEnd, amountOut: amountOutEnd } = calculateEndAmountFromSlippage(
+      request.info,
+      BigNumber.from(body.amountIn),
+      BigNumber.from(body.amountOut)
+    );
     return new DutchLimitQuote(
       currentTimestampInSeconds(),
       request,
@@ -51,12 +55,67 @@ export class DutchLimitQuote implements Quote {
       body.requestId,
       body.quoteId,
       body.tokenIn,
-      BigNumber.from(body.amountIn),
       body.tokenOut,
+      BigNumber.from(body.amountIn),
+      amountInEnd,
       BigNumber.from(body.amountOut),
+      amountOutEnd,
       body.offerer,
       body.filler,
       nonce
+    );
+  }
+
+  // build a synthetic dutch quote from a classic quote
+  public static fromClassicQuote(request: DutchLimitRequest, quote: ClassicQuote): DutchLimitQuote {
+    const { amountIn, amountOut } = applyGasAdjustment(quote);
+    const { amountIn: amountInEnd, amountOut: amountOutEnd } = calculateEndAmountFromSlippage(
+      request.info,
+      amountIn,
+      amountOut
+    );
+    return new DutchLimitQuote(
+      quote.createdAt,
+      request,
+      request.info.tokenInChainId,
+      request.info.requestId,
+      uuidv4(), // synthetic quote doesn't receive a quoteId from RFQ api, so generate one
+      request.info.tokenIn,
+      quote.request.info.tokenOut,
+      amountIn,
+      amountInEnd,
+      amountOut,
+      amountOutEnd,
+      request.config.offerer,
+      '', // synthetic quote has no filler
+      undefined // synthetic quote has no nonce
+    );
+  }
+
+  // reparameterize an RFQ quote with awareness of classic
+  public static reparameterize(quote: DutchLimitQuote, classic?: ClassicQuote): DutchLimitQuote {
+    if (!classic) return quote;
+    const { amountIn: amountInClassic, amountOut: amountOutClassic } = applyGasAdjustment(classic);
+    const { amountIn: amountInEnd, amountOut: amountOutEnd } = calculateEndAmountFromSlippage(
+      quote.request.info,
+      amountInClassic,
+      amountOutClassic
+    );
+    return new DutchLimitQuote(
+      quote.createdAt,
+      quote.request,
+      quote.chainId,
+      quote.quoteId,
+      quote.requestId,
+      quote.tokenIn,
+      quote.tokenOut,
+      quote.amountInStart,
+      amountInEnd,
+      quote.amountOutStart,
+      amountOutEnd,
+      quote.offerer,
+      quote.filler,
+      quote.nonce
     );
   }
 
@@ -67,36 +126,16 @@ export class DutchLimitQuote implements Quote {
     public readonly requestId: string,
     public readonly quoteId: string,
     public readonly tokenIn: string,
-    public readonly amountIn: BigNumber,
     public readonly tokenOut: string,
-    public readonly amountOut: BigNumber,
+    public readonly amountInStart: BigNumber,
+    public readonly amountInEnd: BigNumber,
+    public readonly amountOutStart: BigNumber,
+    public readonly amountOutEnd: BigNumber,
     public readonly offerer: string,
     public readonly filler?: string,
     public readonly nonce?: string
   ) {
     this.createdAt = createdAt || currentTimestampInSeconds();
-    this.endAmountIn =
-      request.info.type === TradeType.EXACT_INPUT ? this.amountIn : this.calculateEndAmountFromSlippage();
-    this.endAmountOut =
-      request.info.type === TradeType.EXACT_INPUT ? this.calculateEndAmountFromSlippage() : this.amountOut;
-  }
-
-  public static fromClassicQuote(request: DutchLimitRequest, quote: ClassicQuote): DutchLimitQuote {
-    const { amountIn, amountOut } = applyGasAdjustment(quote);
-    return new DutchLimitQuote(
-      quote.createdAt,
-      request,
-      request.info.tokenInChainId,
-      request.info.requestId,
-      uuidv4(), // synthetic quote doesn't receive a quoteId from RFQ api, so generate one
-      request.info.tokenIn,
-      amountIn,
-      quote.request.info.tokenOut,
-      amountOut,
-      request.config.offerer,
-      '', // synthetic quote has no filler
-      undefined // synthetic quote has no nonce
-    );
   }
 
   public toJSON(): QuoteJSON {
@@ -120,13 +159,13 @@ export class DutchLimitQuote implements Quote {
       .nonce(BigNumber.from(nonce))
       .input({
         token: this.tokenIn,
-        startAmount: this.amountIn,
-        endAmount: this.endAmountIn,
+        startAmount: this.amountInStart,
+        endAmount: this.amountInEnd,
       })
       .output({
         token: this.tokenOut,
-        startAmount: this.amountOut,
-        endAmount: this.endAmountOut,
+        startAmount: this.amountOutStart,
+        endAmount: this.amountOutEnd,
         recipient: this.request.config.offerer,
       });
 
@@ -147,12 +186,12 @@ export class DutchLimitQuote implements Quote {
       quoteId: this.quoteId,
       tokenIn: this.tokenIn,
       tokenOut: this.tokenOut,
-      amountIn: this.amountIn.toString(),
-      amountOut: this.amountOut.toString(),
-      endAmountIn: this.endAmountIn.toString(),
-      endAmountOut: this.endAmountOut.toString(),
-      amountInGasAdjusted: this.amountIn.toString(),
-      amountOutGasAdjusted: this.amountOut.toString(),
+      amountIn: this.amountInStart.toString(),
+      amountOut: this.amountOutStart.toString(),
+      endAmountIn: this.amountInEnd.toString(),
+      endAmountOut: this.amountOutEnd.toString(),
+      amountInGasAdjusted: this.amountInStart.toString(),
+      amountOutGasAdjusted: this.amountOutStart.toString(),
       offerer: this.offerer,
       filler: this.filler,
       routing: RoutingType[this.routingType],
@@ -161,20 +200,40 @@ export class DutchLimitQuote implements Quote {
     };
   }
 
-  private calculateEndAmountFromSlippage(): BigNumber {
-    if (this.request.info.type === TradeType.EXACT_INPUT) {
-      return this.amountOut
-        .mul(HUNDRED_PERCENT.sub(BigNumber.from(this.request.info.slippageTolerance)))
-        .div(HUNDRED_PERCENT);
-    } else {
-      return this.amountIn
-        .mul(HUNDRED_PERCENT.add(BigNumber.from(this.request.info.slippageTolerance)))
-        .div(HUNDRED_PERCENT);
-    }
-  }
-
   private generateRandomNonce(): string {
     return ethers.BigNumber.from(ethers.utils.randomBytes(31)).shl(8).toString();
+  }
+
+  public get amountOut(): BigNumber {
+    return this.amountOutStart;
+  }
+
+  public get amountIn(): BigNumber {
+    return this.amountInStart;
+  }
+}
+
+type Amounts = {
+  amountIn: BigNumber;
+  amountOut: BigNumber;
+};
+
+function calculateEndAmountFromSlippage(
+  info: QuoteRequestInfo,
+  amountInStart: BigNumber,
+  amountOutStart: BigNumber
+): Amounts {
+  const isExactIn = info.type === TradeType.EXACT_INPUT;
+  if (isExactIn) {
+    return {
+      amountIn: amountInStart,
+      amountOut: amountOutStart.mul(HUNDRED_PERCENT.sub(BigNumber.from(info.slippageTolerance))).div(HUNDRED_PERCENT),
+    };
+  } else {
+    return {
+      amountIn: amountInStart.mul(HUNDRED_PERCENT.add(BigNumber.from(info.slippageTolerance))).div(HUNDRED_PERCENT),
+      amountOut: amountOutStart,
+    };
   }
 }
 
