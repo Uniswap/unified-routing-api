@@ -1,5 +1,5 @@
 import Logger from 'bunyan';
-import { QuoteContext } from '.';
+import { QuoteByKey, QuoteContext } from '.';
 import { ClassicRequest, Quote, QuoteRequest } from '../../entities';
 
 // manages context around a single top level classic quote request
@@ -12,17 +12,15 @@ export class ClassicQuoteContext implements QuoteContext {
 
   // classic quotes have no explicit dependencies and can be resolved by themselves
   dependencies(): QuoteRequest[] {
-    return [];
+    return [this.request];
   }
 
-  resolve(dependencies: (Quote | null)[]): Quote | null {
+  resolve(dependencies: QuoteByKey): Quote | null {
     this.log.info({ dependencies }, 'Resolving classic quote');
-    if (dependencies.length !== 1) {
-      throw new Error(`Invalid quote result: ${dependencies}`);
-    }
+    const quote = dependencies[this.request.key()];
 
-    if (dependencies[0] === null) return null;
+    if (!quote) return null;
 
-    return dependencies[0];
+    return quote;
   }
 }

@@ -1,4 +1,4 @@
-import { QuoteRequest, QuoteRequestInfo } from '.';
+import { defaultRequestKey, QuoteRequest, QuoteRequestInfo } from '.';
 import {
   DEFAULT_AUCTION_PERIOD_SECS,
   DEFAULT_EXCLUSIVITY_OVERRIDE_BPS,
@@ -51,5 +51,9 @@ export class DutchLimitRequest implements QuoteRequest {
     this.info.tokenIn = await getAddress(this.info.tokenInChainId, this.info.tokenIn);
     this.info.tokenOut = await getAddress(this.info.tokenOutChainId, this.info.tokenOut);
     return this;
+  }
+
+  public key(): string {
+    return defaultRequestKey(this);
   }
 }

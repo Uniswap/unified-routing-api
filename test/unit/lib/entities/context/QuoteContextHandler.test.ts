@@ -1,6 +1,6 @@
 import Logger from 'bunyan';
 
-import { Quote, QuoteContext, QuoteContextHandler, QuoteRequest } from '../../../../../lib/entities';
+import { Quote, QuoteByKey, QuoteContext, QuoteContextHandler, QuoteRequest } from '../../../../../lib/entities';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_OUT_WORSE,
@@ -14,7 +14,7 @@ import {
 class MockQuoteContext implements QuoteContext {
   private _dependencies: QuoteRequest[];
   private _quote: Quote | null;
-  public _quoteDependencies: (Quote | null)[];
+  public _quoteDependencies: QuoteByKey;
 
   constructor(public request: QuoteRequest) {
     this._dependencies = [];
@@ -25,7 +25,7 @@ class MockQuoteContext implements QuoteContext {
     return this._dependencies;
   }
 
-  resolve(dependencies: (Quote | null)[]): Quote | null {
+  resolve(dependencies: QuoteByKey): Quote | null {
     this._quoteDependencies = dependencies;
     return this._quote;
   }
@@ -102,6 +102,7 @@ describe('QuoteContextHandler', () => {
       context2.setDependencies([
         Object.assign({}, QUOTE_REQUEST_DL_EXACT_OUT, {
           configs: [],
+          key: QUOTE_REQUEST_DL_EXACT_OUT.key,
         }),
       ]);
       const handler = new QuoteContextHandler(logger, [context1, context2]);
@@ -119,6 +120,7 @@ describe('QuoteContextHandler', () => {
       context2.setDependencies([
         Object.assign({}, QUOTE_REQUEST_DL_EXACT_OUT, {
           requestId: 'different',
+          key: QUOTE_REQUEST_DL_EXACT_OUT.key,
         }),
       ]);
       const handler = new QuoteContextHandler(logger, [context1, context2]);
@@ -138,6 +140,7 @@ describe('QuoteContextHandler', () => {
           ...QUOTE_REQUEST_DL_EXACT_OUT.info,
           tokenIn: 'different',
         },
+        key: QUOTE_REQUEST_DL_EXACT_OUT.key,
       });
       context2.setDependencies([secondExactOut]);
       const handler = new QuoteContextHandler(logger, [context1, context2]);
@@ -155,6 +158,7 @@ describe('QuoteContextHandler', () => {
       const context2 = new MockQuoteContext(QUOTE_REQUEST_CLASSIC);
       const secondExactOut = Object.assign({}, QUOTE_REQUEST_DL, {
         configs: [],
+        key: QUOTE_REQUEST_DL_EXACT_OUT.key,
       });
       context2.setDependencies([secondExactOut]);
       const handler = new QuoteContextHandler(logger, [context1, context2]);
@@ -171,8 +175,8 @@ describe('QuoteContextHandler', () => {
       const context = new MockQuoteContext(QUOTE_REQUEST_DL);
       context.setDependencies([QUOTE_REQUEST_CLASSIC]);
       const handler = new QuoteContextHandler(logger, [context]);
-      handler.resolveQuotes([]);
-      expect(context._quoteDependencies).toEqual([null, null]);
+      expect(handler.resolveQuotes([])).toEqual([]);
+      expect(context._quoteDependencies).toEqual({});
     });
 
     it('passes matching dependencies', () => {
@@ -180,7 +184,10 @@ describe('QuoteContextHandler', () => {
       context.setDependencies([CLASSIC_QUOTE_EXACT_IN_BETTER.request]);
       const handler = new QuoteContextHandler(logger, [context]);
       handler.resolveQuotes([DL_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_IN_BETTER]);
-      expect(context._quoteDependencies).toEqual([DL_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_IN_BETTER]);
+      expect(context._quoteDependencies).toEqual({
+        [DL_QUOTE_EXACT_IN_BETTER.request.key()]: DL_QUOTE_EXACT_IN_BETTER,
+        [CLASSIC_QUOTE_EXACT_IN_BETTER.request.key()]: CLASSIC_QUOTE_EXACT_IN_BETTER,
+      });
     });
 
     it('passes matching dependencies in the proper order', () => {
@@ -188,11 +195,11 @@ describe('QuoteContextHandler', () => {
       context.setDependencies([DL_QUOTE_EXACT_IN_BETTER.request, CLASSIC_QUOTE_EXACT_IN_BETTER.request]);
       const handler = new QuoteContextHandler(logger, [context]);
       handler.resolveQuotes([CLASSIC_QUOTE_EXACT_IN_BETTER, DL_QUOTE_EXACT_IN_BETTER]);
-      expect(context._quoteDependencies).toEqual([
-        DL_QUOTE_EXACT_IN_BETTER,
-        DL_QUOTE_EXACT_IN_BETTER,
-        CLASSIC_QUOTE_EXACT_IN_BETTER,
-      ]);
+      expect(context._quoteDependencies).toEqual({
+        [DL_QUOTE_EXACT_IN_BETTER.request.key()]: DL_QUOTE_EXACT_IN_BETTER,
+        [DL_QUOTE_EXACT_IN_BETTER.request.key()]: DL_QUOTE_EXACT_IN_BETTER,
+        [CLASSIC_QUOTE_EXACT_IN_BETTER.request.key()]: CLASSIC_QUOTE_EXACT_IN_BETTER,
+      });
     });
 
     it('passes one matching and one not matching', () => {
@@ -200,15 +207,10 @@ describe('QuoteContextHandler', () => {
       context.setDependencies([DL_QUOTE_EXACT_IN_BETTER.request, CLASSIC_QUOTE_EXACT_IN_BETTER.request]);
       const handler = new QuoteContextHandler(logger, [context]);
       handler.resolveQuotes([CLASSIC_QUOTE_EXACT_OUT_WORSE, DL_QUOTE_EXACT_IN_BETTER]);
-      expect(context._quoteDependencies).toEqual([DL_QUOTE_EXACT_IN_BETTER, DL_QUOTE_EXACT_IN_BETTER, null]);
-    });
-
-    it('passes if base not matching', () => {
-      const context = new MockQuoteContext(QUOTE_REQUEST_DL);
-      context.setDependencies([DL_QUOTE_EXACT_IN_BETTER.request, CLASSIC_QUOTE_EXACT_IN_BETTER.request]);
-      const handler = new QuoteContextHandler(logger, [context]);
-      handler.resolveQuotes([CLASSIC_QUOTE_EXACT_IN_BETTER]);
-      expect(context._quoteDependencies).toEqual([null, null, CLASSIC_QUOTE_EXACT_IN_BETTER]);
+      expect(context._quoteDependencies).toEqual({
+        [DL_QUOTE_EXACT_IN_BETTER.request.key()]: DL_QUOTE_EXACT_IN_BETTER,
+        [CLASSIC_QUOTE_EXACT_OUT_WORSE.request.key()]: CLASSIC_QUOTE_EXACT_OUT_WORSE,
+      });
     });
   });
 });

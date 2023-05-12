@@ -3,7 +3,7 @@ import { TradeType } from '@uniswap/sdk-core';
 import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
 import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
-import { QuoteContext } from '.';
+import { QuoteByKey, QuoteContext } from '.';
 import {
   ClassicQuote,
   ClassicQuoteDataJSON,
@@ -23,9 +23,13 @@ const BPS = 10000;
 // manages context around a single top level classic quote request
 export class DutchQuoteContext implements QuoteContext {
   private log: Logger;
+  public requestKey: string;
+  public classicKey: string;
+  public routeToNativeKey: string;
 
   constructor(_log: Logger, public request: DutchLimitRequest) {
     this.log = _log.child({ context: 'DutchQuoteContext' });
+    this.requestKey = this.request.key();
   }
 
   // Dutch quotes have two external dependencies:
@@ -35,6 +39,7 @@ export class DutchQuoteContext implements QuoteContext {
     const classicRequest = new ClassicRequest(this.request.info, {
       protocols: [Protocol.MIXED, Protocol.V2, Protocol.V3],
     });
+    this.classicKey = classicRequest.key();
     this.log.info({ classicRequest: classicRequest.info }, 'Adding synthetic classic request');
 
     const native = WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(this.request.info.tokenOutChainId)].address;
@@ -50,32 +55,30 @@ export class DutchQuoteContext implements QuoteContext {
         protocols: [Protocol.MIXED, Protocol.V2, Protocol.V3],
       }
     );
+    this.routeToNativeKey = routeBackToNativeRequest.key();
 
     this.log.info(
       { routeBackToNativeRequest: routeBackToNativeRequest.info },
       'Adding synthetic back to native classic request'
     );
 
-    return [classicRequest, routeBackToNativeRequest];
+    return [this.request, classicRequest, routeBackToNativeRequest];
   }
 
   // return either the rfq quote or a synthetic quote from the classic dependency
-  resolve(dependencies: (Quote | null)[]): Quote | null {
-    this.log.info({ dependencies }, 'Resolving classic quote');
-    if (dependencies.length !== 3) {
-      throw new Error(`Invalid quote result: ${JSON.stringify(dependencies)}`);
-    }
-
-    const [quote, classicQuote, routeBackToNative] = dependencies;
+  resolve(dependencies: QuoteByKey): Quote | null {
+    const quote = dependencies[this.requestKey];
+    const classicQuote = dependencies[this.classicKey];
+    const routeBackToNative = dependencies[this.routeToNativeKey];
     const syntheticQuote = this.getSyntheticQuote(classicQuote, routeBackToNative);
 
     // handle cases where we only either have RFQ or synthetic
-    if (quote === null && syntheticQuote === null) {
+    if (!quote && !syntheticQuote) {
       this.log.warn('No quote or synthetic quote available');
       return null;
-    } else if (quote === null) {
+    } else if (!quote) {
       return syntheticQuote;
-    } else if (syntheticQuote === null) {
+    } else if (!syntheticQuote) {
       return quote;
     }
 
@@ -89,15 +92,15 @@ export class DutchQuoteContext implements QuoteContext {
 
   // transform a classic quote into a synthetic dutch quote
   // if it makes sense to do so
-  getSyntheticQuote(classicQuote: Quote | null, routeBackToNative: Quote | null): DutchLimitQuote | null {
+  getSyntheticQuote(classicQuote?: Quote, routeBackToNative?: Quote): DutchLimitQuote | null {
     // no classic quote to build synthetic from
-    if (classicQuote === null) {
+    if (!classicQuote) {
       this.log.info('No classic quote, skipping synthetic');
       return null;
     }
 
     // no route back to eth; classic quote not usable
-    if (routeBackToNative === null) {
+    if (!routeBackToNative) {
       this.log.info('No route to native quote, skipping synthetic');
       return null;
     }

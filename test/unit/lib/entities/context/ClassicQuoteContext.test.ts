@@ -4,6 +4,7 @@ import { ClassicQuoteContext } from '../../../../../lib/entities';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_IN_WORSE,
+  CLASSIC_QUOTE_EXACT_OUT_WORSE,
   QUOTE_REQUEST_CLASSIC,
 } from '../../../../utils/fixtures';
 
@@ -12,33 +13,35 @@ describe('ClassicQuoteContext', () => {
   logger.level(Logger.FATAL);
 
   describe('dependencies', () => {
-    it('returns no dependencies', () => {
+    it('returns only request dependency', () => {
       const context = new ClassicQuoteContext(logger, QUOTE_REQUEST_CLASSIC);
-      expect(context.dependencies()).toEqual([]);
+      expect(context.dependencies()).toEqual([QUOTE_REQUEST_CLASSIC]);
     });
   });
 
   describe('resolve', () => {
-    it('throws if no dependencies given', () => {
+    it('returns null if no quotes given', () => {
       const context = new ClassicQuoteContext(logger, QUOTE_REQUEST_CLASSIC);
-      expect(() => context.resolve([])).toThrowError('Invalid quote result: ');
+      expect(context.resolve({})).toEqual(null);
     });
 
-    it('throws if too many dependencies given', () => {
+    it('still returns quote if too many dependencies given', () => {
       const context = new ClassicQuoteContext(logger, QUOTE_REQUEST_CLASSIC);
-      expect(() => context.resolve([CLASSIC_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_IN_WORSE])).toThrowError(
-        'Invalid quote result: '
-      );
-    });
-
-    it('returns null if quote is null', () => {
-      const context = new ClassicQuoteContext(logger, QUOTE_REQUEST_CLASSIC);
-      expect(context.resolve([null])).toBeNull();
+      expect(
+        context.resolve({
+          [QUOTE_REQUEST_CLASSIC.key()]: CLASSIC_QUOTE_EXACT_IN_BETTER,
+          [CLASSIC_QUOTE_EXACT_OUT_WORSE.request.key()]: CLASSIC_QUOTE_EXACT_IN_WORSE,
+        })
+      ).toEqual(CLASSIC_QUOTE_EXACT_IN_BETTER);
     });
 
     it('returns quote', () => {
       const context = new ClassicQuoteContext(logger, QUOTE_REQUEST_CLASSIC);
-      expect(context.resolve([CLASSIC_QUOTE_EXACT_IN_BETTER])).toEqual(CLASSIC_QUOTE_EXACT_IN_BETTER);
+      expect(
+        context.resolve({
+          [QUOTE_REQUEST_CLASSIC.key()]: CLASSIC_QUOTE_EXACT_IN_BETTER,
+        })
+      ).toEqual(CLASSIC_QUOTE_EXACT_IN_BETTER);
     });
   });
 });
