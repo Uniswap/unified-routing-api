@@ -22,7 +22,11 @@ const BPS = 10000;
 
 // manages context around a single top level classic quote request
 export class DutchQuoteContext implements QuoteContext {
-  constructor(private log: Logger, public request: DutchLimitRequest) {}
+  private log: Logger;
+
+  constructor(_log: Logger, public request: DutchLimitRequest) {
+    this.log = _log.child({ context: 'DutchQuoteContext' });
+  }
 
   // Dutch quotes have two external dependencies:
   // - classic request to compare with

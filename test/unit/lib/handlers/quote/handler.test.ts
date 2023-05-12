@@ -31,6 +31,10 @@ describe('QuoteHandler', () => {
     const logger = {
       info: jest.fn(),
       error: jest.fn(),
+      child: () => ({
+        info: jest.fn(),
+        error: jest.fn(),
+      }),
     };
 
     const requestInjectedMock: Promise<ApiRInj> = new Promise(
