@@ -4,6 +4,7 @@ import { BigNumber } from 'ethers';
 
 import { SUPPORTED_CHAINS } from '../../config/chains';
 import { DEFAULT_SLIPPAGE_TOLERANCE, RoutingType } from '../../constants';
+import { ValidationError } from '../../util/errors';
 import { currentTimestampInSeconds } from '../../util/time';
 import { ClassicConfig, ClassicConfigJSON, ClassicRequest } from './ClassicRequest';
 import { DutchLimitConfig, DutchLimitConfigJSON, DutchLimitRequest } from './DutchLimitRequest';
@@ -84,6 +85,14 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON, log?: Logger): Qu
       // only log offerer if it's a dutch limit request
       ...(offerer && { offerer: offerer }),
     },
+  });
+
+  const result: Set<RoutingType> = new Set();
+  requests.forEach((request) => {
+    if (result.has(request.routingType)) {
+      throw new ValidationError(`Duplicate routing type: ${request.routingType}`);
+    }
+    result.add(request.routingType);
   });
 
   return requests;
