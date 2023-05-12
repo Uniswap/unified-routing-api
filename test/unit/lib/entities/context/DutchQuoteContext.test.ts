@@ -171,13 +171,13 @@ describe('DutchQuoteContext', () => {
         expect(hasSize).toEqual(true);
       });
 
-      it('returns false if amountOut * 25% == gas used', async () => {
+      it('returns false if amountOut * 55% == gas used', async () => {
         const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL);
 
         const amountOut = ethers.utils.parseEther('1');
-        const fivePercent = amountOut.mul(25).div(100);
+        const gas = amountOut.mul(55).div(100);
         const classicQuote = createClassicQuote(
-          { quote: amountOut.toString(), quoteGasAdjusted: amountOut.sub(fivePercent).toString() },
+          { quote: amountOut.toString(), quoteGasAdjusted: amountOut.sub(gas).toString() },
           'EXACT_INPUT'
         );
 
@@ -201,13 +201,13 @@ describe('DutchQuoteContext', () => {
         expect(hasSize).toEqual(true);
       });
 
-      it('returns false if amountIn * 25% == gas used', async () => {
+      it('returns false if amountIn * 55% == gas used', async () => {
         const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL);
 
         const amountIn = ethers.utils.parseEther('1');
-        const fivePercent = amountIn.mul(25).div(100);
+        const gas = amountIn.mul(55).div(100);
         const classicQuote = createClassicQuote(
-          { quote: amountIn.toString(), quoteGasAdjusted: amountIn.add(fivePercent).toString() },
+          { quote: amountIn.toString(), quoteGasAdjusted: amountIn.add(gas).toString() },
           'EXACT_OUTPUT'
         );
 
