@@ -9,7 +9,7 @@ import {
   parseQuoteContexts,
   parseQuoteRequests,
   Quote,
-  QuoteContextHandler,
+  QuoteContextManager,
   QuoteJSON,
   QuoteRequest,
   QuoteRequestBodyJSON,
@@ -51,7 +51,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     };
 
     log.info({ requestBody: request }, 'request');
-    const contextHandler = new QuoteContextHandler(log, parseQuoteContexts(log, parseQuoteRequests(request, log)));
+    const contextHandler = new QuoteContextManager(log, parseQuoteContexts(log, parseQuoteRequests(request, log)));
     const requests = contextHandler.getRequests();
     log.info({ requests }, 'requests');
     const quotes = await getQuotes(quoters, requests);

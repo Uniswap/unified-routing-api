@@ -30,7 +30,7 @@ export interface QuoteContext {
 }
 
 // handler for quote contexts and their dependencies
-export class QuoteContextHandler {
+export class QuoteContextManager {
   constructor(public log: Logger, public contexts: QuoteContext[]) {}
 
   // deduplicate dependencies
