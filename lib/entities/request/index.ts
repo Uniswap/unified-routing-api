@@ -128,5 +128,6 @@ export function defaultRequestKey(request: QuoteRequest): string {
     routingType: request.routingType,
     // overwrite request id which is irrelevant to deduplication
     requestId: '',
+    slippageTolerance: '',
   });
 }

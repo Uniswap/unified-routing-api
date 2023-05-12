@@ -131,6 +131,24 @@ describe('QuoteContextHandler', () => {
       expect(requests[2]).toMatchObject(QUOTE_REQUEST_DL_EXACT_OUT);
     });
 
+    it('deduplicates even with differing slippage', () => {
+      const context1 = new MockQuoteContext(QUOTE_REQUEST_DL);
+      context1.setDependencies([QUOTE_REQUEST_DL_EXACT_OUT]);
+      const context2 = new MockQuoteContext(QUOTE_REQUEST_CLASSIC);
+      context2.setDependencies([
+        Object.assign({}, QUOTE_REQUEST_DL_EXACT_OUT, {
+          slippage: 'different',
+          key: QUOTE_REQUEST_DL_EXACT_OUT.key,
+        }),
+      ]);
+      const handler = new QuoteContextHandler(logger, [context1, context2]);
+      const requests = handler.getRequests();
+      expect(requests.length).toEqual(3);
+      expect(requests[0]).toMatchObject(QUOTE_REQUEST_DL);
+      expect(requests[1]).toMatchObject(QUOTE_REQUEST_CLASSIC);
+      expect(requests[2]).toMatchObject(QUOTE_REQUEST_DL_EXACT_OUT);
+    });
+
     it('does not deduplicate with different info', () => {
       const context1 = new MockQuoteContext(QUOTE_REQUEST_DL);
       context1.setDependencies([QUOTE_REQUEST_DL_EXACT_OUT]);
