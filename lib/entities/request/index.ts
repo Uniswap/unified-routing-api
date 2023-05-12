@@ -41,6 +41,8 @@ export interface QuoteRequest {
   info: QuoteRequestInfo;
   config: RoutingConfig;
   toJSON(): RoutingConfigJSON;
+  // return a key that uniquely identifies this request
+  key(): string;
 }
 
 export function parseQuoteRequests(body: QuoteRequestBodyJSON, log?: Logger): QuoteRequest[] {
@@ -123,4 +125,18 @@ export function requestInfoEquals(a: QuoteRequestInfo, b: QuoteRequestInfo): boo
 
   // TODO: slippage tolerance is currently formatted differently by type
   // unify so we can add that check here as well
+}
+
+// TODO: maybe have key as getter on request
+// so diff request types can specify their own key
+export function defaultRequestKey(request: QuoteRequest): string {
+  // specify request key as the shared info and routing type
+  // so we make have multiple requests with different configs
+  return JSON.stringify({
+    ...request.info,
+    routingType: request.routingType,
+    // overwrite request id which is irrelevant to deduplication
+    requestId: '',
+    slippageTolerance: '',
+  });
 }

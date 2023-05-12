@@ -5,30 +5,15 @@ import { default as bunyan, default as Logger } from 'bunyan';
 import { RoutingType } from '../../constants';
 import { QuoteRequestBodyJSON } from '../../entities';
 import { Quoter, RfqQuoter, RoutingApiQuoter } from '../../providers/quoters';
-import {
-  ClassicQuoteInserter,
-  CompoundQuoteTransformer,
-  CompoundRequestTransformer,
-  OnlyConfiguredQuotersFilter,
-  QuoteTransformer,
-  RequestTransformer,
-  RouteBackToNativeInserter,
-  SyntheticUniswapXTransformer,
-  UniswapXOrderSizeFilter,
-} from '../../providers/transformers';
-import { InvalidQuoteFilter } from '../../providers/transformers/QuoteTransformers/InvalidQuoteFilter';
-import { NoRouteBackToNativeFilter } from '../../providers/transformers/QuoteTransformers/NoRouteBackToNativeFilter';
 import { checkDefined } from '../../util/preconditions';
 import { ApiInjector, ApiRInj } from '../base/api-handler';
 
 export type QuoterByRoutingType = {
-  [key in RoutingType]?: Quoter[];
+  [key in RoutingType]?: Quoter;
 };
 
 export interface ContainerInjected {
   quoters: QuoterByRoutingType;
-  quoteTransformer: QuoteTransformer;
-  requestTransformer: RequestTransformer;
 }
 
 export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void> {
@@ -43,27 +28,11 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
     const routingApiUrl = checkDefined(process.env.ROUTING_API_URL, 'ROUTING_API_URL is not defined');
     const serviceUrl = checkDefined(process.env.SERVICE_URL, 'SERVICE_URL is not defined');
 
-    // TODO: consider instantiating one quoter per routing type instead
     return {
       quoters: {
-        [RoutingType.DUTCH_LIMIT]: [new RfqQuoter(log, paramApiUrl, serviceUrl)],
-        [RoutingType.CLASSIC]: [new RoutingApiQuoter(log, routingApiUrl)],
+        [RoutingType.DUTCH_LIMIT]: new RfqQuoter(log, paramApiUrl, serviceUrl),
+        [RoutingType.CLASSIC]: new RoutingApiQuoter(log, routingApiUrl),
       },
-      // transformer ordering matters! transformers should generally come before filters
-      quoteTransformer: new CompoundQuoteTransformer(
-        [new SyntheticUniswapXTransformer(log)],
-        [
-          new NoRouteBackToNativeFilter(log),
-          new UniswapXOrderSizeFilter(log),
-          new OnlyConfiguredQuotersFilter(log),
-          new InvalidQuoteFilter(log),
-        ]
-      ),
-
-      requestTransformer: new CompoundRequestTransformer(
-        [new ClassicQuoteInserter(log), new RouteBackToNativeInserter(log)],
-        []
-      ),
     };
   }
 

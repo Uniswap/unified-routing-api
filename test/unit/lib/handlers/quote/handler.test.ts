@@ -3,7 +3,8 @@ import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { default as Logger } from 'bunyan';
 
 import { DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
-import { ClassicQuote, DutchLimitQuote, Quote } from '../../../../../lib/entities';
+import { RoutingType } from '../../../../../lib/constants';
+import { ClassicQuote, ClassicQuoteDataJSON, DutchLimitQuote, Quote } from '../../../../../lib/entities';
 import { QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index';
 import { ApiInjector, ApiRInj } from '../../../../../lib/handlers/base';
 import { compareQuotes, getBestQuote, getQuotes, QuoteHandler } from '../../../../../lib/handlers/quote/handler';
@@ -12,13 +13,12 @@ import { Quoter } from '../../../../../lib/providers/quoters';
 import { CHECKSUM_OFFERER } from '../../../../constants';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
-  CLASSIC_QUOTE_EXACT_IN_BETTER_PREFERENCE,
   CLASSIC_QUOTE_EXACT_IN_WORSE,
   CLASSIC_QUOTE_EXACT_OUT_BETTER,
   CLASSIC_QUOTE_EXACT_OUT_WORSE,
+  CLASSIC_REQUEST_BODY,
   DL_QUOTE_EXACT_IN_BETTER,
   DL_QUOTE_EXACT_IN_WORSE,
-  DL_QUOTE_EXACT_IN_WORSE_PREFERENCE,
   DL_QUOTE_EXACT_OUT_BETTER,
   DL_QUOTE_EXACT_OUT_WORSE,
   QUOTE_REQUEST_BODY_MULTI,
@@ -31,7 +31,12 @@ describe('QuoteHandler', () => {
     const logger = {
       info: jest.fn(),
       error: jest.fn(),
+      child: () => ({
+        info: jest.fn(),
+        error: jest.fn(),
+      }),
     };
+
     const requestInjectedMock: Promise<ApiRInj> = new Promise(
       (resolve) =>
         resolve({
@@ -40,33 +45,21 @@ describe('QuoteHandler', () => {
         }) as unknown as ApiRInj
     );
 
-    const requestTransformerMock = {
-      transform: jest.fn().mockReturnValue([QUOTE_REQUEST_DL]),
-    };
-
-    const quoteTransformerMock = {
-      transform: jest.fn().mockResolvedValue([DL_QUOTE_EXACT_IN_BETTER]),
-    };
-
     const injectorPromiseMock = (
-      quoters: Quoter[],
-      quoteTransformerMockOverride?: any
+      quoters: QuoterByRoutingType
     ): Promise<ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>> =>
       new Promise((resolve) =>
         resolve({
           getContainerInjected: () => {
             return {
               quoters: quoters,
-              requestTransformer: requestTransformerMock,
-              quoteTransformer: quoteTransformerMockOverride ?? quoteTransformerMock,
             };
           },
           getRequestInjected: () => requestInjectedMock,
         } as unknown as ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>)
       );
 
-    const getQuoteHandler = (quoters: Quoter[], quoteTransformerMock?: any) =>
-      new QuoteHandler('quote', injectorPromiseMock(quoters, quoteTransformerMock));
+    const getQuoteHandler = (quoters: QuoterByRoutingType) => new QuoteHandler('quote', injectorPromiseMock(quoters));
 
     const RfqQuoterMock = (dlQuote: DutchLimitQuote): Quoter => {
       return {
@@ -84,12 +77,19 @@ describe('QuoteHandler', () => {
       } as APIGatewayProxyEvent);
 
     describe('handler test', () => {
+      it('handles classic quotes', async () => {
+        const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE) };
+        const res = await getQuoteHandler(quoters).handler(getEvent(CLASSIC_REQUEST_BODY), {} as unknown as Context);
+        const quoteJSON = JSON.parse(res.body).quote as ClassicQuoteDataJSON;
+        expect(quoteJSON.quoteGasAdjusted).toBe(CLASSIC_QUOTE_EXACT_IN_WORSE.amountOutGasAdjusted.toString());
+      });
+
       it('sets the DL quote endAmount using classic quote', async () => {
-        const quoteTransformerMockOverride = {
-          transform: jest.fn().mockResolvedValue([DL_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_IN_WORSE]),
+        const quoters = {
+          [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
+          [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),
         };
-        const quoters = [RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER), ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE)];
-        const res = await getQuoteHandler(quoters, quoteTransformerMockOverride).handler(
+        const res = await getQuoteHandler(quoters).handler(
           getEvent(QUOTE_REQUEST_BODY_MULTI),
           {} as unknown as Context
         );
@@ -101,7 +101,7 @@ describe('QuoteHandler', () => {
 
     describe('logging test', () => {
       it('logs the requests and response in correct format', async () => {
-        const quoters = [RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER)];
+        const quoters = { [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER) };
         await getQuoteHandler(quoters).handler(getEvent(QUOTE_REQUEST_BODY_MULTI), {} as unknown as Context);
         expect(logger.info).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -179,34 +179,6 @@ describe('QuoteHandler', () => {
       );
     });
 
-    it('returns false if lhs is better but rhs dutch limit preference overcomes', () => {
-      expect(compareQuotes(CLASSIC_QUOTE_EXACT_OUT_BETTER, DL_QUOTE_EXACT_OUT_WORSE, TradeType.EXACT_OUTPUT)).toBe(
-        false
-      );
-
-      expect(
-        compareQuotes(
-          CLASSIC_QUOTE_EXACT_IN_BETTER_PREFERENCE,
-          DL_QUOTE_EXACT_IN_WORSE_PREFERENCE,
-          TradeType.EXACT_INPUT
-        )
-      ).toBe(false);
-    });
-
-    it('returns true if rhs is better but lhs dutch limit preference overcomes', () => {
-      expect(compareQuotes(DL_QUOTE_EXACT_OUT_WORSE, CLASSIC_QUOTE_EXACT_OUT_BETTER, TradeType.EXACT_OUTPUT)).toBe(
-        false
-      );
-
-      expect(
-        compareQuotes(
-          CLASSIC_QUOTE_EXACT_IN_BETTER_PREFERENCE,
-          DL_QUOTE_EXACT_IN_WORSE_PREFERENCE,
-          TradeType.EXACT_INPUT
-        )
-      ).toBe(false);
-    });
-
     it('returns false if lhs is a worse mixed type', () => {
       expect(compareQuotes(DL_QUOTE_EXACT_IN_WORSE, CLASSIC_QUOTE_EXACT_IN_BETTER, TradeType.EXACT_INPUT)).toBe(false);
       expect(compareQuotes(CLASSIC_QUOTE_EXACT_IN_WORSE, DL_QUOTE_EXACT_IN_BETTER, TradeType.EXACT_INPUT)).toBe(false);
@@ -240,65 +212,63 @@ describe('QuoteHandler', () => {
 
     it('returns null if the only specified quoter in config returns null', async () => {
       const quoters: QuoterByRoutingType = {
-        CLASSIC: [quoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER)],
-        DUTCH_LIMIT: [nullQuoterMock()],
+        CLASSIC: quoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER),
+        DUTCH_LIMIT: nullQuoterMock(),
       };
-      const quotesByRoutingType = {};
-      const quotes = await getQuotes(quoters, [QUOTE_REQUEST_DL], quotesByRoutingType);
+      const quotes = await getQuotes(quoters, [QUOTE_REQUEST_DL]);
       const bestQuote = await getBestQuote(quotes);
       expect(bestQuote).toBeNull();
     });
 
     it('only considers quoters that did not throw', async () => {
       const quoters: QuoterByRoutingType = {
-        CLASSIC: [quoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER)],
-        DUTCH_LIMIT: [nullQuoterMock()],
+        CLASSIC: quoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER),
+        DUTCH_LIMIT: nullQuoterMock(),
       };
-      const quotesByRoutingType = {};
-      const quotes = await getQuotes(quoters, QUOTE_REQUEST_MULTI, quotesByRoutingType);
+      const quotes = await getQuotes(quoters, QUOTE_REQUEST_MULTI);
       const bestQuote = await getBestQuote(quotes);
       expect(bestQuote).toEqual(CLASSIC_QUOTE_EXACT_IN_BETTER);
     });
 
     it('returns the best quote among two dutch limit quotes', async () => {
-      const quoters: QuoterByRoutingType = {
-        DUTCH_LIMIT: [quoterMock(DL_QUOTE_EXACT_IN_WORSE), quoterMock(DL_QUOTE_EXACT_IN_BETTER)],
+      let quoters: QuoterByRoutingType = {
+        DUTCH_LIMIT: quoterMock(DL_QUOTE_EXACT_IN_WORSE),
       };
-      const quotesByRoutingType = {};
-      const quotes = await getQuotes(quoters, [QUOTE_REQUEST_DL], quotesByRoutingType);
+      let quotes = await getQuotes(quoters, [QUOTE_REQUEST_DL]);
+      quoters = {
+        DUTCH_LIMIT: quoterMock(DL_QUOTE_EXACT_IN_BETTER),
+      };
+      quotes = quotes.concat(await getQuotes(quoters, [QUOTE_REQUEST_DL]));
       const bestQuote = await getBestQuote(quotes);
       expect(bestQuote).toEqual(DL_QUOTE_EXACT_IN_BETTER);
     });
 
     it('returns the dutch limit quote if no classic specified', async () => {
       const quoters: QuoterByRoutingType = {
-        DUTCH_LIMIT: [quoterMock(DL_QUOTE_EXACT_IN_WORSE)],
-        CLASSIC: [quoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER)],
+        DUTCH_LIMIT: quoterMock(DL_QUOTE_EXACT_IN_WORSE),
+        CLASSIC: quoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER),
       };
-      const quotesByRoutingType = {};
-      const quotes = await getQuotes(quoters, [QUOTE_REQUEST_DL], quotesByRoutingType);
+      const quotes = await getQuotes(quoters, [QUOTE_REQUEST_DL]);
       const bestQuote = await getBestQuote(quotes);
       expect(bestQuote).toEqual(DL_QUOTE_EXACT_IN_WORSE);
     });
 
     it('returns the classic quote among one DL quote and one classic quote', async () => {
       const quoters: QuoterByRoutingType = {
-        DUTCH_LIMIT: [quoterMock(DL_QUOTE_EXACT_IN_WORSE)],
-        CLASSIC: [quoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER)],
+        DUTCH_LIMIT: quoterMock(DL_QUOTE_EXACT_IN_WORSE),
+        CLASSIC: quoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER),
       };
-      const quotesByRoutingType = {};
-      const quotes = await getQuotes(quoters, QUOTE_REQUEST_MULTI, quotesByRoutingType);
+      const quotes = await getQuotes(quoters, QUOTE_REQUEST_MULTI);
       const bestQuote = await getBestQuote(quotes);
       expect(bestQuote).toEqual(CLASSIC_QUOTE_EXACT_IN_BETTER);
     });
 
     it('returns the DL quote among one DL quote and one classic quote', async () => {
       const quoters: QuoterByRoutingType = {
-        DUTCH_LIMIT: [quoterMock(DL_QUOTE_EXACT_IN_BETTER)],
-        CLASSIC: [quoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE)],
+        DUTCH_LIMIT: quoterMock(DL_QUOTE_EXACT_IN_BETTER),
+        CLASSIC: quoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
       };
-      const quotesByRoutingType = {};
-      const quotes = await getQuotes(quoters, QUOTE_REQUEST_MULTI, quotesByRoutingType);
+      const quotes = await getQuotes(quoters, QUOTE_REQUEST_MULTI);
       const bestQuote = await getBestQuote(quotes);
       expect(bestQuote).toEqual(DL_QUOTE_EXACT_IN_BETTER);
     });

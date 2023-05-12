@@ -1,7 +1,7 @@
 import { Protocol } from '@uniswap/router-sdk';
 import { BigNumber } from 'ethers';
 
-import { QuoteRequest, QuoteRequestInfo } from '.';
+import { defaultRequestKey, QuoteRequest, QuoteRequestInfo } from '.';
 import { RoutingType } from '../../constants';
 import { DutchLimitRequest } from './DutchLimitRequest';
 
@@ -57,6 +57,10 @@ export class ClassicRequest implements QuoteRequest {
       protocols: this.config.protocols?.map((p: Protocol) => p.toString()),
       ...(this.config.permitAmount !== undefined && { permitAmount: this.config.permitAmount.toString() }),
     });
+  }
+
+  public key(): string {
+    return defaultRequestKey(this);
   }
 }
 
