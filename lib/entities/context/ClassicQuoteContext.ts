@@ -7,7 +7,7 @@ export class ClassicQuoteContext implements QuoteContext {
   private log: Logger;
 
   constructor(_log: Logger, public request: ClassicRequest) {
-    this.log = _log.child({ context: 'DutchQuoteContext' });
+    this.log = _log.child({ context: 'ClassicQuoteContext' });
   }
 
   // classic quotes have no explicit dependencies and can be resolved by themselves
