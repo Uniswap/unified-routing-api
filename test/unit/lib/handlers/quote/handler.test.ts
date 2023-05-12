@@ -4,7 +4,7 @@ import { default as Logger } from 'bunyan';
 
 import { DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
 import { RoutingType } from '../../../../../lib/constants';
-import { ClassicQuote, ClassicQuoteDataJSON, DutchLimitQuote, Quote } from '../../../../../lib/entities';
+import { ClassicQuote, ClassicQuoteDataJSON, DutchLimitQuote, Quote, applyGasAdjustment } from '../../../../../lib/entities';
 import { QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index';
 import { ApiInjector, ApiRInj } from '../../../../../lib/handlers/base';
 import { compareQuotes, getBestQuote, getQuotes, QuoteHandler } from '../../../../../lib/handlers/quote/handler';
@@ -93,9 +93,11 @@ describe('QuoteHandler', () => {
           getEvent(QUOTE_REQUEST_BODY_MULTI),
           {} as unknown as Context
         );
+        const { amountOut: amountOutClassic } = applyGasAdjustment(CLASSIC_QUOTE_EXACT_IN_WORSE);
+        const slippageAdjustedAmountOut = amountOutClassic.mul(95).div(100);
         const quoteJSON = JSON.parse(res.body).quote as DutchLimitOrderInfoJSON;
         expect(quoteJSON.outputs.length).toBe(1);
-        expect(quoteJSON.outputs[0].endAmount).toBe(CLASSIC_QUOTE_EXACT_IN_WORSE.amountOutGasAdjusted.toString());
+        expect(quoteJSON.outputs[0].endAmount).toBe(slippageAdjustedAmountOut.toString());
       });
     });
 
