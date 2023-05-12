@@ -26,10 +26,12 @@ export class DutchQuoteContext implements QuoteContext {
   public requestKey: string;
   public classicKey: string;
   public routeToNativeKey: string;
+  public needsRouteToNative: boolean;
 
   constructor(_log: Logger, public request: DutchLimitRequest) {
     this.log = _log.child({ context: 'DutchQuoteContext' });
     this.requestKey = this.request.key();
+    this.needsRouteToNative = false;
   }
 
   // Dutch quotes have two external dependencies:
@@ -42,27 +44,33 @@ export class DutchQuoteContext implements QuoteContext {
     this.classicKey = classicRequest.key();
     this.log.info({ classicRequest: classicRequest.info }, 'Adding synthetic classic request');
 
+    const result = [this.request, classicRequest];
+
     const native = WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(this.request.info.tokenOutChainId)].address;
-    const routeBackToNativeRequest = new ClassicRequest(
-      {
-        ...this.request.info,
-        type: TradeType.EXACT_OUTPUT,
-        tokenIn: this.request.info.tokenOut,
-        amount: ethers.utils.parseEther('1'),
-        tokenOut: native,
-      },
-      {
-        protocols: [Protocol.MIXED, Protocol.V2, Protocol.V3],
-      }
-    );
-    this.routeToNativeKey = routeBackToNativeRequest.key();
+    if (this.request.info.tokenOut !== native) {
+      this.needsRouteToNative = true;
+      const routeBackToNativeRequest = new ClassicRequest(
+        {
+          ...this.request.info,
+          type: TradeType.EXACT_OUTPUT,
+          tokenIn: this.request.info.tokenOut,
+          amount: ethers.utils.parseEther('1'),
+          tokenOut: native,
+        },
+        {
+          protocols: [Protocol.MIXED, Protocol.V2, Protocol.V3],
+        }
+      );
+      this.routeToNativeKey = routeBackToNativeRequest.key();
+      result.push(routeBackToNativeRequest);
 
-    this.log.info(
-      { routeBackToNativeRequest: routeBackToNativeRequest.info },
-      'Adding synthetic back to native classic request'
-    );
+      this.log.info(
+        { routeBackToNativeRequest: routeBackToNativeRequest.info },
+        'Adding synthetic back to native classic request'
+      );
+    }
 
-    return [this.request, classicRequest, routeBackToNativeRequest];
+    return result;
   }
 
   // return either the rfq quote or a synthetic quote from the classic dependency
@@ -100,7 +108,7 @@ export class DutchQuoteContext implements QuoteContext {
     }
 
     // no route back to eth; classic quote not usable
-    if (!routeBackToNative) {
+    if (this.needsRouteToNative && !routeBackToNative) {
       this.log.info('No route to native quote, skipping synthetic');
       return null;
     }
