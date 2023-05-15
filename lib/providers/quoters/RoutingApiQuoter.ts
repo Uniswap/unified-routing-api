@@ -1,7 +1,7 @@
 import { TradeType } from '@uniswap/sdk-core';
-import axios from './helpers';
 import Logger from 'bunyan';
 import querystring from 'querystring';
+import axios from './helpers';
 
 import { RoutingType } from '../../constants';
 import { ClassicQuote, ClassicRequest, Quote } from '../../entities';

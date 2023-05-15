@@ -1,7 +1,7 @@
 import { TradeType } from '@uniswap/sdk-core';
-import axios from './helpers';
 import Logger from 'bunyan';
 import { BigNumber } from 'ethers';
+import axios from './helpers';
 
 import { RoutingType } from '../../constants';
 import { DutchLimitQuote, DutchLimitRequest, Quote } from '../../entities';
