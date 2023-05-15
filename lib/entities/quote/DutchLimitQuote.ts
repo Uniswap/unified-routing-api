@@ -29,6 +29,11 @@ export type DutchLimitQuoteJSON = {
   filler?: string;
 };
 
+type Amounts = {
+  amountIn: BigNumber;
+  amountOut: BigNumber;
+};
+
 export class DutchLimitQuote implements Quote {
   public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
   // TODO: replace with better values
@@ -43,7 +48,7 @@ export class DutchLimitQuote implements Quote {
     body: DutchLimitQuoteJSON,
     nonce?: string
   ): DutchLimitQuote {
-    const { amountIn: amountInEnd, amountOut: amountOutEnd } = calculateEndAmountFromSlippage(
+    const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchLimitQuote.calculateEndAmountFromSlippage(
       request.info,
       BigNumber.from(body.amountIn),
       BigNumber.from(body.amountOut)
@@ -68,8 +73,8 @@ export class DutchLimitQuote implements Quote {
 
   // build a synthetic dutch quote from a classic quote
   public static fromClassicQuote(request: DutchLimitRequest, quote: ClassicQuote): DutchLimitQuote {
-    const { amountIn, amountOut } = applyGasAdjustment(quote);
-    const { amountIn: amountInEnd, amountOut: amountOutEnd } = calculateEndAmountFromSlippage(
+    const { amountIn, amountOut } = DutchLimitQuote.applyGasAdjustment(quote);
+    const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchLimitQuote.calculateEndAmountFromSlippage(
       request.info,
       amountIn,
       amountOut
@@ -95,8 +100,8 @@ export class DutchLimitQuote implements Quote {
   // reparameterize an RFQ quote with awareness of classic
   public static reparameterize(quote: DutchLimitQuote, classic?: ClassicQuote): DutchLimitQuote {
     if (!classic) return quote;
-    const { amountIn: amountInClassic, amountOut: amountOutClassic } = applyGasAdjustment(classic);
-    const { amountIn: amountInEnd, amountOut: amountOutEnd } = calculateEndAmountFromSlippage(
+    const { amountIn: amountInClassic, amountOut: amountOutClassic } = DutchLimitQuote.applyGasAdjustment(classic);
+    const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchLimitQuote.calculateEndAmountFromSlippage(
       quote.request.info,
       amountInClassic,
       amountOutClassic
@@ -211,84 +216,84 @@ export class DutchLimitQuote implements Quote {
   public get amountIn(): BigNumber {
     return this.amountInStart;
   }
-}
 
-type Amounts = {
-  amountIn: BigNumber;
-  amountOut: BigNumber;
-};
+  // static helpers
 
-function calculateEndAmountFromSlippage(
-  info: QuoteRequestInfo,
-  amountInStart: BigNumber,
-  amountOutStart: BigNumber
-): Amounts {
-  const isExactIn = info.type === TradeType.EXACT_INPUT;
-  if (isExactIn) {
-    return {
-      amountIn: amountInStart,
-      amountOut: amountOutStart.mul(HUNDRED_PERCENT.sub(BigNumber.from(info.slippageTolerance))).div(HUNDRED_PERCENT),
-    };
-  } else {
-    return {
-      amountIn: amountInStart.mul(HUNDRED_PERCENT.add(BigNumber.from(info.slippageTolerance))).div(HUNDRED_PERCENT),
-      amountOut: amountOutStart,
-    };
-  }
-}
-
-// Calculates the gas adjustment for the given quote if processed through Gouda
-export function applyGasAdjustment(classicQuote: ClassicQuote): { amountIn: BigNumber; amountOut: BigNumber } {
-  const info = classicQuote.request.info;
-  const gasAdjustment = getGasAdjustment(classicQuote);
-
-  // get ratio of gas used to gas used with WETH wrap
-  const gasUseEstimate = BigNumber.from(classicQuote.toJSON().gasUseEstimate);
-  const gasUseRatio = gasUseEstimate.add(gasAdjustment).mul(100).div(gasUseEstimate);
-
-  // multiply the original gasUseEstimate in quoteToken by the ratio
-  const newGasUseEstimateQuote = BigNumber.from(classicQuote.toJSON().gasUseEstimateQuote).mul(gasUseRatio).div(100);
-
-  if (info.type === TradeType.EXACT_INPUT) {
-    const amountOut = newGasUseEstimateQuote.gt(classicQuote.amountOut)
-      ? BigNumber.from(0)
-      : classicQuote.amountOut.sub(newGasUseEstimateQuote).mul(DutchLimitQuote.improvementExactIn).div(HUNDRED_PERCENT);
-    return {
-      amountIn: info.amount,
-      amountOut: amountOut.lt(0) ? BigNumber.from(0) : amountOut,
-    };
-  } else {
-    return {
-      amountIn: classicQuote.amountIn
-        .add(newGasUseEstimateQuote)
-        .mul(DutchLimitQuote.improvementExactOut)
-        .div(HUNDRED_PERCENT),
-      amountOut: info.amount,
-    };
-  }
-}
-
-// Returns the number of gas units extra required to execute this quote through Gouda
-export function getGasAdjustment(classicQuote: ClassicQuote): BigNumber {
-  const wethAdjustment = getWETHGasAdjustment(classicQuote);
-  return wethAdjustment.add(GOUDA_BASE_GAS);
-}
-
-// Returns the number of gas units to wrap ETH if required
-export function getWETHGasAdjustment(quote: ClassicQuote): BigNumber {
-  const info = quote.request.info;
-  let result = BigNumber.from(0);
-
-  // gouda does not naturally support ETH input, but user still has to wrap it
-  // so should be considered in the quote pricing
-  if (info.tokenIn === NATIVE_ADDRESS) {
-    result = result.add(WETH_WRAP_GAS);
+  static calculateEndAmountFromSlippage(
+    info: QuoteRequestInfo,
+    amountInStart: BigNumber,
+    amountOutStart: BigNumber
+  ): Amounts {
+    const isExactIn = info.type === TradeType.EXACT_INPUT;
+    if (isExactIn) {
+      return {
+        amountIn: amountInStart,
+        amountOut: amountOutStart.mul(HUNDRED_PERCENT.sub(BigNumber.from(info.slippageTolerance))).div(HUNDRED_PERCENT),
+      };
+    } else {
+      return {
+        amountIn: amountInStart.mul(HUNDRED_PERCENT.add(BigNumber.from(info.slippageTolerance))).div(HUNDRED_PERCENT),
+        amountOut: amountOutStart,
+      };
+    }
   }
 
-  // fill contract must unwrap WETH output tokens
-  if (info.tokenOut === NATIVE_ADDRESS) {
-    result = result.add(WETH_UNWRAP_GAS);
+  // Calculates the gas adjustment for the given quote if processed through Gouda
+  static applyGasAdjustment(classicQuote: ClassicQuote): { amountIn: BigNumber; amountOut: BigNumber } {
+    const info = classicQuote.request.info;
+    const gasAdjustment = DutchLimitQuote.getGasAdjustment(classicQuote);
+
+    // get ratio of gas used to gas used with WETH wrap
+    const gasUseEstimate = BigNumber.from(classicQuote.toJSON().gasUseEstimate);
+    const gasUseRatio = gasUseEstimate.add(gasAdjustment).mul(100).div(gasUseEstimate);
+
+    // multiply the original gasUseEstimate in quoteToken by the ratio
+    const newGasUseEstimateQuote = BigNumber.from(classicQuote.toJSON().gasUseEstimateQuote).mul(gasUseRatio).div(100);
+
+    if (info.type === TradeType.EXACT_INPUT) {
+      const amountOut = newGasUseEstimateQuote.gt(classicQuote.amountOut)
+        ? BigNumber.from(0)
+        : classicQuote.amountOut
+            .sub(newGasUseEstimateQuote)
+            .mul(DutchLimitQuote.improvementExactIn)
+            .div(HUNDRED_PERCENT);
+      return {
+        amountIn: info.amount,
+        amountOut: amountOut.lt(0) ? BigNumber.from(0) : amountOut,
+      };
+    } else {
+      return {
+        amountIn: classicQuote.amountIn
+          .add(newGasUseEstimateQuote)
+          .mul(DutchLimitQuote.improvementExactOut)
+          .div(HUNDRED_PERCENT),
+        amountOut: info.amount,
+      };
+    }
   }
 
-  return result;
+  // Returns the number of gas units extra required to execute this quote through Gouda
+  static getGasAdjustment(classicQuote: ClassicQuote): BigNumber {
+    const wethAdjustment = DutchLimitQuote.getWETHGasAdjustment(classicQuote);
+    return wethAdjustment.add(GOUDA_BASE_GAS);
+  }
+
+  // Returns the number of gas units to wrap ETH if required
+  static getWETHGasAdjustment(quote: ClassicQuote): BigNumber {
+    const info = quote.request.info;
+    let result = BigNumber.from(0);
+
+    // gouda does not naturally support ETH input, but user still has to wrap it
+    // so should be considered in the quote pricing
+    if (info.tokenIn === NATIVE_ADDRESS) {
+      result = result.add(WETH_WRAP_GAS);
+    }
+
+    // fill contract must unwrap WETH output tokens
+    if (info.tokenOut === NATIVE_ADDRESS) {
+      result = result.add(WETH_UNWRAP_GAS);
+    }
+
+    return result;
+  }
 }
