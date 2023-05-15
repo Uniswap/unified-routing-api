@@ -74,9 +74,12 @@ export class DutchQuoteContext implements QuoteContext {
 
   // return either the rfq quote or a synthetic quote from the classic dependency
   resolve(dependencies: QuoteByKey): Quote | null {
-    const quote = dependencies[this.requestKey];
     const classicQuote = dependencies[this.classicKey];
     const routeBackToNative = dependencies[this.routeToNativeKey];
+    const quote = DutchLimitQuote.reparameterize(
+      dependencies[this.requestKey] as DutchLimitQuote,
+      classicQuote as ClassicQuote
+    );
     const syntheticQuote = this.getSyntheticQuote(classicQuote, routeBackToNative);
 
     // handle cases where we only either have RFQ or synthetic
