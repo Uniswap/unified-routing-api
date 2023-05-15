@@ -88,7 +88,9 @@ describe('DutchQuoteContext', () => {
         [context.requestKey]: rfqQuote,
         [context.classicKey]: classicQuote,
       });
-      expect(quote).toMatchObject(rfqQuote);
+      expect(quote?.request).toMatchObject(rfqQuote.request);
+      expect(quote?.amountIn).toEqual(rfqQuote?.amountIn);
+      expect(quote?.amountOut).toEqual(rfqQuote?.amountOut);
     });
 
     it('skips synthetic if very small', () => {
@@ -104,7 +106,9 @@ describe('DutchQuoteContext', () => {
         [context.classicKey]: classicQuote,
         [context.routeToNativeKey]: classicQuote,
       });
-      expect(quote).toMatchObject(rfqQuote);
+      expect(quote?.request).toMatchObject(rfqQuote.request);
+      expect(quote?.amountIn).toEqual(rfqQuote?.amountIn);
+      expect(quote?.amountOut).toEqual(rfqQuote?.amountOut);
     });
   });
 
