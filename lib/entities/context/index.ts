@@ -26,7 +26,7 @@ export interface QuoteContext {
   // params should be in the same order as dependencies response
   // but resolved with quotes
   // returns null if no usable quote is resolved
-  resolve(dependencies: QuoteByKey): Quote | null;
+  resolve(dependencies: QuoteByKey): Promise<Quote | null>;
 }
 
 // handler for quote contexts and their dependencies
@@ -60,18 +60,20 @@ export class QuoteContextManager {
   }
 
   // resolve quotes from quote contexts using quoted dependencies
-  resolveQuotes(quotes: Quote[]): Quote[] {
+  async resolveQuotes(quotes: Quote[]): Promise<Quote[]> {
     this.log.info({ quotes }, `Context quotes`);
     const allQuotes: QuoteByKey = {};
     for (const quote of quotes) {
       allQuotes[quote.request.key()] = quote;
     }
 
-    return this.contexts
-      .map((context) => {
+    const resolved = await Promise.all(
+      this.contexts.map((context) => {
         return context.resolve(allQuotes);
       })
-      .filter((quote) => quote !== null) as Quote[];
+    );
+
+    return resolved.filter((quote) => quote !== null) as Quote[];
   }
 }
 
