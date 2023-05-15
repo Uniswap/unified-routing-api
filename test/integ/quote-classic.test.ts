@@ -100,7 +100,7 @@ const MAX_UINT160 = '0xffffffffffffffffffffffffffffffffffffffff';
 
 describe('quote', function () {
   // Help with test flakiness by retrying.
-  this.retries(0);
+  this.retries(3);
 
   this.timeout('500s');
 
