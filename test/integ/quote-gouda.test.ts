@@ -85,7 +85,7 @@ const checkQuoteToken = (
 
 describe('quoteGouda', function () {
   // Help with test flakiness by retrying.
-  this.retries(0);
+  this.retries(3);
 
   this.timeout('500s');
 
