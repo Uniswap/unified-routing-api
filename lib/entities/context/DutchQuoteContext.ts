@@ -16,8 +16,7 @@ import {
 
 // if the gas is greater than this proportion of the whole trade size
 // then we will not route the order
-// TODO: lower threshold after bug bash
-const GAS_PROPORTION_THRESHOLD_BPS = 1000;
+const GAS_PROPORTION_THRESHOLD_BPS = 5000;
 const BPS = 10000;
 
 // manages context around a single top level classic quote request
