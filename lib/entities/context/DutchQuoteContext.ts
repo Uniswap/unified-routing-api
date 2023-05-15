@@ -1,8 +1,15 @@
+import DEFAULT_TOKEN_LIST from '@uniswap/default-token-list';
 import { Protocol } from '@uniswap/router-sdk';
 import { TradeType } from '@uniswap/sdk-core';
-import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
+import {
+  CachingTokenListProvider,
+  ID_TO_CHAIN_ID,
+  NodeJSCache,
+  WRAPPED_NATIVE_CURRENCY,
+} from '@uniswap/smart-order-router';
 import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
+import NodeCache from 'node-cache';
 import { QuoteByKey, QuoteContext } from '.';
 import {
   ClassicQuote,
@@ -22,6 +29,7 @@ const BPS = 10000;
 // manages context around a single top level classic quote request
 export class DutchQuoteContext implements QuoteContext {
   private log: Logger;
+
   public requestKey: string;
   public classicKey: string;
   public routeToNativeKey: string;
@@ -73,13 +81,12 @@ export class DutchQuoteContext implements QuoteContext {
   }
 
   // return either the rfq quote or a synthetic quote from the classic dependency
-  resolve(dependencies: QuoteByKey): Quote | null {
-    const classicQuote = dependencies[this.classicKey];
-    const routeBackToNative = dependencies[this.routeToNativeKey];
-    const quote = DutchLimitQuote.reparameterize(
-      dependencies[this.requestKey] as DutchLimitQuote,
-      classicQuote as ClassicQuote
-    );
+  async resolve(dependencies: QuoteByKey): Promise<Quote | null> {
+    const classicQuote = dependencies[this.classicKey] as ClassicQuote;
+    const routeBackToNative = dependencies[this.routeToNativeKey] as ClassicQuote;
+    const rfqQuote = dependencies[this.requestKey] as DutchLimitQuote;
+
+    const quote = await this.getRfqQuote(rfqQuote, classicQuote);
     const syntheticQuote = this.getSyntheticQuote(classicQuote, routeBackToNative);
 
     // handle cases where we only either have RFQ or synthetic
@@ -98,6 +105,29 @@ export class DutchQuoteContext implements QuoteContext {
     } else {
       return quote.amountIn.lte(syntheticQuote.amountIn) ? quote : syntheticQuote;
     }
+  }
+
+  async getRfqQuote(quote?: DutchLimitQuote, classicQuote?: ClassicQuote): Promise<DutchLimitQuote | null> {
+    if (!quote) return null;
+
+    // if quote tokens are not in tokenlist return null
+    // TODO: make gouda-specific tokenlist
+    const tokenList = new CachingTokenListProvider(quote.chainId, DEFAULT_TOKEN_LIST, new NodeJSCache(new NodeCache()));
+    const [tokenIn, tokenOut] = await Promise.all([
+      tokenList.getTokenByAddress(quote.tokenIn),
+      tokenList.getTokenByAddress(quote.tokenOut),
+    ]);
+    if (!tokenIn) {
+      this.log.info(`Token ${quote.tokenIn} not in tokenlist, skipping rfq`);
+      return null;
+    }
+
+    if (!tokenOut) {
+      this.log.info(`Token ${quote.tokenOut} not in tokenlist, skipping rfq`);
+      return null;
+    }
+
+    return DutchLimitQuote.reparameterize(quote, classicQuote as ClassicQuote);
   }
 
   // transform a classic quote into a synthetic dutch quote

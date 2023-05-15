@@ -57,7 +57,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     const quotes = await getQuotes(quoters, requests);
     log.info({ rawQuotes: quotes }, 'quotes');
 
-    const resolvedQuotes = contextHandler.resolveQuotes(quotes);
+    const resolvedQuotes = await contextHandler.resolveQuotes(quotes);
     log.info({ resolvedQuotes: quotes }, 'resolvedQuotes');
 
     const uniswapXRequested = requests.filter((request) => request.routingType === RoutingType.DUTCH_LIMIT).length > 0;
