@@ -45,6 +45,12 @@ describe('RfqQuoter test', () => {
       expect(quote).toBeNull();
     });
 
+    it('returns null if rfq POST times out', async () => {
+      jest.spyOn(axios, 'post').mockRejectedValue(new Error('RfqQuoterErr'));
+      const quote = (await quoter.quote(QUOTE_REQUEST_DL)) as DutchLimitQuote;
+      expect(quote).toBeNull();
+    })
+
     it('gracefully handles GET nonce error', async () => {
       jest.spyOn(axios, 'get').mockRejectedValue(new Error('GET nonce error'));
       const quote = (await quoter.quote(QUOTE_REQUEST_DL)) as DutchLimitQuote;
