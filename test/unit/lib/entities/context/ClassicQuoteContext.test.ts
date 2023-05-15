@@ -20,25 +20,25 @@ describe('ClassicQuoteContext', () => {
   });
 
   describe('resolve', () => {
-    it('returns null if no quotes given', () => {
+    it('returns null if no quotes given', async () => {
       const context = new ClassicQuoteContext(logger, QUOTE_REQUEST_CLASSIC);
-      expect(context.resolve({})).toEqual(null);
+      expect(await context.resolve({})).toEqual(null);
     });
 
-    it('still returns quote if too many dependencies given', () => {
+    it('still returns quote if too many dependencies given', async () => {
       const context = new ClassicQuoteContext(logger, QUOTE_REQUEST_CLASSIC);
       expect(
-        context.resolve({
+        await context.resolve({
           [QUOTE_REQUEST_CLASSIC.key()]: CLASSIC_QUOTE_EXACT_IN_BETTER,
           [CLASSIC_QUOTE_EXACT_OUT_WORSE.request.key()]: CLASSIC_QUOTE_EXACT_IN_WORSE,
         })
       ).toEqual(CLASSIC_QUOTE_EXACT_IN_BETTER);
     });
 
-    it('returns quote', () => {
+    it('returns quote', async () => {
       const context = new ClassicQuoteContext(logger, QUOTE_REQUEST_CLASSIC);
       expect(
-        context.resolve({
+        await context.resolve({
           [QUOTE_REQUEST_CLASSIC.key()]: CLASSIC_QUOTE_EXACT_IN_BETTER,
         })
       ).toEqual(CLASSIC_QUOTE_EXACT_IN_BETTER);
