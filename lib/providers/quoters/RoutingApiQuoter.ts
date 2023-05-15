@@ -1,5 +1,5 @@
 import { TradeType } from '@uniswap/sdk-core';
-import axios from 'axios';
+import axios from './helpers';
 import Logger from 'bunyan';
 import querystring from 'querystring';
 
