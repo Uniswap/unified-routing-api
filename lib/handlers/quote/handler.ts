@@ -1,7 +1,7 @@
 import { TradeType } from '@uniswap/sdk-core';
 import Logger from 'bunyan';
 import Joi from 'joi';
-
+import { PermitSingleData } from '@uniswap/permit2-sdk'
 import { v4 as uuidv4 } from 'uuid';
 import { RoutingType } from '../../constants';
 import {
@@ -27,6 +27,7 @@ const DUTCH_LIMIT_PREFERENCE_BUFFER_BPS = 500;
 export interface QuoteResponseJSON {
   routing: string;
   quote: QuoteJSON;
+  permit: PermitSingleData;
 }
 
 export class QuoteHandler extends APIGLambdaHandler<
