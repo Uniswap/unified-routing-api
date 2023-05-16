@@ -1,7 +1,7 @@
 import { TradeType } from '@uniswap/sdk-core';
 import Logger from 'bunyan';
 import Joi from 'joi';
-import { PermitSingleData } from '@uniswap/permit2-sdk'
+import { PermitTransferFromData } from '@uniswap/permit2-sdk'
 import { v4 as uuidv4 } from 'uuid';
 import { RoutingType } from '../../constants';
 import {
