@@ -1,4 +1,5 @@
-import { TradeType } from '@uniswap/sdk-core';
+import { TradeType , Token } from '@uniswap/sdk-core';
+import { BigNumber } from 'ethers';
 import Logger from 'bunyan';
 import Joi from 'joi';
 import { PermitTransferFromData } from '@uniswap/permit2-sdk'
@@ -18,6 +19,7 @@ import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
 import { ContainerInjected, QuoterByRoutingType } from './injector';
 import { PostQuoteRequestBodyJoi } from './schema';
+import { DutchLimitOrderBuilder, DutchLimitOrderInfo, DutchLimitOrderTrade, DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
 
 // number of bps per whole
 const BPS = 10000;
@@ -27,7 +29,7 @@ const DUTCH_LIMIT_PREFERENCE_BUFFER_BPS = 500;
 export interface QuoteResponseJSON {
   routing: string;
   quote: QuoteJSON;
-  permit: PermitSingleData;
+  permit: PermitTransferFromData;
 }
 
 export class QuoteHandler extends APIGLambdaHandler<
@@ -154,8 +156,42 @@ const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
 };
 
 export function quoteToResponse(quote: Quote): QuoteResponseJSON {
+
+  const trade = new DutchLimitOrderTrade({
+    // somehow get decimals
+    currencyIn: new Token(quote.request.info.tokenInChainId, quote.request.info.tokenIn, 6),
+    // somehow get decimals
+    currenciesOut: [new Token(quote.request.info.tokenOutChainId, quote.request.info.tokenOut, 18)],
+    tradeType: quote.request.info.type,
+    // somehow get this
+    orderInfo: toDutchLimitOrderInfo(quote.toJSON() as DutchLimitOrderInfoJSON),
+  })
+
+  // add the current time etc
+  const permit =  DutchLimitOrderBuilder.fromOrder(trade.order).build().permitData();
+
   return {
     routing: quote.routingType,
     quote: quote.toJSON(),
+    permit
   };
+}
+
+function toDutchLimitOrderInfo(orderInfoJSON: DutchLimitOrderInfoJSON): DutchLimitOrderInfo {
+  const { nonce, input, outputs } = orderInfoJSON
+  return {
+    ...orderInfoJSON,
+    exclusivityOverrideBps: BigNumber.from(orderInfoJSON.exclusivityOverrideBps), 
+    nonce: BigNumber.from(nonce),
+    input: {
+      ...input,
+      startAmount: BigNumber.from(input.startAmount),
+      endAmount: BigNumber.from(input.endAmount),
+    },
+    outputs: outputs.map((output) => ({
+      ...output,
+      startAmount: BigNumber.from(output.startAmount),
+      endAmount: BigNumber.from(output.endAmount),
+    })),
+  }
 }

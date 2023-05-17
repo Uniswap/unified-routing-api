@@ -18,7 +18,7 @@
           "Unified Router"
         ],
         "summary": "Get quote",
-        "description": "Retrieves a quote for the confuration passed.",
+        "description": "Retrieves a quote for the configuration passed.",
         "requestBody": {
           "content": {
             "application/json": {
