@@ -30,6 +30,7 @@ export interface QuoteResponseJSON {
   routing: string;
   quote: QuoteJSON;
   permit: PermitTransferFromData;
+  encodedOrder: string;
 }
 
 export class QuoteHandler extends APIGLambdaHandler<
@@ -168,12 +169,13 @@ export function quoteToResponse(quote: Quote): QuoteResponseJSON {
   })
 
   // add the current time etc
-  const permit =  DutchLimitOrderBuilder.fromOrder(trade.order).build().permitData();
+  const order =  DutchLimitOrderBuilder.fromOrder(trade.order).build()
 
   return {
     routing: quote.routingType,
     quote: quote.toJSON(),
-    permit
+    encodedOrder: order.serialize(),
+    permit: order.permitData(),
   };
 }
 
