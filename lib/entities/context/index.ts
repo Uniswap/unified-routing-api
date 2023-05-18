@@ -1,8 +1,7 @@
-import Logger from 'bunyan';
-
 import { RoutingType } from '../../constants';
 import { ClassicRequest, DutchLimitRequest, Quote, QuoteRequest } from '../../entities';
 
+import { log } from '../../util/log';
 import { ClassicQuoteContext } from './ClassicQuoteContext';
 import { DutchQuoteContext } from './DutchQuoteContext';
 
@@ -31,7 +30,7 @@ export interface QuoteContext {
 
 // handler for quote contexts and their dependencies
 export class QuoteContextManager {
-  constructor(public log: Logger, public contexts: QuoteContext[]) {}
+  constructor(public contexts: QuoteContext[]) {}
 
   // deduplicate dependencies
   // note this prioritizes user-defined configs first
@@ -54,14 +53,14 @@ export class QuoteContextManager {
       }
     }
 
-    this.log.info({ requests: requestMap }, `Context requests`);
+    log.info({ requests: requestMap }, `Context requests`);
 
     return Object.values(requestMap);
   }
 
   // resolve quotes from quote contexts using quoted dependencies
   async resolveQuotes(quotes: Quote[]): Promise<Quote[]> {
-    this.log.info({ quotes }, `Context quotes`);
+    log.info({ quotes }, `Context quotes`);
     const allQuotes: QuoteByKey = {};
     for (const quote of quotes) {
       allQuotes[quote.request.key()] = quote;
@@ -77,7 +76,7 @@ export class QuoteContextManager {
   }
 }
 
-export function parseQuoteContexts(log: Logger, requests: QuoteRequest[]): QuoteContext[] {
+export function parseQuoteContexts(requests: QuoteRequest[]): QuoteContext[] {
   return requests.map((request) => {
     switch (request.routingType) {
       case RoutingType.DUTCH_LIMIT:

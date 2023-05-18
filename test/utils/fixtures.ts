@@ -34,7 +34,7 @@ export const BASE_REQUEST_INFO_EXACT_OUT = {
   type: 'EXACT_OUTPUT',
 };
 
-export const QUOTE_REQUEST_BODY_MULTI = {
+export const QUOTE_REQUEST_BODY_MULTI: QuoteRequestBodyJSON = {
   ...BASE_REQUEST_INFO_EXACT_IN,
   configs: [
     {
@@ -62,7 +62,7 @@ export const DL_REQUEST_BODY = {
   ],
 };
 
-export const CLASSIC_REQUEST_BODY = {
+export const CLASSIC_REQUEST_BODY: QuoteRequestBodyJSON = {
   ...BASE_REQUEST_INFO_EXACT_IN,
   configs: [
     {

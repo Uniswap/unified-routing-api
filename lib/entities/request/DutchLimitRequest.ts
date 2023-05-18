@@ -17,7 +17,7 @@ export interface DutchLimitConfig {
 }
 
 export interface DutchLimitConfigJSON extends DutchLimitConfig {
-  routingType: RoutingType;
+  routingType: RoutingType.DUTCH_LIMIT;
 }
 
 export class DutchLimitRequest implements QuoteRequest {
@@ -42,7 +42,7 @@ export class DutchLimitRequest implements QuoteRequest {
 
   public toJSON(): DutchLimitConfigJSON {
     return Object.assign({}, this.config, {
-      routingType: RoutingType.DUTCH_LIMIT,
+      routingType: RoutingType.DUTCH_LIMIT as RoutingType.DUTCH_LIMIT,
     });
   }
 

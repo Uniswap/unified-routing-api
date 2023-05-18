@@ -1,22 +1,22 @@
 import { RoutingType } from '../../../../lib/constants';
-import { ClassicRequest, DutchLimitRequest, parseQuoteRequests, prepareQuoteRequests } from '../../../../lib/entities';
+import { ClassicConfigJSON, ClassicRequest, DutchLimitConfigJSON, DutchLimitRequest, QuoteRequestBodyJSON, parseQuoteRequests, prepareQuoteRequests } from '../../../../lib/entities';
 import { ValidationError } from '../../../../lib/util/errors';
 import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
 
-const MOCK_DL_CONFIG_JSON = {
+const MOCK_DL_CONFIG_JSON: DutchLimitConfigJSON = {
   routingType: RoutingType.DUTCH_LIMIT,
   offerer: OFFERER,
   exclusivityOverrideBps: 24,
   auctionPeriodSecs: 60,
 };
 
-const CLASSIC_CONFIG_JSON = {
+const CLASSIC_CONFIG_JSON: ClassicConfigJSON = {
   routingType: RoutingType.CLASSIC,
   protocols: ['V3', 'V2', 'MIXED'],
   gasPriceWei: '1000000000',
 };
 
-const MOCK_REQUEST_JSON = {
+const MOCK_REQUEST_JSON: QuoteRequestBodyJSON = {
   requestId: 'requestId',
   tokenInChainId: CHAIN_IN_ID,
   tokenOutChainId: CHAIN_OUT_ID,

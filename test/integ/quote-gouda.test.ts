@@ -21,7 +21,7 @@ import { BigNumber } from 'ethers';
 import hre from 'hardhat';
 import qs from 'qs';
 import { RoutingType } from '../../lib/constants';
-import { ClassicQuoteDataJSON, QuoteRequestBodyJSON } from '../../lib/entities';
+import { ClassicQuoteDataJSON, QuoteRequestBodyJSON, RoutingConfigJSON } from '../../lib/entities';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { ExclusiveDutchLimitOrderReactor__factory } from '../../lib/types/ext';
 import { fund, resetAndFundAtBlock } from '../utils/forkAndFund';
@@ -60,7 +60,7 @@ const callAndExpectFail = async (quoteReq: Partial<QuoteRequestBodyJSON>, resp: 
     await axios.post<QuoteResponseJSON>(`${API}`, quoteReq);
     fail();
   } catch (err: any) {
-    expect(err.response).to.containSubset(resp);
+    expect(err.response.data).to.containSubset(resp);
   }
 };
 
@@ -81,7 +81,7 @@ const checkQuoteToken = (
 
 describe('quoteGouda', function () {
   // Help with test flakiness by retrying.
-  this.retries(3);
+  this.retries(2);
 
   this.timeout('500s');
 
@@ -191,7 +191,7 @@ describe('quoteGouda', function () {
                 routingType: RoutingType.DUTCH_LIMIT,
                 offerer: alice.address,
               },
-            ],
+            ] as RoutingConfigJSON[],
           };
           await callAndExpectFail(quoteReq, {
             status: 404,
@@ -217,7 +217,7 @@ describe('quoteGouda', function () {
                 routingType: RoutingType.DUTCH_LIMIT,
                 offerer: alice.address,
               },
-            ],
+            ] as RoutingConfigJSON[],
           };
 
           const response: AxiosResponse<QuoteResponseJSON> = await axios.post<QuoteResponseJSON>(`${API}`, quoteReq);
@@ -263,7 +263,7 @@ describe('quoteGouda', function () {
                 routingType: RoutingType.DUTCH_LIMIT,
                 offerer: alice.address,
               },
-            ],
+            ] as RoutingConfigJSON[],
           };
 
           await callAndExpectFail(quoteReq, {
@@ -290,7 +290,7 @@ describe('quoteGouda', function () {
                 routingType: RoutingType.DUTCH_LIMIT,
                 offerer: alice.address,
               },
-            ],
+            ] as RoutingConfigJSON[],
           };
 
           const response: AxiosResponse<QuoteResponseJSON> = await axios.post<QuoteResponseJSON>(`${API}`, quoteReq);
@@ -338,7 +338,7 @@ describe('quoteGouda', function () {
                 routingType: RoutingType.DUTCH_LIMIT,
                 offerer: alice.address,
               },
-            ],
+            ] as RoutingConfigJSON[],
           };
 
           const response = await axios.post<QuoteResponseJSON>(`${API}`, quoteReq);
@@ -408,7 +408,7 @@ describe('quoteGouda', function () {
                 routingType: RoutingType.DUTCH_LIMIT,
                 offerer: alice.address,
               },
-            ],
+            ] as RoutingConfigJSON[],
           };
 
           await callAndExpectFail(quoteReq, {
@@ -436,7 +436,7 @@ describe('quoteGouda', function () {
                 offerer: alice.address,
                 exclusivityOverrideBps: -1,
               },
-            ],
+            ] as RoutingConfigJSON[],
           };
 
           await callAndExpectFail(quoteReq, {
@@ -464,7 +464,7 @@ describe('quoteGouda', function () {
                 offerer: alice.address,
                 auctionPeriodSecs: -1,
               },
-            ],
+            ] as RoutingConfigJSON[],
           };
 
           await callAndExpectFail(quoteReq, {
@@ -492,7 +492,7 @@ describe('quoteGouda', function () {
               routingType: RoutingType.DUTCH_LIMIT,
               offerer: alice.address,
             },
-          ],
+          ] as RoutingConfigJSON[],
         };
 
         await callAndExpectFail(quoteReq, {

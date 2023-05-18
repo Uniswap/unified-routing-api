@@ -1,34 +1,54 @@
-# Unified Routing
+# unified-routing-api
 
-## Prerequisite
+## Deployment
 
-1. New to AWS CDK, please refer to [api-template](https://github.com/Uniswap/api-template)
+### Dev Environment
 
-## Getting Started
-
-1. Install and build the package
-   ```
-   yarn && yarn build
-   ```
-2. To deploy the API to your AWS account run:
+1. Create a .env file with the necessary dependencies
 
    ```
-   cdk deploy UnifiedRoutingStack
+   PARAMETERIZATION_API_URL=<>
+   ROUTING_API_URL=<>
+   SERVICE_URL=<>
+   UNISWAP_API='<YourUrl>'
    ```
 
-   Once complete it will output the url of your api:
+To deploy to your own AWS account,
 
-   ```
-   UnifiedRoutingStack.Url = https://...
-   ```
+```
+yarn && yarn build
+```
 
-3. (optional) To run dynamo-db integration tests, you need to have Java Runtime installed (https://www.java.com/en/download/manual.jsp).
+then
+
+```
+cdk deploy GoudaParameterizationStack
+```
+
+after successful deployment, you should see something like
+
+```
+ ✅  GoudaParameterizationStack
+
+✨  Deployment time: 93.78s
+
+Outputs:
+GoudaParameterizationStack.GoudaParameterizationEndpoint57A27B25 = <your dev url>
+GoudaParameterizationStack.Url = <your dev url>
+```
+
+The project currently has a `GET hello-world` Api Gateway<>Lambda integration set up:
+
+```
+❯ curl <url>/prod/quote/hello-world
+"hello world"%
+```
 
 ## Integration Tests
 
 1. Deploy your API using the intructions above.
 
-1. Add your API url to your `.env` file as `UNISWAP_API`
+1. Add your deployed API url to your `.env` file as `UNISWAP_API`
 
    ```
    UNISWAP_API='<YourUrl>'
@@ -36,31 +56,5 @@
 
 1. Run the tests with:
    ```
-   yarn integ-test
+   yarn test:integ
    ```
-
-## Development Cycle
-
-To test your changes you must redeploy your service. The dev cycle is thus:
-
-1. Make code changes. Make sure all env variables are present in the .env file:
-
-```
-WEB3_RPC_TENDERLY=<>
-REACTOR_TENDERLY=<>
-QUOTER_TENDERLY=<>
-PERMIT_TENDERLY=<>
-FIREHOSE_ARN_LOCAL=<>
-```
-
-1. `yarn build && cdk deploy UnifiedRoutingStackStack`
-
-1. `yarn integ-test`
-
-1. If failures, look at logs in Cloudwatch Insights
-
-1. Repeat
-
-## Productionizing your service
-
-Refer to Notion for how to create a deployment pipeline for your service and add it to `api.uniswap.org`

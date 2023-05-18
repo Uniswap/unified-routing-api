@@ -1,10 +1,10 @@
 import { TradeType } from '@uniswap/sdk-core';
-import Logger from 'bunyan';
 import { BigNumber } from 'ethers';
 
 import { SUPPORTED_CHAINS } from '../../config/chains';
 import { DEFAULT_SLIPPAGE_TOLERANCE, RoutingType } from '../../constants';
 import { ValidationError } from '../../util/errors';
+import { log } from '../../util/log';
 import { currentTimestampInSeconds } from '../../util/time';
 import { getAddress } from '../../util/tokens';
 import { ClassicConfig, ClassicConfigJSON, ClassicRequest } from './ClassicRequest';
@@ -54,7 +54,7 @@ export async function prepareQuoteRequests(body: QuoteRequestBodyJSON): Promise<
   });
 }
 
-export function parseQuoteRequests(body: QuoteRequestBodyJSON, log?: Logger): QuoteRequest[] {
+export function parseQuoteRequests(body: QuoteRequestBodyJSON): QuoteRequest[] {
   const info: QuoteRequestInfo = {
     requestId: body.requestId,
     tokenInChainId: body.tokenInChainId,
@@ -81,7 +81,8 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON, log?: Logger): Qu
 
   const offerer = (requests.find((r) => r.routingType === RoutingType.DUTCH_LIMIT)?.config as DutchLimitConfig)
     ?.offerer;
-  log?.info({
+
+  log.info({
     eventType: 'UnifiedRoutingQuoteRequest',
     body: {
       requestId: info.requestId,
