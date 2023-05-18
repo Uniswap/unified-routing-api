@@ -21,6 +21,7 @@ import {
   DL_QUOTE_EXACT_IN_WORSE,
   DL_QUOTE_EXACT_OUT_BETTER,
   DL_QUOTE_EXACT_OUT_WORSE,
+  DL_REQUEST_BODY,
   QUOTE_REQUEST_BODY_MULTI,
   QUOTE_REQUEST_DL,
   QUOTE_REQUEST_MULTI,
@@ -140,6 +141,80 @@ describe('QuoteHandler', () => {
             }),
           })
         );
+      });
+    });
+
+    describe('parseAndValidateRequest', () => {
+      it('Succeeds - Classic Quote', async ()  => {
+        const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE) };
+        const event = { 
+          body: JSON.stringify(CLASSIC_REQUEST_BODY),
+        } as APIGatewayProxyEvent;
+
+        const res = await getQuoteHandler(quoters).parseAndValidateRequest(event, logger as unknown as Logger,);         
+        expect(res.state).toBe('valid');
+      });
+
+      it('Succeeds - Gouda Quote', async ()  => {
+        const quoters = { [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER) };
+        const event = { 
+          body: JSON.stringify(DL_REQUEST_BODY),
+        } as APIGatewayProxyEvent;
+
+        const res = await getQuoteHandler(quoters).parseAndValidateRequest(event, logger as unknown as Logger,);         
+        expect(res.state).toBe('valid');
+      });
+
+      it('Succeeds - Classic Quote with correct tokenInDecimals', async ()  => {
+        const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE) };
+        const event = { 
+          body: JSON.stringify({
+            ...CLASSIC_REQUEST_BODY,
+            tokenInDecimals: 18,
+          }),
+        } as APIGatewayProxyEvent;
+
+        const res = await getQuoteHandler(quoters).parseAndValidateRequest(event, logger as unknown as Logger,);         
+        expect(res.state).toBe('valid');
+      });
+
+      it('Succeeds - Classic Quote with correct tokenOutDecimals', async ()  => {
+        const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE) };
+        const event = { 
+          body: JSON.stringify({
+            ...CLASSIC_REQUEST_BODY,
+            tokenOutDecimals: 18,
+          }),
+        } as APIGatewayProxyEvent;
+
+        const res = await getQuoteHandler(quoters).parseAndValidateRequest(event, logger as unknown as Logger,);         
+        expect(res.state).toBe('valid');
+      });
+
+      it('Succeeds - Classic Quote with incorrect tokenInDecimals', async ()  => {
+        const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE) };
+        const event = { 
+          body: JSON.stringify({
+            ...CLASSIC_REQUEST_BODY,
+            tokenInDecimals: -1,
+          }),
+        } as APIGatewayProxyEvent;
+
+        const res = await getQuoteHandler(quoters).parseAndValidateRequest(event, logger as unknown as Logger,);         
+        expect(res.state).toBe('invalid');
+      });
+
+      it('Succeeds - Classic Quote with incorrect tokenOutDecimals', async ()  => {
+        const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE) };
+        const event = { 
+          body: JSON.stringify({
+            ...CLASSIC_REQUEST_BODY,
+            tokenOutDecimals: -1,
+          }),
+        } as APIGatewayProxyEvent;
+
+        const res = await getQuoteHandler(quoters).parseAndValidateRequest(event, logger as unknown as Logger,);         
+        expect(res.state).toBe('invalid');
       });
     });
   });
@@ -275,4 +350,6 @@ describe('QuoteHandler', () => {
       expect(bestQuote).toEqual(DL_QUOTE_EXACT_IN_BETTER);
     });
   });
+
+  
 });

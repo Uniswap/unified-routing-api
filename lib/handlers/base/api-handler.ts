@@ -221,7 +221,7 @@ export abstract class APIGLambdaHandler<
     return result.statusCode < 200 || result.statusCode > 202;
   }
 
-  private async parseAndValidateRequest(
+  public async parseAndValidateRequest(
     event: APIGatewayProxyEvent,
     log: Logger
   ): Promise<
