@@ -91,6 +91,12 @@
           "tokenOutChainId": {
             "type": "number"
           },
+          "tokenInDecimals": {
+            "$ref": "#/components/schemas/Decimals"
+          },
+          "tokenOutDecimals": {
+            "$ref": "#/components/schemas/Decimals"
+          },
           "tokenIn": {
             "type": "string"
           },
@@ -473,6 +479,11 @@
             }
           }
         }
+      },
+      "Decimals": {
+        "type": "number",
+        "pattern": "^(?:1[0-8]|[0-9])$",
+        "description": "A number from 0 to 18"
       }
     }
   }
