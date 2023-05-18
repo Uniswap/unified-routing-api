@@ -20,6 +20,8 @@ import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../bas
 import { ContainerInjected, QuoterByRoutingType } from './injector';
 import { PostQuoteRequestBodyJoi } from './schema';
 import { DutchLimitOrderBuilder, DutchLimitOrderInfo, DutchLimitOrderTrade, DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
+import { getAddress } from 'ethers/lib/utils';
+import { getDecimals } from '../../util/tokens';
 
 // number of bps per whole
 const BPS = 10000;
@@ -158,13 +160,13 @@ const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
 
 export function quoteToResponse(quote: Quote): QuoteResponseJSON {
 
+  const tokenInDecimals = quote.request.info.tokenInDecimals ?? getDecimals(quote.request.info.tokenInChainId , quote.request.info.tokenIn)
+  const tokenOutDecimals = quote.request.info.tokenOutDecimals ?? getDecimals(quote.request.info.tokenOutChainId, quote.request.info.tokenOut)
+
   const trade = new DutchLimitOrderTrade({
-    // somehow get decimals
-    currencyIn: new Token(quote.request.info.tokenInChainId, quote.request.info.tokenIn, 6),
-    // somehow get decimals
-    currenciesOut: [new Token(quote.request.info.tokenOutChainId, quote.request.info.tokenOut, 18)],
+    currencyIn: new Token(quote.request.info.tokenInChainId, quote.request.info.tokenIn, tokenInDecimals),
+    currenciesOut: [new Token(quote.request.info.tokenOutChainId, quote.request.info.tokenOut, tokenOutDecimals)],
     tradeType: quote.request.info.type,
-    // somehow get this
     orderInfo: toDutchLimitOrderInfo(quote.toJSON() as DutchLimitOrderInfoJSON),
   })
 
