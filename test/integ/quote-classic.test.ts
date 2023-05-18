@@ -1977,10 +1977,10 @@ describe('quote', function () {
           };
 
           await callAndExpectFail(quoteReq, {
-            status: 404,
+            status: 400,
             data: {
-              detail: 'No quotes available',
-              errorCode: 'QUOTE_ERROR',
+              detail: 'Could not find token with symbol NONEXISTANTTOKEN',
+              errorCode: 'VALIDATION_ERROR',
             },
           });
         });

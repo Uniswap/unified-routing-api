@@ -1,9 +1,10 @@
 import { TradeType } from '@uniswap/sdk-core';
+import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
 import axios from 'axios';
 import Logger from 'bunyan';
 import { BigNumber } from 'ethers';
 
-import { RoutingType } from '../../constants';
+import { NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { DutchLimitQuote, DutchLimitRequest, Quote } from '../../entities';
 import { Quoter, QuoterType } from './index';
 
@@ -30,8 +31,8 @@ export class RfqQuoter implements Quoter {
       axios.post(`${this.rfqUrl}quote`, {
         tokenInChainId: request.info.tokenInChainId,
         tokenOutChainId: request.info.tokenOutChainId,
-        tokenIn: request.info.tokenIn,
-        tokenOut: request.info.tokenOut,
+        tokenIn: mapNative(request.info.tokenIn, request.info.tokenInChainId),
+        tokenOut: mapNative(request.info.tokenOut, request.info.tokenInChainId),
         amount: request.info.amount.toString(),
         offerer: offerer,
         requestId: request.info.requestId,
@@ -60,4 +61,12 @@ export class RfqQuoter implements Quoter {
     });
     return quote;
   }
+}
+
+function mapNative(token: string, chainId: number): string {
+  if (token === NATIVE_ADDRESS) {
+    const wrapped = WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(chainId)].address;
+    return wrapped;
+  }
+  return token;
 }

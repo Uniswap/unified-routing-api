@@ -8,7 +8,7 @@ import {
   QUOTE_REQUEST_CLASSIC,
   QUOTE_REQUEST_DL,
   QUOTE_REQUEST_DL_EXACT_OUT,
-  QUOTE_REQUEST_DL_ONE_SYMBOL,
+  QUOTE_REQUEST_DL_NATIVE_IN,
 } from '../../../../utils/fixtures';
 
 class MockQuoteContext implements QuoteContext {
@@ -71,7 +71,7 @@ describe('QuoteContextManager', () => {
       const context1 = new MockQuoteContext(QUOTE_REQUEST_DL);
       context1.setDependencies([QUOTE_REQUEST_DL_EXACT_OUT]);
       const context2 = new MockQuoteContext(QUOTE_REQUEST_CLASSIC);
-      context2.setDependencies([QUOTE_REQUEST_DL_ONE_SYMBOL]);
+      context2.setDependencies([QUOTE_REQUEST_DL_NATIVE_IN]);
       const handler = new QuoteContextManager(logger, [context1, context2]);
       const requests = handler.getRequests();
       expect(requests.length).toEqual(4);
@@ -79,7 +79,7 @@ describe('QuoteContextManager', () => {
       expect(requests[0]).toMatchObject(QUOTE_REQUEST_DL);
       expect(requests[1]).toMatchObject(QUOTE_REQUEST_CLASSIC);
       expect(requests[2]).toMatchObject(QUOTE_REQUEST_DL_EXACT_OUT);
-      expect(requests[3]).toMatchObject(QUOTE_REQUEST_DL_ONE_SYMBOL);
+      expect(requests[3]).toMatchObject(QUOTE_REQUEST_DL_NATIVE_IN);
     });
 
     it('deduplicates quote requests on info / type', () => {

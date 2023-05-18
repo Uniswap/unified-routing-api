@@ -19,11 +19,9 @@ import chaiAsPromised from 'chai-as-promised';
 import chaiSubset from 'chai-subset';
 import { BigNumber } from 'ethers';
 import hre from 'hardhat';
-import _ from 'lodash';
 import qs from 'qs';
 import { RoutingType } from '../../lib/constants';
-import { ClassicQuoteDataJSON } from '../../lib/entities/quote';
-import { QuoteRequestBodyJSON } from '../../lib/entities/request';
+import { ClassicQuoteDataJSON, QuoteRequestBodyJSON } from '../../lib/entities';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { ExclusiveDutchLimitOrderReactor__factory } from '../../lib/types/ext';
 import { fund, resetAndFundAtBlock } from '../utils/forkAndFund';
@@ -369,12 +367,16 @@ describe('quoteGouda', function () {
           const order = new DutchLimitOrder(quote as any, 1);
           expect(status).to.equal(200);
           const routingQuote = routingResponse.data.quoteGasAdjusted;
+          // account for gas and slippage
+          const adjustedAmountOutClassic = BigNumber.from(routingQuote).mul(90).div(100);
 
           expect(order.info.offerer).to.equal(alice.address);
           expect(order.info.outputs.length).to.equal(1);
-          expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.gte(parseInt(routingQuote));
+          expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.gte(
+            parseInt(adjustedAmountOutClassic.toString())
+          );
           expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.lt(
-            parseInt(BigNumber.from(routingQuote).mul(2).toString())
+            parseInt(BigNumber.from(adjustedAmountOutClassic).mul(2).toString())
           );
 
           const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
