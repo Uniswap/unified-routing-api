@@ -350,6 +350,4 @@ describe('QuoteHandler', () => {
       expect(bestQuote).toEqual(DL_QUOTE_EXACT_IN_BETTER);
     });
   });
-
-  
 });
