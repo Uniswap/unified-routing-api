@@ -331,13 +331,11 @@ export class DashboardStack extends cdk.NestedStack {
             height: 6,
             properties: {
               metrics: [
-                [{ expression: '(m3/m1)*100', label: 'RoutingAPIRequestErrorRate', id: 'e1' }],
-                [{ expression: '(m4/m5)*100', label: 'RFQAPIRequestErrorRate', id: 'e2' }],
-                ['Uniswap', 'RoutingApiQuoterRequest', 'Service', SERVICE_NAME, { id: 'm1', visible: false }],
-                ['.', 'RoutingApiQuoterSuccess', '.', '.', { id: 'm2', visible: false }],
-                ['.', 'RoutingApiQuoterErr', '.', '.', { id: 'm3', visible: false }],
-                ['.', 'RfqQuoterErrRfq', '.', '.', { id: 'm4', visible: false }],
-                ['.', 'RfqQuoterRequest', '.', '.', { id: 'm5', visible: false }],
+                ['Uniswap', 'RoutingApiQuoterRequest', 'Service', SERVICE_NAME, { id: 'm1' }],
+                ['.', 'RoutingApiQuoterSuccess', '.', '.', { id: 'm2' }],
+                ['.', 'RoutingApiQuoterErr', '.', '.', { id: 'm3' }],
+                ['.', 'RfqQuoterErrRfq', '.', '.', { id: 'm4' }],
+                ['.', 'RfqQuoterRequest', '.', '.', { id: 'm5' }],
               ],
               view: 'timeSeries',
               stacked: false,
