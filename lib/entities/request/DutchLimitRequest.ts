@@ -6,7 +6,6 @@ import {
   NATIVE_ADDRESS,
   RoutingType,
 } from '../../constants';
-import { getAddress } from '../../util/tokens';
 
 export * from './ClassicRequest';
 export * from './DutchLimitRequest';
@@ -45,12 +44,6 @@ export class DutchLimitRequest implements QuoteRequest {
     return Object.assign({}, this.config, {
       routingType: RoutingType.DUTCH_LIMIT,
     });
-  }
-
-  public async resolveTokenSymbols() {
-    this.info.tokenIn = await getAddress(this.info.tokenInChainId, this.info.tokenIn);
-    this.info.tokenOut = await getAddress(this.info.tokenOutChainId, this.info.tokenOut);
-    return this;
   }
 
   public key(): string {
