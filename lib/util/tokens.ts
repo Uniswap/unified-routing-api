@@ -23,3 +23,14 @@ export const getAddress = async (id: ChainId, symbolOrAddress: string): Promise<
     return token.address;
   }
 };
+
+export const getDecimals = async (id: ChainId, symbolOrAddress: string): Promise<number> => {
+    // if invalid, try to parse as symbol
+    const tokenListProvider = getTokenListProvider(id);
+    const token = await tokenListProvider.getTokenBySymbol(symbolOrAddress);
+    // if the token is not defined then throw
+    if (token === undefined) {
+      throw new ValidationError(`Could not find token with symbol ${symbolOrAddress}`);
+    }
+    return token.decimals;
+};
