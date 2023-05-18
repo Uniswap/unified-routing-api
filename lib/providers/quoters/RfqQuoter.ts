@@ -15,17 +15,16 @@ export class RfqQuoter implements Quoter {
     this.log = _log.child({ quoter: 'RfqQuoter' });
   }
 
-  async quote(originalRequest: DutchLimitRequest): Promise<Quote | null> {
-    if (originalRequest.routingType !== RoutingType.DUTCH_LIMIT) {
-      this.log.error(`Invalid routing config type: ${originalRequest.routingType}`);
+  async quote(request: DutchLimitRequest): Promise<Quote | null> {
+    if (request.routingType !== RoutingType.DUTCH_LIMIT) {
+      this.log.error(`Invalid routing config type: ${request.routingType}`);
       return null;
     }
-    if (originalRequest.info.type === TradeType.EXACT_OUTPUT) {
-      this.log.error(`Invalid trade type: ${originalRequest.info.type}`);
+    if (request.info.type === TradeType.EXACT_OUTPUT) {
+      this.log.error(`Invalid trade type: ${request.info.type}`);
       return null;
     }
 
-    const request = await originalRequest.resolveTokenSymbols();
     const offerer = request.config.offerer;
     const requests = [
       axios.post(`${this.rfqUrl}quote`, {

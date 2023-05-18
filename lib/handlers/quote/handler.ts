@@ -51,11 +51,19 @@ export class QuoteHandler extends APIGLambdaHandler<
     };
 
     log.info({ requestBody: request }, 'request');
+<<<<<<< HEAD
     const contextHandler = new QuoteContextManager(log, parseQuoteContexts(log, parseQuoteRequests(request, log)));
     const requests = contextHandler.getRequests();
     log.info({ requests }, 'requests');
     const quotes = await getQuotes(quoters, requests);
     log.info({ rawQuotes: quotes }, 'quotes');
+=======
+    const requests = parseQuoteRequests(await prepareQuoteRequests(request), log);
+    const requestsTransformed = requestTransformer.transform(requests);
+    const quotesByRequestType: QuotesByRoutingType = {};
+    const quotes = await getQuotes(quoters, requestsTransformed, quotesByRequestType);
+    const quotesTransformed = await quoteTransformer.transform(requests, quotes);
+>>>>>>> parent of 4d83130 (fix classic quote integration tests when tokenOut is ETH in token symbol)
 
     const resolvedQuotes = await contextHandler.resolveQuotes(quotes);
     log.info({ resolvedQuotes: quotes }, 'resolvedQuotes');
