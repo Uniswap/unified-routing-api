@@ -3,7 +3,7 @@ import axios from 'axios';
 import Logger from 'bunyan';
 import querystring from 'querystring';
 
-import { RoutingType } from '../../constants';
+import { NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { ClassicQuote, ClassicRequest, Quote } from '../../entities';
 import { Quoter, QuoterType } from './index';
 
@@ -36,9 +36,9 @@ export class RoutingApiQuoter implements Quoter {
       this.routingApiUrl +
       'quote?' +
       querystring.stringify({
-        tokenInAddress: request.info.tokenIn,
+        tokenInAddress: mapNative(request.info.tokenIn),
         tokenInChainId: request.info.tokenInChainId,
-        tokenOutAddress: request.info.tokenOut,
+        tokenOutAddress: mapNative(request.info.tokenOut),
         tokenOutChainId: request.info.tokenOutChainId,
         amount: request.info.amount.toString(),
         type: tradeType,
@@ -66,4 +66,9 @@ export class RoutingApiQuoter implements Quoter {
       })
     );
   }
+}
+
+function mapNative(token: string): string {
+  if (token === NATIVE_ADDRESS) return 'ETH';
+  return token;
 }
