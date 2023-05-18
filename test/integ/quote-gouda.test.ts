@@ -28,6 +28,7 @@ import { fund, resetAndFundAtBlock } from '../utils/forkAndFund';
 import { getBalance, getBalanceAndApprove, getBalanceAndApprovePermit2 } from '../utils/getBalanceAndApprove';
 import { RoutingApiQuoteResponse } from '../utils/quoteResponse';
 import { getAmount } from '../utils/tokens';
+import _ from 'lodash';
 
 const { ethers } = hre;
 
