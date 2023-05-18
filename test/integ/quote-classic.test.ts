@@ -67,7 +67,7 @@ const callAndExpectFail = async (quoteReq: Partial<QuoteRequestBodyJSON>, resp: 
     await axios.post<QuoteResponseJSON>(`${API}`, quoteReq);
     fail();
   } catch (err: any) {
-    expect(err.response).to.containSubset(resp);
+    expect(_.pick(err.response, ['status', 'data'])).to.containSubset(resp);
   }
 };
 

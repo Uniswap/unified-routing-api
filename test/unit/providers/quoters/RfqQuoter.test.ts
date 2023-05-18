@@ -1,5 +1,4 @@
 import axios from 'axios';
-import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
 
 import { DutchLimitQuote, DutchLimitQuoteJSON } from '../../../../lib/entities/quote/DutchLimitQuote';
@@ -8,14 +7,10 @@ import { AMOUNT_IN, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
 import { QUOTE_REQUEST_DL, QUOTE_REQUEST_DL_EXACT_OUT } from '../../../utils/fixtures';
 
 describe('RfqQuoter test', () => {
-  // silent logger in tests
-  const logger = Logger.createLogger({ name: 'test' });
-  logger.level(Logger.FATAL);
-
   const getSpy = (nonce?: string) => jest.spyOn(axios, 'get').mockResolvedValue({ data: { nonce: nonce } });
   const postSpy = (responseData: DutchLimitQuoteJSON) =>
     jest.spyOn(axios, 'post').mockResolvedValue({ data: responseData });
-  const quoter = new RfqQuoter(logger, 'https://api.uniswap.org/', 'https://api.uniswap.org/');
+  const quoter = new RfqQuoter('https://api.uniswap.org/', 'https://api.uniswap.org/');
 
   beforeEach(() => {
     jest.clearAllMocks();
