@@ -66,6 +66,8 @@ export class FieldValidator {
 
   public static readonly positiveNumber = Joi.number().greater(0);
 
+  public static readonly decimals = Joi.number().integer().min(0).max(18);
+
   public static readonly classicConfig = Joi.object({
     routingType: FieldValidator.routingType.required(),
     protocols: FieldValidator.protocols.required(),

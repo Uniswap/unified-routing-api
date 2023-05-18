@@ -5,6 +5,8 @@ import { FieldValidator } from '../../util/validator';
 export const PostQuoteRequestBodyJoi = Joi.object({
   tokenInChainId: FieldValidator.classicChainId.required(),
   tokenOutChainId: FieldValidator.classicChainId.required(),
+  tokenInDecimals: FieldValidator.decimals.optional(),
+  tokenOutDecimals: FieldValidator.decimals.optional(),
 
   // TODO: consider that routing-api accepts token names if it can resolve them
   // dutch limit flow should probably do the same
