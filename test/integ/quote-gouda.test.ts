@@ -19,11 +19,9 @@ import chaiAsPromised from 'chai-as-promised';
 import chaiSubset from 'chai-subset';
 import { BigNumber } from 'ethers';
 import hre from 'hardhat';
-import _ from 'lodash';
 import qs from 'qs';
 import { RoutingType } from '../../lib/constants';
-import { ClassicQuoteDataJSON } from '../../lib/entities/quote';
-import { QuoteRequestBodyJSON } from '../../lib/entities/request';
+import { ClassicQuoteDataJSON, QuoteRequestBodyJSON } from '../../lib/entities';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { ExclusiveDutchLimitOrderReactor__factory } from '../../lib/types/ext';
 import { fund, resetAndFundAtBlock } from '../utils/forkAndFund';
@@ -39,14 +37,12 @@ chai.use(chaiSubset);
 const DIRECT_TAKER = '0x0000000000000000000000000000000000000001';
 const NO_LIQ_TOKEN = '0x69b148395Ce0015C13e36BFfBAd63f49EF874E03';
 
-if (!process.env.UNISWAP_API || !process.env.ARCHIVE_NODE_RPC || !process.env.ROUTING_API_URL) {
-  throw new Error(
-    'Must set [UNISWAP_API, ARCHIVE_NODE_RPC, ROUTING_API_URL] env variables for integ tests. See README'
-  );
+if (!process.env.UNISWAP_API || !process.env.ARCHIVE_NODE_RPC || !process.env.ROUTING_API) {
+  throw new Error('Must set [UNISWAP_API, ARCHIVE_NODE_RPC, ROUTING_API] env variables for integ tests. See README');
 }
 
 const API = `${process.env.UNISWAP_API!}quote`;
-const ROUTING_API = `${process.env.ROUTING_API_URL!}quote`;
+const ROUTING_API = `${process.env.ROUTING_API!}/quote`;
 
 const SLIPPAGE = '5';
 
@@ -370,19 +366,17 @@ describe('quoteGouda', function () {
 
           const order = new DutchLimitOrder(quote as any, 1);
           expect(status).to.equal(200);
-          // only need to establish gas cost baseline, not accurate estimate
-          const routingQuoteGoudaGasAdjusted = BigNumber.from(routingResponse.data.quoteGasAdjusted)
-            .mul(95)
-            .div(100)
-            .toString();
+          const routingQuote = routingResponse.data.quoteGasAdjusted;
+          // account for gas and slippage
+          const adjustedAmountOutClassic = BigNumber.from(routingQuote).mul(90).div(100);
 
           expect(order.info.offerer).to.equal(alice.address);
           expect(order.info.outputs.length).to.equal(1);
           expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.gte(
-            parseInt(routingQuoteGoudaGasAdjusted)
+            parseInt(adjustedAmountOutClassic.toString())
           );
           expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.lt(
-            parseInt(BigNumber.from(routingQuoteGoudaGasAdjusted).mul(2).toString())
+            parseInt(BigNumber.from(adjustedAmountOutClassic).mul(2).toString())
           );
 
           const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(

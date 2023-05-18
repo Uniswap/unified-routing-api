@@ -112,18 +112,6 @@ export const QUOTE_REQUEST_DL_NATIVE_IN = makeDutchLimitRequest({
 export const QUOTE_REQUEST_DL_NATIVE_OUT = makeDutchLimitRequest({
   tokenOut: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_OUT_ID)].address,
 });
-export const QUOTE_REQUEST_DL_TOKEN_SYMBOLS = makeDutchLimitRequest({
-  tokenIn: 'UNI',
-  tokenOut: 'WETH',
-});
-export const QUOTE_REQUEST_DL_ONE_SYMBOL = makeDutchLimitRequest({
-  tokenIn: 'UNI',
-  tokenOut: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_OUT_ID)].address,
-});
-export const QUOTE_REQUEST_DL_UNKNOWN_SYMBOLS = makeDutchLimitRequest({
-  tokenIn: 'UNI',
-  tokenOut: 'ASDF',
-});
 
 export const QUOTE_REQUEST_MULTI = parseQuoteRequests({
   ...BASE_REQUEST_INFO_EXACT_IN,

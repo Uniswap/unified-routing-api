@@ -1,9 +1,10 @@
 import { TradeType } from '@uniswap/sdk-core';
+import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
 import axios from 'axios';
 import Logger from 'bunyan';
 import { BigNumber } from 'ethers';
 
-import { RoutingType } from '../../constants';
+import { NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { DutchLimitQuote, DutchLimitRequest, Quote } from '../../entities';
 import { Quoter, QuoterType } from './index';
 
@@ -15,24 +16,23 @@ export class RfqQuoter implements Quoter {
     this.log = _log.child({ quoter: 'RfqQuoter' });
   }
 
-  async quote(originalRequest: DutchLimitRequest): Promise<Quote | null> {
-    if (originalRequest.routingType !== RoutingType.DUTCH_LIMIT) {
-      this.log.error(`Invalid routing config type: ${originalRequest.routingType}`);
+  async quote(request: DutchLimitRequest): Promise<Quote | null> {
+    if (request.routingType !== RoutingType.DUTCH_LIMIT) {
+      this.log.error(`Invalid routing config type: ${request.routingType}`);
       return null;
     }
-    if (originalRequest.info.type === TradeType.EXACT_OUTPUT) {
-      this.log.error(`Invalid trade type: ${originalRequest.info.type}`);
+    if (request.info.type === TradeType.EXACT_OUTPUT) {
+      this.log.error(`Invalid trade type: ${request.info.type}`);
       return null;
     }
 
-    const request = await originalRequest.resolveTokenSymbols();
     const offerer = request.config.offerer;
     const requests = [
       axios.post(`${this.rfqUrl}quote`, {
         tokenInChainId: request.info.tokenInChainId,
         tokenOutChainId: request.info.tokenOutChainId,
-        tokenIn: request.info.tokenIn,
-        tokenOut: request.info.tokenOut,
+        tokenIn: mapNative(request.info.tokenIn, request.info.tokenInChainId),
+        tokenOut: mapNative(request.info.tokenOut, request.info.tokenInChainId),
         amount: request.info.amount.toString(),
         offerer: offerer,
         requestId: request.info.requestId,
@@ -61,4 +61,12 @@ export class RfqQuoter implements Quoter {
     });
     return quote;
   }
+}
+
+function mapNative(token: string, chainId: number): string {
+  if (token === NATIVE_ADDRESS) {
+    const wrapped = WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(chainId)].address;
+    return wrapped;
+  }
+  return token;
 }
