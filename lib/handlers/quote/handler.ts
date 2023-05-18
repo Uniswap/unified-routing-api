@@ -9,6 +9,7 @@ import {
   ClassicQuote,
   parseQuoteContexts,
   parseQuoteRequests,
+  prepareQuoteRequests,
   Quote,
   QuoteContextManager,
   QuoteJSON,
@@ -62,7 +63,9 @@ export class QuoteHandler extends APIGLambdaHandler<
     };
 
     log.info({ requestBody: request }, 'request');
-    const contextHandler = new QuoteContextManager(parseQuoteContexts(parseQuoteRequests(request)));
+    const contextHandler = new QuoteContextManager(
+      parseQuoteContexts(parseQuoteRequests(await prepareQuoteRequests(request)))
+    );
     const requests = contextHandler.getRequests();
     log.info({ requests }, 'requests');
     const quotes = await getQuotes(quoters, requests);
@@ -71,7 +74,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     const resolvedQuotes = await contextHandler.resolveQuotes(quotes);
     log.info({ resolvedQuotes: quotes }, 'resolvedQuotes');
 
-    this.emitMetrics(params);
+    this.emitQuoteRequestedMetrics(params);
 
     const uniswapXRequested = requests.filter((request) => request.routingType === RoutingType.DUTCH_LIMIT).length > 0;
     const bestQuote = await getBestQuote(resolvedQuotes, uniswapXRequested);
@@ -89,7 +92,9 @@ export class QuoteHandler extends APIGLambdaHandler<
     };
   }
 
-  private emitMetrics(params: APIHandleRequestParams<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>) {
+  private emitQuoteRequestedMetrics(
+    params: APIHandleRequestParams<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>
+  ) {
     const {
       requestBody: { tokenInChainId, tokenIn, tokenOut },
       requestInjected: { metrics },

@@ -359,6 +359,7 @@ export class APIStack extends cdk.Stack {
       ];
     });
 
+    // Alarm on calls from URA to the routing API
     const routingAPIErrorMetric = new aws_cloudwatch.MathExpression({
       expression: '100*(error/invocations)',
       period: Duration.minutes(5),
@@ -380,20 +381,21 @@ export class APIStack extends cdk.Stack {
       },
     });
 
-    new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV2-RoutingAPI-ErrorRate', {
+    const routingAPIErrorRateAlarmSev2 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV2-RoutingAPI-ErrorRate', {
       alarmName: 'UnifiedRoutingAPI-SEV2-RoutingAPI-ErrorRate',
       metric: routingAPIErrorMetric,
       threshold: 10,
       evaluationPeriods: 3,
     });
 
-    new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV3-RoutingAPI-ErrorRate', {
+    const routingAPIErrorRateAlarmSev3 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV3-RoutingAPI-ErrorRate', {
       alarmName: 'UnifiedRoutingAPI-SEV3-RoutingAPI-ErrorRate',
       metric: routingAPIErrorMetric,
       threshold: 5,
       evaluationPeriods: 3,
     });
 
+    // Alarm on calls from URA to the rfq service
     const rfqAPIErrorMetric = new aws_cloudwatch.MathExpression({
       expression: '100*(error/invocations)',
       period: Duration.minutes(5),
@@ -415,20 +417,21 @@ export class APIStack extends cdk.Stack {
       },
     });
 
-    new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV2-RFQAPI-ErrorRate', {
+    const rfqAPIErrorRateAlarmSev2 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV2-RFQAPI-ErrorRate', {
       alarmName: 'UnifiedRoutingAPI-SEV2-RFQAPI-ErrorRate',
       metric: rfqAPIErrorMetric,
       threshold: 10,
       evaluationPeriods: 3,
     });
 
-    new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV3-RFQAPI-ErrorRate', {
+    const rfqAPIErrorRateAlarmSev3 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV3-RFQAPI-ErrorRate', {
       alarmName: 'UnifiedRoutingAPI-SEV3-RFQAPI-ErrorRate',
       metric: rfqAPIErrorMetric,
       threshold: 5,
       evaluationPeriods: 3,
     });
 
+    // Alarm on calls from URA to the nonce service (gouda service)
     const nonceAPIErrorMetric = new aws_cloudwatch.MathExpression({
       expression: '100*(error/invocations)',
       period: Duration.minutes(5),
@@ -450,14 +453,14 @@ export class APIStack extends cdk.Stack {
       },
     });
 
-    new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV2-NonceAPI-ErrorRate', {
+    const nonceAPIErrorRateAlarmSev2 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV2-NonceAPI-ErrorRate', {
       alarmName: 'UnifiedRoutingAPI-SEV2-NonceAPI-ErrorRate',
       metric: nonceAPIErrorMetric,
       threshold: 10,
       evaluationPeriods: 3,
     });
 
-    new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV3-NonceAPI-ErrorRate', {
+    const nonceAPIErrorRateAlarmSev3 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV3-NonceAPI-ErrorRate', {
       alarmName: 'UnifiedRoutingAPI-SEV3-NonceAPI-ErrorRate',
       metric: nonceAPIErrorMetric,
       threshold: 5,
@@ -472,13 +475,20 @@ export class APIStack extends cdk.Stack {
       apiAlarm4xxSev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       apiAlarmLatencySev2.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       apiAlarmLatencySev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
-
+      
       percent5XXByChainAlarm.forEach((alarm) => {
         alarm.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       });
       percent4XXByChainAlarm.forEach((alarm) => {
         alarm.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       });
+
+      routingAPIErrorRateAlarmSev2.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
+      routingAPIErrorRateAlarmSev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
+      rfqAPIErrorRateAlarmSev2.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
+      rfqAPIErrorRateAlarmSev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
+      nonceAPIErrorRateAlarmSev2.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
+      nonceAPIErrorRateAlarmSev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
     }
 
     this.url = new CfnOutput(this, 'Url', {
