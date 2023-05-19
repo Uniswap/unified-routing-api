@@ -24,9 +24,7 @@ export interface QuoteRequestInfo {
   tokenInChainId: number;
   tokenOutChainId: number;
   tokenIn: string;
-  tokenInDecimals: number;
   tokenOut: string;
-  tokenOutDecimals: number;
   amount: BigNumber;
   type: TradeType;
   slippageTolerance?: string;

@@ -1,8 +1,14 @@
-import { TradeType , Token } from '@uniswap/sdk-core';
-import { BigNumber } from 'ethers';
+import {
+  DutchLimitOrderBuilder,
+  DutchLimitOrderInfo,
+  DutchLimitOrderInfoJSON,
+  DutchLimitOrderTrade,
+} from '@uniswap/gouda-sdk';
+import { PermitTransferFromData } from '@uniswap/permit2-sdk';
+import { Token, TradeType } from '@uniswap/sdk-core';
 import Logger from 'bunyan';
+import { BigNumber } from 'ethers';
 import Joi from 'joi';
-import { PermitTransferFromData } from '@uniswap/permit2-sdk'
 import { v4 as uuidv4 } from 'uuid';
 import { RoutingType } from '../../constants';
 import {
@@ -15,13 +21,11 @@ import {
   QuoteRequest,
   QuoteRequestBodyJSON,
 } from '../../entities';
+import { getDecimals } from '../../util/tokens';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
 import { ContainerInjected, QuoterByRoutingType } from './injector';
 import { PostQuoteRequestBodyJoi } from './schema';
-import { DutchLimitOrderBuilder, DutchLimitOrderInfo, DutchLimitOrderTrade, DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
-import { getAddress } from 'ethers/lib/utils';
-import { getDecimals } from '../../util/tokens';
 
 // number of bps per whole
 const BPS = 10000;
@@ -78,7 +82,7 @@ export class QuoteHandler extends APIGLambdaHandler<
 
     return {
       statusCode: 200,
-      body: quoteToResponse(bestQuote),
+      body: await quoteToResponse(bestQuote),
     };
   }
 
@@ -158,20 +162,19 @@ const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
   }
 };
 
-export function quoteToResponse(quote: Quote): QuoteResponseJSON {
-
-  const tokenInDecimals = quote.request.info.tokenInDecimals ?? getDecimals(quote.request.info.tokenInChainId , quote.request.info.tokenIn)
-  const tokenOutDecimals = quote.request.info.tokenOutDecimals ?? getDecimals(quote.request.info.tokenOutChainId, quote.request.info.tokenOut)
+export async function quoteToResponse(quote: Quote): QuoteResponseJSON {
+  const tokenInDecimals = await getDecimals(quote.request.info.tokenInChainId, quote.request.info.tokenIn);
+  const tokenOutDecimals = await getDecimals(quote.request.info.tokenOutChainId, quote.request.info.tokenOut);
 
   const trade = new DutchLimitOrderTrade({
     currencyIn: new Token(quote.request.info.tokenInChainId, quote.request.info.tokenIn, tokenInDecimals),
     currenciesOut: [new Token(quote.request.info.tokenOutChainId, quote.request.info.tokenOut, tokenOutDecimals)],
     tradeType: quote.request.info.type,
     orderInfo: toDutchLimitOrderInfo(quote.toJSON() as DutchLimitOrderInfoJSON),
-  })
+  });
 
-  // add the current time etc
-  const order =  DutchLimitOrderBuilder.fromOrder(trade.order).build()
+  // add the current time etc if needed
+  const order = DutchLimitOrderBuilder.fromOrder(trade.order).build();
 
   return {
     routing: quote.routingType,
@@ -182,10 +185,10 @@ export function quoteToResponse(quote: Quote): QuoteResponseJSON {
 }
 
 function toDutchLimitOrderInfo(orderInfoJSON: DutchLimitOrderInfoJSON): DutchLimitOrderInfo {
-  const { nonce, input, outputs } = orderInfoJSON
+  const { nonce, input, outputs } = orderInfoJSON;
   return {
     ...orderInfoJSON,
-    exclusivityOverrideBps: BigNumber.from(orderInfoJSON.exclusivityOverrideBps), 
+    exclusivityOverrideBps: BigNumber.from(orderInfoJSON.exclusivityOverrideBps),
     nonce: BigNumber.from(nonce),
     input: {
       ...input,
@@ -197,5 +200,5 @@ function toDutchLimitOrderInfo(orderInfoJSON: DutchLimitOrderInfoJSON): DutchLim
       startAmount: BigNumber.from(output.startAmount),
       endAmount: BigNumber.from(output.endAmount),
     })),
-  }
+  };
 }
