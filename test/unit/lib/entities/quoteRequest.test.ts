@@ -40,7 +40,7 @@ const DUPLICATE_REQUEST_JSON = {
 
 describe('QuoteRequest', () => {
   it('parses dutch limit order config properly', () => {
-    const requests = parseQuoteRequests(MOCK_REQUEST_JSON);
+    const { quoteRequests: requests } = parseQuoteRequests(MOCK_REQUEST_JSON);
     const info = requests[0].info;
 
     const config = DutchLimitRequest.fromRequestBody(info, MOCK_DL_CONFIG_JSON);
@@ -48,7 +48,7 @@ describe('QuoteRequest', () => {
   });
 
   it('parses basic classic quote order config properly', () => {
-    const requests = parseQuoteRequests(MOCK_REQUEST_JSON);
+    const { quoteRequests: requests } = parseQuoteRequests(MOCK_REQUEST_JSON);
     const info = requests[0].info;
 
     const config = ClassicRequest.fromRequestBody(info, CLASSIC_CONFIG_JSON);
@@ -56,7 +56,7 @@ describe('QuoteRequest', () => {
   });
 
   it('parses a complete quote request properly', () => {
-    const requests = parseQuoteRequests(MOCK_REQUEST_JSON);
+    const { quoteRequests: requests } = parseQuoteRequests(MOCK_REQUEST_JSON);
 
     expect(requests.length).toEqual(2);
     expect(requests[0].toJSON()).toMatchObject(MOCK_DL_CONFIG_JSON);
@@ -83,7 +83,7 @@ describe('QuoteRequest', () => {
     );
     expect(request).toMatchObject(MOCK_REQUEST_JSON);
 
-    const requests = parseQuoteRequests(request);
+    const { quoteRequests: requests } = parseQuoteRequests(request);
 
     expect(requests.length).toEqual(2);
     expect(requests[0].toJSON()).toMatchObject(MOCK_DL_CONFIG_JSON);
@@ -96,7 +96,7 @@ describe('QuoteRequest', () => {
     );
     expect(request).toMatchObject(MOCK_REQUEST_JSON);
 
-    const requests = parseQuoteRequests(request);
+    const { quoteRequests: requests } = parseQuoteRequests(request);
 
     expect(requests.length).toEqual(2);
     expect(requests[0].toJSON()).toMatchObject(MOCK_DL_CONFIG_JSON);

@@ -84,7 +84,7 @@ export function makeClassicRequest(overrides: Partial<QuoteRequestBodyJSON>): Cl
         gasPriceWei: '12',
       },
     ],
-  })[0] as ClassicRequest;
+  }).quoteRequests[0] as ClassicRequest;
 }
 
 export const QUOTE_REQUEST_CLASSIC = makeClassicRequest({});
@@ -101,7 +101,7 @@ export function makeDutchLimitRequest(overrides: Partial<QuoteRequestBodyJSON>):
         auctionPeriodSecs: 60,
       },
     ],
-  })[0] as DutchLimitRequest;
+  }).quoteRequests[0] as DutchLimitRequest;
 }
 
 export const QUOTE_REQUEST_DL = makeDutchLimitRequest({});
@@ -113,7 +113,7 @@ export const QUOTE_REQUEST_DL_NATIVE_OUT = makeDutchLimitRequest({
   tokenOut: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_OUT_ID)].address,
 });
 
-export const QUOTE_REQUEST_MULTI = parseQuoteRequests({
+export const { quoteRequests: QUOTE_REQUEST_MULTI } = parseQuoteRequests({
   ...BASE_REQUEST_INFO_EXACT_IN,
   configs: [
     {

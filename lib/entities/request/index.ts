@@ -4,8 +4,6 @@ import { BigNumber } from 'ethers';
 import { SUPPORTED_CHAINS } from '../../config/chains';
 import { DEFAULT_SLIPPAGE_TOLERANCE, RoutingType } from '../../constants';
 import { ValidationError } from '../../util/errors';
-import { log } from '../../util/log';
-import { currentTimestampInSeconds } from '../../util/time';
 import { getAddress } from '../../util/tokens';
 import { ClassicConfig, ClassicConfigJSON, ClassicRequest } from './ClassicRequest';
 import { DutchLimitConfig, DutchLimitConfigJSON, DutchLimitRequest } from './DutchLimitRequest';
