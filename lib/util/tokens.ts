@@ -3,6 +3,8 @@ import {
   CachingTokenListProvider,
   CachingTokenProviderWithFallback,
   ChainId,
+  ITokenListProvider,
+  ITokenProvider,
   NodeJSCache,
   TokenProvider,
   UniswapMulticallProvider,
@@ -15,11 +17,11 @@ import { Token } from '@uniswap/sdk-core'
 export const ARBITRUM_TIMEOUT = 8000;
 export const DEFAULT_TIMEOUT = 5000;
 
-export const getTokenListProvider = (id: ChainId) => {
+export const getTokenListProvider = (id: ChainId): ITokenProvider & ITokenListProvider => {
   return new CachingTokenListProvider(id, DEFAULT_TOKEN_LIST, new NodeJSCache(new NodeCache()));
 };
 
-export const getTokenProvider = (chainId: ChainId) => {
+export const getTokenProvider = (chainId: ChainId): ITokenProvider => {
   let timeout: number;
   switch (chainId) {
     case ChainId.ARBITRUM_ONE:
