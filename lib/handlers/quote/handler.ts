@@ -15,9 +15,12 @@ import {
   QuoteJSON,
   QuoteRequest,
   QuoteRequestBodyJSON,
+  QuoteRequestInfo,
 } from '../../entities';
+import { ValidationError } from '../../util/errors';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
+import { currentTimestampInSeconds } from '../../util/time';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
 import { ContainerInjected, QuoterByRoutingType } from './injector';
@@ -50,11 +53,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     } = params;
 
     if (tokenInChainId != tokenOutChainId) {
-      return {
-        statusCode: 400,
-        errorCode: 'TOKEN_CHAINS_DIFFERENT',
-        detail: `Cannot request quotes for tokens on different chains`,
-      };
+      throw new ValidationError(`Cannot request quotes for tokens on different chains`);
     }
 
     const request = {
@@ -63,9 +62,8 @@ export class QuoteHandler extends APIGLambdaHandler<
     };
 
     log.info({ requestBody: request }, 'request');
-    const contextHandler = new QuoteContextManager(
-      parseQuoteContexts(parseQuoteRequests(await prepareQuoteRequests(request)))
-    );
+    const { quoteRequests, quoteInfo } = parseQuoteRequests(await prepareQuoteRequests(request));
+    const contextHandler = new QuoteContextManager(parseQuoteContexts(quoteRequests));
     const requests = contextHandler.getRequests();
     log.info({ requests }, 'requests');
     const quotes = await getQuotes(quoters, requests);
@@ -74,7 +72,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     const resolvedQuotes = await contextHandler.resolveQuotes(quotes);
     log.info({ resolvedQuotes: quotes }, 'resolvedQuotes');
 
-    this.emitQuoteRequestedMetrics(params);
+    this.emitQuoteRequestedMetrics(quoteInfo, quoteRequests);
 
     const uniswapXRequested = requests.filter((request) => request.routingType === RoutingType.DUTCH_LIMIT).length > 0;
     const bestQuote = await getBestQuote(resolvedQuotes, uniswapXRequested);
@@ -92,15 +90,8 @@ export class QuoteHandler extends APIGLambdaHandler<
     };
   }
 
-  private emitQuoteRequestedMetrics(
-    params: APIHandleRequestParams<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>
-  ) {
-    const {
-      requestBody: { tokenInChainId, tokenIn, tokenOut },
-      requestInjected: { metrics },
-    } = params;
-
-    const chainId = tokenInChainId;
+  private emitQuoteRequestedMetrics(info: QuoteRequestInfo, requests: QuoteRequest[]) {
+    const { tokenInChainId: chainId, tokenIn, tokenOut } = info;
     const tokenInAbbr = tokenIn.slice(0, 6);
     const tokenOutAbbr = tokenOut.slice(0, 6);
     const tokenPairSymbol = `${tokenInAbbr}/${tokenOutAbbr}`;
@@ -108,6 +99,24 @@ export class QuoteHandler extends APIGLambdaHandler<
 
     // This log is used to generate the quotes by token dashboard.
     log.info({ tokenIn, tokenOut, chainId, tokenPairSymbol, tokenPairSymbolChain }, 'tokens and chains');
+
+    // This log is used for ingesting into redshift for analytics purposes.
+    log.info({
+      eventType: 'UnifiedRoutingQuoteRequest',
+      body: {
+        requestId: info.requestId,
+        tokenInChainId: info.tokenInChainId,
+        tokenOutChainId: info.tokenOutChainId,
+        tokenIn: info.tokenIn,
+        tokenOut: info.tokenOut,
+        amount: info.amount.toString(),
+        type: TradeType[info.type],
+        configs: requests.map((r) => r.routingType).join(','),
+        createdAt: currentTimestampInSeconds(),
+        // only log offerer if it's a dutch limit request
+        ...(info.offerer && { offerer: info.offerer }),
+      },
+    });
 
     metrics.putMetric(`QuoteRequestedChainId${chainId.toString()}`, 1, Unit.Count);
   }
