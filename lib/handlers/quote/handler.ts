@@ -1,11 +1,21 @@
-import { TradeType } from '@uniswap/sdk-core';
+import {
+  DutchLimitOrder,
+  DutchLimitOrderBuilder,
+  DutchLimitOrderInfo,
+  DutchLimitOrderInfoJSON,
+  DutchLimitOrderTrade,
+} from '@uniswap/gouda-sdk';
+import { Token, TradeType } from '@uniswap/sdk-core';
 import Logger from 'bunyan';
 import Joi from 'joi';
 
+import { PermitSingleData, PermitTransferFromData } from '@uniswap/permit2-sdk';
+import { BigNumber } from 'ethers';
 import { v4 as uuidv4 } from 'uuid';
 import { RoutingType } from '../../constants';
 import { ClassicQuote, parseQuoteRequests, Quote, QuoteJSON, QuoteRequest, QuoteRequestBodyJSON } from '../../entities';
 import { QuotesByRoutingType } from '../../entities/quote/index';
+import { getDecimals } from '../../util/tokens';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
 import { ContainerInjected, QuoterByRoutingType } from './injector';
@@ -19,6 +29,7 @@ const DUTCH_LIMIT_PREFERENCE_BUFFER_BPS = 500;
 export interface QuoteResponseJSON {
   routing: string;
   quote: QuoteJSON;
+  permit?: PermitSingleData | PermitTransferFromData;
 }
 
 export class QuoteHandler extends APIGLambdaHandler<
@@ -61,9 +72,19 @@ export class QuoteHandler extends APIGLambdaHandler<
       };
     }
 
+    // check if permit needed
+    const order = await getOrder(bestQuote);
+    if (!order) {
+      return {
+        statusCode: 404,
+        detail: 'Failed to create permit',
+        errorCode: 'PERMIT_ERROR',
+      };
+    }
+
     return {
       statusCode: 200,
-      body: quoteToResponse(bestQuote),
+      body: quoteToResponse(bestQuote, order),
     };
   }
 
@@ -154,9 +175,44 @@ const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
   }
 };
 
-export function quoteToResponse(quote: Quote): QuoteResponseJSON {
+export function quoteToResponse(quote: Quote, order: DutchLimitOrder): QuoteResponseJSON {
   return {
     routing: quote.routingType,
     quote: quote.toJSON(),
+    permit: order.permitData(),
+  };
+}
+
+export async function getOrder(quote: Quote): Promise<DutchLimitOrder> {
+  const tokenInDecimals = await getDecimals(quote.request.info.tokenInChainId, quote.request.info.tokenIn);
+  const tokenOutDecimals = await getDecimals(quote.request.info.tokenOutChainId, quote.request.info.tokenOut);
+
+  const trade = new DutchLimitOrderTrade({
+    currencyIn: new Token(quote.request.info.tokenInChainId, quote.request.info.tokenIn, tokenInDecimals),
+    currenciesOut: [new Token(quote.request.info.tokenOutChainId, quote.request.info.tokenOut, tokenOutDecimals)],
+    tradeType: quote.request.info.type,
+    orderInfo: quoteToDutchLimitOrderInfo(quote.toJSON() as DutchLimitOrderInfoJSON),
+  });
+
+  // add the current time etc if needed
+  return DutchLimitOrderBuilder.fromOrder(trade.order).build();
+}
+
+export function quoteToDutchLimitOrderInfo(orderInfoJSON: DutchLimitOrderInfoJSON): DutchLimitOrderInfo {
+  const { nonce, input, outputs } = orderInfoJSON;
+  return {
+    ...orderInfoJSON,
+    exclusivityOverrideBps: BigNumber.from(orderInfoJSON.exclusivityOverrideBps),
+    nonce: BigNumber.from(nonce),
+    input: {
+      ...input,
+      startAmount: BigNumber.from(input.startAmount),
+      endAmount: BigNumber.from(input.endAmount),
+    },
+    outputs: outputs.map((output) => ({
+      ...output,
+      startAmount: BigNumber.from(output.startAmount),
+      endAmount: BigNumber.from(output.endAmount),
+    })),
   };
 }

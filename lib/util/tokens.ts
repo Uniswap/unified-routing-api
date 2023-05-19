@@ -1,4 +1,5 @@
 import DEFAULT_TOKEN_LIST from '@uniswap/default-token-list';
+import { Token } from '@uniswap/sdk-core';
 import {
   CachingTokenListProvider,
   CachingTokenProviderWithFallback,
@@ -12,7 +13,6 @@ import {
 import { ethers } from 'ethers';
 import NodeCache from 'node-cache';
 import { ValidationError } from './errors';
-import { Token } from '@uniswap/sdk-core'
 
 export const ARBITRUM_TIMEOUT = 8000;
 export const DEFAULT_TIMEOUT = 5000;
@@ -71,4 +71,16 @@ export const getAddress = async (id: ChainId, symbolOrAddress: string): Promise<
     }
     return token.address;
   }
+};
+
+export const getDecimals = async (chainId: ChainId, address: string): Promise<number> => {
+  // if invalid, try to parse as symbol
+  const tokenProvider = getTokenProvider(chainId);
+  const tokenAccessor = await tokenProvider.getTokens([address]);
+  const token = tokenAccessor.getTokenByAddress(address);
+  // if the token is not defined then throw
+  if (token === undefined) {
+    throw new ValidationError(`Could not find token with symbol ${address}`);
+  }
+  return token.decimals;
 };
