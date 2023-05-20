@@ -19,7 +19,7 @@ export class RoutingApiQuoter implements Quoter {
     if (request.routingType !== RoutingType.CLASSIC) {
       throw new Error(`Invalid routing config type: ${request.routingType}`);
     }
-    
+
     metrics.putMetric(`RoutingApiQuoterRequest`, 1);
     try {
       const req = this.buildRequest(request);
