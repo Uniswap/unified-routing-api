@@ -1,13 +1,8 @@
-import { default as Logger } from 'bunyan';
-
 import { RoutingApiQuoter } from '../../../../lib/providers/quoters';
 import { QUOTE_REQUEST_CLASSIC } from '../../../utils/fixtures';
 
 describe('RoutingApiQuoter', () => {
-  // silent logger in tests
-  const logger = Logger.createLogger({ name: 'test' });
-  logger.level(Logger.FATAL);
-  const routingApiQuoter = new RoutingApiQuoter(logger, 'https://api.uniswap.org/');
+  const routingApiQuoter = new RoutingApiQuoter('https://api.uniswap.org/');
 
   describe('buildRequest', () => {
     it('properly builds query string', () => {

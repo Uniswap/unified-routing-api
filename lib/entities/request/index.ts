@@ -1,11 +1,9 @@
 import { TradeType } from '@uniswap/sdk-core';
-import Logger from 'bunyan';
 import { BigNumber } from 'ethers';
 
 import { SUPPORTED_CHAINS } from '../../config/chains';
 import { DEFAULT_SLIPPAGE_TOLERANCE, RoutingType } from '../../constants';
 import { ValidationError } from '../../util/errors';
-import { currentTimestampInSeconds } from '../../util/time';
 import { getAddress } from '../../util/tokens';
 import { ClassicConfig, ClassicConfigJSON, ClassicRequest } from './ClassicRequest';
 import { DutchLimitConfig, DutchLimitConfigJSON, DutchLimitRequest } from './DutchLimitRequest';
@@ -29,6 +27,7 @@ export interface QuoteRequestInfo {
   amount: BigNumber;
   type: TradeType;
   slippageTolerance?: string;
+  offerer?: string;
 }
 
 export interface QuoteRequestBodyJSON extends Omit<QuoteRequestInfo, 'type' | 'amount'> {
@@ -54,7 +53,10 @@ export async function prepareQuoteRequests(body: QuoteRequestBodyJSON): Promise<
   });
 }
 
-export function parseQuoteRequests(body: QuoteRequestBodyJSON, log?: Logger): QuoteRequest[] {
+export function parseQuoteRequests(body: QuoteRequestBodyJSON): {
+  quoteRequests: QuoteRequest[];
+  quoteInfo: QuoteRequestInfo;
+} {
   const info: QuoteRequestInfo = {
     requestId: body.requestId,
     tokenInChainId: body.tokenInChainId,
@@ -79,24 +81,7 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON, log?: Logger): Qu
     return [];
   });
 
-  const offerer = (requests.find((r) => r.routingType === RoutingType.DUTCH_LIMIT)?.config as DutchLimitConfig)
-    ?.offerer;
-  log?.info({
-    eventType: 'UnifiedRoutingQuoteRequest',
-    body: {
-      requestId: info.requestId,
-      tokenInChainId: info.tokenInChainId,
-      tokenOutChainId: info.tokenOutChainId,
-      tokenIn: info.tokenIn,
-      tokenOut: info.tokenOut,
-      amount: info.amount.toString(),
-      type: TradeType[info.type],
-      configs: requests.map((r) => r.routingType).join(','),
-      createdAt: currentTimestampInSeconds(),
-      // only log offerer if it's a dutch limit request
-      ...(offerer && { offerer: offerer }),
-    },
-  });
+  info.offerer = (requests.find((r) => r.routingType === RoutingType.DUTCH_LIMIT)?.config as DutchLimitConfig)?.offerer;
 
   const result: Set<RoutingType> = new Set();
   requests.forEach((request) => {
@@ -106,7 +91,7 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON, log?: Logger): Qu
     result.add(request.routingType);
   });
 
-  return requests;
+  return { quoteInfo: info, quoteRequests: requests };
 }
 
 function parseTradeType(tradeType: string): TradeType {

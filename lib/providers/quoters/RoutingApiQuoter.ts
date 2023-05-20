@@ -1,30 +1,34 @@
 import { TradeType } from '@uniswap/sdk-core';
 import axios from 'axios';
-import Logger from 'bunyan';
 import querystring from 'querystring';
 
 import { NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { ClassicQuote, ClassicRequest, Quote } from '../../entities';
+import { log as globalLog } from '../../util/log';
+import { metrics } from '../../util/metrics';
 import { Quoter, QuoterType } from './index';
+
+const log = globalLog.child({ quoter: 'RoutingApiQuoter' });
 
 export class RoutingApiQuoter implements Quoter {
   static readonly type: QuoterType.ROUTING_API;
-  private log: Logger;
 
-  constructor(_log: Logger, private routingApiUrl: string) {
-    this.log = _log.child({ quoter: 'RoutingApiQuoter' });
-  }
+  constructor(private routingApiUrl: string) {}
 
   async quote(request: ClassicRequest): Promise<Quote | null> {
     if (request.routingType !== RoutingType.CLASSIC) {
       throw new Error(`Invalid routing config type: ${request.routingType}`);
     }
+    
+    metrics.putMetric(`RoutingApiQuoterRequest`, 1);
     try {
       const req = this.buildRequest(request);
       const response = await axios.get(req);
+      metrics.putMetric(`RoutingApiQuoterSuccess`, 1);
       return ClassicQuote.fromResponseBody(request, response.data);
     } catch (e) {
-      this.log.error(e, 'RoutingApiQuoterErr');
+      log.error(e, 'RoutingApiQuoterErr');
+      metrics.putMetric(`RoutingApiQuoterErr`, 1);
       return null;
     }
   }

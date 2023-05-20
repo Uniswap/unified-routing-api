@@ -24,7 +24,7 @@ export interface ClassicConfig {
 }
 
 export interface ClassicConfigJSON extends Omit<ClassicConfig, 'protocols' | 'permitAmount'> {
-  routingType: RoutingType;
+  routingType: RoutingType.CLASSIC;
   protocols?: string[];
   permitAmount?: string;
 }
@@ -53,7 +53,7 @@ export class ClassicRequest implements QuoteRequest {
 
   public toJSON(): ClassicConfigJSON {
     return Object.assign({}, this.config, {
-      routingType: RoutingType.CLASSIC,
+      routingType: RoutingType.CLASSIC as RoutingType.CLASSIC,
       protocols: this.config.protocols?.map((p: Protocol) => p.toString()),
       ...(this.config.permitAmount !== undefined && { permitAmount: this.config.permitAmount.toString() }),
     });

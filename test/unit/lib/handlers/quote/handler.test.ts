@@ -3,6 +3,7 @@ import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { default as Logger } from 'bunyan';
 
 import { DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
+import { MetricsLogger } from 'aws-embedded-metrics';
 import { RoutingType } from '../../../../../lib/constants';
 import { ClassicQuote, ClassicQuoteDataJSON, DutchLimitQuote, Quote } from '../../../../../lib/entities';
 import { QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index';
@@ -10,6 +11,7 @@ import { ApiInjector, ApiRInj } from '../../../../../lib/handlers/base';
 import { compareQuotes, getBestQuote, getQuotes, QuoteHandler } from '../../../../../lib/handlers/quote/handler';
 import { ContainerInjected, QuoterByRoutingType } from '../../../../../lib/handlers/quote/injector';
 import { Quoter } from '../../../../../lib/providers/quoters';
+import { setGlobalLogger } from '../../../../../lib/util/log';
 import { CHECKSUM_OFFERER } from '../../../../constants';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
@@ -37,13 +39,17 @@ describe('QuoteHandler', () => {
       }),
     };
 
-    const requestInjectedMock: Promise<ApiRInj> = new Promise(
-      (resolve) =>
-        resolve({
-          log: logger as unknown as Logger,
-          requestId: 'test',
-        }) as unknown as ApiRInj
-    );
+    const metrics = {
+      putMetric: jest.fn(),
+    };
+    const requestInjectedMock: Promise<ApiRInj> = new Promise((resolve) => {
+      setGlobalLogger(logger as any);
+      resolve({
+        log: logger as unknown as Logger,
+        requestId: 'test',
+        metrics: metrics as unknown as MetricsLogger,
+      }) as unknown as ApiRInj;
+    });
 
     const injectorPromiseMock = (
       quoters: QuoterByRoutingType
