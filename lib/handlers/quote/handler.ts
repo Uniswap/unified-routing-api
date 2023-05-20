@@ -75,7 +75,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     this.emitQuoteRequestedMetrics(quoteInfo, quoteRequests);
 
     const uniswapXRequested = requests.filter((request) => request.routingType === RoutingType.DUTCH_LIMIT).length > 0;
-    const bestQuote = await getBestQuote(resolvedQuotes, uniswapXRequested);
+    const bestQuote = await getBestQuote(resolvedQuotes.filter((q) => q !== null) as Quote[], uniswapXRequested, log);
     if (!bestQuote) {
       return {
         statusCode: 404,
@@ -86,7 +86,15 @@ export class QuoteHandler extends APIGLambdaHandler<
 
     return {
       statusCode: 200,
-      body: quoteToResponse(bestQuote),
+      body: Object.assign(
+        quoteToResponse(bestQuote),
+        // additional info to return alongside the main quote
+        {
+          // note the best quote is duplicated, but this allows callers
+          // to easily map their original request configs to quotes by index
+          allQuotes: resolvedQuotes.map((q) => (q ? quoteToResponse(q) : null)),
+        }
+      ),
     };
   }
 
