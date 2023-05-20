@@ -1,5 +1,13 @@
 import { RoutingType } from '../../../../lib/constants';
-import { ClassicConfigJSON, ClassicRequest, DutchLimitConfigJSON, DutchLimitRequest, QuoteRequestBodyJSON, parseQuoteRequests, prepareQuoteRequests } from '../../../../lib/entities';
+import {
+  ClassicConfigJSON,
+  ClassicRequest,
+  DutchLimitConfigJSON,
+  DutchLimitRequest,
+  parseQuoteRequests,
+  prepareQuoteRequests,
+  QuoteRequestBodyJSON,
+} from '../../../../lib/entities';
 import { ValidationError } from '../../../../lib/util/errors';
 import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
 

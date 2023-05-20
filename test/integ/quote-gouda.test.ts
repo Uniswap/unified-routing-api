@@ -19,6 +19,7 @@ import chaiAsPromised from 'chai-as-promised';
 import chaiSubset from 'chai-subset';
 import { BigNumber } from 'ethers';
 import hre from 'hardhat';
+import _ from 'lodash';
 import qs from 'qs';
 import { RoutingType } from '../../lib/constants';
 import { ClassicQuoteDataJSON, QuoteRequestBodyJSON, RoutingConfigJSON } from '../../lib/entities';
@@ -28,7 +29,6 @@ import { fund, resetAndFundAtBlock } from '../utils/forkAndFund';
 import { getBalance, getBalanceAndApprove, getBalanceAndApprovePermit2 } from '../utils/getBalanceAndApprove';
 import { RoutingApiQuoteResponse } from '../utils/quoteResponse';
 import { getAmount } from '../utils/tokens';
-import _ from 'lodash';
 
 const { ethers } = hre;
 

@@ -70,7 +70,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     log.info({ rawQuotes: quotes }, 'quotes');
 
     const resolvedQuotes = await contextHandler.resolveQuotes(quotes);
-    log.info({ resolvedQuotes: quotes }, 'resolvedQuotes');
+    log.info({ resolvedQuotes }, 'resolvedQuotes');
 
     this.emitQuoteRequestedMetrics(quoteInfo, quoteRequests);
 

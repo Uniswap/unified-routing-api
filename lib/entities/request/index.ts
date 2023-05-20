@@ -104,33 +104,18 @@ function parseTradeType(tradeType: string): TradeType {
   }
 }
 
-// compares two request infos, returning true if they are quoting the same thing
-// note requests of different types but over the same data would return true here
-export function requestInfoEquals(a: QuoteRequestInfo, b: QuoteRequestInfo): boolean {
-  return (
-    a.requestId === b.requestId &&
-    a.tokenInChainId === b.tokenInChainId &&
-    a.tokenOutChainId === b.tokenOutChainId &&
-    a.tokenIn === b.tokenIn &&
-    a.tokenOut === b.tokenOut &&
-    a.amount.eq(b.amount) &&
-    a.type === b.type
-  );
-
-  // TODO: slippage tolerance is currently formatted differently by type
-  // unify so we can add that check here as well
-}
-
-// TODO: maybe have key as getter on request
-// so diff request types can specify their own key
+// uniquely identifying key for a request
 export function defaultRequestKey(request: QuoteRequest): string {
   // specify request key as the shared info and routing type
   // so we make have multiple requests with different configs
+  const info = request.info;
   return JSON.stringify({
-    ...request.info,
     routingType: request.routingType,
-    // overwrite request id which is irrelevant to deduplication
-    requestId: '',
-    slippageTolerance: '',
+    tokenInChainId: info.tokenInChainId,
+    tokenOutChainId: info.tokenOutChainId,
+    tokenIn: info.tokenIn,
+    tokenOut: info.tokenOut,
+    amount: info.amount.toString(),
+    type: info.type,
   });
 }
