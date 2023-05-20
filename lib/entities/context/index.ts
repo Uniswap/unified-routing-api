@@ -60,7 +60,7 @@ export class QuoteContextManager {
   }
 
   // resolve quotes from quote contexts using quoted dependencies
-  async resolveQuotes(quotes: Quote[]): Promise<Quote[]> {
+  async resolveQuotes(quotes: Quote[]): Promise<(Quote | null)[]> {
     this.log.info({ quotes }, `Context quotes`);
     const allQuotes: QuoteByKey = {};
     for (const quote of quotes) {
@@ -73,7 +73,7 @@ export class QuoteContextManager {
       })
     );
 
-    return resolved.filter((quote) => quote !== null) as Quote[];
+    return resolved;
   }
 }
 

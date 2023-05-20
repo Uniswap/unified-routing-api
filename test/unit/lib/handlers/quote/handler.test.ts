@@ -99,6 +99,37 @@ describe('QuoteHandler', () => {
         expect(quoteJSON.outputs.length).toBe(1);
         expect(quoteJSON.outputs[0].endAmount).toBe(slippageAdjustedAmountOut.toString());
       });
+
+      it('returns allQuotes', async () => {
+        const quoters = {
+          [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
+          [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),
+        };
+        const res = await getQuoteHandler(quoters).handler(
+          getEvent(QUOTE_REQUEST_BODY_MULTI),
+          {} as unknown as Context
+        );
+
+        const allQuotes = JSON.parse(res.body).allQuotes;
+        expect(allQuotes.length).toEqual(2);
+        expect(allQuotes[0].routing).toEqual('DUTCH_LIMIT');
+        expect(allQuotes[1].routing).toEqual('CLASSIC');
+      });
+
+      it('returns null in allQuotes on quote failure', async () => {
+        const quoters = {
+          [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),
+        };
+        const res = await getQuoteHandler(quoters).handler(
+          getEvent(QUOTE_REQUEST_BODY_MULTI),
+          {} as unknown as Context
+        );
+
+        const allQuotes = JSON.parse(res.body).allQuotes;
+        expect(allQuotes.length).toEqual(2);
+        expect(allQuotes[0].routing).toEqual('DUTCH_LIMIT');
+        expect(allQuotes[1]).toEqual(null);
+      });
     });
 
     describe('logging test', () => {

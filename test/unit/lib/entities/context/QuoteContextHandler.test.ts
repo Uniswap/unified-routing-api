@@ -193,7 +193,7 @@ describe('QuoteContextManager', () => {
       const context = new MockQuoteContext(QUOTE_REQUEST_DL);
       context.setDependencies([QUOTE_REQUEST_CLASSIC]);
       const handler = new QuoteContextManager(logger, [context]);
-      expect(await handler.resolveQuotes([])).toEqual([]);
+      expect(await handler.resolveQuotes([])).toEqual([null]);
       expect(context._quoteDependencies).toEqual({});
     });
 
