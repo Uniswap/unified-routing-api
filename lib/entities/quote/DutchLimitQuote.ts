@@ -1,4 +1,4 @@
-import { DutchLimitOrder, DutchLimitOrderBuilder, DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
+import { DutchLimitOrder, DutchLimitOrderBuilder } from '@uniswap/gouda-sdk';
 import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber, ethers } from 'ethers';
 
@@ -201,6 +201,10 @@ export class DutchLimitQuote implements Quote {
       slippage: this.request.info.slippageTolerance ? parseFloat(this.request.info.slippageTolerance) : -1,
       createdAt: this.createdAt,
     };
+  }
+
+  public getPermit() {
+    return this.toOrder().permitData();
   }
 
   private generateRandomNonce(): string {

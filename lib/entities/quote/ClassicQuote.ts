@@ -111,6 +111,10 @@ export class ClassicQuote implements Quote {
     };
   }
 
+  getPermit(): null {
+    return null;
+  }
+
   public get amountOut(): BigNumber {
     return this.request.info.type === TradeType.EXACT_INPUT
       ? BigNumber.from(this.quoteData.quote)

@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-import {  TradeType } from '@uniswap/sdk-core';
+import { TradeType } from '@uniswap/sdk-core';
 import { Unit } from 'aws-embedded-metrics';
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 
@@ -36,7 +36,6 @@ const DUTCH_LIMIT_PREFERENCE_BUFFER_BPS = 500;
 export interface QuoteResponseJSON {
   routing: string;
   quote: QuoteJSON;
-   
   permit?: PermitSingleData | PermitTransferFromData;
 }
 
@@ -107,7 +106,7 @@ export class QuoteHandler extends APIGLambdaHandler<
           allQuotes: resolvedQuotes.map((q) => (q ? quoteToResponse(q) : null)),
         },
         {
-          permit: bestQuote instanceof DutchLimitQuote ? bestQuote.toOrder().permitData() : undefined,  
+          permit: bestQuote.getPermit(),
         }
       ),
     };
