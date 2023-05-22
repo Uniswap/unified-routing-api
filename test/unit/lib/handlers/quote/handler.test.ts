@@ -27,6 +27,7 @@ import {
   QUOTE_REQUEST_DL,
   QUOTE_REQUEST_MULTI,
 } from '../../../../utils/fixtures';
+import { TokenFetcher } from '../../../../../lib/handlers/fetchers/tokens';
 
 describe('QuoteHandler', () => {
   describe('handler', () => {
@@ -52,20 +53,22 @@ describe('QuoteHandler', () => {
     });
 
     const injectorPromiseMock = (
-      quoters: QuoterByRoutingType
+      quoters: QuoterByRoutingType,
+      tokenFetcher: TokenFetcher
     ): Promise<ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>> =>
       new Promise((resolve) =>
         resolve({
           getContainerInjected: () => {
             return {
               quoters: quoters,
+              tokenFetcher: tokenFetcher,
             };
           },
           getRequestInjected: () => requestInjectedMock,
         } as unknown as ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>)
       );
 
-    const getQuoteHandler = (quoters: QuoterByRoutingType) => new QuoteHandler('quote', injectorPromiseMock(quoters));
+    const getQuoteHandler = (quoters: QuoterByRoutingType, tokenFetcher: TokenFetcher) => new QuoteHandler('quote', injectorPromiseMock(quoters, tokenFetcher));
 
     const RfqQuoterMock = (dlQuote: DutchLimitQuote): Quoter => {
       return {
@@ -77,6 +80,11 @@ describe('QuoteHandler', () => {
         quote: jest.fn().mockResolvedValue(classicQuote),
       };
     };
+    const TokenFetcherMock = (address: string): TokenFetcher => {
+      return {
+        getTokenAddressFromList: jest.fn().mockResolvedValue(address),
+      } as unknown as TokenFetcher;
+    };
     const getEvent = (request: QuoteRequestBodyJSON): APIGatewayProxyEvent =>
       ({
         body: JSON.stringify(request),
@@ -85,8 +93,11 @@ describe('QuoteHandler', () => {
     describe('handler test', () => {
       it('handles classic quotes', async () => {
         const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE) };
-        const res = await getQuoteHandler(quoters).handler(getEvent(CLASSIC_REQUEST_BODY), {} as unknown as Context);
+        const tokenFetcher = TokenFetcherMock('0x123')
+        const res = await getQuoteHandler(quoters, tokenFetcher).handler(getEvent(CLASSIC_REQUEST_BODY), {} as unknown as Context);
+        console.log(res);
         const quoteJSON = JSON.parse(res.body).quote as ClassicQuoteDataJSON;
+        console.log(quoteJSON);
         expect(quoteJSON.quoteGasAdjusted).toBe(CLASSIC_QUOTE_EXACT_IN_WORSE.amountOutGasAdjusted.toString());
       });
 
@@ -95,7 +106,8 @@ describe('QuoteHandler', () => {
           [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
           [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),
         };
-        const res = await getQuoteHandler(quoters).handler(
+        const tokenFetcher = TokenFetcherMock('0x123')
+        const res = await getQuoteHandler(quoters, tokenFetcher).handler(
           getEvent(QUOTE_REQUEST_BODY_MULTI),
           {} as unknown as Context
         );
@@ -111,7 +123,8 @@ describe('QuoteHandler', () => {
           [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
           [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),
         };
-        const res = await getQuoteHandler(quoters).handler(
+        const tokenFetcher = TokenFetcherMock('0x123')
+        const res = await getQuoteHandler(quoters, tokenFetcher).handler(
           getEvent(QUOTE_REQUEST_BODY_MULTI),
           {} as unknown as Context
         );
@@ -126,7 +139,8 @@ describe('QuoteHandler', () => {
         const quoters = {
           [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),
         };
-        const res = await getQuoteHandler(quoters).handler(
+        const tokenFetcher = TokenFetcherMock('0x123')
+        const res = await getQuoteHandler(quoters, tokenFetcher).handler(
           getEvent(QUOTE_REQUEST_BODY_MULTI),
           {} as unknown as Context
         );
@@ -141,7 +155,8 @@ describe('QuoteHandler', () => {
     describe('logging test', () => {
       it('logs the requests and response in correct format', async () => {
         const quoters = { [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER) };
-        await getQuoteHandler(quoters).handler(getEvent(QUOTE_REQUEST_BODY_MULTI), {} as unknown as Context);
+        const tokenFetcher = TokenFetcherMock('0x123')
+        await getQuoteHandler(quoters, tokenFetcher).handler(getEvent(QUOTE_REQUEST_BODY_MULTI), {} as unknown as Context);
         expect(logger.info).toHaveBeenCalledWith(
           expect.objectContaining({
             eventType: 'UnifiedRoutingQuoteRequest',

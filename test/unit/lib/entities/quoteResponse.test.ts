@@ -53,9 +53,9 @@ describe('QuoteResponse', () => {
     expect(() => DutchLimitQuote.fromResponseBody(config, DL_QUOTE_JSON)).not.toThrow();
   });
 
-  it('produces dutch limit order info from param-api respone and config', () => {
+  it('produces dutch limit order info from param-api response and config', () => {
     const quote = DutchLimitQuote.fromResponseBody(config, DL_QUOTE_JSON);
-    expect(quote.toOrder()).toMatchObject({
+    expect(quote.toOrder().toJSON()).toMatchObject({
       offerer: OFFERER,
       input: {
         token: TOKEN_IN,
@@ -71,16 +71,16 @@ describe('QuoteResponse', () => {
         },
       ],
     });
-    const order = DutchLimitOrder.fromJSON(quote.toOrder(), quote.chainId);
+    const order = DutchLimitOrder.fromJSON(quote.toOrder().toJSON(), quote.chainId);
     expect(order.info.exclusiveFiller).toEqual(FILLER);
     expect(order.info.exclusivityOverrideBps.toString()).toEqual('12');
 
-    expect(BigNumber.from(quote.toOrder().nonce).gt(0)).toBeTruthy();
+    expect(BigNumber.from(quote.toOrder().toJSON().nonce).gt(0)).toBeTruthy();
   });
 
-  it('produces dutch limit order info from param-api respone and config without filler', () => {
+  it('produces dutch limit order info from param-api response and config without filler', () => {
     const quote = DutchLimitQuote.fromResponseBody(config, Object.assign({}, DL_QUOTE_JSON, { filler: undefined }));
-    expect(quote.toOrder()).toMatchObject({
+    expect(quote.toOrder().toJSON()).toMatchObject({
       offerer: OFFERER,
       input: {
         token: TOKEN_IN,
@@ -96,11 +96,10 @@ describe('QuoteResponse', () => {
         },
       ],
     });
-    const order = DutchLimitOrder.fromJSON(quote.toOrder(), quote.chainId);
+    const order = DutchLimitOrder.fromJSON(quote.toOrder().toJSON(), quote.chainId);
     const parsedValidation = parseValidation(order.info);
     expect(parsedValidation.type).toEqual(ValidationType.None);
-
-    expect(BigNumber.from(quote.toOrder().nonce).gt(0)).toBeTruthy();
+    expect(BigNumber.from(quote.toOrder().toJSON().nonce).gt(0)).toBeTruthy();
   });
 
   it('parses classic quote exactInput', () => {

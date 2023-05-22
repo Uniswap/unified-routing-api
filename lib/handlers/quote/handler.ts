@@ -9,7 +9,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { RoutingType } from '../../constants';
 import {
   ClassicQuote,
-  DutchLimitQuote,
   parseQuoteContexts,
   parseQuoteRequests,
   Quote,
@@ -71,6 +70,8 @@ export class QuoteHandler extends APIGLambdaHandler<
       tokenIn: await tokenInAddress,
       tokenOut: await tokenOutAddress,
     };
+    console.log('made it down here');
+
 
     log.info({ requestBody: request }, 'request');
     const { quoteRequests, quoteInfo } = parseQuoteRequests(requestWithTokenAddresses);
@@ -88,6 +89,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     const uniswapXRequested = requests.filter((request) => request.routingType === RoutingType.DUTCH_LIMIT).length > 0;
     const bestQuote = await getBestQuote(resolvedQuotes.filter((q) => q !== null) as Quote[], uniswapXRequested);
     if (!bestQuote) {
+      console.log('no best quote');
       return {
         statusCode: 404,
         detail: 'No quotes available',
