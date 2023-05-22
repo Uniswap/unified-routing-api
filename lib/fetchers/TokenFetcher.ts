@@ -11,13 +11,13 @@ import NodeCache from 'node-cache';
 import { ValidationError } from '../util/errors';
 
 export class TokenFetcher {
-  private _tokenListProviders: Map<number, ITokenProvider & ITokenListProvider> = new Map();
+  private _tokenListProviders: Map<ChainId, ITokenProvider & ITokenListProvider> = new Map();
 
   private createTokenListProvider = (id: ChainId): ITokenProvider & ITokenListProvider => {
     return new CachingTokenListProvider(id, DEFAULT_TOKEN_LIST, new NodeJSCache(new NodeCache()));
   };
 
-  private getTokenListProvider(chainId: number): ITokenProvider & ITokenListProvider {
+  private getTokenListProvider(chainId: ChainId): ITokenProvider & ITokenListProvider {
     let tokenListProvider = this._tokenListProviders.get(chainId);
     if (tokenListProvider === undefined) {
       tokenListProvider = this.createTokenListProvider(chainId);
