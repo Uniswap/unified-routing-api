@@ -80,11 +80,16 @@ describe('QuoteHandler', () => {
         quote: jest.fn().mockResolvedValue(classicQuote),
       };
     };
-    const TokenFetcherMock = (addresses: string[]): TokenFetcher => {
-
+    const TokenFetcherMock = (addresses: string[], isError = false): TokenFetcher => {
       const fetcher = {
         getTokenAddressFromList: jest.fn(),
       }
+
+      if(isError) {
+        fetcher.getTokenAddressFromList.mockRejectedValue(new Error('error'));
+        return fetcher as unknown as TokenFetcher;
+      }
+      
       for (const address of addresses) {
         fetcher.getTokenAddressFromList.mockResolvedValueOnce(address);
       }
@@ -184,6 +189,21 @@ describe('QuoteHandler', () => {
 
         const permit = JSON.parse(res.body).permit;
         expect(permit).toBe(null);
+      });
+
+      it('fails if symbol does not exist', async () => {
+          const quoters = {
+            [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
+          };
+          const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT], true)
+          const res = await getQuoteHandler(quoters, tokenFetcher).handler(
+            getEvent(QUOTE_REQUEST_BODY_MULTI),
+            {} as unknown as Context
+          );
+         
+          const responseBody = JSON.parse(res.body)
+          expect(res.statusCode).toBe(500);
+          expect(responseBody.errorCode).toBe('INTERNAL_ERROR');
       });
 
     });
