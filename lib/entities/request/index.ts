@@ -34,7 +34,6 @@ export interface QuoteRequestBodyJSON extends Omit<QuoteRequestInfo, 'type' | 'a
   type: string;
   amount: string;
   configs: RoutingConfigJSON[];
-  checkApproval?: boolean;
 }
 
 export interface QuoteRequest {
