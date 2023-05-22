@@ -13,8 +13,8 @@ import { ValidationError } from '../util/errors';
 export class TokenFetcher {
   private _tokenListProviders: Map<ChainId, ITokenProvider & ITokenListProvider> = new Map();
 
-  private createTokenListProvider = (id: ChainId): ITokenProvider & ITokenListProvider => {
-    return new CachingTokenListProvider(id, DEFAULT_TOKEN_LIST, new NodeJSCache(new NodeCache()));
+  private createTokenListProvider = (chainId: ChainId): ITokenProvider & ITokenListProvider => {
+    return new CachingTokenListProvider(chainId, DEFAULT_TOKEN_LIST, new NodeJSCache(new NodeCache()));
   };
 
   private getTokenListProvider(chainId: ChainId): ITokenProvider & ITokenListProvider {
