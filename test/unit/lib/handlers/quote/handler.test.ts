@@ -27,7 +27,7 @@ import {
   QUOTE_REQUEST_DL,
   QUOTE_REQUEST_MULTI,
 } from '../../../../utils/fixtures';
-import { TokenFetcher } from '../../../../../lib/handlers/fetchers/tokens';
+import { TokenFetcher } from '../../../../../lib/fetchers/TokenFetcher';
 
 describe('QuoteHandler', () => {
   describe('handler', () => {

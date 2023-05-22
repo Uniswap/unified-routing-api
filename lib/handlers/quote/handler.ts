@@ -67,8 +67,8 @@ export class QuoteHandler extends APIGLambdaHandler<
     const tokenOutAddress = await tokenFetcher.getTokenAddressFromList(request.tokenOutChainId, request.tokenOut);
     const requestWithTokenAddresses = {
       ...request,
-      tokenIn:  tokenInAddress,
-      tokenOut:  tokenOutAddress,
+      tokenIn: tokenInAddress,
+      tokenOut: tokenOutAddress,
     };
 
     log.info({ requestBody: request }, 'request');

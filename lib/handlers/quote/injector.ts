@@ -4,12 +4,12 @@ import { default as bunyan, default as Logger } from 'bunyan';
 import { MetricsLogger } from 'aws-embedded-metrics';
 import { RoutingType } from '../../constants';
 import { QuoteRequestBodyJSON } from '../../entities';
+import { TokenFetcher } from '../../fetchers/TokenFetcher';
 import { Quoter, RfqQuoter, RoutingApiQuoter } from '../../providers/quoters';
 import { setGlobalLogger } from '../../util/log';
 import { setGlobalMetrics } from '../../util/metrics';
 import { checkDefined } from '../../util/preconditions';
 import { ApiInjector, ApiRInj } from '../base/api-handler';
-import { TokenFetcher } from '../fetchers/tokens';
 
 export type QuoterByRoutingType = {
   [key in RoutingType]?: Quoter;

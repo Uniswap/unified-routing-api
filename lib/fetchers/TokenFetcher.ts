@@ -8,7 +8,7 @@ import {
 } from '@uniswap/smart-order-router';
 import { ethers } from 'ethers';
 import NodeCache from 'node-cache';
-import { ValidationError } from '../../util/errors';
+import { ValidationError } from '../util/errors';
 
 export class TokenFetcher {
   private _tokenListProviders: Map<number, ITokenProvider & ITokenListProvider> = new Map();
