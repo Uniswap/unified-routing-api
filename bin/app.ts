@@ -216,9 +216,6 @@ envVars['SERVICE_URL'] = process.env['SERVICE_URL'] || '';
 envVars['REQUEST_DESTINATION_ARN'] = process.env['REQUEST_DESTINATION_ARN'] || '';
 envVars['RESPONSE_DESTINATION_ARN'] = process.env['RESPONSE_DESTINATION_ARN'] || '';
 
-envVars['RPC_1'] = process.env[`RPC_1`] || '';
-envVars['RPC_137'] = process.env[`RPC_137`] || '';
-
 new APIStack(app, `${SERVICE_NAME}Stack`, {
   provisionedConcurrency: process.env.PROVISION_CONCURRENCY ? parseInt(process.env.PROVISION_CONCURRENCY) : 0,
   throttlingOverride: process.env.THROTTLE_PER_FIVE_MINS,
