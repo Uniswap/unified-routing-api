@@ -1,7 +1,7 @@
 import { TokenFetcher } from '../../../../lib/fetchers/TokenFetcher'
 import * as _ from 'lodash'
 import { FetcherTest } from '../../../types'
-import { TOKEN_IN, USDC_ADDRESS } from '../../../constants';
+import { TOKEN_IN, USDC_ADDRESS, USDC_ADDRESS_POLYGON } from '../../../constants';
 import { ValidationError } from '../../../../lib/util/errors';
 
 const tests: FetcherTest[] = [
@@ -22,7 +22,16 @@ const tests: FetcherTest[] = [
     output: USDC_ADDRESS,
   },
   {
-    testName: 'Fails - Unkwnon Symbol',
+    testName: 'Succeeds - Symbol Polygon',
+    input: {
+      chainId: 137,
+      address: 'USDC'
+    },
+    output: USDC_ADDRESS_POLYGON,
+    only: true,
+  },
+  {
+    testName: 'Fails - Unknown Symbol',
     input: {
       chainId: 1,
       address: 'USDA'
@@ -34,7 +43,7 @@ const tests: FetcherTest[] = [
   },
 ]
 
-describe.only('TokenFetcher Unit Tests', () => {
+describe('TokenFetcher Unit Tests', () => {
   for (const test of tests) {
     const t = test
 
