@@ -1,6 +1,6 @@
 import { TradeType } from '@uniswap/sdk-core';
-import axios from 'axios';
 import querystring from 'querystring';
+import axios from './helpers';
 
 import { NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { ClassicQuote, ClassicRequest, Quote } from '../../entities';
@@ -19,7 +19,7 @@ export class RoutingApiQuoter implements Quoter {
     if (request.routingType !== RoutingType.CLASSIC) {
       throw new Error(`Invalid routing config type: ${request.routingType}`);
     }
-    
+
     metrics.putMetric(`RoutingApiQuoterRequest`, 1);
     try {
       const req = this.buildRequest(request);

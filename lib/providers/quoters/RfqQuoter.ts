@@ -1,7 +1,7 @@
 import { TradeType } from '@uniswap/sdk-core';
 import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
-import axios from 'axios';
 import { BigNumber } from 'ethers';
+import axios from './helpers';
 
 import { NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { DutchLimitQuote, DutchLimitRequest, Quote } from '../../entities';
