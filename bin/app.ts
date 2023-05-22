@@ -23,7 +23,7 @@ export class APIStage extends Stage {
     props: StageProps & {
       provisionedConcurrency: number;
       chatbotSNSArn?: string;
-      stage: string;
+      stage: STAGE;
       envVars: Record<string, string>;
     }
   ) {

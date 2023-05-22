@@ -2,6 +2,7 @@ import DEFAULT_TOKEN_LIST from '@uniswap/default-token-list';
 import { CachingTokenListProvider, ChainId, NodeJSCache } from '@uniswap/smart-order-router';
 import { ethers } from 'ethers';
 import NodeCache from 'node-cache';
+import { NATIVE_ADDRESS } from '../constants';
 import { ValidationError } from './errors';
 
 export const getTokenListProvider = (id: ChainId) => {
@@ -9,6 +10,10 @@ export const getTokenListProvider = (id: ChainId) => {
 };
 
 export const getAddress = async (id: ChainId, symbolOrAddress: string): Promise<string> => {
+  if (symbolOrAddress === 'ETH') {
+    return NATIVE_ADDRESS;
+  }
+
   try {
     // try to parse address normal way
     return ethers.utils.getAddress(symbolOrAddress);

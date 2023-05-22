@@ -49,32 +49,56 @@ describe('DutchQuoteContext', () => {
   });
 
   describe('resolve', () => {
-    it('returns null if dependencies given', () => {
+    it('returns null if no dependencies given', async () => {
       const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL);
-      expect(context.resolve({})).toEqual(null);
+      expect(await context.resolve({})).toEqual(null);
     });
 
-    it('returns null if quote key is not set properly', () => {
+    it('returns null if quote key is not set properly', async () => {
       const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL);
       expect(
-        context.resolve({
+        await context.resolve({
           wrong: DL_QUOTE_EXACT_IN_BETTER,
         })
       ).toBeNull();
     });
 
-    it('returns main quote if others are null', () => {
+    it('returns main quote if others are null', async () => {
       const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL);
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchLimitQuote({ amountOut: '1', filler }, 'EXACT_INPUT');
-      const quote = context.resolve({
+      const quote = await context.resolve({
         [QUOTE_REQUEST_DL.key()]: rfqQuote,
       });
       expect(quote).toMatchObject(rfqQuote);
       expect((quote?.toJSON() as DutchLimitOrderInfoJSON).exclusiveFiller).toEqual(filler);
     });
 
-    it('uses synthetic if better', () => {
+    it('returns null if tokenIn is not in tokenlist', async () => {
+      const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL);
+      const rfqQuote = createDutchLimitQuote(
+        { tokenIn: '0x0000000000000000000000000000000000000000', amountOut: '1' },
+        'EXACT_INPUT'
+      );
+      const quote = await context.resolve({
+        [QUOTE_REQUEST_DL.key()]: rfqQuote,
+      });
+      expect(quote).toBeNull();
+    });
+
+    it('returns null if tokenOut is not in tokenlist', async () => {
+      const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL);
+      const rfqQuote = createDutchLimitQuote(
+        { tokenOut: '0x0000000000000000000000000000000000000000', amountOut: '1' },
+        'EXACT_INPUT'
+      );
+      const quote = await context.resolve({
+        [QUOTE_REQUEST_DL.key()]: rfqQuote,
+      });
+      expect(quote).toBeNull();
+    });
+
+    it('uses synthetic if better', async () => {
       const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL);
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchLimitQuote({ amountOut: '1', filler }, 'EXACT_INPUT');
@@ -82,7 +106,7 @@ describe('DutchQuoteContext', () => {
       const classicQuote = createClassicQuote({ quote: '10000000000', quoteGasAdjusted: '9999000000' }, 'EXACT_INPUT');
       context.dependencies();
 
-      const quote = context.resolve({
+      const quote = await context.resolve({
         [context.requestKey]: rfqQuote,
         [context.classicKey]: classicQuote,
         [context.routeToNativeKey]: classicQuote,
@@ -93,7 +117,7 @@ describe('DutchQuoteContext', () => {
       );
     });
 
-    it('skips synthetic if no route to eth', () => {
+    it('skips synthetic if no route to eth', async () => {
       const request = makeDutchLimitRequest({
         tokenOut: '0x1111111111111111111111111111111111111111',
       });
@@ -104,7 +128,7 @@ describe('DutchQuoteContext', () => {
       const classicQuote = createClassicQuote({ quote: '10000000000', quoteGasAdjusted: '9999000000' }, 'EXACT_INPUT');
       context.dependencies();
 
-      const quote = context.resolve({
+      const quote = await context.resolve({
         [context.requestKey]: rfqQuote,
         [context.classicKey]: classicQuote,
       });
@@ -113,7 +137,7 @@ describe('DutchQuoteContext', () => {
       expect(quote?.amountOut).toEqual(rfqQuote?.amountOut);
     });
 
-    it('keeps synthetic if output is weth', () => {
+    it('keeps synthetic if output is weth', async () => {
       const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL);
       const filler = '0x1111111111111111111111111111111111111111';
       const native = WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(1)].address;
@@ -122,7 +146,7 @@ describe('DutchQuoteContext', () => {
       const classicQuote = createClassicQuote({ quote: '10000000000', quoteGasAdjusted: '9999000000' }, 'EXACT_INPUT');
       context.dependencies();
 
-      const quote = context.resolve({
+      const quote = await context.resolve({
         [context.requestKey]: rfqQuote,
         [context.classicKey]: classicQuote,
       });
@@ -132,7 +156,7 @@ describe('DutchQuoteContext', () => {
       );
     });
 
-    it('skips synthetic if very small', () => {
+    it('skips synthetic if very small', async () => {
       const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL);
       context.dependencies();
       const filler = '0x1111111111111111111111111111111111111111';
@@ -140,7 +164,7 @@ describe('DutchQuoteContext', () => {
       expect(rfqQuote.filler).toEqual(filler);
       const classicQuote = createClassicQuote({ quote: '10', quoteGasAdjusted: '9' }, 'EXACT_INPUT');
 
-      const quote = context.resolve({
+      const quote = await context.resolve({
         [context.requestKey]: rfqQuote,
         [context.classicKey]: classicQuote,
         [context.routeToNativeKey]: classicQuote,

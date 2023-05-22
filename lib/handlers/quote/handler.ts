@@ -1,19 +1,26 @@
 import { TradeType } from '@uniswap/sdk-core';
-import Logger from 'bunyan';
 import Joi from 'joi';
 
+import { Unit } from 'aws-embedded-metrics';
+import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { v4 as uuidv4 } from 'uuid';
 import { RoutingType } from '../../constants';
 import {
   ClassicQuote,
   parseQuoteContexts,
   parseQuoteRequests,
+  prepareQuoteRequests,
   Quote,
   QuoteContextManager,
   QuoteJSON,
   QuoteRequest,
   QuoteRequestBodyJSON,
+  QuoteRequestInfo,
 } from '../../entities';
+import { ValidationError } from '../../util/errors';
+import { log } from '../../util/log';
+import { metrics } from '../../util/metrics';
+import { currentTimestampInSeconds } from '../../util/time';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
 import { ContainerInjected, QuoterByRoutingType } from './injector';
@@ -40,10 +47,14 @@ export class QuoteHandler extends APIGLambdaHandler<
     params: APIHandleRequestParams<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>
   ): Promise<ErrorResponse | Response<QuoteResponseJSON>> {
     const {
-      requestInjected: { log },
       requestBody,
       containerInjected: { quoters },
+      requestBody: { tokenInChainId, tokenOutChainId },
     } = params;
+
+    if (tokenInChainId != tokenOutChainId) {
+      throw new ValidationError(`Cannot request quotes for tokens on different chains`);
+    }
 
     const request = {
       ...requestBody,
@@ -51,17 +62,20 @@ export class QuoteHandler extends APIGLambdaHandler<
     };
 
     log.info({ requestBody: request }, 'request');
-    const contextHandler = new QuoteContextManager(log, parseQuoteContexts(log, parseQuoteRequests(request, log)));
+    const { quoteRequests, quoteInfo } = parseQuoteRequests(await prepareQuoteRequests(request));
+    const contextHandler = new QuoteContextManager(parseQuoteContexts(quoteRequests));
     const requests = contextHandler.getRequests();
     log.info({ requests }, 'requests');
     const quotes = await getQuotes(quoters, requests);
     log.info({ rawQuotes: quotes }, 'quotes');
 
-    const resolvedQuotes = contextHandler.resolveQuotes(quotes);
+    const resolvedQuotes = await contextHandler.resolveQuotes(quotes);
     log.info({ resolvedQuotes: quotes }, 'resolvedQuotes');
 
+    this.emitQuoteRequestedMetrics(quoteInfo, quoteRequests);
+
     const uniswapXRequested = requests.filter((request) => request.routingType === RoutingType.DUTCH_LIMIT).length > 0;
-    const bestQuote = await getBestQuote(resolvedQuotes, uniswapXRequested, log);
+    const bestQuote = await getBestQuote(resolvedQuotes, uniswapXRequested);
     if (!bestQuote) {
       return {
         statusCode: 404,
@@ -76,7 +90,55 @@ export class QuoteHandler extends APIGLambdaHandler<
     };
   }
 
-  // TODO: add Joi validations
+  private emitQuoteRequestedMetrics(info: QuoteRequestInfo, requests: QuoteRequest[]) {
+    const { tokenInChainId: chainId, tokenIn, tokenOut } = info;
+    const tokenInAbbr = tokenIn.slice(0, 6);
+    const tokenOutAbbr = tokenOut.slice(0, 6);
+    const tokenPairSymbol = `${tokenInAbbr}/${tokenOutAbbr}`;
+    const tokenPairSymbolChain = `${tokenInAbbr}/${tokenOutAbbr}/${chainId}`;
+
+    // This log is used to generate the quotes by token dashboard.
+    log.info({ tokenIn, tokenOut, chainId, tokenPairSymbol, tokenPairSymbolChain }, 'tokens and chains');
+
+    // This log is used for ingesting into redshift for analytics purposes.
+    log.info({
+      eventType: 'UnifiedRoutingQuoteRequest',
+      body: {
+        requestId: info.requestId,
+        tokenInChainId: info.tokenInChainId,
+        tokenOutChainId: info.tokenOutChainId,
+        tokenIn: info.tokenIn,
+        tokenOut: info.tokenOut,
+        amount: info.amount.toString(),
+        type: TradeType[info.type],
+        configs: requests.map((r) => r.routingType).join(','),
+        createdAt: currentTimestampInSeconds(),
+        // only log offerer if it's a dutch limit request
+        ...(info.offerer && { offerer: info.offerer }),
+      },
+    });
+
+    metrics.putMetric(`QuoteRequestedChainId${chainId.toString()}`, 1, Unit.Count);
+  }
+
+  protected afterResponseHook(event: APIGatewayProxyEvent, _context: Context, response: APIGatewayProxyResult): void {
+    const { statusCode } = response;
+
+    // Try and extract the chain id from the raw json.
+    let chainId = '0';
+    try {
+      const rawBody = JSON.parse(event.body!);
+      chainId = rawBody.tokenInChainId ?? rawBody.chainId;
+    } catch (err) {
+      // no-op. If we can't get chainId still log the metric as chain 0
+    }
+
+    const metricName = `QuoteResponseChainId${chainId.toString()}Status${((statusCode % 100) * 100)
+      .toString()
+      .replace(/0/g, 'X')}`;
+    metrics.putMetric(metricName, 1, Unit.Count);
+  }
+
   protected requestBodySchema(): Joi.ObjectSchema | null {
     return PostQuoteRequestBodyJoi;
   }
@@ -105,12 +167,12 @@ export async function getQuotes(quoterByRoutingType: QuoterByRoutingType, reques
 }
 
 // determine and return the "best" quote of the given list
-export async function getBestQuote(quotes: Quote[], uniswapXRequested?: boolean, log?: Logger): Promise<Quote | null> {
+export async function getBestQuote(quotes: Quote[], uniswapXRequested?: boolean): Promise<Quote | null> {
   return quotes.reduce((bestQuote: Quote | null, quote: Quote) => {
     // log all valid quotes, so that we capture auto router prices at request time
     // skip logging in only classic requested
     if (uniswapXRequested) {
-      log?.info({
+      log.info({
         eventType: 'UnifiedRoutingQuoteResponse',
         body: {
           ...quote.toLog(),
