@@ -153,6 +153,39 @@ describe('QuoteHandler', () => {
         expect(allQuotes[0].routing).toEqual('DUTCH_LIMIT');
         expect(allQuotes[1]).toEqual(null);
       });
+
+      it('always returns correct permit for DL', async () => {
+        const quoters = {
+          [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),
+        };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT])
+        const response = await getQuoteHandler(quoters, tokenFetcher).handler(
+          getEvent(QUOTE_REQUEST_BODY_MULTI),
+          {} as unknown as Context
+        );
+
+        const responseBody = JSON.parse(response.body)
+        const permit = responseBody.permit;
+        const quote = responseBody.quote as DutchLimitOrderInfoJSON
+        expect(permit.values.permitted.token).toBe(quote.input.token);
+        expect(permit.values.witness.inputToken).toBe(quote.input.token);
+        expect(permit.values.witness.outputs[0].token).toBe(quote.outputs[0].token);
+      });
+
+      it('never returns permit for Classic', async () => {
+        const quoters = {
+          [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
+        };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT])
+        const res = await getQuoteHandler(quoters, tokenFetcher).handler(
+          getEvent(QUOTE_REQUEST_BODY_MULTI),
+          {} as unknown as Context
+        );
+
+        const permit = JSON.parse(res.body).permit;
+        expect(permit).toBe(null);
+      });
+
     });
 
     describe('logging test', () => {
