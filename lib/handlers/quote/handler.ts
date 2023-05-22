@@ -15,7 +15,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { RoutingType } from '../../constants';
 import { ClassicQuote, parseQuoteRequests, Quote, QuoteJSON, QuoteRequest, QuoteRequestBodyJSON } from '../../entities';
 import { QuotesByRoutingType } from '../../entities/quote/index';
-import { getDecimals } from '../../util/tokens';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
 import { ContainerInjected, QuoterByRoutingType } from './injector';
@@ -45,7 +44,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     const {
       requestInjected: { log },
       requestBody,
-      containerInjected: { quoters, quoteTransformer, requestTransformer },
+      containerInjected: { quoters, quoteTransformer, requestTransformer, tokenFetcher },
     } = params;
 
     const request = {
@@ -53,8 +52,16 @@ export class QuoteHandler extends APIGLambdaHandler<
       requestId: uuidv4(),
     };
 
+    const tokenInAddress = tokenFetcher.getTokenAddressFromList(request.tokenInChainId, request.tokenIn);
+    const tokenOutAddress = tokenFetcher.getTokenAddressFromList(request.tokenOutChainId, request.tokenOut);
+    const requestWithTokenAddresses = {
+      ...request,
+      tokenIn: await tokenInAddress,
+      tokenOut: await tokenOutAddress,
+    };
+
     log.info({ requestBody: request }, 'request');
-    const requests = parseQuoteRequests(request, log);
+    const requests = parseQuoteRequests(requestWithTokenAddresses, log);
     const requestsTransformed = requestTransformer.transform(requests);
     const quotesByRequestType: QuotesByRoutingType = {};
     const quotes = await getQuotes(quoters, requestsTransformed, quotesByRequestType);
@@ -72,8 +79,12 @@ export class QuoteHandler extends APIGLambdaHandler<
       };
     }
 
-    // check if permit needed
-    const order = await getOrder(bestQuote);
+    const tokenIn = tokenFetcher.getTokenByAddress(requestWithTokenAddresses.tokenInChainId, requestWithTokenAddresses.tokenIn);
+    const tokenOut = tokenFetcher.getTokenByAddress(
+      requestWithTokenAddresses.tokenOutChainId,
+      requestWithTokenAddresses.tokenOut
+    );
+    const order = await createOrder(bestQuote, await tokenIn, await tokenOut);
     if (!order) {
       return {
         statusCode: 404,
@@ -183,18 +194,14 @@ export function quoteToResponse(quote: Quote, order: DutchLimitOrder): QuoteResp
   };
 }
 
-export async function getOrder(quote: Quote): Promise<DutchLimitOrder> {
-  const tokenInDecimals = await getDecimals(quote.request.info.tokenInChainId, quote.request.info.tokenIn);
-  const tokenOutDecimals = await getDecimals(quote.request.info.tokenOutChainId, quote.request.info.tokenOut);
-
+export async function createOrder(quote: Quote, tokenIn: Token, tokenOut: Token): Promise<DutchLimitOrder> {
   const trade = new DutchLimitOrderTrade({
-    currencyIn: new Token(quote.request.info.tokenInChainId, quote.request.info.tokenIn, tokenInDecimals),
-    currenciesOut: [new Token(quote.request.info.tokenOutChainId, quote.request.info.tokenOut, tokenOutDecimals)],
+    currencyIn: tokenIn,
+    currenciesOut: [tokenOut],
     tradeType: quote.request.info.type,
     orderInfo: quoteToDutchLimitOrderInfo(quote.toJSON() as DutchLimitOrderInfoJSON),
   });
 
-  // add the current time etc if needed
   return DutchLimitOrderBuilder.fromOrder(trade.order).build();
 }
 

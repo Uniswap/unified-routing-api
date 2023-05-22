@@ -1,4 +1,4 @@
-import { setGlobalLogger } from '@uniswap/smart-order-router';
+import { ITokenProvider, setGlobalLogger, TokenProvider } from '@uniswap/smart-order-router';
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { default as bunyan, default as Logger } from 'bunyan';
 
@@ -20,6 +20,7 @@ import { InvalidQuoteFilter } from '../../providers/transformers/QuoteTransforme
 import { NoRouteBackToNativeFilter } from '../../providers/transformers/QuoteTransformers/NoRouteBackToNativeFilter';
 import { checkDefined } from '../../util/preconditions';
 import { ApiInjector, ApiRInj } from '../base/api-handler';
+import { TokenFetcher } from '../fetchers/tokens';
 
 export type QuoterByRoutingType = {
   [key in RoutingType]?: Quoter[];
@@ -29,6 +30,7 @@ export interface ContainerInjected {
   quoters: QuoterByRoutingType;
   quoteTransformer: QuoteTransformer;
   requestTransformer: RequestTransformer;
+  tokenFetcher: TokenFetcher;
 }
 
 export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void> {
@@ -59,11 +61,11 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
           new InvalidQuoteFilter(log),
         ]
       ),
-
       requestTransformer: new CompoundRequestTransformer(
         [new ClassicQuoteInserter(log), new RouteBackToNativeInserter(log)],
         []
       ),
+      tokenFetcher: new TokenFetcher(),
     };
   }
 
