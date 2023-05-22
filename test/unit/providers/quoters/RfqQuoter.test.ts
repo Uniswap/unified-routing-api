@@ -1,7 +1,7 @@
-import axios from 'axios';
 import { BigNumber, ethers } from 'ethers';
 
 import { DutchLimitQuote, DutchLimitQuoteJSON } from '../../../../lib/entities/quote/DutchLimitQuote';
+import axios from '../../../../lib/providers/quoters/helpers';
 import { RfqQuoter } from '../../../../lib/providers/quoters/RfqQuoter';
 import { AMOUNT_IN, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
 import { QUOTE_REQUEST_DL, QUOTE_REQUEST_DL_EXACT_OUT } from '../../../utils/fixtures';
@@ -36,7 +36,7 @@ describe('RfqQuoter test', () => {
       jest.spyOn(axios, 'post').mockRejectedValue(new Error('RfqQuoterErr'));
       const quote = (await quoter.quote(QUOTE_REQUEST_DL)) as DutchLimitQuote;
       expect(quote).toBeNull();
-    })
+    });
 
     it('gracefully handles GET nonce error', async () => {
       jest.spyOn(axios, 'get').mockRejectedValue(new Error('GET nonce error'));
