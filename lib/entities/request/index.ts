@@ -4,7 +4,6 @@ import { BigNumber } from 'ethers';
 import { SUPPORTED_CHAINS } from '../../config/chains';
 import { DEFAULT_SLIPPAGE_TOLERANCE, RoutingType } from '../../constants';
 import { ValidationError } from '../../util/errors';
-import { getAddress } from '../../util/tokens';
 import { ClassicConfig, ClassicConfigJSON, ClassicRequest } from './ClassicRequest';
 import { DutchLimitConfig, DutchLimitConfigJSON, DutchLimitRequest } from './DutchLimitRequest';
 
@@ -43,14 +42,6 @@ export interface QuoteRequest {
   toJSON(): RoutingConfigJSON;
   // return a key that uniquely identifies this request
   key(): string;
-}
-
-// async functions to prepare quote requests for parsing
-export async function prepareQuoteRequests(body: QuoteRequestBodyJSON): Promise<QuoteRequestBodyJSON> {
-  return Object.assign(body, {
-    tokenIn: await getAddress(body.tokenInChainId, body.tokenIn),
-    tokenOut: await getAddress(body.tokenInChainId, body.tokenOut),
-  });
 }
 
 export function parseQuoteRequests(body: QuoteRequestBodyJSON): {
