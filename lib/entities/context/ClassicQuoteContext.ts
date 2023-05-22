@@ -15,7 +15,7 @@ export class ClassicQuoteContext implements QuoteContext {
     return [this.request];
   }
 
-  resolve(dependencies: QuoteByKey): Quote | null {
+  async resolve(dependencies: QuoteByKey): Promise<Quote | null> {
     this.log.info({ dependencies }, 'Resolving classic quote');
     const quote = dependencies[this.request.key()];
 

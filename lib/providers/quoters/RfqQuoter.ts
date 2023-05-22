@@ -1,38 +1,38 @@
 import { TradeType } from '@uniswap/sdk-core';
-import Logger from 'bunyan';
+import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
 import { BigNumber } from 'ethers';
 import axios from './helpers';
 
-import { RoutingType } from '../../constants';
+import { NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { DutchLimitQuote, DutchLimitRequest, Quote } from '../../entities';
+import { log as globalLog } from '../../util/log';
+import { metrics } from '../../util/metrics';
 import { Quoter, QuoterType } from './index';
+
+const log = globalLog.child({ quoter: 'RfqQuoter' });
 
 export class RfqQuoter implements Quoter {
   static readonly type: QuoterType.GOUDA_RFQ;
-  private log: Logger;
 
-  constructor(_log: Logger, private rfqUrl: string, private serviceUrl: string) {
-    this.log = _log.child({ quoter: 'RfqQuoter' });
-  }
+  constructor(private rfqUrl: string, private serviceUrl: string) {}
 
-  async quote(originalRequest: DutchLimitRequest): Promise<Quote | null> {
-    if (originalRequest.routingType !== RoutingType.DUTCH_LIMIT) {
-      this.log.error(`Invalid routing config type: ${originalRequest.routingType}`);
+  async quote(request: DutchLimitRequest): Promise<Quote | null> {
+    if (request.routingType !== RoutingType.DUTCH_LIMIT) {
+      log.error(`Invalid routing config type: ${request.routingType}`);
       return null;
     }
-    if (originalRequest.info.type === TradeType.EXACT_OUTPUT) {
-      this.log.error(`Invalid trade type: ${originalRequest.info.type}`);
+    if (request.info.type === TradeType.EXACT_OUTPUT) {
+      log.error(`Invalid trade type: ${request.info.type}`);
       return null;
     }
 
-    const request = await originalRequest.resolveTokenSymbols();
     const offerer = request.config.offerer;
     const requests = [
       axios.post(`${this.rfqUrl}quote`, {
         tokenInChainId: request.info.tokenInChainId,
         tokenOutChainId: request.info.tokenOutChainId,
-        tokenIn: request.info.tokenIn,
-        tokenOut: request.info.tokenOut,
+        tokenIn: mapNative(request.info.tokenIn, request.info.tokenInChainId),
+        tokenOut: mapNative(request.info.tokenOut, request.info.tokenInChainId),
         amount: request.info.amount.toString(),
         offerer: offerer,
         requestId: request.info.requestId,
@@ -42,16 +42,20 @@ export class RfqQuoter implements Quoter {
     ];
 
     let quote: Quote | null = null;
+    metrics.putMetric(`RfqQuoterRequest`, 1);
     await Promise.allSettled(requests).then((results) => {
       if (results[0].status == 'rejected') {
-        this.log.error(results[0].reason, 'RfqQuoterErr');
+        log.error(results[0].reason, 'RfqQuoterErr');
+        metrics.putMetric(`RfqQuoterRfqErr`, 1);
       } else if (results[1].status == 'rejected') {
-        this.log.debug(results[1].reason, 'RfqQuoterErr: GET nonce failed');
-        this.log.info(results[0].value.data, 'RfqQuoter: POST quote request success');
+        log.debug(results[1].reason, 'RfqQuoterErr: GET nonce failed');
+        log.info(results[0].value.data, 'RfqQuoter: POST quote request success');
+        metrics.putMetric(`RfqQuoterNonceErr`, 1);
         quote = DutchLimitQuote.fromResponseBody(request, results[0].value.data);
       } else {
-        this.log.info(results[1].value.data, 'RfqQuoter: GET nonce success');
-        this.log.info(results[0].value.data, 'RfqQuoter: POST quote request success');
+        log.info(results[1].value.data, 'RfqQuoter: GET nonce success');
+        log.info(results[0].value.data, 'RfqQuoter: POST quote request success');
+        metrics.putMetric(`RfqQuoterSuccess`, 1);
         quote = DutchLimitQuote.fromResponseBody(
           request,
           results[0].value.data,
@@ -59,6 +63,15 @@ export class RfqQuoter implements Quoter {
         );
       }
     });
+
     return quote;
   }
+}
+
+function mapNative(token: string, chainId: number): string {
+  if (token === NATIVE_ADDRESS) {
+    const wrapped = WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(chainId)].address;
+    return wrapped;
+  }
+  return token;
 }

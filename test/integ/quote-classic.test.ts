@@ -67,7 +67,7 @@ const callAndExpectFail = async (quoteReq: Partial<QuoteRequestBodyJSON>, resp: 
     await axios.post<QuoteResponseJSON>(`${API}`, quoteReq);
     fail();
   } catch (err: any) {
-    expect(err.response).to.containSubset(resp);
+    expect(_.pick(err.response, ['status', 'data'])).to.containSubset(resp);
   }
 };
 
@@ -1977,10 +1977,10 @@ describe('quote', function () {
           };
 
           await callAndExpectFail(quoteReq, {
-            status: 404,
+            status: 400,
             data: {
-              detail: 'No quotes available',
-              errorCode: 'QUOTE_ERROR',
+              detail: 'Could not find token with symbol NONEXISTANTTOKEN',
+              errorCode: 'VALIDATION_ERROR',
             },
           });
         });

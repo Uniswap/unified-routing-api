@@ -1,8 +1,7 @@
-import Logger from 'bunyan';
-
 import { RoutingType } from '../../constants';
 import { ClassicRequest, DutchLimitRequest, Quote, QuoteRequest } from '../../entities';
 
+import { log } from '../../util/log';
 import { ClassicQuoteContext } from './ClassicQuoteContext';
 import { DutchQuoteContext } from './DutchQuoteContext';
 
@@ -26,12 +25,12 @@ export interface QuoteContext {
   // params should be in the same order as dependencies response
   // but resolved with quotes
   // returns null if no usable quote is resolved
-  resolve(dependencies: QuoteByKey): Quote | null;
+  resolve(dependencies: QuoteByKey): Promise<Quote | null>;
 }
 
 // handler for quote contexts and their dependencies
 export class QuoteContextManager {
-  constructor(public log: Logger, public contexts: QuoteContext[]) {}
+  constructor(public contexts: QuoteContext[]) {}
 
   // deduplicate dependencies
   // note this prioritizes user-defined configs first
@@ -54,28 +53,30 @@ export class QuoteContextManager {
       }
     }
 
-    this.log.info({ requests: requestMap }, `Context requests`);
+    log.info({ requests: requestMap }, `Context requests`);
 
     return Object.values(requestMap);
   }
 
   // resolve quotes from quote contexts using quoted dependencies
-  resolveQuotes(quotes: Quote[]): Quote[] {
-    this.log.info({ quotes }, `Context quotes`);
+  async resolveQuotes(quotes: Quote[]): Promise<Quote[]> {
+    log.info({ quotes }, `Context quotes`);
     const allQuotes: QuoteByKey = {};
     for (const quote of quotes) {
       allQuotes[quote.request.key()] = quote;
     }
 
-    return this.contexts
-      .map((context) => {
+    const resolved = await Promise.all(
+      this.contexts.map((context) => {
         return context.resolve(allQuotes);
       })
-      .filter((quote) => quote !== null) as Quote[];
+    );
+
+    return resolved.filter((quote) => quote !== null) as Quote[];
   }
 }
 
-export function parseQuoteContexts(log: Logger, requests: QuoteRequest[]): QuoteContext[] {
+export function parseQuoteContexts(requests: QuoteRequest[]): QuoteContext[] {
   return requests.map((request) => {
     switch (request.routingType) {
       case RoutingType.DUTCH_LIMIT:
