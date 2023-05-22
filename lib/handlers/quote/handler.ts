@@ -1,8 +1,18 @@
-import { TradeType } from '@uniswap/sdk-core';
 import Joi from 'joi';
 
+import {
+  DutchLimitOrder,
+  DutchLimitOrderBuilder,
+  DutchLimitOrderInfo,
+  DutchLimitOrderInfoJSON,
+  DutchLimitOrderTrade,
+} from '@uniswap/gouda-sdk';
+import { Token, TradeType } from '@uniswap/sdk-core';
 import { Unit } from 'aws-embedded-metrics';
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
+
+import { PermitSingleData, PermitTransferFromData } from '@uniswap/permit2-sdk';
+import { BigNumber } from 'ethers';
 import { v4 as uuidv4 } from 'uuid';
 import { RoutingType } from '../../constants';
 import {
@@ -34,6 +44,7 @@ const DUTCH_LIMIT_PREFERENCE_BUFFER_BPS = 500;
 export interface QuoteResponseJSON {
   routing: string;
   quote: QuoteJSON;
+  permit?: PermitSingleData | PermitTransferFromData;
 }
 
 export class QuoteHandler extends APIGLambdaHandler<
@@ -48,8 +59,8 @@ export class QuoteHandler extends APIGLambdaHandler<
   ): Promise<ErrorResponse | Response<QuoteResponseJSON>> {
     const {
       requestBody,
-      containerInjected: { quoters },
       requestBody: { tokenInChainId, tokenOutChainId },
+      containerInjected: { quoters, tokenFetcher },
     } = params;
 
     if (tokenInChainId != tokenOutChainId) {
@@ -59,6 +70,14 @@ export class QuoteHandler extends APIGLambdaHandler<
     const request = {
       ...requestBody,
       requestId: uuidv4(),
+    };
+
+    const tokenInAddress = tokenFetcher.getTokenAddressFromList(request.tokenInChainId, request.tokenIn);
+    const tokenOutAddress = tokenFetcher.getTokenAddressFromList(request.tokenOutChainId, request.tokenOut);
+    const requestWithTokenAddresses = {
+      ...request,
+      tokenIn: await tokenInAddress,
+      tokenOut: await tokenOutAddress,
     };
 
     log.info({ requestBody: request }, 'request');
@@ -84,6 +103,25 @@ export class QuoteHandler extends APIGLambdaHandler<
       };
     }
 
+    const tokenIn = tokenFetcher.getTokenByAddress(
+      requestWithTokenAddresses.tokenInChainId,
+      requestWithTokenAddresses.tokenIn
+    );
+    const tokenOut = tokenFetcher.getTokenByAddress(
+      requestWithTokenAddresses.tokenOutChainId,
+      requestWithTokenAddresses.tokenOut
+    );
+    const order = await createOrder(bestQuote, await tokenIn, await tokenOut);
+    if (!order) {
+      return {
+        statusCode: 404,
+        detail: 'Failed to create permit',
+        errorCode: 'PERMIT_ERROR',
+      };
+    }
+
+    // permit: order.permitData(),
+
     return {
       statusCode: 200,
       body: Object.assign(
@@ -93,6 +131,9 @@ export class QuoteHandler extends APIGLambdaHandler<
           // note the best quote is duplicated, but this allows callers
           // to easily map their original request configs to quotes by index
           allQuotes: resolvedQuotes.map((q) => (q ? quoteToResponse(q) : null)),
+        },
+        {
+          permit: order.permitData(),
         }
       ),
     };
@@ -226,5 +267,35 @@ export function quoteToResponse(quote: Quote): QuoteResponseJSON {
   return {
     routing: quote.routingType,
     quote: quote.toJSON(),
+  };
+}
+
+export async function createOrder(quote: Quote, tokenIn: Token, tokenOut: Token): Promise<DutchLimitOrder> {
+  const trade = new DutchLimitOrderTrade({
+    currencyIn: tokenIn,
+    currenciesOut: [tokenOut],
+    tradeType: quote.request.info.type,
+    orderInfo: quoteToDutchLimitOrderInfo(quote.toJSON() as DutchLimitOrderInfoJSON),
+  });
+
+  return DutchLimitOrderBuilder.fromOrder(trade.order).build();
+}
+
+export function quoteToDutchLimitOrderInfo(orderInfoJSON: DutchLimitOrderInfoJSON): DutchLimitOrderInfo {
+  const { nonce, input, outputs } = orderInfoJSON;
+  return {
+    ...orderInfoJSON,
+    exclusivityOverrideBps: BigNumber.from(orderInfoJSON.exclusivityOverrideBps),
+    nonce: BigNumber.from(nonce),
+    input: {
+      ...input,
+      startAmount: BigNumber.from(input.startAmount),
+      endAmount: BigNumber.from(input.endAmount),
+    },
+    outputs: outputs.map((output) => ({
+      ...output,
+      startAmount: BigNumber.from(output.startAmount),
+      endAmount: BigNumber.from(output.endAmount),
+    })),
   };
 }

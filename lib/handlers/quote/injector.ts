@@ -9,6 +9,7 @@ import { setGlobalLogger } from '../../util/log';
 import { setGlobalMetrics } from '../../util/metrics';
 import { checkDefined } from '../../util/preconditions';
 import { ApiInjector, ApiRInj } from '../base/api-handler';
+import { TokenFetcher } from '../fetchers/tokens';
 
 export type QuoterByRoutingType = {
   [key in RoutingType]?: Quoter;
@@ -16,6 +17,7 @@ export type QuoterByRoutingType = {
 
 export interface ContainerInjected {
   quoters: QuoterByRoutingType;
+  tokenFetcher: TokenFetcher;
 }
 
 export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void> {
@@ -36,6 +38,7 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
         [RoutingType.DUTCH_LIMIT]: new RfqQuoter(paramApiUrl, serviceUrl),
         [RoutingType.CLASSIC]: new RoutingApiQuoter(routingApiUrl),
       },
+      tokenFetcher: new TokenFetcher(),
     };
   }
 
