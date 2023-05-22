@@ -12,7 +12,7 @@ import { compareQuotes, getBestQuote, getQuotes, QuoteHandler } from '../../../.
 import { ContainerInjected, QuoterByRoutingType } from '../../../../../lib/handlers/quote/injector';
 import { Quoter } from '../../../../../lib/providers/quoters';
 import { setGlobalLogger } from '../../../../../lib/util/log';
-import { CHECKSUM_OFFERER } from '../../../../constants';
+import { CHECKSUM_OFFERER, TOKEN_IN, TOKEN_OUT } from '../../../../constants';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_IN_WORSE,
@@ -80,10 +80,15 @@ describe('QuoteHandler', () => {
         quote: jest.fn().mockResolvedValue(classicQuote),
       };
     };
-    const TokenFetcherMock = (address: string): TokenFetcher => {
-      return {
-        getTokenAddressFromList: jest.fn().mockResolvedValue(address),
-      } as unknown as TokenFetcher;
+    const TokenFetcherMock = (addresses: string[]): TokenFetcher => {
+
+      const fetcher = {
+        getTokenAddressFromList: jest.fn(),
+      }
+      for (const address of addresses) {
+        fetcher.getTokenAddressFromList.mockResolvedValueOnce(address);
+      }
+      return fetcher as unknown as TokenFetcher;
     };
     const getEvent = (request: QuoteRequestBodyJSON): APIGatewayProxyEvent =>
       ({
@@ -93,11 +98,9 @@ describe('QuoteHandler', () => {
     describe('handler test', () => {
       it('handles classic quotes', async () => {
         const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE) };
-        const tokenFetcher = TokenFetcherMock('0x123')
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT])
         const res = await getQuoteHandler(quoters, tokenFetcher).handler(getEvent(CLASSIC_REQUEST_BODY), {} as unknown as Context);
-        console.log(res);
         const quoteJSON = JSON.parse(res.body).quote as ClassicQuoteDataJSON;
-        console.log(quoteJSON);
         expect(quoteJSON.quoteGasAdjusted).toBe(CLASSIC_QUOTE_EXACT_IN_WORSE.amountOutGasAdjusted.toString());
       });
 
@@ -106,7 +109,7 @@ describe('QuoteHandler', () => {
           [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
           [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),
         };
-        const tokenFetcher = TokenFetcherMock('0x123')
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT])
         const res = await getQuoteHandler(quoters, tokenFetcher).handler(
           getEvent(QUOTE_REQUEST_BODY_MULTI),
           {} as unknown as Context
@@ -123,7 +126,7 @@ describe('QuoteHandler', () => {
           [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
           [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),
         };
-        const tokenFetcher = TokenFetcherMock('0x123')
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT])
         const res = await getQuoteHandler(quoters, tokenFetcher).handler(
           getEvent(QUOTE_REQUEST_BODY_MULTI),
           {} as unknown as Context
@@ -139,7 +142,7 @@ describe('QuoteHandler', () => {
         const quoters = {
           [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),
         };
-        const tokenFetcher = TokenFetcherMock('0x123')
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT])
         const res = await getQuoteHandler(quoters, tokenFetcher).handler(
           getEvent(QUOTE_REQUEST_BODY_MULTI),
           {} as unknown as Context
@@ -155,7 +158,7 @@ describe('QuoteHandler', () => {
     describe('logging test', () => {
       it('logs the requests and response in correct format', async () => {
         const quoters = { [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER) };
-        const tokenFetcher = TokenFetcherMock('0x123')
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT])
         await getQuoteHandler(quoters, tokenFetcher).handler(getEvent(QUOTE_REQUEST_BODY_MULTI), {} as unknown as Context);
         expect(logger.info).toHaveBeenCalledWith(
           expect.objectContaining({
