@@ -116,11 +116,18 @@ export class ClassicQuote implements Quote {
   }
 
   getPermit(currentPermit: Omit<PermitDetails, 'token'> | null): PermitSingleData | null {
+     // early return if permit not needed
+    if (
+      currentPermit &&
+      BigNumber.from(currentPermit.amount).gte(this.amountOut) &&
+      BigNumber.from(currentPermit.expiration).gt(Math.floor(new Date().getTime() / 1000))
+    )
+      return null;
+
     return TokenPermitCalculator.createPermitData(
-      currentPermit,
       this.request.info.tokenIn,
-      this.amountOut.toString(),
-      this.request.info.tokenInChainId
+      this.request.info.tokenInChainId,
+      currentPermit?.nonce.toString() || '0', 
     );
   }
 
