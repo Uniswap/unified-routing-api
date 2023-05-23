@@ -18,8 +18,8 @@ const tests: UtilityTest[] = [{
     output: {
         permit: null,
     },
-    },
-    {
+},
+{
     testName: 'Succeeds - No Permit',
     input: {
         quote: createClassicQuote({}, 'EXACT_INPUT'),
@@ -28,7 +28,33 @@ const tests: UtilityTest[] = [{
     output: {
         permit: PERMIT2,
     },
-}]
+}, {
+    testName: 'Succeeds - Permit Not Enough',
+    input: {
+        quote: createClassicQuote({}, 'EXACT_INPUT'),
+        permitDetails: {
+            ...PERMIT_DETAILS,
+            amount: '0',
+        },
+    },
+    output: {
+        permit: PERMIT2,
+    },
+},
+{
+    testName: 'Succeeds - Permit Expired',
+    input: {
+        quote: createClassicQuote({}, 'EXACT_INPUT'),
+        permitDetails: {
+            ...PERMIT_DETAILS,
+            expiration: '0',
+        },
+    },
+    output: {
+        permit: PERMIT2,
+    },
+}
+]
 
 describe('ClassicQuote Unit Tests', () => {
     for (const test of tests) {
@@ -44,7 +70,6 @@ describe('ClassicQuote Unit Tests', () => {
             })
 
             const result = input.quote.getPermit(input.permitDetails);
-            console.log(result)
             expect(_.isEqual(result, output.permit)).toBe(true)
             jest.clearAllTimers()
         })
