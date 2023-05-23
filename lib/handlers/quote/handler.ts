@@ -40,7 +40,7 @@ export interface QuoteResponseJSON {
     * CLASSIC quotes have optional permit as they user might have already approved the router.
     * DUTCH_LIMIT quotes have mandatory permit as the permit is the order as well as the signature transfer approval.
     */
-  permit?: PermitSingleData | PermitTransferFromData;
+  permit: PermitSingleData | PermitTransferFromData | null;
 }
 
 export class QuoteHandler extends APIGLambdaHandler<
@@ -244,5 +244,6 @@ export function quoteToResponse(quote: Quote): QuoteResponseJSON {
   return {
     routing: quote.routingType,
     quote: quote.toJSON(),
+    permit: null
   };
 }
