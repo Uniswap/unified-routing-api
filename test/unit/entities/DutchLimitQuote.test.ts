@@ -2,7 +2,8 @@ import Logger from 'bunyan';
 import * as _ from 'lodash'
 
 import { DutchLimitQuote } from '../../../lib/entities';
-import { CLASSIC_QUOTE_EXACT_IN_LARGE, DL_QUOTE_EXACT_IN_LARGE, createDutchLimitQuote, DL_PERMIT } from '../../utils/fixtures';
+import { CLASSIC_QUOTE_EXACT_IN_LARGE, DL_QUOTE_EXACT_IN_LARGE, createDutchLimitQuote } from '../../utils/fixtures';
+import { DL_PERMIT } from '../../constants'
 
 describe('DutchLimitQuote', () => {
   // silent logger in tests
