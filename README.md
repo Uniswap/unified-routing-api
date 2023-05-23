@@ -22,19 +22,19 @@ yarn && yarn build
 then
 
 ```
-cdk deploy GoudaParameterizationStack
+cdk deploy UnifiedRoutingStack
 ```
 
 after successful deployment, you should see something like
 
 ```
- ✅  GoudaParameterizationStack
+ ✅  UnifiedRoutingStack
 
 ✨  Deployment time: 93.78s
 
 Outputs:
-GoudaParameterizationStack.GoudaParameterizationEndpoint57A27B25 = <your dev url>
-GoudaParameterizationStack.Url = <your dev url>
+UnifiedRoutingStack.UnifiedRoutingEndpointEE9D7262 = <your dev url>
+UnifiedRoutingStack.Url = <your dev url>
 ```
 
 The project currently has a `GET hello-world` Api Gateway<>Lambda integration set up:
