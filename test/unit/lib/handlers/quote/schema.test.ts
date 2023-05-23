@@ -43,6 +43,7 @@ describe('Post quote request validation', () => {
         routingType: 'INVALID',
       });
       expect(error).toBeDefined();
+      expect(error?.message).toEqual('Invalid routingType');
     });
 
     it('should reject invalid slippage', () => {
@@ -72,6 +73,15 @@ describe('Post quote request validation', () => {
     it('should validate classic config', () => {
       const { error } = FieldValidator.classicConfig.validate(CLASSIC_CONFIG_JSON);
       expect(error).toBeUndefined();
+    });
+
+    it('should reject invalid routingType', () => {
+      const { error } = FieldValidator.classicConfig.validate({
+        ...CLASSIC_CONFIG_JSON,
+        routingType: 'INVALID',
+      });
+      expect(error).toBeDefined();
+      expect(error?.message).toEqual('Invalid routingType');
     });
 
     it('should reject invalid protocols', () => {
@@ -217,5 +227,33 @@ describe('Post quote request validation', () => {
     });
     expect(error).toBeDefined();
     expect(error?.details[0].message).toEqual('"tokenIn" is required');
+  });
+
+  it('should reject no configs', () => {
+    const { error } = PostQuoteRequestBodyJoi.validate({
+      ...BASE_REQUEST_BODY,
+      configs: [],
+    });
+    expect(error).toBeDefined();
+  });
+
+  it('should reject duplicate configs of same routingType', () => {
+    const { error } = PostQuoteRequestBodyJoi.validate({
+      ...BASE_REQUEST_BODY,
+      configs: [
+        {
+          ...CLASSIC_CONFIG_JSON,
+        },
+        {
+          ...DL_CONFIG_JSON,
+        },
+        {
+          ...CLASSIC_CONFIG_JSON,
+          protocols: ['V2'],
+        },
+      ],
+    });
+    expect(error).toBeDefined();
+    expect(error?.message).toEqual('Duplicate routingType in configs');
   });
 });
