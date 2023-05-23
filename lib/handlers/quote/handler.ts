@@ -4,7 +4,8 @@ import { TradeType } from '@uniswap/sdk-core';
 import { Unit } from 'aws-embedded-metrics';
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 
-import { PermitSingleData, PermitTransferFromData } from '@uniswap/permit2-sdk';
+import { PermitDetails, PermitSingleData, PermitTransferFromData } from '@uniswap/permit2-sdk';
+import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { RoutingType } from '../../constants';
 import {
@@ -26,7 +27,6 @@ import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
 import { ContainerInjected, QuoterByRoutingType } from './injector';
 import { PostQuoteRequestBodyJoi } from './schema';
-import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk'
 
 // number of bps per whole
 const BPS = 10000;
@@ -99,11 +99,17 @@ export class QuoteHandler extends APIGLambdaHandler<
       };
     }
 
+    /**
+     * flow only valid if the offerer has been passed in
+     */
     let allowance = null;
-    if(bestQuote.routingType === RoutingType.CLASSIC) {
-      allowance = await permit2Fetcher.fetchAllowance('0x8a3da2ffc819358524c209dd5faea73437d4f678', '0x6982508145454Ce325dDbE47a25d4ec3d2311933', UNIVERSAL_ROUTER_ADDRESS(1));
+    if (bestQuote.routingType === RoutingType.CLASSIC) {
+      allowance = (await permit2Fetcher.fetchAllowance(
+        requestBody.offerer!,
+        '0x6982508145454Ce325dDbE47a25d4ec3d2311933',
+        UNIVERSAL_ROUTER_ADDRESS(1)
+      )) as PermitDetails;
     }
-
 
     return {
       statusCode: 200,
@@ -116,8 +122,8 @@ export class QuoteHandler extends APIGLambdaHandler<
           allQuotes: resolvedQuotes.map((q) => (q ? quoteToResponse(q) : null)),
         },
         {
-          permit: bestQuote.getPermit(),
-          allowance
+          allowance,
+          permit: bestQuote.getPermit(allowance),
         }
       ),
     };
@@ -251,6 +257,6 @@ export function quoteToResponse(quote: Quote): QuoteResponseJSON {
   return {
     routing: quote.routingType,
     quote: quote.toJSON(),
-    permitData: null,
+    permit: null,
   };
 }

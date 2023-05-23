@@ -2,16 +2,16 @@ import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { default as bunyan, default as Logger } from 'bunyan';
 
 import { MetricsLogger } from 'aws-embedded-metrics';
+import { ethers } from 'ethers';
 import { RoutingType } from '../../constants';
 import { QuoteRequestBodyJSON } from '../../entities';
+import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
 import { TokenFetcher } from '../../fetchers/TokenFetcher';
 import { Quoter, RfqQuoter, RoutingApiQuoter } from '../../providers/quoters';
 import { setGlobalLogger } from '../../util/log';
 import { setGlobalMetrics } from '../../util/metrics';
 import { checkDefined } from '../../util/preconditions';
 import { ApiInjector, ApiRInj } from '../base/api-handler';
-import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
-import { ethers } from 'ethers';
 
 export type QuoterByRoutingType = {
   [key in RoutingType]?: Quoter;
