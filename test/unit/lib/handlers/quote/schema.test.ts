@@ -76,12 +76,10 @@ describe('Post quote request validation', () => {
     });
 
     it('should reject invalid routingType', () => {
-      const { error } = FieldValidator.classicConfig.validate(
-        {
-          ...CLASSIC_CONFIG_JSON,
-          routingType: 'INVALID',
-        }
-      );
+      const { error } = FieldValidator.classicConfig.validate({
+        ...CLASSIC_CONFIG_JSON,
+        routingType: 'INVALID',
+      });
       expect(error).toBeDefined();
       expect(error?.message).toEqual('Invalid routingType');
     });
@@ -256,6 +254,6 @@ describe('Post quote request validation', () => {
       ],
     });
     expect(error).toBeDefined();
-    expect(error?.message).toEqual('"configs[2]" contains a duplicate value')
-  })
+    expect(error?.message).toEqual('"configs[2]" contains a duplicate value');
+  });
 });
