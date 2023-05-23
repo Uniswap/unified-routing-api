@@ -10,6 +10,8 @@ import { setGlobalLogger } from '../../util/log';
 import { setGlobalMetrics } from '../../util/metrics';
 import { checkDefined } from '../../util/preconditions';
 import { ApiInjector, ApiRInj } from '../base/api-handler';
+import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
+import { ethers } from 'ethers';
 
 export type QuoterByRoutingType = {
   [key in RoutingType]?: Quoter;
@@ -18,6 +20,7 @@ export type QuoterByRoutingType = {
 export interface ContainerInjected {
   quoters: QuoterByRoutingType;
   tokenFetcher: TokenFetcher;
+  permit2Fetcher: Permit2Fetcher;
 }
 
 export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void> {
@@ -39,6 +42,7 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
         [RoutingType.CLASSIC]: new RoutingApiQuoter(routingApiUrl),
       },
       tokenFetcher: new TokenFetcher(),
+      permit2Fetcher: new Permit2Fetcher(new ethers.providers.JsonRpcProvider(process.env.RPC_1)),
     };
   }
 

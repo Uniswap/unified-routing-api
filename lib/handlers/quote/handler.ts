@@ -26,6 +26,7 @@ import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
 import { ContainerInjected, QuoterByRoutingType } from './injector';
 import { PostQuoteRequestBodyJoi } from './schema';
+import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk'
 
 // number of bps per whole
 const BPS = 10000;
@@ -55,7 +56,7 @@ export class QuoteHandler extends APIGLambdaHandler<
   ): Promise<ErrorResponse | Response<QuoteResponseJSON>> {
     const {
       requestBody,
-      containerInjected: { quoters, tokenFetcher },
+      containerInjected: { quoters, tokenFetcher, permit2Fetcher },
     } = params;
 
     if (requestBody.tokenInChainId != requestBody.tokenOutChainId) {
@@ -98,6 +99,12 @@ export class QuoteHandler extends APIGLambdaHandler<
       };
     }
 
+    let allowance = null;
+    if(bestQuote.routingType === RoutingType.CLASSIC) {
+      allowance = await permit2Fetcher.fetchAllowance('0x8a3da2ffc819358524c209dd5faea73437d4f678', '0x6982508145454Ce325dDbE47a25d4ec3d2311933', UNIVERSAL_ROUTER_ADDRESS(1));
+    }
+
+
     return {
       statusCode: 200,
       body: Object.assign(
@@ -109,7 +116,8 @@ export class QuoteHandler extends APIGLambdaHandler<
           allQuotes: resolvedQuotes.map((q) => (q ? quoteToResponse(q) : null)),
         },
         {
-          permitData: bestQuote.getPermit(),
+          permit: bestQuote.getPermit(),
+          allowance
         }
       ),
     };
