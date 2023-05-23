@@ -1,8 +1,7 @@
 import { Permit2Calculator } from '../../../../lib/calculators/Permit2Calculator'
 import * as _ from 'lodash'
-import { TOKEN_IN } from '../../../constants'
 import { UtilityTest } from '../../../types'
-import { PERMIT2, PERMIT2_POLYGON } from '../../../utils/fixtures'
+import { PERMIT2, PERMIT2_POLYGON, TOKEN_IN } from '../../../constants'
 
 const tests: UtilityTest[] = [{
   testName: 'Succeeds - Basic',
@@ -14,7 +13,6 @@ const tests: UtilityTest[] = [{
   output: {
     permit: PERMIT2
   },
-  only: true,
 },
 {
   testName: 'Succeeds - Basic Polygon',
@@ -26,7 +24,6 @@ const tests: UtilityTest[] = [{
   output: {
     permit: PERMIT2_POLYGON
   },
-  only: true,
 }
 ]
 

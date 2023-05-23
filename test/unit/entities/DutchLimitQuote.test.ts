@@ -3,7 +3,7 @@ import * as _ from 'lodash'
 
 import { DutchLimitQuote } from '../../../lib/entities';
 import { CLASSIC_QUOTE_EXACT_IN_LARGE, DL_QUOTE_EXACT_IN_LARGE, createDutchLimitQuote } from '../../utils/fixtures';
-import { DL_PERMIT } from '../../constants'
+import { DL_PERMIT } from '../../constants';
 
 describe('DutchLimitQuote', () => {
   // silent logger in tests
