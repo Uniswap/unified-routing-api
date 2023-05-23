@@ -37,7 +37,7 @@ export class FieldValidator {
   public static readonly tradeType = Joi.string().valid('EXACT_INPUT', 'EXACT_OUTPUT');
 
   public static readonly routingType = Joi.string().valid('CLASSIC', 'DUTCH_LIMIT').messages({
-    "any.only": 'Invalid routingType',
+    'any.only': 'Invalid routingType',
   });
 
   public static readonly protocol = Joi.string().valid('V2', 'V3', 'MIXED');
