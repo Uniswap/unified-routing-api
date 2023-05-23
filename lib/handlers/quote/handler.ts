@@ -55,11 +55,10 @@ export class QuoteHandler extends APIGLambdaHandler<
   ): Promise<ErrorResponse | Response<QuoteResponseJSON>> {
     const {
       requestBody,
-      requestBody: { tokenInChainId, tokenOutChainId },
       containerInjected: { quoters, tokenFetcher },
     } = params;
 
-    if (tokenInChainId != tokenOutChainId) {
+    if (requestBody.tokenInChainId != requestBody.tokenOutChainId) {
       throw new ValidationError(`Cannot request quotes for tokens on different chains`);
     }
 
