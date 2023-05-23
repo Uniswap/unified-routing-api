@@ -43,7 +43,7 @@ describe('Post quote request validation', () => {
         routingType: 'INVALID',
       });
       expect(error).toBeDefined();
-      expect(error?.message).toEqual('Invalid routingType')
+      expect(error?.message).toEqual('Invalid routingType');
     });
 
     it('should reject invalid slippage', () => {
@@ -81,18 +81,17 @@ describe('Post quote request validation', () => {
         configs: [],
       });
       expect(error).toBeUndefined();
-    })
+    });
 
     it('should reject invalid routingType', () => {
-      const { error } = FieldValidator.classicConfig.validate({
-        ...CLASSIC_CONFIG_JSON,
-        routingType: 'INVALID',
-      }, {
-        context: undefined
-      });
+      const { error } = FieldValidator.classicConfig.validate(
+        {
+          ...CLASSIC_CONFIG_JSON,
+          routingType: 'INVALID',
+        }
+      );
       expect(error).toBeDefined();
-      expect(error?.message).toEqual('Invalid routingType')
-      console.log(JSON.stringify(error))
+      expect(error?.message).toEqual('Invalid routingType');
     });
 
     it('should reject invalid protocols', () => {
