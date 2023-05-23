@@ -75,14 +75,6 @@ describe('Post quote request validation', () => {
       expect(error).toBeUndefined();
     });
 
-    it('should accept no configs', () => {
-      const { error } = PostQuoteRequestBodyJoi.validate({
-        ...BASE_REQUEST_BODY,
-        configs: [],
-      });
-      expect(error).toBeUndefined();
-    });
-
     it('should reject invalid routingType', () => {
       const { error } = FieldValidator.classicConfig.validate(
         {
@@ -237,5 +229,33 @@ describe('Post quote request validation', () => {
     });
     expect(error).toBeDefined();
     expect(error?.details[0].message).toEqual('"tokenIn" is required');
+  });
+
+  it('should accept no configs', () => {
+    const { error } = PostQuoteRequestBodyJoi.validate({
+      ...BASE_REQUEST_BODY,
+      configs: [],
+    });
+    expect(error).toBeUndefined();
+  });
+
+  it('should reject invalid routingType within valid ones', () => {
+    const { error } = PostQuoteRequestBodyJoi.validate({
+      ...BASE_REQUEST_BODY,
+      configs: [
+        {
+          ...CLASSIC_CONFIG_JSON,
+        },
+        {
+          ...DL_CONFIG_JSON,
+        },
+        {
+          ...CLASSIC_CONFIG_JSON,
+          routingType: 'INVALID',
+        },
+      ],
+    });
+    expect(error).toBeDefined();
+    expect(error?.message).toEqual('"configs[2]" does not match any of the allowed types');
   });
 });
