@@ -1,3 +1,7 @@
+type Input = any
+type Output = any
+type Response = any
+
 export type FetcherTest = {
     testName: string
     only?: boolean
