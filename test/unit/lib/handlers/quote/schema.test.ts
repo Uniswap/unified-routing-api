@@ -231,15 +231,15 @@ describe('Post quote request validation', () => {
     expect(error?.details[0].message).toEqual('"tokenIn" is required');
   });
 
-  it('should accept no configs', () => {
+  it('should reject no configs', () => {
     const { error } = PostQuoteRequestBodyJoi.validate({
       ...BASE_REQUEST_BODY,
       configs: [],
     });
-    expect(error).toBeUndefined();
+    expect(error).toBeDefined();
   });
 
-  it('should reject invalid routingType within valid ones', () => {
+  it('should reject duplicate configs of same routingType', () => {
     const { error } = PostQuoteRequestBodyJoi.validate({
       ...BASE_REQUEST_BODY,
       configs: [
@@ -251,11 +251,11 @@ describe('Post quote request validation', () => {
         },
         {
           ...CLASSIC_CONFIG_JSON,
-          routingType: 'INVALID',
+          protocols: ['V2'],
         },
       ],
     });
     expect(error).toBeDefined();
-    expect(error?.message).toEqual('"configs[2]" does not match any of the allowed types');
-  });
+    expect(error?.message).toEqual('"configs[2]" contains a duplicate value')
+  })
 });

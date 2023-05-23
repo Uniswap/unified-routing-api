@@ -12,5 +12,7 @@ export const PostQuoteRequestBodyJoi = Joi.object({
   tokenOut: Joi.string().alphanum().max(42).required(),
   amount: FieldValidator.amount.required(),
   type: FieldValidator.tradeType.required(),
-  configs: Joi.array().items(FieldValidator.classicConfig, FieldValidator.dutchLimitConfig).required(),
+  configs: Joi.array().items(FieldValidator.classicConfig, FieldValidator.dutchLimitConfig).unique((a: any, b: any) => {
+    return a.routingType === b.routingType;
+  }).required().min(1),
 });
