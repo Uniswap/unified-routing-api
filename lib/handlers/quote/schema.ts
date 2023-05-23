@@ -18,5 +18,8 @@ export const PostQuoteRequestBodyJoi = Joi.object({
       return a.routingType === b.routingType;
     })
     .required()
-    .min(1),
+    .min(1)
+    .messages({
+      "array.unique": "Duplicate routingType in configs",
+    }),
 });

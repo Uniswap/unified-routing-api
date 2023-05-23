@@ -234,6 +234,7 @@ describe('Post quote request validation', () => {
       ...BASE_REQUEST_BODY,
       configs: [],
     });
+    console.log(error)
     expect(error).toBeDefined();
   });
 
@@ -254,6 +255,6 @@ describe('Post quote request validation', () => {
       ],
     });
     expect(error).toBeDefined();
-    expect(error?.message).toEqual('"configs[2]" contains a duplicate value');
+    expect(error?.message).toEqual('Duplicate routingType in configs');
   });
 });
