@@ -20,6 +20,6 @@ export const PostQuoteRequestBodyJoi = Joi.object({
     .required()
     .min(1)
     .messages({
-      "array.unique": "Duplicate routingType in configs",
+      'array.unique': 'Duplicate routingType in configs',
     }),
 });

@@ -234,7 +234,6 @@ describe('Post quote request validation', () => {
       ...BASE_REQUEST_BODY,
       configs: [],
     });
-    console.log(error)
     expect(error).toBeDefined();
   });
 
