@@ -28,7 +28,6 @@ const tests: FetcherTest[] = [
       address: 'USDC'
     },
     output: USDC_ADDRESS_POLYGON,
-    only: true,
   },
   {
     testName: 'Fails - Unknown Symbol',
