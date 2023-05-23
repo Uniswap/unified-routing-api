@@ -99,14 +99,11 @@ export class QuoteHandler extends APIGLambdaHandler<
       };
     }
 
-    /**
-     * flow only valid if the offerer has been passed in
-     */
     let allowance = null;
-    if (bestQuote.routingType === RoutingType.CLASSIC) {
+    if (bestQuote.routingType === RoutingType.CLASSIC && requestBody.offerer) {
       allowance = (await permit2Fetcher.fetchAllowance(
-        requestBody.offerer!,
-        '0x6982508145454Ce325dDbE47a25d4ec3d2311933',
+        requestBody.offerer,
+        request.tokenIn,
         UNIVERSAL_ROUTER_ADDRESS(1)
       )) as PermitDetails;
     }

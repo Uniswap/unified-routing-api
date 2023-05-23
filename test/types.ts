@@ -10,4 +10,12 @@ export type FetcherTest = {
     clientResponse?: Response
     reject?: boolean
     errorType?: any
-  }
+}
+
+export type UtilityTest = {
+  testName: string
+  only?: boolean
+  input?: Input
+  output: Output
+  errorType?: any
+}

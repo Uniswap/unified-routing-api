@@ -5,7 +5,7 @@ import { BigNumber } from 'ethers';
 import { PermitDetails, PermitSingleData } from '@uniswap/permit2-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteRequest } from '..';
-import { TokenPermitCalculator } from '../../calculators/Permit2Calculator';
+import { Permit2Calculator } from '../../calculators/Permit2Calculator';
 import { RoutingType } from '../../constants';
 import { currentTimestampInSeconds } from '../../util/time';
 import { LogJSON } from './index';
@@ -116,7 +116,7 @@ export class ClassicQuote implements Quote {
   }
 
   getPermit(currentPermit: Omit<PermitDetails, 'token'> | null): PermitSingleData | null {
-     // early return if permit not needed
+    // early return if permit not needed
     if (
       currentPermit &&
       BigNumber.from(currentPermit.amount).gte(this.amountOut) &&
@@ -124,10 +124,10 @@ export class ClassicQuote implements Quote {
     )
       return null;
 
-    return TokenPermitCalculator.createPermitData(
+    return Permit2Calculator.createPermitData(
       this.request.info.tokenIn,
       this.request.info.tokenInChainId,
-      currentPermit?.nonce.toString() || '0', 
+      currentPermit?.nonce.toString() || '0'
     );
   }
 
