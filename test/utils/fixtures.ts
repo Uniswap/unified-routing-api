@@ -21,6 +21,7 @@ export const BASE_REQUEST_INFO_EXACT_IN = {
   tokenOut: TOKEN_OUT,
   amount: AMOUNT_IN,
   type: 'EXACT_INPUT',
+  offerer: OFFERER,
 };
 
 export const REQUEST_INFO_ETH_EXACT_IN = {

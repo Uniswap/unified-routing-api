@@ -4,7 +4,7 @@ import { TradeType } from '@uniswap/sdk-core';
 import { Unit } from 'aws-embedded-metrics';
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 
-import { PermitDetails, PermitSingleData, PermitTransferFromData } from '@uniswap/permit2-sdk';
+import { PermitSingleData, PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { RoutingType } from '../../constants';
@@ -83,7 +83,6 @@ export class QuoteHandler extends APIGLambdaHandler<
     log.info({ requests }, 'requests');
     const quotes = await getQuotes(quoters, requests);
     log.info({ rawQuotes: quotes }, 'quotes');
-
     const resolvedQuotes = await contextHandler.resolveQuotes(quotes);
     log.info({ resolvedQuotes }, 'resolvedQuotes');
 
@@ -101,11 +100,12 @@ export class QuoteHandler extends APIGLambdaHandler<
 
     let allowance = null;
     if (bestQuote.routingType === RoutingType.CLASSIC && requestBody.offerer) {
-      allowance = (await permit2Fetcher.fetchAllowance(
+      allowance = await permit2Fetcher.fetchAllowance(
         requestBody.offerer,
         request.tokenIn,
+        //TODO: chain ID
         UNIVERSAL_ROUTER_ADDRESS(1)
-      )) as PermitDetails;
+      );
     }
 
     return {
@@ -119,11 +119,10 @@ export class QuoteHandler extends APIGLambdaHandler<
           allQuotes: resolvedQuotes.map((q) => (q ? quoteToResponse(q) : null)),
         },
         {
-          allowance,
           permit: bestQuote.getPermit(allowance),
         }
       ),
-    };
+    }
   }
 
   private emitQuoteRequestedMetrics(info: QuoteRequestInfo, requests: QuoteRequest[]) {

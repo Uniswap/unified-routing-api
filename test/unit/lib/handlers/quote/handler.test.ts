@@ -12,7 +12,7 @@ import { compareQuotes, getBestQuote, getQuotes, QuoteHandler } from '../../../.
 import { ContainerInjected, QuoterByRoutingType } from '../../../../../lib/handlers/quote/injector';
 import { Quoter } from '../../../../../lib/providers/quoters';
 import { setGlobalLogger } from '../../../../../lib/util/log';
-import { CHECKSUM_OFFERER, TOKEN_IN, TOKEN_OUT } from '../../../../constants';
+import { CHECKSUM_OFFERER, TOKEN_IN, TOKEN_OUT , PERMIT_DETAILS } from '../../../../constants';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_IN_WORSE,
@@ -28,9 +28,11 @@ import {
   QUOTE_REQUEST_MULTI,
 } from '../../../../utils/fixtures';
 import { TokenFetcher } from '../../../../../lib/fetchers/TokenFetcher';
+import { PermitDetails } from '@uniswap/permit2-sdk';
+import { Permit2Fetcher } from '../../../../../lib/fetchers/Permit2Fetcher';
 
-describe('QuoteHandler', () => {
-  describe('handler', () => {
+describe.only('QuoteHandler', () => {
+  describe.only('handler', () => {
     const logger = {
       info: jest.fn(),
       error: jest.fn(),
@@ -54,7 +56,8 @@ describe('QuoteHandler', () => {
 
     const injectorPromiseMock = (
       quoters: QuoterByRoutingType,
-      tokenFetcher: TokenFetcher
+      tokenFetcher: TokenFetcher,
+      permit2Fetcher: Permit2Fetcher
     ): Promise<ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>> =>
       new Promise((resolve) =>
         resolve({
@@ -62,13 +65,14 @@ describe('QuoteHandler', () => {
             return {
               quoters: quoters,
               tokenFetcher: tokenFetcher,
+              permit2Fetcher: permit2Fetcher,
             };
           },
           getRequestInjected: () => requestInjectedMock,
         } as unknown as ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>)
       );
 
-    const getQuoteHandler = (quoters: QuoterByRoutingType, tokenFetcher: TokenFetcher) => new QuoteHandler('quote', injectorPromiseMock(quoters, tokenFetcher));
+    const getQuoteHandler = (quoters: QuoterByRoutingType, tokenFetcher: TokenFetcher, permit2Fetcher: Permit2Fetcher) => new QuoteHandler('quote', injectorPromiseMock(quoters, tokenFetcher, permit2Fetcher));
 
     const RfqQuoterMock = (dlQuote: DutchLimitQuote): Quoter => {
       return {
@@ -95,17 +99,34 @@ describe('QuoteHandler', () => {
       }
       return fetcher as unknown as TokenFetcher;
     };
+    const Permit2FetcherMock = (permitDetails: PermitDetails, isError = false): Permit2Fetcher => {
+      const fetcher = {
+        fetchAllowance: jest.fn(),
+      }
+
+      if(isError) {
+        fetcher.fetchAllowance.mockRejectedValue(new Error('error'));
+        return fetcher as unknown as Permit2Fetcher;
+      }
+      
+      fetcher.fetchAllowance.mockResolvedValueOnce(permitDetails);
+      return fetcher as unknown as Permit2Fetcher;
+    };
     const getEvent = (request: QuoteRequestBodyJSON): APIGatewayProxyEvent =>
       ({
         body: JSON.stringify(request),
       } as APIGatewayProxyEvent);
 
-    describe('handler test', () => {
-      it('handles classic quotes', async () => {
+    describe.only('handler test', () => {
+      it.only('handles classic quotes', async () => {
         const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE) };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT])
-        const res = await getQuoteHandler(quoters, tokenFetcher).handler(getEvent(CLASSIC_REQUEST_BODY), {} as unknown as Context);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS as PermitDetails);
+
+        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(getEvent(CLASSIC_REQUEST_BODY), {} as unknown as Context);
+        console.log(res);
         const quoteJSON = JSON.parse(res.body).quote as ClassicQuoteDataJSON;
+        console.log(quoteJSON);
         expect(quoteJSON.quoteGasAdjusted).toBe(CLASSIC_QUOTE_EXACT_IN_WORSE.amountOutGasAdjusted.toString());
       });
 
@@ -115,7 +136,9 @@ describe('QuoteHandler', () => {
           [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),
         };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT])
-        const res = await getQuoteHandler(quoters, tokenFetcher).handler(
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS as PermitDetails);
+
+        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(
           getEvent(QUOTE_REQUEST_BODY_MULTI),
           {} as unknown as Context
         );
@@ -132,7 +155,9 @@ describe('QuoteHandler', () => {
           [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),
         };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT])
-        const res = await getQuoteHandler(quoters, tokenFetcher).handler(
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS as PermitDetails);
+
+        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(
           getEvent(QUOTE_REQUEST_BODY_MULTI),
           {} as unknown as Context
         );
@@ -148,7 +173,9 @@ describe('QuoteHandler', () => {
           [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),
         };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT])
-        const res = await getQuoteHandler(quoters, tokenFetcher).handler(
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS as PermitDetails);
+
+        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(
           getEvent(QUOTE_REQUEST_BODY_MULTI),
           {} as unknown as Context
         );
@@ -164,7 +191,9 @@ describe('QuoteHandler', () => {
           [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),
         };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT])
-        const response = await getQuoteHandler(quoters, tokenFetcher).handler(
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS as PermitDetails);
+
+        const response = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(
           getEvent(QUOTE_REQUEST_BODY_MULTI),
           {} as unknown as Context
         );
@@ -177,12 +206,14 @@ describe('QuoteHandler', () => {
         expect(permitData.values.witness.outputs[0].token).toBe(quote.outputs[0].token);
       });
 
-      it('never returns permit for Classic', async () => {
+      it('never returns permit for Classic with no offerer', async () => {
         const quoters = {
           [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
         };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT])
-        const res = await getQuoteHandler(quoters, tokenFetcher).handler(
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS as PermitDetails);
+
+        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(
           getEvent(QUOTE_REQUEST_BODY_MULTI),
           {} as unknown as Context
         );
@@ -196,7 +227,9 @@ describe('QuoteHandler', () => {
             [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
           };
           const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT], true)
-          const res = await getQuoteHandler(quoters, tokenFetcher).handler(
+          const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS as PermitDetails);
+
+          const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(
             getEvent(QUOTE_REQUEST_BODY_MULTI),
             {} as unknown as Context
           );
@@ -212,7 +245,9 @@ describe('QuoteHandler', () => {
       it('logs the requests and response in correct format', async () => {
         const quoters = { [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER) };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT])
-        await getQuoteHandler(quoters, tokenFetcher).handler(getEvent(QUOTE_REQUEST_BODY_MULTI), {} as unknown as Context);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS as PermitDetails);
+
+        await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(getEvent(QUOTE_REQUEST_BODY_MULTI), {} as unknown as Context);
         expect(logger.info).toHaveBeenCalledWith(
           expect.objectContaining({
             eventType: 'UnifiedRoutingQuoteRequest',
