@@ -17,6 +17,10 @@ export class TokenFetcher {
     return new CachingTokenListProvider(chainId, DEFAULT_TOKEN_LIST, new NodeJSCache(new NodeCache()));
   };
 
+  /**
+   * Gets the token list provider for the provided chainId. Creates a new one if it doesn't exist.
+   * Allows us to cache the token list provider for each chainId for the lifetime of the lambda.
+   */
   private getTokenListProvider(chainId: ChainId): ITokenProvider & ITokenListProvider {
     let tokenListProvider = this._tokenListProviders.get(chainId);
     if (tokenListProvider === undefined) {

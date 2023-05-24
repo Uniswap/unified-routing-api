@@ -37,8 +37,8 @@ export interface QuoteResponseJSON {
   quote: QuoteJSON;
    /** 
     * The value depends on weather the quote is CLASSIC or DUTCH_LIMIT.
-    * CLASSIC quotes have optional permit as they user might have already approved the router.
-    * DUTCH_LIMIT quotes have mandatory permit as the permit is the order as well as the signature transfer approval.
+    * CLASSIC quotes have optional permit (PermitSingleData) as they user might have already approved the router.
+    * DUTCH_LIMIT quotes have mandatory permit (PermitTransferFromData) as the permit is the order as well as the signature transfer approval.
     */
   permit: PermitSingleData | PermitTransferFromData | null;
 }
