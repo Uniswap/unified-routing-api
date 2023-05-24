@@ -4,10 +4,13 @@ import PERMIT2_CONTRACT from '../abis/Permit2.json';
 
 export class Permit2Fetcher {
   private rpcProvider: ethers.providers.Provider;
-  // static PERMIT2_INTERFACE = new ethers.utils.Interface(JSON.stringify(PERMIT2_ABI))
+  public readonly permitAddress: string;
+  public readonly permitAbi: ethers.ContractInterface;
 
   constructor(rpcProvider: ethers.providers.Provider) {
     this.rpcProvider = rpcProvider;
+    this.permitAddress = PERMIT2_ADDRESS;
+    this.permitAbi = PERMIT2_CONTRACT.abi;    
   }
 
   public async fetchAllowance(
@@ -15,7 +18,7 @@ export class Permit2Fetcher {
     tokenAddress: string,
     spenderAddress: string
   ): Promise<Omit<PermitDetails, 'token'>> {
-    const allowance = await new ethers.Contract(PERMIT2_ADDRESS, PERMIT2_CONTRACT.abi, this.rpcProvider).allowance(
+    const allowance = await new ethers.Contract(this.permitAddress, this.permitAbi, this.rpcProvider).allowance(
       ownerAddress,
       tokenAddress,
       spenderAddress
