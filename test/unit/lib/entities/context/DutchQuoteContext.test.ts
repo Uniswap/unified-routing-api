@@ -103,7 +103,7 @@ describe('DutchQuoteContext', () => {
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchLimitQuote({ amountOut: '1', filler }, 'EXACT_INPUT');
       expect(rfqQuote.filler).toEqual(filler);
-      const classicQuote = createClassicQuote({ quote: '10000000000', quoteGasAdjusted: '9999000000' }, 'EXACT_INPUT');
+      const classicQuote = createClassicQuote({ quote: '10000000000', quoteGasAdjusted: '9999000000' }, { type: 'EXACT_INPUT' });
       context.dependencies();
 
       const quote = await context.resolve({
@@ -125,7 +125,7 @@ describe('DutchQuoteContext', () => {
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchLimitQuote({ amountOut: '1', filler }, 'EXACT_INPUT');
       expect(rfqQuote.filler).toEqual(filler);
-      const classicQuote = createClassicQuote({ quote: '10000000000', quoteGasAdjusted: '9999000000' }, 'EXACT_INPUT');
+      const classicQuote = createClassicQuote({ quote: '10000000000', quoteGasAdjusted: '9999000000' }, { type: 'EXACT_INPUT' });
       context.dependencies();
 
       const quote = await context.resolve({
@@ -143,7 +143,7 @@ describe('DutchQuoteContext', () => {
       const native = WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(1)].address;
       const rfqQuote = createDutchLimitQuote({ amountOut: '1', tokenOut: native, filler }, 'EXACT_INPUT');
       expect(rfqQuote.filler).toEqual(filler);
-      const classicQuote = createClassicQuote({ quote: '10000000000', quoteGasAdjusted: '9999000000' }, 'EXACT_INPUT');
+      const classicQuote = createClassicQuote({ quote: '10000000000', quoteGasAdjusted: '9999000000' }, { type: 'EXACT_INPUT' });
       context.dependencies();
 
       const quote = await context.resolve({
@@ -162,7 +162,7 @@ describe('DutchQuoteContext', () => {
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchLimitQuote({ amountOut: '1', filler }, 'EXACT_INPUT');
       expect(rfqQuote.filler).toEqual(filler);
-      const classicQuote = createClassicQuote({ quote: '10', quoteGasAdjusted: '9' }, 'EXACT_INPUT');
+      const classicQuote = createClassicQuote({ quote: '10', quoteGasAdjusted: '9' }, { type: 'EXACT_INPUT' });
 
       const quote = await context.resolve({
         [context.requestKey]: rfqQuote,
@@ -180,7 +180,7 @@ describe('DutchQuoteContext', () => {
       it('returns false if amountOut == gas used', async () => {
         const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL);
         const amountOut = ethers.utils.parseEther('1');
-        const classicQuote = createClassicQuote({ quote: amountOut.toString(), quoteGasAdjusted: '1' }, 'EXACT_INPUT');
+        const classicQuote = createClassicQuote({ quote: amountOut.toString(), quoteGasAdjusted: '1' }, { type: 'EXACT_INPUT' });
         const hasSize = context.hasOrderSizeForSynthetic(logger, classicQuote);
         expect(hasSize).toEqual(false);
       });
@@ -192,7 +192,7 @@ describe('DutchQuoteContext', () => {
         const fivePercent = amountOut.mul(5).div(100);
         const classicQuote = createClassicQuote(
           { quote: amountOut.toString(), quoteGasAdjusted: amountOut.sub(fivePercent).toString() },
-          'EXACT_INPUT'
+          { type: 'EXACT_INPUT' }
         );
 
         const hasSize = context.hasOrderSizeForSynthetic(logger, classicQuote);
@@ -206,7 +206,7 @@ describe('DutchQuoteContext', () => {
         const gas = amountOut.mul(55).div(100);
         const classicQuote = createClassicQuote(
           { quote: amountOut.toString(), quoteGasAdjusted: amountOut.sub(gas).toString() },
-          'EXACT_INPUT'
+          { type: 'EXACT_INPUT' }
         );
 
         const hasSize = context.hasOrderSizeForSynthetic(logger, classicQuote);
@@ -222,7 +222,7 @@ describe('DutchQuoteContext', () => {
         const fivePercent = amountIn.mul(5).div(100);
         const classicQuote = createClassicQuote(
           { quote: amountIn.toString(), quoteGasAdjusted: amountIn.add(fivePercent).toString() },
-          'EXACT_OUTPUT'
+          { type: 'EXACT_OUTPUT' }
         );
 
         const hasSize = context.hasOrderSizeForSynthetic(logger, classicQuote);
@@ -236,7 +236,7 @@ describe('DutchQuoteContext', () => {
         const gas = amountIn.mul(55).div(100);
         const classicQuote = createClassicQuote(
           { quote: amountIn.toString(), quoteGasAdjusted: amountIn.add(gas).toString() },
-          'EXACT_OUTPUT'
+          { type: 'EXACT_OUTPUT' }
         );
 
         const hasSize = context.hasOrderSizeForSynthetic(logger, classicQuote);

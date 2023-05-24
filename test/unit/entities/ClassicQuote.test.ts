@@ -8,7 +8,21 @@ import { MaxUint160, MaxSigDeadline } from '@uniswap/permit2-sdk'
 const tests: UtilityTest[] = [{
     testName: 'Succeeds - No Permit',
     input: {
-        quote: createClassicQuote({}, 'EXACT_INPUT'),
+        quote: createClassicQuote({}, { type: 'EXACT_INPUT' }),
+        permitDetails: {
+            ...PERMIT_DETAILS,
+            amount: MaxUint160,
+            expiration: MaxSigDeadline,
+        },
+    },
+    output: {
+        permit: null,
+    },
+},
+{
+    testName: 'Succeeds - No Offerer',
+    input: {
+        quote: createClassicQuote({}, { type: 'EXACT_INPUT' }),
         permitDetails: {
             ...PERMIT_DETAILS,
             amount: MaxUint160,
@@ -22,7 +36,7 @@ const tests: UtilityTest[] = [{
 {
     testName: 'Succeeds - No Permit',
     input: {
-        quote: createClassicQuote({}, 'EXACT_INPUT'),
+        quote: createClassicQuote({}, { type: 'EXACT_INPUT' }),
         permitDetails: null,
     },
     output: {
@@ -31,7 +45,7 @@ const tests: UtilityTest[] = [{
 }, {
     testName: 'Succeeds - Permit Not Enough',
     input: {
-        quote: createClassicQuote({}, 'EXACT_INPUT'),
+        quote: createClassicQuote({}, { type: 'EXACT_INPUT' }),
         permitDetails: {
             ...PERMIT_DETAILS,
             amount: '0',
@@ -44,7 +58,7 @@ const tests: UtilityTest[] = [{
 {
     testName: 'Succeeds - Permit Expired',
     input: {
-        quote: createClassicQuote({}, 'EXACT_INPUT'),
+        quote: createClassicQuote({}, { type: 'EXACT_INPUT' }),
         permitDetails: {
             ...PERMIT_DETAILS,
             expiration: '0',
