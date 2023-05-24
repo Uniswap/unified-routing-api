@@ -45,6 +45,7 @@ export type V3PoolInRouteJSON = {
 };
 
 export type ClassicQuoteDataJSON = {
+  requestId: string;
   quoteId: string;
   amount: string;
   amountDecimals: string;
@@ -82,7 +83,7 @@ export class ClassicQuote implements Quote {
     this.createdAt = createdAt;
   }
 
-  public toJSON(): ClassicQuoteDataJSON & { requestId: string } {
+  public toJSON(): ClassicQuoteDataJSON {
     return {
       ...this.quoteData,
       quoteId: this.quoteId,
