@@ -182,6 +182,7 @@ const DL_QUOTE_DATA = {
 export const CLASSIC_QUOTE_DATA = {
   routing: RoutingType.CLASSIC,
   quote: {
+    requestId: 'requestId',
     quoteId: '1',
     amount: '1',
     amountDecimals: '18',
