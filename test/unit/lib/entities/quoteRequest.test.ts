@@ -1,3 +1,4 @@
+import { BigNumber } from 'ethers';
 import { RoutingType } from '../../../../lib/constants';
 import {
   ClassicConfigJSON,
@@ -5,10 +6,12 @@ import {
   DutchLimitConfigJSON,
   DutchLimitRequest,
   parseQuoteRequests,
+  parseTradeType,
   QuoteRequestBodyJSON,
 } from '../../../../lib/entities';
 import { ValidationError } from '../../../../lib/util/errors';
 import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
+import { DEFAULT_SLIPPAGE_TOLERANCE } from '../../../../lib/constants';
 
 const MOCK_DL_CONFIG_JSON: DutchLimitConfigJSON = {
   routingType: RoutingType.DUTCH_LIMIT,
@@ -31,6 +34,7 @@ const MOCK_REQUEST_JSON: QuoteRequestBodyJSON = {
   tokenOut: TOKEN_OUT,
   amount: AMOUNT_IN,
   type: 'EXACT_INPUT',
+  offerer: OFFERER,
   configs: [MOCK_DL_CONFIG_JSON, CLASSIC_CONFIG_JSON],
 };
 
@@ -43,22 +47,40 @@ const DUPLICATE_REQUEST_JSON = {
   amount: AMOUNT_IN,
   type: 'EXACT_INPUT',
   configs: [MOCK_DL_CONFIG_JSON, CLASSIC_CONFIG_JSON, MOCK_DL_CONFIG_JSON],
+  offerer: OFFERER,
 };
 
-describe('QuoteRequest', () => {
+const MOCK_QUOTE_REQUEST_INFO = {
+  tokenInChainId: CHAIN_IN_ID,
+  tokenOutChainId: CHAIN_OUT_ID,
+  requestId: 'requestId',
+  tokenIn: TOKEN_IN,
+  tokenOut: TOKEN_OUT,
+  amount: BigNumber.from(AMOUNT_IN),
+  type: parseTradeType('EXACT_INPUT'),
+  offerer: OFFERER,
+  slippageTolerance: DEFAULT_SLIPPAGE_TOLERANCE,
+};
+
+describe.only('QuoteRequest', () => {
   it('parses dutch limit order config properly', () => {
     const { quoteRequests: requests } = parseQuoteRequests(MOCK_REQUEST_JSON);
     const info = requests[0].info;
-
     const config = DutchLimitRequest.fromRequestBody(info, MOCK_DL_CONFIG_JSON);
+
+    expect(info).toEqual({
+      ...MOCK_QUOTE_REQUEST_INFO,
+      slippageTolerance: '50',
+    });
     expect(config.toJSON()).toEqual(MOCK_DL_CONFIG_JSON);
   });
 
   it('parses basic classic quote order config properly', () => {
     const { quoteRequests: requests } = parseQuoteRequests(MOCK_REQUEST_JSON);
-    const info = requests[0].info;
-
+    const info = requests[1].info; 
     const config = ClassicRequest.fromRequestBody(info, CLASSIC_CONFIG_JSON);
+
+    expect(info).toEqual(MOCK_QUOTE_REQUEST_INFO);
     expect(config.toJSON()).toEqual(CLASSIC_CONFIG_JSON);
   });
 
