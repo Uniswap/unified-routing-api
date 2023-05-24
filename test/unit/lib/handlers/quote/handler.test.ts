@@ -253,7 +253,7 @@ describe('QuoteHandler', () => {
         jest.clearAllTimers();
       });
 
-      it.only('does not return permit for Classic with no offerer', async () => {
+      it('does not return permit for Classic with no offerer', async () => {
         const quoters = {
           [RoutingType.CLASSIC]: ClassicQuoterMock(createClassicQuote({ quote: '1', quoteGasAdjusted: '1' }, { type: 'EXACT_INPUT', offerer: undefined })),
         };

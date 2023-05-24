@@ -62,7 +62,7 @@ const MOCK_QUOTE_REQUEST_INFO = {
   slippageTolerance: DEFAULT_SLIPPAGE_TOLERANCE,
 };
 
-describe.only('QuoteRequest', () => {
+describe('QuoteRequest', () => {
   it('parses dutch limit order config properly', () => {
     const { quoteRequests: requests } = parseQuoteRequests(MOCK_REQUEST_JSON);
     const info = requests[0].info;
