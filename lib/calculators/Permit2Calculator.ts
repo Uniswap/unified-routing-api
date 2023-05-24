@@ -18,7 +18,7 @@ export class Permit2Calculator {
         expiration: this.toDeadline(PERMIT_EXPIRATION),
         nonce: nonce,
       },
-      spender: UNIVERSAL_ROUTER_ADDRESS(1),
+      spender: UNIVERSAL_ROUTER_ADDRESS(chainId),
       sigDeadline: this.toDeadline(PERMIT_SIG_EXPIRATION),
     };
 

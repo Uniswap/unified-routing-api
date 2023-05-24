@@ -10,6 +10,6 @@ describe('Permit2Fetcher Unit Tests', () => {
             const fetcher = new Permit2Fetcher(ethers.getDefaultProvider())
             expect(fetcher.permitAddress).toBe(PERMIT2_ADDRESS)
             expect(fetcher.permitAbi).toBe(PERMIT2_CONTRACT.abi)
+        })
     })
-})
 })

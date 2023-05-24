@@ -103,8 +103,7 @@ export class QuoteHandler extends APIGLambdaHandler<
       allowance = await permit2Fetcher.fetchAllowance(
         requestBody.offerer,
         request.tokenIn,
-        //TODO: chain ID
-        UNIVERSAL_ROUTER_ADDRESS(1)
+        UNIVERSAL_ROUTER_ADDRESS(request.tokenInChainId),
       );
     }
 
