@@ -12,7 +12,7 @@ import { compareQuotes, getBestQuote, getQuotes, QuoteHandler } from '../../../.
 import { ContainerInjected, QuoterByRoutingType } from '../../../../../lib/handlers/quote/injector';
 import { Quoter } from '../../../../../lib/providers/quoters';
 import { setGlobalLogger } from '../../../../../lib/util/log';
-import { CHECKSUM_OFFERER, TOKEN_IN, TOKEN_OUT , PERMIT_DETAILS } from '../../../../constants';
+import { TOKEN_IN, TOKEN_OUT , PERMIT_DETAILS, OFFERER } from '../../../../constants';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_IN_WORSE,
@@ -31,8 +31,8 @@ import { TokenFetcher } from '../../../../../lib/fetchers/TokenFetcher';
 import { PermitDetails } from '@uniswap/permit2-sdk';
 import { Permit2Fetcher } from '../../../../../lib/fetchers/Permit2Fetcher';
 
-describe.only('QuoteHandler', () => {
-  describe.only('handler', () => {
+describe('QuoteHandler', () => {
+  describe('handler', () => {
     const logger = {
       info: jest.fn(),
       error: jest.fn(),
@@ -117,8 +117,8 @@ describe.only('QuoteHandler', () => {
         body: JSON.stringify(request),
       } as APIGatewayProxyEvent);
 
-    describe.only('handler test', () => {
-      it.only('handles classic quotes', async () => {
+    describe('handler test', () => {
+      it('handles classic quotes', async () => {
         const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE) };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT])
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS as PermitDetails);
@@ -258,7 +258,7 @@ describe.only('QuoteHandler', () => {
               tokenOut: QUOTE_REQUEST_BODY_MULTI.tokenOut,
               amount: QUOTE_REQUEST_BODY_MULTI.amount,
               type: QUOTE_REQUEST_BODY_MULTI.type,
-              offerer: CHECKSUM_OFFERER,
+              offerer: OFFERER,
               configs: 'DUTCH_LIMIT,CLASSIC',
               createdAt: expect.any(String),
             }),
