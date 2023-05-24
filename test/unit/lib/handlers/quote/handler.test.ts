@@ -1,6 +1,7 @@
 import { TradeType } from '@uniswap/sdk-core';
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { default as Logger } from 'bunyan';
+import * as _ from 'lodash'
 
 import { DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
 import { MetricsLogger } from 'aws-embedded-metrics';
@@ -12,7 +13,7 @@ import { compareQuotes, getBestQuote, getQuotes, QuoteHandler } from '../../../.
 import { ContainerInjected, QuoterByRoutingType } from '../../../../../lib/handlers/quote/injector';
 import { Quoter } from '../../../../../lib/providers/quoters';
 import { setGlobalLogger } from '../../../../../lib/util/log';
-import { TOKEN_IN, TOKEN_OUT , PERMIT_DETAILS, OFFERER } from '../../../../constants';
+import { TOKEN_IN, TOKEN_OUT , PERMIT_DETAILS, OFFERER, PERMIT2 } from '../../../../constants';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_IN_WORSE,
@@ -124,9 +125,7 @@ describe('QuoteHandler', () => {
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS as PermitDetails);
 
         const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(getEvent(CLASSIC_REQUEST_BODY), {} as unknown as Context);
-        console.log(res);
         const quoteJSON = JSON.parse(res.body).quote as ClassicQuoteDataJSON;
-        console.log(quoteJSON);
         expect(quoteJSON.quoteGasAdjusted).toBe(CLASSIC_QUOTE_EXACT_IN_WORSE.amountOutGasAdjusted.toString());
       });
 
@@ -206,20 +205,27 @@ describe('QuoteHandler', () => {
         expect(permitData.values.witness.outputs[0].token).toBe(quote.outputs[0].token);
       });
 
-      it('never returns permit for Classic with no offerer', async () => {
+      it('returns permit for Classic with offerer and current permit invalid', async () => {
         const quoters = {
           [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
         };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT])
-        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS as PermitDetails);
+        const permit2Fetcher = Permit2FetcherMock({
+          ...PERMIT_DETAILS,
+          amount: '0',
+        } as PermitDetails);
 
-        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(
+        jest.useFakeTimers({
+          now: 0,
+        })
+        const response = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(
           getEvent(QUOTE_REQUEST_BODY_MULTI),
           {} as unknown as Context
         );
+        const responseBody = JSON.parse(response.body)
 
-        const permitData = JSON.parse(res.body).permitData;
-        expect(permitData).toBe(null);
+        expect(_.isEqual(responseBody.permit, PERMIT2)).toBe(true)
+        jest.clearAllTimers();
       });
 
       it('fails if symbol does not exist', async () => {
