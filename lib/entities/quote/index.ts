@@ -8,7 +8,9 @@ import { ClassicQuoteDataJSON } from './ClassicQuote';
 export * from './ClassicQuote';
 export * from './DutchLimitQuote';
 
-export type QuoteJSON = (DutchLimitOrderInfoJSON & { quoteId: string }) | ClassicQuoteDataJSON;
+export type QuoteJSON =
+  | (DutchLimitOrderInfoJSON & { quoteId: string; requestId: string })
+  | (ClassicQuoteDataJSON & { requestId: string });
 
 export type LogJSON = {
   quoteId: string;

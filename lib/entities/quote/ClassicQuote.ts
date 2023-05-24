@@ -82,10 +82,11 @@ export class ClassicQuote implements Quote {
     this.createdAt = createdAt;
   }
 
-  public toJSON(): ClassicQuoteDataJSON {
+  public toJSON(): ClassicQuoteDataJSON & { requestId: string } {
     return {
       ...this.quoteData,
       quoteId: this.quoteId,
+      requestId: this.request.info.requestId,
     };
   }
 

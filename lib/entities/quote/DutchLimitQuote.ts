@@ -147,6 +147,7 @@ export class DutchLimitQuote implements Quote {
     return {
       ...this.toOrder(),
       quoteId: this.quoteId,
+      requestId: this.requestId,
     };
   }
 
