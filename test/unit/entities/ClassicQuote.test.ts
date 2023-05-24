@@ -22,12 +22,8 @@ const tests: UtilityTest[] = [{
 {
     testName: 'Succeeds - No Offerer',
     input: {
-        quote: createClassicQuote({}, { type: 'EXACT_INPUT' }),
-        permitDetails: {
-            ...PERMIT_DETAILS,
-            amount: MaxUint160,
-            expiration: MaxSigDeadline,
-        },
+        quote: createClassicQuote({}, { type: 'EXACT_INPUT', offerer: undefined }),
+        permitDetails: PERMIT_DETAILS,
     },
     output: {
         permit: null,

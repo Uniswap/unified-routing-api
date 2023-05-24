@@ -2,19 +2,8 @@ import { TradeType } from '@uniswap/sdk-core';
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { default as Logger } from 'bunyan';
 import * as _ from 'lodash'
-
-import { DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
-import { MetricsLogger } from 'aws-embedded-metrics';
-import { RoutingType } from '../../../../../lib/constants';
-import { ClassicQuote, ClassicQuoteDataJSON, DutchLimitQuote, Quote } from '../../../../../lib/entities';
-import { QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index';
-import { ApiInjector, ApiRInj } from '../../../../../lib/handlers/base';
-import { compareQuotes, getBestQuote, getQuotes, QuoteHandler } from '../../../../../lib/handlers/quote/handler';
-import { ContainerInjected, QuoterByRoutingType } from '../../../../../lib/handlers/quote/injector';
-import { Quoter } from '../../../../../lib/providers/quoters';
-import { setGlobalLogger } from '../../../../../lib/util/log';
-import { TOKEN_IN, TOKEN_OUT , PERMIT_DETAILS, OFFERER, PERMIT2 } from '../../../../constants';
-import {
+import { 
+  createClassicQuote ,
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_IN_WORSE,
   CLASSIC_QUOTE_EXACT_OUT_BETTER,
@@ -28,6 +17,18 @@ import {
   QUOTE_REQUEST_DL,
   QUOTE_REQUEST_MULTI,
 } from '../../../../utils/fixtures';
+
+import { DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
+import { MetricsLogger } from 'aws-embedded-metrics';
+import { RoutingType } from '../../../../../lib/constants';
+import { ClassicQuote, ClassicQuoteDataJSON, DutchLimitQuote, Quote } from '../../../../../lib/entities';
+import { QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index';
+import { ApiInjector, ApiRInj } from '../../../../../lib/handlers/base';
+import { compareQuotes, getBestQuote, getQuotes, QuoteHandler } from '../../../../../lib/handlers/quote/handler';
+import { ContainerInjected, QuoterByRoutingType } from '../../../../../lib/handlers/quote/injector';
+import { Quoter } from '../../../../../lib/providers/quoters';
+import { setGlobalLogger } from '../../../../../lib/util/log';
+import { TOKEN_IN, TOKEN_OUT , PERMIT_DETAILS, OFFERER, PERMIT2 } from '../../../../constants';
 import { TokenFetcher } from '../../../../../lib/fetchers/TokenFetcher';
 import { PermitDetails } from '@uniswap/permit2-sdk';
 import { Permit2Fetcher } from '../../../../../lib/fetchers/Permit2Fetcher';
@@ -249,6 +250,30 @@ describe('QuoteHandler', () => {
 
         expect(_.isEqual(responseBody.permit, null)).toBe(true)
         expect(permit2Fetcher.fetchAllowance).toHaveBeenCalledWith(OFFERER, TOKEN_IN, UNIVERSAL_ROUTER_ADDRESS(1));
+        jest.clearAllTimers();
+      });
+
+      it.only('does not return permit for Classic with no offerer', async () => {
+        const quoters = {
+          [RoutingType.CLASSIC]: ClassicQuoterMock(createClassicQuote({ quote: '1', quoteGasAdjusted: '1' }, { type: 'EXACT_INPUT', offerer: undefined })),
+        };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT])
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+
+        jest.useFakeTimers({
+          now: 0,
+        })
+        const response = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(
+          getEvent({
+            ...QUOTE_REQUEST_BODY_MULTI,
+            offerer: undefined,
+          }),
+          {} as unknown as Context
+        );
+        const responseBody = JSON.parse(response.body)
+
+        expect(_.isEqual(responseBody.permit, null)).toBe(true)
+        expect(permit2Fetcher.fetchAllowance).not.toHaveBeenCalled();
         jest.clearAllTimers();
       });
 
