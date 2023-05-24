@@ -10,7 +10,7 @@ export class Permit2Fetcher {
   constructor(rpcProvider: ethers.providers.Provider) {
     this.rpcProvider = rpcProvider;
     this.permitAddress = PERMIT2_ADDRESS;
-    this.permitAbi = PERMIT2_CONTRACT.abi;    
+    this.permitAbi = PERMIT2_CONTRACT.abi;
   }
 
   public async fetchAllowance(

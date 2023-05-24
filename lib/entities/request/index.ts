@@ -72,7 +72,9 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON): {
     return [];
   });
 
-  info.offerer = body.offerer ?? (requests.find((r) => r.routingType === RoutingType.DUTCH_LIMIT)?.config as DutchLimitConfig)?.offerer;
+  info.offerer =
+    body.offerer ??
+    (requests.find((r) => r.routingType === RoutingType.DUTCH_LIMIT)?.config as DutchLimitConfig)?.offerer;
 
   const result: Set<RoutingType> = new Set();
   requests.forEach((request) => {

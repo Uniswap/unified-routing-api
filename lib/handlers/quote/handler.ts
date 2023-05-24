@@ -37,11 +37,11 @@ export interface QuoteResponseJSON {
   routing: string;
   quote: QuoteJSON;
   /**
-   * The value depends on whether the quote is CLASSIC or DUTCH_LIMIT.
+   * The value depends on weather the quote is CLASSIC or DUTCH_LIMIT.
    * CLASSIC quotes have optional permit (PermitSingleData) as they user might have already approved the router.
    * DUTCH_LIMIT quotes have mandatory permit (PermitTransferFromData) as the permit is the order as well as the signature transfer approval.
    */
-  permitData: PermitSingleData | PermitTransferFromData | null;
+  permit: PermitSingleData | PermitTransferFromData | null;
 }
 
 export class QuoteHandler extends APIGLambdaHandler<
@@ -103,7 +103,7 @@ export class QuoteHandler extends APIGLambdaHandler<
       allowance = await permit2Fetcher.fetchAllowance(
         requestBody.offerer,
         request.tokenIn,
-        UNIVERSAL_ROUTER_ADDRESS(request.tokenInChainId),
+        UNIVERSAL_ROUTER_ADDRESS(request.tokenInChainId)
       );
     }
 
@@ -121,7 +121,7 @@ export class QuoteHandler extends APIGLambdaHandler<
           permit: bestQuote.getPermit(allowance),
         }
       ),
-    }
+    };
   }
 
   private emitQuoteRequestedMetrics(info: QuoteRequestInfo, requests: QuoteRequest[]) {
