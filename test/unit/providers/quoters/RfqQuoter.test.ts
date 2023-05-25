@@ -27,9 +27,26 @@ describe('RfqQuoter test', () => {
       });
     });
 
-    it('returns null if requested trade type is EXACT_OUTPUT', async () => {
+    it('returns EXACT_INPUT quote', async () => {
+      const quote = await quoter.quote(QUOTE_REQUEST_DL);
+      expect(quote).toMatchObject({
+        chainId: 1,
+        tokenIn: TOKEN_IN,
+        tokenOut: TOKEN_OUT,
+        amountInStart: BigNumber.from(AMOUNT_IN),
+        amountOutStart: BigNumber.from(AMOUNT_IN),
+      });
+    });
+
+    it('returns EXACT_OUTPUT quote', async () => {
       const quote = await quoter.quote(QUOTE_REQUEST_DL_EXACT_OUT);
-      expect(quote).toBeNull();
+      expect(quote).toMatchObject({
+        chainId: 1,
+        tokenIn: TOKEN_IN,
+        tokenOut: TOKEN_OUT,
+        amountInStart: BigNumber.from(AMOUNT_IN),
+        amountOutStart: BigNumber.from(AMOUNT_IN),
+      });
     });
 
     it('returns null if rfq POST times out', async () => {
@@ -52,11 +69,6 @@ describe('RfqQuoter test', () => {
         nonce: '124',
       });
     });
-  });
-
-  it('returns null if requested trade type is EXACT_OUTPUT', async () => {
-    const quote = await quoter.quote(QUOTE_REQUEST_DL_EXACT_OUT);
-    expect(quote).toBeNull();
   });
 
   it('gracefully handles GET nonce error', async () => {
