@@ -8,7 +8,7 @@ describe('Permit2Fetcher Unit Tests', () => {
     describe('constructor', () => {
         it('gets initialized with correct contract address and ABI', async () => {
             const rpcUrlMap = new Map()
-            rpcUrlMap.set(ChainId.MAINNET, 'https://mainnet.infura.io/v3/1234567890')
+            rpcUrlMap.set(ChainId.MAINNET, 'mainnet rpc url')
             const fetcher = new Permit2Fetcher(rpcUrlMap)
             expect(fetcher.permitAddress).toBe(PERMIT2_ADDRESS)
             expect(fetcher.permitAbi).toBe(PERMIT2_CONTRACT.abi)
