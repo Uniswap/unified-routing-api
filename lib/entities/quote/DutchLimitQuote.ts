@@ -147,6 +147,7 @@ export class DutchLimitQuote implements Quote {
   public toJSON(): QuoteJSON {
     return {
       ...this.toOrder().toJSON(),
+      encodedOrder: this.toOrder().serialize(),
       quoteId: this.quoteId,
       requestId: this.requestId,
     };

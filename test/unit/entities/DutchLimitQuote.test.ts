@@ -3,7 +3,7 @@ import * as _ from 'lodash'
 
 import { DutchLimitQuote } from '../../../lib/entities';
 import { CLASSIC_QUOTE_EXACT_IN_LARGE, DL_QUOTE_EXACT_IN_LARGE, createDutchLimitQuote } from '../../utils/fixtures';
-import { DL_PERMIT } from '../../constants';
+import { DL_PERMIT, DUTCH_LIMIT_ORDER_JSON } from '../../constants';
 
 describe('DutchLimitQuote', () => {
   // silent logger in tests
@@ -47,6 +47,15 @@ describe('DutchLimitQuote', () => {
       const expected = DL_PERMIT;
       expect(_.isEqual(JSON.stringify(result), JSON.stringify(expected))).toBe(true)
       jest.clearAllTimers();
+    })
+  })
+
+  describe('toJSON', () => {
+    it('Succeeds - Basic', () => {
+      const quote =  createDutchLimitQuote({ amountOut: '10000' }, 'EXACT_INPUT') as any;
+      quote.nonce = 1;
+      const result = quote.toJSON();
+      expect(_.isEqual(result, DUTCH_LIMIT_ORDER_JSON)).toBe(true)
     })
   })
 });
