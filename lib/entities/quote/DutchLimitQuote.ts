@@ -1,7 +1,8 @@
-import { DutchLimitOrderBuilder, DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
+import { DutchLimitOrder, DutchLimitOrderBuilder } from '@uniswap/gouda-sdk';
 import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber, ethers } from 'ethers';
 
+import { PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteJSON } from '.';
 import { DutchLimitRequest, QuoteRequestInfo } from '..';
@@ -145,13 +146,13 @@ export class DutchLimitQuote implements Quote {
 
   public toJSON(): QuoteJSON {
     return {
-      ...this.toOrder(),
+      ...this.toOrder().toJSON(),
       quoteId: this.quoteId,
       requestId: this.requestId,
     };
   }
 
-  public toOrder(): DutchLimitOrderInfoJSON {
+  public toOrder(): DutchLimitOrder {
     const orderBuilder = new DutchLimitOrderBuilder(this.chainId);
     const startTime = Math.floor(Date.now() / 1000);
     const nonce = this.nonce ?? this.generateRandomNonce();
@@ -179,9 +180,7 @@ export class DutchLimitQuote implements Quote {
       builder.exclusiveFiller(this.filler, BigNumber.from(this.request.config.exclusivityOverrideBps));
     }
 
-    const order = builder.build();
-
-    return order.toJSON();
+    return builder.build();
   }
 
   public toLog(): LogJSON {
@@ -204,6 +203,10 @@ export class DutchLimitQuote implements Quote {
       slippage: this.request.info.slippageTolerance ? parseFloat(this.request.info.slippageTolerance) : -1,
       createdAt: this.createdAt,
     };
+  }
+
+  getPermit(): PermitTransferFromData {
+    return this.toOrder().permitData();
   }
 
   private generateRandomNonce(): string {

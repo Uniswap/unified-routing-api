@@ -4,6 +4,7 @@ import { default as bunyan, default as Logger } from 'bunyan';
 import { MetricsLogger } from 'aws-embedded-metrics';
 import { RoutingType } from '../../constants';
 import { QuoteRequestBodyJSON } from '../../entities';
+import { TokenFetcher } from '../../fetchers/TokenFetcher';
 import { Quoter, RfqQuoter, RoutingApiQuoter } from '../../providers/quoters';
 import { setGlobalLogger } from '../../util/log';
 import { setGlobalMetrics } from '../../util/metrics';
@@ -16,6 +17,7 @@ export type QuoterByRoutingType = {
 
 export interface ContainerInjected {
   quoters: QuoterByRoutingType;
+  tokenFetcher: TokenFetcher;
 }
 
 export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void> {
@@ -36,6 +38,7 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
         [RoutingType.DUTCH_LIMIT]: new RfqQuoter(paramApiUrl, serviceUrl),
         [RoutingType.CLASSIC]: new RoutingApiQuoter(routingApiUrl),
       },
+      tokenFetcher: new TokenFetcher(),
     };
   }
 

@@ -9,6 +9,8 @@ export const TOKEN_IN = '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984';
 export const TOKEN_OUT = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 export const AMOUNT_IN = '1000000000000000000';
 export const FILLER = '0x0000000000000000000000000000000000000000';
+export const USDC_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
+export const USDC_ADDRESS_POLYGON = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
 
 export const DL_CONFIG = {
   routingType: RoutingType.DUTCH_LIMIT,
@@ -21,3 +23,5 @@ export const CLASSIC_CONFIG = {
   routingType: RoutingType.CLASSIC,
   protocols: ['V2', 'V3', 'MIXED'],
 };
+
+export const DL_PERMIT = {"domain":{"name":"Permit2","chainId":1,"verifyingContract":"0x000000000022d473030f116ddee9f6b43ac78ba3"},"types":{"PermitWitnessTransferFrom":[{"name":"permitted","type":"TokenPermissions"},{"name":"spender","type":"address"},{"name":"nonce","type":"uint256"},{"name":"deadline","type":"uint256"},{"name":"witness","type":"ExclusiveDutchLimitOrder"}],"TokenPermissions":[{"name":"token","type":"address"},{"name":"amount","type":"uint256"}],"ExclusiveDutchLimitOrder":[{"name":"info","type":"OrderInfo"},{"name":"startTime","type":"uint256"},{"name":"endTime","type":"uint256"},{"name":"exclusiveFiller","type":"address"},{"name":"exclusivityOverrideBps","type":"uint256"},{"name":"inputToken","type":"address"},{"name":"inputStartAmount","type":"uint256"},{"name":"inputEndAmount","type":"uint256"},{"name":"outputs","type":"DutchOutput[]"}],"OrderInfo":[{"name":"reactor","type":"address"},{"name":"offerer","type":"address"},{"name":"nonce","type":"uint256"},{"name":"deadline","type":"uint256"},{"name":"validationContract","type":"address"},{"name":"validationData","type":"bytes"}],"DutchOutput":[{"name":"token","type":"address"},{"name":"startAmount","type":"uint256"},{"name":"endAmount","type":"uint256"},{"name":"recipient","type":"address"}]},"values":{"permitted":{"token":"0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984","amount":{"type":"BigNumber","hex":"0x01"}},"spender":"0xbD7F9D0239f81C94b728d827a87b9864972661eC","nonce":{"type":"BigNumber","hex":"0x01"},"deadline":60,"witness":{"info":{"reactor":"0xbD7F9D0239f81C94b728d827a87b9864972661eC","offerer":"0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee","nonce":{"type":"BigNumber","hex":"0x01"},"deadline":60,"validationContract":"0x0000000000000000000000000000000000000000","validationData":"0x"},"startTime":0,"endTime":60,"exclusiveFiller":"0x0000000000000000000000000000000000000000","exclusivityOverrideBps":{"type":"BigNumber","hex":"0x0c"},"inputToken":"0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984","inputStartAmount":{"type":"BigNumber","hex":"0x01"},"inputEndAmount":{"type":"BigNumber","hex":"0x01"},"outputs":[{"token":"0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2","startAmount":{"type":"BigNumber","hex":"0x2710"},"endAmount":{"type":"BigNumber","hex":"0x26de"},"recipient":"0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"}]}}}
