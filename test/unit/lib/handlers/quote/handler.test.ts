@@ -294,6 +294,22 @@ describe('QuoteHandler', () => {
           expect(responseBody.errorCode).toBe('INTERNAL_ERROR');
       });
 
+      it('always returns encodedOrder in quote for DL', async () => {
+        const quoters = {
+          [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),
+        };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT])
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+
+        const response = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(
+          getEvent(QUOTE_REQUEST_BODY_MULTI),
+          {} as unknown as Context
+        );
+
+        const responseBody = JSON.parse(response.body)
+        const quote = responseBody.quote 
+        expect(quote.encodedOrder).not.toBe(null);
+      });
     });
 
     describe('logging test', () => {
