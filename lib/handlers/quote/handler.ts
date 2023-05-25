@@ -32,7 +32,8 @@ const BPS = 10000;
 // amount of price preference for dutch limit orders
 const DUTCH_LIMIT_PREFERENCE_BUFFER_BPS = 500;
 
-export interface QuoteResponseJSON {
+
+export interface SingleQuoteJSON {
   routing: string;
   quote: QuoteJSON;
   /**
@@ -41,6 +42,10 @@ export interface QuoteResponseJSON {
    * DUTCH_LIMIT quotes have mandatory permit (PermitTransferFromData) as the permit is the order as well as the signature transfer approval.
    */
   permitData: PermitSingleData | PermitTransferFromData | null;
+}
+
+export interface QuoteResponseJSON extends SingleQuoteJSON {
+  allQuotes: (SingleQuoteJSON | null)[];
 }
 
 export class QuoteHandler extends APIGLambdaHandler<
@@ -239,7 +244,7 @@ const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
   }
 };
 
-export function quoteToResponse(quote: Quote): QuoteResponseJSON {
+export function quoteToResponse(quote: Quote): SingleQuoteJSON {
   return {
     routing: quote.routingType,
     quote: quote.toJSON(),
