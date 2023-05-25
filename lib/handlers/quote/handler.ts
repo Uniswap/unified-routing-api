@@ -1,15 +1,16 @@
-import { TradeType } from '@uniswap/sdk-core';
 import Joi from 'joi';
 
+import { TradeType } from '@uniswap/sdk-core';
 import { Unit } from 'aws-embedded-metrics';
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
+
+import { PermitSingleData, PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { RoutingType } from '../../constants';
 import {
   ClassicQuote,
   parseQuoteContexts,
   parseQuoteRequests,
-  prepareQuoteRequests,
   Quote,
   QuoteContextManager,
   QuoteJSON,
@@ -34,6 +35,12 @@ const DUTCH_LIMIT_PREFERENCE_BUFFER_BPS = 500;
 export interface QuoteResponseJSON {
   routing: string;
   quote: QuoteJSON;
+  /**
+   * The value depends on whether the quote is CLASSIC or DUTCH_LIMIT.
+   * CLASSIC quotes have optional permit (PermitSingleData) as they user might have already approved the router.
+   * DUTCH_LIMIT quotes have mandatory permit (PermitTransferFromData) as the permit is the order as well as the signature transfer approval.
+   */
+  permitData: PermitSingleData | PermitTransferFromData | null;
 }
 
 export class QuoteHandler extends APIGLambdaHandler<
@@ -48,11 +55,10 @@ export class QuoteHandler extends APIGLambdaHandler<
   ): Promise<ErrorResponse | Response<QuoteResponseJSON>> {
     const {
       requestBody,
-      containerInjected: { quoters },
-      requestBody: { tokenInChainId, tokenOutChainId },
+      containerInjected: { quoters, tokenFetcher },
     } = params;
 
-    if (tokenInChainId != tokenOutChainId) {
+    if (requestBody.tokenInChainId != requestBody.tokenOutChainId) {
       throw new ValidationError(`Cannot request quotes for tokens on different chains`);
     }
 
@@ -61,8 +67,16 @@ export class QuoteHandler extends APIGLambdaHandler<
       requestId: uuidv4(),
     };
 
+    const tokenInAddress = await tokenFetcher.getTokenAddressFromList(request.tokenInChainId, request.tokenIn);
+    const tokenOutAddress = await tokenFetcher.getTokenAddressFromList(request.tokenOutChainId, request.tokenOut);
+    const requestWithTokenAddresses = {
+      ...request,
+      tokenIn: tokenInAddress,
+      tokenOut: tokenOutAddress,
+    };
+
     log.info({ requestBody: request }, 'request');
-    const { quoteRequests, quoteInfo } = parseQuoteRequests(await prepareQuoteRequests(request));
+    const { quoteRequests, quoteInfo } = parseQuoteRequests(requestWithTokenAddresses);
     const contextHandler = new QuoteContextManager(parseQuoteContexts(quoteRequests));
     const requests = contextHandler.getRequests();
     log.info({ requests }, 'requests');
@@ -93,6 +107,9 @@ export class QuoteHandler extends APIGLambdaHandler<
           // note the best quote is duplicated, but this allows callers
           // to easily map their original request configs to quotes by index
           allQuotes: resolvedQuotes.map((q) => (q ? quoteToResponse(q) : null)),
+        },
+        {
+          permitData: bestQuote.getPermit(),
         }
       ),
     };
@@ -226,5 +243,6 @@ export function quoteToResponse(quote: Quote): QuoteResponseJSON {
   return {
     routing: quote.routingType,
     quote: quote.toJSON(),
+    permitData: null,
   };
 }

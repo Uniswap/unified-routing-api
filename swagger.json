@@ -202,6 +202,16 @@
           },
           "quote": {
             "$ref": "#/components/schemas/Quote"
+          },
+          "permitData": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PermitData"
+              },
+              {
+                "nullable": true
+              }
+            ]
           }
         }
       },
@@ -471,6 +481,20 @@
             "items": {
               "$ref": "#/components/schemas/RoutingConfig"
             }
+          }
+        }
+      },
+      "PermitData": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "object"
+          },
+          "values": {
+            "type": "object"
+          },
+          "types": {
+            "type": "object"
           }
         }
       }

@@ -1,6 +1,7 @@
 import { DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
 import { BigNumber } from 'ethers';
 
+import { PermitSingleData, PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { QuoteRequest } from '..';
 import { RoutingType } from '../../constants';
 import { ClassicQuoteDataJSON } from './ClassicQuote';
@@ -8,7 +9,7 @@ import { ClassicQuoteDataJSON } from './ClassicQuote';
 export * from './ClassicQuote';
 export * from './DutchLimitQuote';
 
-export type QuoteJSON = (DutchLimitOrderInfoJSON & { quoteId: string }) | ClassicQuoteDataJSON;
+export type QuoteJSON = (DutchLimitOrderInfoJSON & { quoteId: string; requestId: string }) | ClassicQuoteDataJSON;
 
 export type LogJSON = {
   quoteId: string;
@@ -38,4 +39,5 @@ export interface Quote {
   toJSON(): QuoteJSON;
   request: QuoteRequest;
   toLog(): LogJSON;
+  getPermit(): PermitSingleData | PermitTransferFromData | null;
 }

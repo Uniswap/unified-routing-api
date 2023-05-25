@@ -1,7 +1,9 @@
 import Logger from 'bunyan';
+import * as _ from 'lodash'
 
 import { DutchLimitQuote } from '../../../lib/entities';
-import { CLASSIC_QUOTE_EXACT_IN_LARGE, DL_QUOTE_EXACT_IN_LARGE } from '../../utils/fixtures';
+import { CLASSIC_QUOTE_EXACT_IN_LARGE, DL_QUOTE_EXACT_IN_LARGE, createDutchLimitQuote } from '../../utils/fixtures';
+import { DL_PERMIT } from '../../constants'
 
 describe('DutchLimitQuote', () => {
   // silent logger in tests
@@ -9,7 +11,7 @@ describe('DutchLimitQuote', () => {
   logger.level(Logger.FATAL);
 
   describe('Reparameterize', () => {
-    it('Does ont reparameterize if classic is not defined', async () => {
+    it('Does not reparameterize if classic is not defined', async () => {
       const reparameterized = DutchLimitQuote.reparameterize(DL_QUOTE_EXACT_IN_LARGE, undefined);
       expect(reparameterized).toMatchObject(DL_QUOTE_EXACT_IN_LARGE);
     });
@@ -32,4 +34,19 @@ describe('DutchLimitQuote', () => {
       expect(reparameterized.amountOutEnd).toEqual(amountOutEnd);
     });
   });
+
+  describe('getPermit', () => {
+    it('Succeeds - Basic', () => {
+      jest.useFakeTimers({
+        now: 0
+      })
+      const quote =  createDutchLimitQuote({ amountOut: '10000' }, 'EXACT_INPUT') as any;
+      quote.nonce = 1;
+      const dlQuote = quote as DutchLimitQuote;
+      const result = dlQuote.getPermit();
+      const expected = DL_PERMIT;
+      expect(_.isEqual(JSON.stringify(result), JSON.stringify(expected))).toBe(true)
+      jest.clearAllTimers();
+    })
+  })
 });

@@ -45,6 +45,7 @@ export type V3PoolInRouteJSON = {
 };
 
 export type ClassicQuoteDataJSON = {
+  requestId: string;
   quoteId: string;
   amount: string;
   amountDecimals: string;
@@ -86,6 +87,7 @@ export class ClassicQuote implements Quote {
     return {
       ...this.quoteData,
       quoteId: this.quoteId,
+      requestId: this.request.info.requestId,
     };
   }
 
@@ -109,6 +111,10 @@ export class ClassicQuote implements Quote {
       createdAt: this.createdAt,
       gasPriceWei: this.gasPriceWei,
     };
+  }
+
+  getPermit(): null {
+    return null;
   }
 
   public get amountOut(): BigNumber {
