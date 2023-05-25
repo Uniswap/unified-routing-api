@@ -202,9 +202,9 @@ describe('QuoteHandler', () => {
         const responseBody = JSON.parse(response.body)
         const permitData = responseBody.permitData;
         const quote = responseBody.quote as DutchLimitOrderInfoJSON
-        expect(permit.values.permitted.token).toBe(quote.input.token);
-        expect(permit.values.witness.inputToken).toBe(quote.input.token);
-        expect(permit.values.witness.outputs[0].token).toBe(quote.outputs[0].token);
+        expect(permitData.values.permitted.token).toBe(quote.input.token);
+        expect(permitData.values.witness.inputToken).toBe(quote.input.token);
+        expect(permitData.values.witness.outputs[0].token).toBe(quote.outputs[0].token);
         expect(permit2Fetcher.fetchAllowance).not.toHaveBeenCalled();
       });
 
@@ -227,7 +227,7 @@ describe('QuoteHandler', () => {
         );
         const responseBody = JSON.parse(response.body)
 
-        expect(_.isEqual(responseBody.permit, PERMIT2)).toBe(true)
+        expect(_.isEqual(responseBody.permitData, PERMIT2)).toBe(true)
         expect(permit2Fetcher.fetchAllowance).toHaveBeenCalledWith(OFFERER, TOKEN_IN, UNIVERSAL_ROUTER_ADDRESS(1));
         jest.clearAllTimers();
       });
@@ -248,7 +248,7 @@ describe('QuoteHandler', () => {
         );
         const responseBody = JSON.parse(response.body)
 
-        expect(_.isEqual(responseBody.permit, null)).toBe(true)
+        expect(_.isEqual(responseBody.permitData, null)).toBe(true)
         expect(permit2Fetcher.fetchAllowance).toHaveBeenCalledWith(OFFERER, TOKEN_IN, UNIVERSAL_ROUTER_ADDRESS(1));
         jest.clearAllTimers();
       });
@@ -272,7 +272,7 @@ describe('QuoteHandler', () => {
         );
         const responseBody = JSON.parse(response.body)
 
-        expect(_.isEqual(responseBody.permit, null)).toBe(true)
+        expect(_.isEqual(responseBody.permitData, null)).toBe(true)
         expect(permit2Fetcher.fetchAllowance).not.toHaveBeenCalled();
         jest.clearAllTimers();
       });
