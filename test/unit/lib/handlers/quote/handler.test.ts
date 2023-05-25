@@ -228,7 +228,7 @@ describe('QuoteHandler', () => {
         const responseBody = JSON.parse(response.body)
 
         expect(_.isEqual(responseBody.permitData, PERMIT2)).toBe(true)
-        expect(permit2Fetcher.fetchAllowance).toHaveBeenCalledWith(OFFERER, TOKEN_IN, UNIVERSAL_ROUTER_ADDRESS(1));
+        expect(permit2Fetcher.fetchAllowance).toHaveBeenCalledWith(QUOTE_REQUEST_BODY_MULTI.tokenInChainId ,OFFERER, TOKEN_IN, UNIVERSAL_ROUTER_ADDRESS(1));
         jest.clearAllTimers();
       });
 
@@ -249,7 +249,7 @@ describe('QuoteHandler', () => {
         const responseBody = JSON.parse(response.body)
 
         expect(_.isEqual(responseBody.permitData, null)).toBe(true)
-        expect(permit2Fetcher.fetchAllowance).toHaveBeenCalledWith(OFFERER, TOKEN_IN, UNIVERSAL_ROUTER_ADDRESS(1));
+        expect(permit2Fetcher.fetchAllowance).toHaveBeenCalledWith(QUOTE_REQUEST_BODY_MULTI.tokenInChainId , OFFERER, TOKEN_IN, UNIVERSAL_ROUTER_ADDRESS(1));
         jest.clearAllTimers();
       });
 

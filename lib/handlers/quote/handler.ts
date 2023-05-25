@@ -101,6 +101,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     let allowance = null;
     if (bestQuote.routingType === RoutingType.CLASSIC && requestBody.offerer) {
       allowance = await permit2Fetcher.fetchAllowance(
+        requestBody.tokenInChainId,
         requestBody.offerer,
         request.tokenIn,
         UNIVERSAL_ROUTER_ADDRESS(request.tokenInChainId)
