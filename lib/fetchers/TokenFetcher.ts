@@ -10,10 +10,11 @@ import { ethers } from 'ethers';
 import NodeCache from 'node-cache';
 import { ValidationError } from '../util/errors';
 
+type ITokenFetcherProvider = ITokenListProvider & ITokenProvider;
 export class TokenFetcher {
-  private _tokenListProviders: Map<ChainId, ITokenProvider & ITokenListProvider> = new Map();
+  private _tokenListProviders: Map<ChainId, ITokenFetcherProvider> = new Map();
 
-  private createTokenListProvider = (chainId: ChainId): ITokenProvider & ITokenListProvider => {
+  private createTokenListProvider = (chainId: ChainId): ITokenFetcherProvider => {
     return new CachingTokenListProvider(chainId, DEFAULT_TOKEN_LIST, new NodeJSCache(new NodeCache()));
   };
 
@@ -21,7 +22,7 @@ export class TokenFetcher {
    * Gets the token list provider for the provided chainId. Creates a new one if it doesn't exist.
    * Allows us to cache the token list provider for each chainId for the lifetime of the lambda.
    */
-  private getTokenListProvider(chainId: ChainId): ITokenProvider & ITokenListProvider {
+  private getTokenListProvider(chainId: ChainId): ITokenFetcherProvider {
     let tokenListProvider = this._tokenListProviders.get(chainId);
     if (tokenListProvider === undefined) {
       tokenListProvider = this.createTokenListProvider(chainId);

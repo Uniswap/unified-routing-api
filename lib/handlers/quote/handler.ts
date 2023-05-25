@@ -35,12 +35,12 @@ const DUTCH_LIMIT_PREFERENCE_BUFFER_BPS = 500;
 export interface QuoteResponseJSON {
   routing: string;
   quote: QuoteJSON;
-   /** 
-    * The value depends on weather the quote is CLASSIC or DUTCH_LIMIT.
-    * CLASSIC quotes have optional permit (PermitSingleData) as they user might have already approved the router.
-    * DUTCH_LIMIT quotes have mandatory permit (PermitTransferFromData) as the permit is the order as well as the signature transfer approval.
-    */
-  permit: PermitSingleData | PermitTransferFromData | null;
+  /**
+   * The value depends on whether the quote is CLASSIC or DUTCH_LIMIT.
+   * CLASSIC quotes have optional permit (PermitSingleData) as they user might have already approved the router.
+   * DUTCH_LIMIT quotes have mandatory permit (PermitTransferFromData) as the permit is the order as well as the signature transfer approval.
+   */
+  permitData: PermitSingleData | PermitTransferFromData | null;
 }
 
 export class QuoteHandler extends APIGLambdaHandler<
@@ -109,7 +109,7 @@ export class QuoteHandler extends APIGLambdaHandler<
           allQuotes: resolvedQuotes.map((q) => (q ? quoteToResponse(q) : null)),
         },
         {
-          permit: bestQuote.getPermit(),
+          permitData: bestQuote.getPermit(),
         }
       ),
     };
@@ -243,6 +243,6 @@ export function quoteToResponse(quote: Quote): QuoteResponseJSON {
   return {
     routing: quote.routingType,
     quote: quote.toJSON(),
-    permit: null
+    permitData: null,
   };
 }

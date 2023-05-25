@@ -170,11 +170,11 @@ describe('QuoteHandler', () => {
         );
 
         const responseBody = JSON.parse(response.body)
-        const permit = responseBody.permit;
+        const permitData = responseBody.permitData;
         const quote = responseBody.quote as DutchLimitOrderInfoJSON
-        expect(permit.values.permitted.token).toBe(quote.input.token);
-        expect(permit.values.witness.inputToken).toBe(quote.input.token);
-        expect(permit.values.witness.outputs[0].token).toBe(quote.outputs[0].token);
+        expect(permitData.values.permitted.token).toBe(quote.input.token);
+        expect(permitData.values.witness.inputToken).toBe(quote.input.token);
+        expect(permitData.values.witness.outputs[0].token).toBe(quote.outputs[0].token);
       });
 
       it('never returns permit for Classic', async () => {
@@ -187,8 +187,8 @@ describe('QuoteHandler', () => {
           {} as unknown as Context
         );
 
-        const permit = JSON.parse(res.body).permit;
-        expect(permit).toBe(null);
+        const permitData = JSON.parse(res.body).permitData;
+        expect(permitData).toBe(null);
       });
 
       it('fails if symbol does not exist', async () => {

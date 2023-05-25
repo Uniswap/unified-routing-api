@@ -2,6 +2,7 @@ import { DutchLimitOrder, DutchLimitOrderBuilder } from '@uniswap/gouda-sdk';
 import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber, ethers } from 'ethers';
 
+import { PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteJSON } from '.';
 import { DutchLimitRequest, QuoteRequestInfo } from '..';
@@ -203,7 +204,7 @@ export class DutchLimitQuote implements Quote {
     };
   }
 
-  public getPermit() {
+  getPermit(): PermitTransferFromData {
     return this.toOrder().permitData();
   }
 
