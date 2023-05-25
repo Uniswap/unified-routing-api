@@ -34,4 +34,5 @@ export const PERMIT_DETAILS = {
   amount: AMOUNT_IN,
   expiration: 2592000,
   nonce: 0,
+  token: TOKEN_IN,
 }

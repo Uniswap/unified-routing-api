@@ -19,7 +19,7 @@ export class Permit2Fetcher {
     ownerAddress: string,
     tokenAddress: string,
     spenderAddress: string
-  ): Promise<Omit<PermitDetails, 'token'>> {
+  ): Promise<PermitDetails> {
     const rpcUrl = this.rpcUrlMap.get(chainId);
     const rpcProvider = new ethers.providers.JsonRpcProvider(rpcUrl);
     const allowance = await new ethers.Contract(this.permitAddress, this.permitAbi, rpcProvider).allowance(
