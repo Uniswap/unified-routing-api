@@ -1,9 +1,9 @@
 import Logger from 'bunyan';
-import * as _ from 'lodash'
+import * as _ from 'lodash';
 
 import { DutchLimitQuote } from '../../../lib/entities';
-import { CLASSIC_QUOTE_EXACT_IN_LARGE, DL_QUOTE_EXACT_IN_LARGE, createDutchLimitQuote } from '../../utils/fixtures';
-import { DL_PERMIT } from '../../constants'
+import { DL_PERMIT } from '../../constants';
+import { CLASSIC_QUOTE_EXACT_IN_LARGE, createDutchLimitQuote, DL_QUOTE_EXACT_IN_LARGE } from '../../utils/fixtures';
 
 describe('DutchLimitQuote', () => {
   // silent logger in tests
@@ -38,15 +38,15 @@ describe('DutchLimitQuote', () => {
   describe('getPermit', () => {
     it('Succeeds - Basic', () => {
       jest.useFakeTimers({
-        now: 0
-      })
-      const quote =  createDutchLimitQuote({ amountOut: '10000' }, 'EXACT_INPUT') as any;
+        now: 0,
+      });
+      const quote = createDutchLimitQuote({ amountOut: '10000' }, 'EXACT_INPUT') as any;
       quote.nonce = 1;
       const dlQuote = quote as DutchLimitQuote;
       const result = dlQuote.getPermit();
       const expected = DL_PERMIT;
-      expect(_.isEqual(JSON.stringify(result), JSON.stringify(expected))).toBe(true)
+      expect(_.isEqual(JSON.stringify(result), JSON.stringify(expected))).toBe(true);
       jest.clearAllTimers();
-    })
-  })
+    });
+  });
 });

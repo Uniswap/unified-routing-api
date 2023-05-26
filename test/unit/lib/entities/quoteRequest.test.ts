@@ -23,7 +23,7 @@ const CLASSIC_CONFIG_JSON: ClassicConfigJSON = {
   gasPriceWei: '1000000000',
 };
 
-const MOCK_REQUEST_JSON: QuoteRequestBodyJSON = {
+const EXACT_INPUT_MOCK_REQUEST_JSON: QuoteRequestBodyJSON = {
   requestId: 'requestId',
   tokenInChainId: CHAIN_IN_ID,
   tokenOutChainId: CHAIN_OUT_ID,
@@ -45,42 +45,57 @@ const DUPLICATE_REQUEST_JSON = {
   configs: [MOCK_DL_CONFIG_JSON, CLASSIC_CONFIG_JSON, MOCK_DL_CONFIG_JSON],
 };
 
+const EXACT_OUTPUT_MOCK_REQUEST_JSON: QuoteRequestBodyJSON = {
+  requestId: 'requestId',
+  tokenInChainId: CHAIN_IN_ID,
+  tokenOutChainId: CHAIN_OUT_ID,
+  tokenIn: TOKEN_IN,
+  tokenOut: TOKEN_OUT,
+  amount: AMOUNT_IN,
+  type: 'EXACT_OUTPUT',
+  configs: [MOCK_DL_CONFIG_JSON, CLASSIC_CONFIG_JSON],
+};
+
 describe('QuoteRequest', () => {
-  it('parses dutch limit order config properly', () => {
-    const { quoteRequests: requests } = parseQuoteRequests(MOCK_REQUEST_JSON);
-    const info = requests[0].info;
+  for (const request of [EXACT_INPUT_MOCK_REQUEST_JSON, EXACT_OUTPUT_MOCK_REQUEST_JSON]) {
+    describe(request.type, () => {
+      it('parses exactInput dutch limit order config properly', () => {
+        const { quoteRequests: requests } = parseQuoteRequests(request);
+        const info = requests[0].info;
 
-    const config = DutchLimitRequest.fromRequestBody(info, MOCK_DL_CONFIG_JSON);
-    expect(config.toJSON()).toEqual(MOCK_DL_CONFIG_JSON);
-  });
+        const config = DutchLimitRequest.fromRequestBody(info, MOCK_DL_CONFIG_JSON);
+        expect(config.toJSON()).toEqual(MOCK_DL_CONFIG_JSON);
+      });
 
-  it('parses basic classic quote order config properly', () => {
-    const { quoteRequests: requests } = parseQuoteRequests(MOCK_REQUEST_JSON);
-    const info = requests[0].info;
+      it('parses exactOutput dutch limit order config properly', () => {
+        const { quoteRequests: requests } = parseQuoteRequests(request);
+        const info = requests[0].info;
 
-    const config = ClassicRequest.fromRequestBody(info, CLASSIC_CONFIG_JSON);
-    expect(config.toJSON()).toEqual(CLASSIC_CONFIG_JSON);
-  });
+        const config = DutchLimitRequest.fromRequestBody(info, MOCK_DL_CONFIG_JSON);
+        expect(config.toJSON()).toEqual(MOCK_DL_CONFIG_JSON);
+      });
 
-  it('parses a complete quote request properly', () => {
-    const { quoteRequests: requests } = parseQuoteRequests(MOCK_REQUEST_JSON);
+      it('parses basic classic quote order config properly', () => {
+        const { quoteRequests: requests } = parseQuoteRequests(request);
+        const info = requests[0].info;
 
-    expect(requests.length).toEqual(2);
-    expect(requests[0].toJSON()).toMatchObject(MOCK_DL_CONFIG_JSON);
-    expect(requests[1].toJSON()).toMatchObject(CLASSIC_CONFIG_JSON);
-  });
+        const config = ClassicRequest.fromRequestBody(info, CLASSIC_CONFIG_JSON);
+        expect(config.toJSON()).toEqual(CLASSIC_CONFIG_JSON);
+      });
 
-  it('throws if more than one of the same type', () => {
-    let threw = false;
-    try {
-      parseQuoteRequests(DUPLICATE_REQUEST_JSON);
-    } catch (e) {
-      threw = true;
-      expect(e instanceof ValidationError).toBeTruthy();
-      if (e instanceof ValidationError) {
-        expect(e.message).toEqual('Duplicate routing type: DUTCH_LIMIT');
-      }
-    }
-    expect(threw).toBeTruthy();
-  });
+      it('throws if more than one of the same type', () => {
+        let threw = false;
+        try {
+          parseQuoteRequests(DUPLICATE_REQUEST_JSON);
+        } catch (e) {
+          threw = true;
+          expect(e instanceof ValidationError).toBeTruthy();
+          if (e instanceof ValidationError) {
+            expect(e.message).toEqual('Duplicate routing type: DUTCH_LIMIT');
+          }
+        }
+        expect(threw).toBeTruthy();
+      });
+    });
+  }
 });
