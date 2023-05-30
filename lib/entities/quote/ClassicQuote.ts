@@ -115,7 +115,7 @@ export class ClassicQuote implements Quote {
     };
   }
 
-  getPermit(currentPermit: Omit<PermitDetails, 'token'> | null): PermitSingleData | null {
+  getPermit(currentPermit: PermitDetails | null): PermitSingleData | null {
     if (
       !this.request.info.offerer ||
       (currentPermit &&

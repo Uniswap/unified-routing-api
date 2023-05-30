@@ -21,10 +21,6 @@ export class RfqQuoter implements Quoter {
       log.error(`Invalid routing config type: ${request.routingType}`);
       return null;
     }
-    if (request.info.type === TradeType.EXACT_OUTPUT) {
-      log.error(`Invalid trade type: ${request.info.type}`);
-      return null;
-    }
 
     const offerer = request.config.offerer;
     const requests = [

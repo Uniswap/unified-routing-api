@@ -158,7 +158,7 @@ describe('quoteGouda', function () {
       parseAmount('8000000', USDC_MAINNET),
       parseAmount('5000000', USDT_MAINNET),
       parseAmount('10', WBTC_MAINNET),
-      parseAmount('1000', UNI_MAINNET),
+      parseAmount('5000', UNI_MAINNET),
       parseAmount('4000', WETH9[1]),
       parseAmount('5000000', DAI_MAINNET),
     ]);
@@ -167,14 +167,14 @@ describe('quoteGouda', function () {
       parseAmount('8000000', USDC_MAINNET),
       parseAmount('5000000', USDT_MAINNET),
       parseAmount('10', WBTC_MAINNET),
-      parseAmount('1000', UNI_MAINNET),
+      parseAmount('5000', UNI_MAINNET),
       parseAmount('4000', WETH9[1]),
       parseAmount('5000000', DAI_MAINNET),
     ]);
   });
 
   // TODO: add exactOutput when we support it
-  for (const type of ['EXACT_INPUT']) {
+  for (const type of ['EXACT_INPUT', 'EXACT_OUTPUT']) {
     describe(`${ID_TO_NETWORK_NAME(1)} ${type} 2xx`, () => {
       describe(`+ Execute Swap`, () => {
         it(`stable -> stable, tiny trade should be filterd out due to gas`, async () => {
@@ -234,6 +234,8 @@ describe('quoteGouda', function () {
           expect(order.info.outputs.length).to.equal(1);
           expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.greaterThan(9000000000);
           expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.lessThan(11000000000);
+          expect(parseInt(order.info.input.startAmount.toString())).to.be.greaterThan(9000000000);
+          expect(parseInt(order.info.input.startAmount.toString())).to.be.lessThan(11000000000);
 
           const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
             order,
@@ -241,12 +243,21 @@ describe('quoteGouda', function () {
             USDT_MAINNET
           );
 
-          expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('10000');
-          checkQuoteToken(
-            tokenOutBefore,
-            tokenOutAfter,
-            CurrencyAmount.fromRawAmount(USDT_MAINNET, order.info.outputs[0].startAmount.toString())
-          );
+          if (type === 'EXACT_INPUT') {
+            expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('10000');
+            checkQuoteToken(
+              tokenOutBefore,
+              tokenOutAfter,
+              CurrencyAmount.fromRawAmount(USDT_MAINNET, order.info.outputs[0].startAmount.toString())
+            );
+          } else {
+            expect(tokenOutAfter.subtract(tokenOutBefore).toExact()).to.equal('10000');
+            checkQuoteToken(
+              tokenInBefore,
+              tokenInAfter,
+              CurrencyAmount.fromRawAmount(USDC_MAINNET, order.info.input.startAmount.toString())
+            );
+          }
         });
 
         it(`stable -> stable by name, tiny trade should be filtered out due to gas`, async () => {
@@ -308,6 +319,8 @@ describe('quoteGouda', function () {
           expect(order.info.outputs.length).to.equal(1);
           expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.greaterThan(9000000000);
           expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.lessThan(11000000000);
+          expect(parseInt(order.info.input.startAmount.toString())).to.be.greaterThan(9000000000);
+          expect(parseInt(order.info.input.startAmount.toString())).to.be.lessThan(11000000000);
 
           const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
             order,
@@ -315,12 +328,21 @@ describe('quoteGouda', function () {
             USDT_MAINNET
           );
 
-          expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('10000');
-          checkQuoteToken(
-            tokenOutBefore,
-            tokenOutAfter,
-            CurrencyAmount.fromRawAmount(USDT_MAINNET, order.info.outputs[0].startAmount.toString())
-          );
+          if (type === 'EXACT_INPUT') {
+            expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('10000');
+            checkQuoteToken(
+              tokenOutBefore,
+              tokenOutAfter,
+              CurrencyAmount.fromRawAmount(USDT_MAINNET, order.info.outputs[0].startAmount.toString())
+            );
+          } else {
+            expect(tokenOutAfter.subtract(tokenOutBefore).toExact()).to.equal('10000');
+            checkQuoteToken(
+              tokenInBefore,
+              tokenInAfter,
+              CurrencyAmount.fromRawAmount(USDC_MAINNET, order.info.input.startAmount.toString())
+            );
+          }
         });
 
         it(`stable -> large cap, large trade should return valid quote`, async () => {
@@ -355,7 +377,7 @@ describe('quoteGouda', function () {
               tokenInChainId: 1,
               tokenOutChainId: 1,
               amount: amount,
-              type: 'exactIn',
+              type: type === 'EXACT_INPUT' ? 'exactIn' : 'exactOut',
               recipient: alice.address,
               slippageTolerance: SLIPPAGE,
               deadline: '360',
@@ -369,16 +391,28 @@ describe('quoteGouda', function () {
           expect(status).to.equal(200);
           const routingQuote = routingResponse.data.quoteGasAdjusted;
           // account for gas and slippage
-          const adjustedAmountOutClassic = BigNumber.from(routingQuote).mul(90).div(100);
-
           expect(order.info.offerer).to.equal(alice.address);
           expect(order.info.outputs.length).to.equal(1);
-          expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.gte(
-            parseInt(adjustedAmountOutClassic.toString())
-          );
-          expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.lt(
-            parseInt(BigNumber.from(adjustedAmountOutClassic).mul(2).toString())
-          );
+          if (type === 'EXACT_INPUT') {
+            const adjustedAmountOutClassic = BigNumber.from(routingQuote).mul(90).div(100);
+
+            expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.gte(
+              parseInt(adjustedAmountOutClassic.toString())
+            );
+            expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.lt(
+              parseInt(BigNumber.from(adjustedAmountOutClassic).mul(2).toString())
+            );
+          } else {
+            const adjustedAmountInClassic = BigNumber.from(routingQuote).mul(110).div(100);
+
+            expect(parseInt(order.info.input.startAmount.toString())).to.be.lt(
+              parseInt(adjustedAmountInClassic.toString())
+            );
+            expect(parseInt(order.info.input.startAmount.toString())).to.be.gte(
+              parseInt(BigNumber.from(adjustedAmountInClassic).div(2).toString())
+            );
+
+          }
 
           const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
             order,
@@ -386,12 +420,21 @@ describe('quoteGouda', function () {
             UNI_MAINNET
           );
 
-          expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('1000');
-          checkQuoteToken(
-            tokenOutBefore,
-            tokenOutAfter,
-            CurrencyAmount.fromRawAmount(UNI_MAINNET, order.info.outputs[0].startAmount.toString())
-          );
+          if (type === 'EXACT_INPUT') {
+            expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('1000');
+            checkQuoteToken(
+              tokenOutBefore,
+              tokenOutAfter,
+              CurrencyAmount.fromRawAmount(UNI_MAINNET, order.info.outputs[0].startAmount.toString())
+            );
+          } else {
+            expect(tokenOutAfter.subtract(tokenOutBefore).toExact()).to.equal('1000');
+            checkQuoteToken(
+              tokenInBefore,
+              tokenInAfter,
+              CurrencyAmount.fromRawAmount(USDC_MAINNET, order.info.input.startAmount.toString())
+            );
+          }
         });
 
         it(`stable -> no liq token; should return no quote`, async () => {

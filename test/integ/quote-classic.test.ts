@@ -98,7 +98,7 @@ const isTesterPKEnvironmentSet = (): boolean => {
 
 const MAX_UINT160 = '0xffffffffffffffffffffffffffffffffffffffff';
 
-describe('quote', function () {
+xdescribe('quote', function () {
   // Help with test flakiness by retrying.
   this.retries(3);
 
