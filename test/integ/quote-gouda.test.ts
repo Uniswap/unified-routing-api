@@ -158,7 +158,7 @@ describe('quoteGouda', function () {
       parseAmount('8000000', USDC_MAINNET),
       parseAmount('5000000', USDT_MAINNET),
       parseAmount('10', WBTC_MAINNET),
-      parseAmount('1000', UNI_MAINNET),
+      parseAmount('5000', UNI_MAINNET),
       parseAmount('4000', WETH9[1]),
       parseAmount('5000000', DAI_MAINNET),
     ]);
@@ -167,7 +167,7 @@ describe('quoteGouda', function () {
       parseAmount('8000000', USDC_MAINNET),
       parseAmount('5000000', USDT_MAINNET),
       parseAmount('10', WBTC_MAINNET),
-      parseAmount('1000', UNI_MAINNET),
+      parseAmount('5000', UNI_MAINNET),
       parseAmount('4000', WETH9[1]),
       parseAmount('5000000', DAI_MAINNET),
     ]);
@@ -345,7 +345,7 @@ describe('quoteGouda', function () {
           }
         });
 
-        it.only(`stable -> large cap, large trade should return valid quote`, async () => {
+        it(`stable -> large cap, large trade should return valid quote`, async () => {
           const amount = await getAmount(1, type, 'USDC', 'UNI', '1000');
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',

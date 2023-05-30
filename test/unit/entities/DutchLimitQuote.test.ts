@@ -2,7 +2,7 @@ import Logger from 'bunyan';
 import * as _ from 'lodash';
 
 import { DutchLimitQuote } from '../../../lib/entities';
-import { CLASSIC_QUOTE_EXACT_IN_LARGE, createDutchLimitQuote, DL_QUOTE_EXACT_IN_LARGE } from '../../utils/fixtures';
+import { DL_QUOTE_EXACT_OUT_LARGE, CLASSIC_QUOTE_EXACT_OUT_LARGE, createDutchLimitQuote, DL_QUOTE_EXACT_IN_LARGE, CLASSIC_QUOTE_EXACT_IN_LARGE } from '../../utils/fixtures';
 import { DL_PERMIT } from '../../constants';
 
 describe('DutchLimitQuote', () => {
@@ -26,6 +26,24 @@ describe('DutchLimitQuote', () => {
         DutchLimitQuote.applyGasAdjustment(CLASSIC_QUOTE_EXACT_IN_LARGE);
       const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchLimitQuote.calculateEndAmountFromSlippage(
         DL_QUOTE_EXACT_IN_LARGE.request.info,
+        amountInClassic,
+        amountOutClassic
+      );
+
+      expect(reparameterized.amountInEnd).toEqual(amountInEnd);
+      expect(reparameterized.amountOutEnd).toEqual(amountOutEnd);
+    });
+
+    it('reparameterizes with classic quote for end exactOutput', async () => {
+      const reparameterized = DutchLimitQuote.reparameterize(DL_QUOTE_EXACT_OUT_LARGE, CLASSIC_QUOTE_EXACT_OUT_LARGE);
+      expect(reparameterized.request).toMatchObject(DL_QUOTE_EXACT_OUT_LARGE.request);
+      expect(reparameterized.amountInStart).toEqual(DL_QUOTE_EXACT_OUT_LARGE.amountInStart);
+      expect(reparameterized.amountOutStart).toEqual(DL_QUOTE_EXACT_OUT_LARGE.amountOutStart);
+
+      const { amountIn: amountInClassic, amountOut: amountOutClassic } =
+        DutchLimitQuote.applyGasAdjustment(CLASSIC_QUOTE_EXACT_OUT_LARGE);
+      const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchLimitQuote.calculateEndAmountFromSlippage(
+        DL_QUOTE_EXACT_OUT_LARGE.request.info,
         amountInClassic,
         amountOutClassic
       );
