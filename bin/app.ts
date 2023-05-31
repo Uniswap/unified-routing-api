@@ -102,15 +102,13 @@ export class APIPipeline extends Stack {
 
     const jsonRpcProvidersSecret = sm.Secret.fromSecretAttributes(this, 'RPCProviderUrls', {
       // Infura RPC urls
-      secretCompleteArn:
-        'arn:aws:secretsmanager:us-east-2:644039819003:secret:routing-api-rpc-urls-json-primary-ixS8mw',
+      secretCompleteArn: 'arn:aws:secretsmanager:us-east-2:644039819003:secret:gouda-service-rpc-urls-2-9spgjc',
     })
 
     const jsonRpcProviders = {} as { [chainKey: string]: string }
     SUPPORTED_CHAINS[RoutingType.CLASSIC].forEach((chainId: ChainId) => {
-      const secretKey = `WEB3_RPC_${chainId}`
       const mapKey = `RPC_${chainId}`
-      jsonRpcProviders[mapKey] = jsonRpcProvidersSecret.secretValueFromJson(secretKey).toString()
+      jsonRpcProviders[mapKey] = jsonRpcProvidersSecret.secretValueFromJson(mapKey).toString()
     })
 
     // Beta us-east-2

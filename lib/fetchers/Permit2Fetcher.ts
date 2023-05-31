@@ -7,11 +7,13 @@ export class Permit2Fetcher {
   public readonly permitAddress: string;
   public readonly permitAbi: ethers.ContractInterface;
   private readonly rpcUrlMap: Map<ChainId, string>;
+  private readonly contract: ethers.Contract;
 
   constructor(rpcUrlMap: Map<ChainId, string>) {
     this.rpcUrlMap = rpcUrlMap;
     this.permitAddress = PERMIT2_ADDRESS;
     this.permitAbi = PERMIT2_CONTRACT.abi;
+    this.contract = new ethers.Contract(this.permitAddress, this.permitAbi);
   }
 
   public async fetchAllowance(
@@ -22,11 +24,7 @@ export class Permit2Fetcher {
   ): Promise<PermitDetails> {
     const rpcUrl = this.rpcUrlMap.get(chainId);
     const rpcProvider = new ethers.providers.JsonRpcProvider(rpcUrl);
-    const allowance = await new ethers.Contract(this.permitAddress, this.permitAbi, rpcProvider).allowance(
-      ownerAddress,
-      tokenAddress,
-      spenderAddress
-    );
+    const allowance = await this.contract.connect(rpcProvider).allowance(ownerAddress, tokenAddress, spenderAddress);
 
     return allowance;
   }

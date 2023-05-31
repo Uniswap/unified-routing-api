@@ -104,7 +104,7 @@ describe('QuoteHandler', () => {
       }
       return fetcher as unknown as TokenFetcher;
     };
-    const Permit2FetcherMock = (permitDetails: Omit<PermitDetails, "token">, isError = false): Permit2Fetcher => {
+    const Permit2FetcherMock = (permitDetails: PermitDetails, isError = false): Permit2Fetcher => {
       const fetcher = {
         fetchAllowance: jest.fn(),
       }

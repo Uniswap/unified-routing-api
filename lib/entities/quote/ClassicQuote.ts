@@ -5,7 +5,7 @@ import { BigNumber } from 'ethers';
 import { PermitDetails, PermitSingleData } from '@uniswap/permit2-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteRequest } from '..';
-import { Permit2Calculator } from '../../calculators/Permit2Calculator';
+import { createPermitData } from '../../util/permit2';
 import { RoutingType } from '../../constants';
 import { currentTimestampInSeconds } from '../../util/time';
 import { LogJSON } from './index';
@@ -124,7 +124,7 @@ export class ClassicQuote implements Quote {
     )
       return null;
 
-    return Permit2Calculator.createPermitData(
+    return createPermitData(
       this.request.info.tokenIn,
       this.request.info.tokenInChainId,
       currentPermit?.nonce.toString() || '0'

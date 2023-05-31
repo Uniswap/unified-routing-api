@@ -1,4 +1,4 @@
-import { Permit2Calculator } from '../../../../lib/calculators/Permit2Calculator'
+import { createPermitData } from '../../../../lib/util/permit2'
 import * as _ from 'lodash'
 import { UtilityTest } from '../../../types'
 import { PERMIT2, PERMIT2_POLYGON, TOKEN_IN } from '../../../constants'
@@ -27,7 +27,7 @@ const tests: UtilityTest[] = [{
 }
 ]
 
-describe('Permit2Calculator Unit Tests', () => {
+describe('permit2 Unit Tests', () => {
     for (const test of tests) {
       const t = test
   
@@ -41,7 +41,7 @@ describe('Permit2Calculator Unit Tests', () => {
         })
   
         try {
-          const result = Permit2Calculator.createPermitData(input.token, input.chainId, input.nonce)
+          const result = createPermitData(input.token, input.chainId, input.nonce)
           expect(_.isEqual(result, output.permit)).toBe(true)
         } catch (e: any) {
           expect(e).toBeInstanceOf(t.errorType)

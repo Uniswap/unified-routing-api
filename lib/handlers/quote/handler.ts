@@ -33,7 +33,6 @@ const BPS = 10000;
 // amount of price preference for dutch limit orders
 const DUTCH_LIMIT_PREFERENCE_BUFFER_BPS = 500;
 
-
 export interface SingleQuoteJSON {
   routing: string;
   quote: QuoteJSON;
