@@ -102,7 +102,7 @@ export class QuoteHandler extends APIGLambdaHandler<
       };
     }
 
-    let allowance = null;
+    let allowance = undefined;
     if (bestQuote.routingType === RoutingType.CLASSIC && requestBody.offerer) {
       allowance = await permit2Fetcher.fetchAllowance(
         requestBody.tokenInChainId,

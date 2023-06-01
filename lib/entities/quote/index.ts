@@ -39,5 +39,5 @@ export interface Quote {
   toJSON(): QuoteJSON;
   request: QuoteRequest;
   toLog(): LogJSON;
-  getPermit(currentPermit: PermitDetails | null): PermitSingleData | PermitTransferFromData | null;
+  getPermit(currentPermit?: PermitDetails): PermitSingleData | PermitTransferFromData | null;
 }
