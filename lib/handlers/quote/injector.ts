@@ -1,9 +1,12 @@
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { default as bunyan, default as Logger } from 'bunyan';
 
+import { ChainId } from '@uniswap/smart-order-router';
 import { MetricsLogger } from 'aws-embedded-metrics';
+import { SUPPORTED_CHAINS } from '../../config/chains';
 import { RoutingType } from '../../constants';
 import { QuoteRequestBodyJSON } from '../../entities';
+import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
 import { TokenFetcher } from '../../fetchers/TokenFetcher';
 import { Quoter, RfqQuoter, RoutingApiQuoter } from '../../providers/quoters';
 import { setGlobalLogger } from '../../util/log';
@@ -18,6 +21,7 @@ export type QuoterByRoutingType = {
 export interface ContainerInjected {
   quoters: QuoterByRoutingType;
   tokenFetcher: TokenFetcher;
+  permit2Fetcher: Permit2Fetcher;
 }
 
 export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void> {
@@ -33,12 +37,19 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
     const routingApiUrl = checkDefined(process.env.ROUTING_API_URL, 'ROUTING_API_URL is not defined');
     const serviceUrl = checkDefined(process.env.SERVICE_URL, 'SERVICE_URL is not defined');
 
+    const rpcUrlMap = new Map<ChainId, string>();
+    SUPPORTED_CHAINS[RoutingType.CLASSIC].forEach((chainId) => {
+      const rpcUrl = checkDefined(process.env[`RPC_${chainId}`], `RPC_${chainId} is not defined`);
+      rpcUrlMap.set(chainId, rpcUrl);
+    });
+
     return {
       quoters: {
         [RoutingType.DUTCH_LIMIT]: new RfqQuoter(paramApiUrl, serviceUrl),
         [RoutingType.CLASSIC]: new RoutingApiQuoter(routingApiUrl),
       },
       tokenFetcher: new TokenFetcher(),
+      permit2Fetcher: new Permit2Fetcher(rpcUrlMap),
     };
   }
 

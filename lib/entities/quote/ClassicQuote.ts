@@ -2,9 +2,11 @@ import { TradeType } from '@uniswap/sdk-core';
 import { MethodParameters } from '@uniswap/smart-order-router';
 import { BigNumber } from 'ethers';
 
+import { PermitDetails, PermitSingleData } from '@uniswap/permit2-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteRequest } from '..';
 import { RoutingType } from '../../constants';
+import { createPermitData } from '../../util/permit2';
 import { currentTimestampInSeconds } from '../../util/time';
 import { LogJSON } from './index';
 
@@ -113,8 +115,20 @@ export class ClassicQuote implements Quote {
     };
   }
 
-  getPermit(): null {
-    return null;
+  getPermit(currentPermit?: PermitDetails): PermitSingleData | null {
+    if (
+      !this.request.info.offerer ||
+      (currentPermit &&
+        BigNumber.from(currentPermit.amount).gte(this.amountOut) &&
+        BigNumber.from(currentPermit.expiration).gt(Math.floor(new Date().getTime() / 1000)))
+    )
+      return null;
+
+    return createPermitData(
+      this.request.info.tokenIn,
+      this.request.info.tokenInChainId,
+      currentPermit?.nonce.toString() || '0'
+    );
   }
 
   public get amountOut(): BigNumber {

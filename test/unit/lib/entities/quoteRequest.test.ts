@@ -1,4 +1,4 @@
-import { RoutingType } from '../../../../lib/constants';
+import { RoutingType  } from '../../../../lib/constants';
 import {
   ClassicConfigJSON,
   ClassicRequest,
@@ -23,17 +23,6 @@ const CLASSIC_CONFIG_JSON: ClassicConfigJSON = {
   gasPriceWei: '1000000000',
 };
 
-const EXACT_INPUT_MOCK_REQUEST_JSON: QuoteRequestBodyJSON = {
-  requestId: 'requestId',
-  tokenInChainId: CHAIN_IN_ID,
-  tokenOutChainId: CHAIN_OUT_ID,
-  tokenIn: TOKEN_IN,
-  tokenOut: TOKEN_OUT,
-  amount: AMOUNT_IN,
-  type: 'EXACT_INPUT',
-  configs: [MOCK_DL_CONFIG_JSON, CLASSIC_CONFIG_JSON],
-};
-
 const DUPLICATE_REQUEST_JSON = {
   requestId: 'requestId',
   tokenInChainId: CHAIN_IN_ID,
@@ -43,6 +32,19 @@ const DUPLICATE_REQUEST_JSON = {
   amount: AMOUNT_IN,
   type: 'EXACT_INPUT',
   configs: [MOCK_DL_CONFIG_JSON, CLASSIC_CONFIG_JSON, MOCK_DL_CONFIG_JSON],
+  offerer: OFFERER,
+};
+
+const EXACT_INPUT_MOCK_REQUEST_JSON: QuoteRequestBodyJSON = {
+  requestId: 'requestId',
+  tokenInChainId: CHAIN_IN_ID,
+  tokenOutChainId: CHAIN_OUT_ID,
+  tokenIn: TOKEN_IN,
+  tokenOut: TOKEN_OUT,
+  amount: AMOUNT_IN,
+  type: 'EXACT_INPUT',
+  offerer: OFFERER,
+  configs: [MOCK_DL_CONFIG_JSON, CLASSIC_CONFIG_JSON],
 };
 
 const EXACT_OUTPUT_MOCK_REQUEST_JSON: QuoteRequestBodyJSON = {
@@ -53,8 +55,10 @@ const EXACT_OUTPUT_MOCK_REQUEST_JSON: QuoteRequestBodyJSON = {
   tokenOut: TOKEN_OUT,
   amount: AMOUNT_IN,
   type: 'EXACT_OUTPUT',
+  offerer: OFFERER,
   configs: [MOCK_DL_CONFIG_JSON, CLASSIC_CONFIG_JSON],
 };
+
 
 describe('QuoteRequest', () => {
   for (const request of [EXACT_INPUT_MOCK_REQUEST_JSON, EXACT_OUTPUT_MOCK_REQUEST_JSON]) {
@@ -78,8 +82,8 @@ describe('QuoteRequest', () => {
       it('parses basic classic quote order config properly', () => {
         const { quoteRequests: requests } = parseQuoteRequests(request);
         const info = requests[0].info;
-
         const config = ClassicRequest.fromRequestBody(info, CLASSIC_CONFIG_JSON);
+
         expect(config.toJSON()).toEqual(CLASSIC_CONFIG_JSON);
       });
 
@@ -96,6 +100,23 @@ describe('QuoteRequest', () => {
         }
         expect(threw).toBeTruthy();
       });
+
+      it('includes offerer in info for dutch limit', () => {
+        const { quoteRequests: requests } = parseQuoteRequests(request);
+        const info = requests[0].info;
+        const config = DutchLimitRequest.fromRequestBody(info, MOCK_DL_CONFIG_JSON);
+
+        expect(config.info.offerer).toEqual(OFFERER);
+      })
+
+      it('includes offerer in info for classic', () => {
+        const { quoteRequests: requests } = parseQuoteRequests(request);
+        const info = requests[0].info;
+        const config = ClassicRequest.fromRequestBody(info, CLASSIC_CONFIG_JSON);
+
+        expect(config.info.offerer).toEqual(OFFERER);
+      })
+
     });
   }
 });

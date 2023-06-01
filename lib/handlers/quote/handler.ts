@@ -5,6 +5,7 @@ import { Unit } from 'aws-embedded-metrics';
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 
 import { PermitSingleData, PermitTransferFromData } from '@uniswap/permit2-sdk';
+import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { RoutingType } from '../../constants';
 import {
@@ -31,7 +32,6 @@ import { PostQuoteRequestBodyJoi } from './schema';
 const BPS = 10000;
 // amount of price preference for dutch limit orders
 const DUTCH_LIMIT_PREFERENCE_BUFFER_BPS = 500;
-
 
 export interface SingleQuoteJSON {
   routing: string;
@@ -60,7 +60,7 @@ export class QuoteHandler extends APIGLambdaHandler<
   ): Promise<ErrorResponse | Response<QuoteResponseJSON>> {
     const {
       requestBody,
-      containerInjected: { quoters, tokenFetcher },
+      containerInjected: { quoters, tokenFetcher, permit2Fetcher },
     } = params;
 
     if (requestBody.tokenInChainId != requestBody.tokenOutChainId) {
@@ -87,7 +87,6 @@ export class QuoteHandler extends APIGLambdaHandler<
     log.info({ requests }, 'requests');
     const quotes = await getQuotes(quoters, requests);
     log.info({ rawQuotes: quotes }, 'quotes');
-
     const resolvedQuotes = await contextHandler.resolveQuotes(quotes);
     log.info({ resolvedQuotes }, 'resolvedQuotes');
 
@@ -103,6 +102,16 @@ export class QuoteHandler extends APIGLambdaHandler<
       };
     }
 
+    let allowance = undefined;
+    if (bestQuote.routingType === RoutingType.CLASSIC && requestBody.offerer) {
+      allowance = await permit2Fetcher.fetchAllowance(
+        requestBody.tokenInChainId,
+        requestBody.offerer,
+        request.tokenIn,
+        UNIVERSAL_ROUTER_ADDRESS(request.tokenInChainId)
+      );
+    }
+
     return {
       statusCode: 200,
       body: Object.assign(
@@ -114,7 +123,7 @@ export class QuoteHandler extends APIGLambdaHandler<
           allQuotes: resolvedQuotes.map((q) => (q ? quoteToResponse(q) : null)),
         },
         {
-          permitData: bestQuote.getPermit(),
+          permitData: bestQuote.getPermit(allowance),
         }
       ),
     };

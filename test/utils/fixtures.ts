@@ -21,6 +21,7 @@ export const BASE_REQUEST_INFO_EXACT_IN = {
   tokenOut: TOKEN_OUT,
   amount: AMOUNT_IN,
   type: 'EXACT_INPUT',
+  offerer: OFFERER,
 };
 
 export const REQUEST_INFO_ETH_EXACT_IN = {
@@ -211,10 +212,10 @@ export function createDutchLimitQuote(overrides: Partial<DutchLimitQuoteJSON>, t
   ) as DutchLimitQuote;
 }
 
-export function createClassicQuote(overrides: Partial<ClassicQuoteDataJSON>, type: string): ClassicQuote {
+export function createClassicQuote(overrides: Partial<ClassicQuoteDataJSON>, requestOverrides: Partial<QuoteRequestBodyJSON>): ClassicQuote {
   return buildQuoteResponse(
     Object.assign({}, CLASSIC_QUOTE_DATA, { quote: { ...CLASSIC_QUOTE_DATA.quote, ...overrides } }),
-    makeClassicRequest({ type })
+    makeClassicRequest(requestOverrides)
   ) as ClassicQuote;
 }
 
@@ -248,13 +249,13 @@ export const DL_QUOTE_EXACT_OUT_LARGE = createDutchLimitQuote({ amountOut: '1000
 
 export const CLASSIC_QUOTE_EXACT_IN_BETTER_PREFERENCE = createClassicQuote(
   { quote: '100100', quoteGasAdjusted: '100100' },
-  'EXACT_INPUT'
+  { type: 'EXACT_INPUT' }
 );
-export const CLASSIC_QUOTE_EXACT_IN_BETTER = createClassicQuote({ quote: '2', quoteGasAdjusted: '2' }, 'EXACT_INPUT');
-export const CLASSIC_QUOTE_EXACT_IN_WORSE = createClassicQuote({ quote: '1', quoteGasAdjusted: '1' }, 'EXACT_INPUT');
+export const CLASSIC_QUOTE_EXACT_IN_BETTER = createClassicQuote({ quote: '2', quoteGasAdjusted: '2' }, { type: 'EXACT_INPUT' });
+export const CLASSIC_QUOTE_EXACT_IN_WORSE = createClassicQuote({ quote: '1', quoteGasAdjusted: '1' }, { type: 'EXACT_INPUT' });
 export const CLASSIC_QUOTE_EXACT_IN_LARGE = createClassicQuote(
   { quote: '10000', quoteGasAdjusted: '9000' },
-  'EXACT_INPUT'
+  { type: 'EXACT_INPUT' }
 );
 export const CLASSIC_QUOTE_EXACT_IN_LARGE_GAS = createClassicQuote(
   // quote: 1 ETH, quoteGasAdjusted: 0.9 ETH, gasUseEstimate: 100000, gasUseEstimateQuote: 0.1 ETH
@@ -264,7 +265,7 @@ export const CLASSIC_QUOTE_EXACT_IN_LARGE_GAS = createClassicQuote(
     gasUseEstimate: '100000',
     gasUseEstimateQuote: '1000000000000000000000',
   },
-  'EXACT_INPUT'
+  { type: 'EXACT_INPUT' }
 );
 
 export const CLASSIC_QUOTE_EXACT_IN_NATIVE = buildQuoteResponse(
@@ -280,11 +281,11 @@ export const CLASSIC_QUOTE_EXACT_IN_NATIVE = buildQuoteResponse(
   makeClassicRequest({ type: 'EXACT_INPUT', tokenIn: NATIVE_ADDRESS, tokenOut: TOKEN_IN })
 );
 
-export const CLASSIC_QUOTE_EXACT_OUT_BETTER = createClassicQuote({ quote: '1', quoteGasAdjusted: '1' }, 'EXACT_OUTPUT');
-export const CLASSIC_QUOTE_EXACT_OUT_WORSE = createClassicQuote({ quote: '2', quoteGasAdjusted: '2' }, 'EXACT_OUTPUT');
+export const CLASSIC_QUOTE_EXACT_OUT_BETTER = createClassicQuote({ quote: '1', quoteGasAdjusted: '1' }, { type: 'EXACT_OUTPUT' });
+export const CLASSIC_QUOTE_EXACT_OUT_WORSE = createClassicQuote({ quote: '2', quoteGasAdjusted: '2' }, { type: 'EXACT_OUTPUT' });
 export const CLASSIC_QUOTE_EXACT_OUT_LARGE = createClassicQuote(
   { quote: '10000', quoteGasAdjusted: '10000' },
-  'EXACT_OUTPUT'
+  { type: 'EXACT_OUTPUT' }
 );
 export const CLASSIC_QUOTE_HAS_ROUTE_TO_NATIVE = createRouteBackToNativeQuote(
   {

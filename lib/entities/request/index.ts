@@ -57,6 +57,7 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON): {
     amount: BigNumber.from(body.amount),
     type: parseTradeType(body.type),
     slippageTolerance: body.slippageTolerance ?? DEFAULT_SLIPPAGE_TOLERANCE,
+    offerer: body.offerer,
   };
 
   const requests = body.configs.flatMap((config) => {
@@ -72,8 +73,6 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON): {
     return [];
   });
 
-  info.offerer = (requests.find((r) => r.routingType === RoutingType.DUTCH_LIMIT)?.config as DutchLimitConfig)?.offerer;
-
   const result: Set<RoutingType> = new Set();
   requests.forEach((request) => {
     if (result.has(request.routingType)) {
@@ -85,7 +84,7 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON): {
   return { quoteInfo: info, quoteRequests: requests };
 }
 
-function parseTradeType(tradeType: string): TradeType {
+export function parseTradeType(tradeType: string): TradeType {
   if (tradeType === 'exactIn' || tradeType === 'EXACT_INPUT') {
     return TradeType.EXACT_INPUT;
   } else if (tradeType === 'exactOut' || tradeType === 'EXACT_OUTPUT') {
