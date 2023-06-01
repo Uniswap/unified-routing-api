@@ -14,7 +14,6 @@ import { APIStack } from './stacks/api-stack';
 import { SUPPORTED_CHAINS } from '../lib/config/chains';
 import { RoutingType } from '../lib/constants';
 import { ChainId } from '@uniswap/smart-order-router';
-import { checkDefined } from '../lib/util/preconditions';
 
 dotenv.config();
 
@@ -235,7 +234,7 @@ envVars['RESPONSE_DESTINATION_ARN'] = process.env['RESPONSE_DESTINATION_ARN'] ||
 const jsonRpcProviders = {} as { [chainKey: string]: string }
     SUPPORTED_CHAINS[RoutingType.CLASSIC].forEach((chainId: ChainId) => {
       const mapKey = `RPC_${chainId}`
-      jsonRpcProviders[mapKey] = checkDefined(process.env[mapKey], mapKey)
+      jsonRpcProviders[mapKey] = process.env[mapKey] || '';
 })
 
 new APIStack(app, `${SERVICE_NAME}Stack`, {
