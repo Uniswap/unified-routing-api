@@ -1,4 +1,4 @@
-import { DutchLimitOrder, DutchLimitOrderBuilder } from '@uniswap/gouda-sdk';
+import { DutchLimitOrder, DutchLimitOrderBuilder, DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
 import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber, ethers } from 'ethers';
 
@@ -17,6 +17,12 @@ import {
 import { currentTimestampInSeconds } from '../../util/time';
 import { ClassicQuote } from './ClassicQuote';
 import { LogJSON } from './index';
+
+export type DutchLimitQuoteDataJSON = DutchLimitOrderInfoJSON & {
+  quoteId: string;
+  requestId: string;
+  encodedOrder: string;
+};
 
 export type DutchLimitQuoteJSON = {
   chainId: number;
@@ -147,6 +153,7 @@ export class DutchLimitQuote implements Quote {
   public toJSON(): QuoteJSON {
     return {
       ...this.toOrder().toJSON(),
+      encodedOrder: this.toOrder().serialize(),
       quoteId: this.quoteId,
       requestId: this.requestId,
     };
