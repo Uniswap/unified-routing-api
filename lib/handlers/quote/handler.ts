@@ -116,15 +116,15 @@ export class QuoteHandler extends APIGLambdaHandler<
       statusCode: 200,
       body: Object.assign(
         quoteToResponse(bestQuote),
+        {
+          permitData: bestQuote.getPermit(allowance),
+        },
         // additional info to return alongside the main quote
         {
           // note the best quote is duplicated, but this allows callers
           // to easily map their original request configs to quotes by index
           allQuotes: resolvedQuotes.map((q) => (q ? quoteToResponse(q) : null)),
         },
-        {
-          permitData: bestQuote.getPermit(allowance),
-        }
       ),
     };
   }
