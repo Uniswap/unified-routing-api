@@ -35,6 +35,7 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
 
     const paramApiUrl = checkDefined(process.env.PARAMETERIZATION_API_URL, 'PARAMETERIZATION_API_URL is not defined');
     const routingApiUrl = checkDefined(process.env.ROUTING_API_URL, 'ROUTING_API_URL is not defined');
+    const routingApiKey = checkDefined(process.env.ROUTING_API_KEY, 'ROUTING_API_KEY is not defined');
     const serviceUrl = checkDefined(process.env.SERVICE_URL, 'SERVICE_URL is not defined');
 
     const rpcUrlMap = new Map<ChainId, string>();
@@ -46,7 +47,7 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
     return {
       quoters: {
         [RoutingType.DUTCH_LIMIT]: new RfqQuoter(paramApiUrl, serviceUrl),
-        [RoutingType.CLASSIC]: new RoutingApiQuoter(routingApiUrl),
+        [RoutingType.CLASSIC]: new RoutingApiQuoter(routingApiUrl, routingApiKey),
       },
       tokenFetcher: new TokenFetcher(),
       permit2Fetcher: new Permit2Fetcher(rpcUrlMap),

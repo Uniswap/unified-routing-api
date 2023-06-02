@@ -2,7 +2,7 @@ import { RoutingApiQuoter } from '../../../../lib/providers/quoters';
 import { QUOTE_REQUEST_CLASSIC } from '../../../utils/fixtures';
 
 describe('RoutingApiQuoter', () => {
-  const routingApiQuoter = new RoutingApiQuoter('https://api.uniswap.org/');
+  const routingApiQuoter = new RoutingApiQuoter('https://api.uniswap.org/', 'test-key');
 
   describe('buildRequest', () => {
     it('properly builds query string', () => {
