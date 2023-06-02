@@ -412,6 +412,47 @@ describe('QuoteHandler', () => {
         );
       });
     });
+
+    describe('parseAndValidateRequest', () => {
+      it('Succeeds - Classic Quote', async ()  => {
+        const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE) };
+        const event = { 
+          body: JSON.stringify(CLASSIC_REQUEST_BODY),
+        } as APIGatewayProxyEvent;
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT])
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+
+        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).parseAndValidateRequest(event, logger as unknown as Logger,);         
+        expect(res.state).toBe('valid');
+      });
+
+      it('Succeeds - Bad offerer address', async ()  => {
+        const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE) };
+        const event = { 
+          body: JSON.stringify({
+            ...CLASSIC_REQUEST_BODY,
+            offerer: 'bad address'
+          }),
+        } as APIGatewayProxyEvent;
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT])
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+
+        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).parseAndValidateRequest(event, logger as unknown as Logger,);         
+        expect(res.state).toBe('invalid');
+      });
+
+      it('Succeeds - Gouda Quote', async ()  => {
+        const quoters = { [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER) };
+        const event = { 
+          body: JSON.stringify(DL_REQUEST_BODY),
+        } as APIGatewayProxyEvent;
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT])
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+
+        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).parseAndValidateRequest(event, logger as unknown as Logger,);  
+        expect(res.state).toBe('valid');
+      });
+    });
   });
 
   describe('compareQuotes', () => {
