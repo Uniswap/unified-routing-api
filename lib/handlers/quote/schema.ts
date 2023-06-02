@@ -22,4 +22,5 @@ export const PostQuoteRequestBodyJoi = Joi.object({
     .messages({
       'array.unique': 'Duplicate routingType in configs',
     }),
+    offerer: FieldValidator.address.optional(),
 });
