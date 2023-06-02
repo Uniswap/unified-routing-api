@@ -13,7 +13,7 @@ const log = globalLog.child({ quoter: 'RoutingApiQuoter' });
 export class RoutingApiQuoter implements Quoter {
   static readonly type: QuoterType.ROUTING_API;
 
-  constructor(private routingApiUrl: string) {}
+  constructor(private routingApiUrl: string, private routingApiKey: string) {}
 
   async quote(request: ClassicRequest): Promise<Quote | null> {
     if (request.routingType !== RoutingType.CLASSIC) {
@@ -23,7 +23,7 @@ export class RoutingApiQuoter implements Quoter {
     metrics.putMetric(`RoutingApiQuoterRequest`, 1);
     try {
       const req = this.buildRequest(request);
-      const response = await axios.get(req);
+      const response = await axios.get(req, { headers: { 'x-api-key': this.routingApiKey } });
       metrics.putMetric(`RoutingApiQuoterSuccess`, 1);
       return ClassicQuote.fromResponseBody(request, response.data);
     } catch (e) {
