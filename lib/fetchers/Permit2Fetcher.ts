@@ -2,7 +2,11 @@ import { PERMIT2_ADDRESS, PermitDetails } from '@uniswap/permit2-sdk';
 import { ChainId } from '@uniswap/smart-order-router';
 import { ethers } from 'ethers';
 import PERMIT2_CONTRACT from '../abis/Permit2.json';
+import { log as globalLog } from '../util/log';
+import { metrics } from '../util/metrics';
 
+
+const log = globalLog.child({ quoter: 'Permit2Fetcher' });
 export class Permit2Fetcher {
   public readonly permitAddress: string;
   public readonly permitAbi: ethers.ContractInterface;
@@ -21,10 +25,20 @@ export class Permit2Fetcher {
     ownerAddress: string,
     tokenAddress: string,
     spenderAddress: string
-  ): Promise<PermitDetails> {
+  ): Promise<PermitDetails | undefined> {
     const rpcUrl = this.rpcUrlMap.get(chainId);
     const rpcProvider = new ethers.providers.JsonRpcProvider(rpcUrl);
-    const allowance = await this.contract.connect(rpcProvider).allowance(ownerAddress, tokenAddress, spenderAddress);
+
+    let allowance
+    metrics.putMetric(`Permit2FetcherRequest`, 1);
+    try {
+      allowance = await this.contract.connect(rpcProvider).allowance(ownerAddress, tokenAddress, spenderAddress);
+      metrics.putMetric(`Permit2FetcherSuccess`, 1);
+    } catch(e) {
+      log.error(e, 'Permit2FetcherErr');
+      metrics.putMetric(`Permit2FetcherErr`, 1);
+      return undefined;
+    }
 
     return allowance;
   }
