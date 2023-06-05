@@ -8,7 +8,7 @@ export class FieldValidator {
     if (!ethers.utils.isAddress(value)) {
       return helpers.message({ custom: 'Invalid address' });
     }
-    return ethers.utils.getAddress(value).toLowerCase();
+    return ethers.utils.getAddress(value);
   });
 
   public static readonly amount = Joi.string().custom((value: string, helpers: CustomHelpers<string>) => {
