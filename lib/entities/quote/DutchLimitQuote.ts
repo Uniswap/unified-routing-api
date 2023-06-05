@@ -92,7 +92,7 @@ export class DutchLimitQuote implements Quote {
       uuidv4(), // synthetic quote doesn't receive a quoteId from RFQ api, so generate one
       request.info.tokenIn,
       quote.request.info.tokenOut,
-      amountIn,
+      quote.amountInGasAdjusted,
       amountInEnd,
       quote.amountOutGasAdjusted,
       amountOutEnd,

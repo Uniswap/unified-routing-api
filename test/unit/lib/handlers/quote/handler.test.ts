@@ -299,13 +299,16 @@ describe('QuoteHandler', () => {
           now: 0,
         })
         const response = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(
-          getEvent(QUOTE_REQUEST_BODY_MULTI),
+          getEvent({
+            ...CLASSIC_REQUEST_BODY,
+            offerer: OFFERER,
+          }),
           {} as unknown as Context
         );
         const responseBody = JSON.parse(response.body)
 
         expect(_.isEqual(responseBody.permitData, PERMIT2)).toBe(true)
-        expect(permit2Fetcher.fetchAllowance).toHaveBeenCalledWith(QUOTE_REQUEST_BODY_MULTI.tokenInChainId , QUOTE_REQUEST_BODY_MULTI.offerer, QUOTE_REQUEST_BODY_MULTI.tokenIn, UNIVERSAL_ROUTER_ADDRESS(1));
+        expect(permit2Fetcher.fetchAllowance).toHaveBeenCalledWith(CLASSIC_REQUEST_BODY.tokenInChainId , OFFERER, CLASSIC_REQUEST_BODY.tokenIn, UNIVERSAL_ROUTER_ADDRESS(1));
         jest.clearAllTimers();
       });
 
@@ -320,13 +323,13 @@ describe('QuoteHandler', () => {
           now: 0,
         })
         const response = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(
-          getEvent(QUOTE_REQUEST_BODY_MULTI),
+          getEvent(CLASSIC_REQUEST_BODY),
           {} as unknown as Context
         );
         const responseBody = JSON.parse(response.body)
 
         expect(_.isEqual(responseBody.permitData, null)).toBe(true)
-        expect(permit2Fetcher.fetchAllowance).toHaveBeenCalledWith(QUOTE_REQUEST_BODY_MULTI.tokenInChainId , QUOTE_REQUEST_BODY_MULTI.offerer, QUOTE_REQUEST_BODY_MULTI.tokenIn, UNIVERSAL_ROUTER_ADDRESS(1));
+        expect(permit2Fetcher.fetchAllowance).toHaveBeenCalledWith(CLASSIC_REQUEST_BODY.tokenInChainId , OFFERER, CLASSIC_REQUEST_BODY.tokenIn, UNIVERSAL_ROUTER_ADDRESS(1));
         jest.clearAllTimers();
       });
 
@@ -342,7 +345,7 @@ describe('QuoteHandler', () => {
         })
         const response = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(
           getEvent({
-            ...QUOTE_REQUEST_BODY_MULTI,
+            ...CLASSIC_REQUEST_BODY,
             offerer: undefined,
           }),
           {} as unknown as Context
