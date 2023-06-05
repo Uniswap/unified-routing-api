@@ -13,5 +13,12 @@ describe('Permit2Fetcher Unit Tests', () => {
             expect(fetcher.permitAddress).toBe(PERMIT2_ADDRESS)
             expect(fetcher.permitAbi).toBe(PERMIT2_CONTRACT.abi)
         })
+
+        it('returns undefined if an error occurs', async () => {
+            const rpcUrlMap = new Map()
+            const fetcher = new Permit2Fetcher(rpcUrlMap)
+            const result = await fetcher.fetchAllowance(ChainId.MAINNET, 'owner', 'token', 'spender')
+            expect(result).toBe(undefined)
+        })
     })
 })
