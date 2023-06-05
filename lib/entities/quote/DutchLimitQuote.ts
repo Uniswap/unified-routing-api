@@ -94,7 +94,7 @@ export class DutchLimitQuote implements Quote {
       quote.request.info.tokenOut,
       amountIn,
       amountInEnd,
-      amountOut,
+      quote.amountOutGasAdjusted,
       amountOutEnd,
       request.config.offerer,
       '', // synthetic quote has no filler
