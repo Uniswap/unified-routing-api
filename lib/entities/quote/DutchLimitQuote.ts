@@ -167,7 +167,7 @@ export class DutchLimitQuote implements Quote {
       .startTime(decayStartTime)
       .endTime(decayStartTime + this.request.config.auctionPeriodSecs)
       .deadline(decayStartTime + this.request.config.auctionPeriodSecs)
-      .offerer(this.request.config.offerer)
+      .offerer(ethers.utils.getAddress(this.request.config.offerer))
       .nonce(BigNumber.from(nonce))
       .input({
         token: this.tokenIn,
