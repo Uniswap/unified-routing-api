@@ -144,6 +144,7 @@ export class APIPipeline extends Stack {
       stage: STAGE.PROD,
       envVars: {
         ...envVars,
+        ...jsonRpcProviders,
         ROUTING_API_KEY: routingApiKeySecret.secretValue.toString(),
         PARAMETERIZATION_API_URL: urlSecrets.secretValueFromJson('PARAMETERIZATION_API_PROD').toString(),
         ROUTING_API_URL: urlSecrets.secretValueFromJson('ROUTING_API_PROD').toString(),
