@@ -162,7 +162,7 @@ describe('DutchQuoteContext', () => {
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchLimitQuote({ amountOut: '1', filler }, 'EXACT_INPUT');
       expect(rfqQuote.filler).toEqual(filler);
-      const classicQuote = createClassicQuote({ quote: '10', quoteGasAdjusted: '9' }, { type: 'EXACT_INPUT' });
+      const classicQuote = createClassicQuote({ quote: '10', quoteGasAdjusted: '4' }, { type: 'EXACT_INPUT' });
 
       const quote = await context.resolve({
         [context.requestKey]: rfqQuote,
@@ -177,12 +177,12 @@ describe('DutchQuoteContext', () => {
 
   describe('hasOrderSizeForsynthetic', () => {
     describe('exactIn', () => {
-      it('returns false if amountOut == gas used', async () => {
+      it('returns true if quote == quoteGasAdjusted', async () => {
         const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL);
         const amountOut = ethers.utils.parseEther('1');
-        const classicQuote = createClassicQuote({ quote: amountOut.toString(), quoteGasAdjusted: '1' }, { type: 'EXACT_INPUT' });
+        const classicQuote = createClassicQuote({ quote: amountOut.toString(), quoteGasAdjusted: amountOut.toString() }, { type: 'EXACT_INPUT' });
         const hasSize = context.hasOrderSizeForSynthetic(logger, classicQuote);
-        expect(hasSize).toEqual(false);
+        expect(hasSize).toEqual(true);
       });
 
       it('returns true if amountOut * 5% == gas used', async () => {
