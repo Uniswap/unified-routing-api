@@ -5,12 +5,12 @@ import {
   ChainId,
   ITokenListProvider,
   ITokenProvider,
-  NodeJSCache,
   NATIVE_NAMES_BY_ID,
+  NodeJSCache,
 } from '@uniswap/smart-order-router';
 import { ethers } from 'ethers';
-import { NATIVE_ADDRESS } from '../constants'
 import NodeCache from 'node-cache';
+import { NATIVE_ADDRESS } from '../constants';
 import { ValidationError } from '../util/errors';
 
 type ITokenFetcherProvider = ITokenListProvider & ITokenProvider;

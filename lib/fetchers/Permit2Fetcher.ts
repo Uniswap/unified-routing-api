@@ -25,16 +25,14 @@ export class Permit2Fetcher {
     tokenAddress: string,
     spenderAddress: string
   ): Promise<PermitDetails | undefined> {
-    
-
-    let allowance = undefined
+    let allowance = undefined;
     metrics.putMetric(`Permit2FetcherRequest`, 1);
     try {
       const rpcUrl = this.rpcUrlMap.get(chainId);
       const rpcProvider = new ethers.providers.JsonRpcProvider(rpcUrl);
       allowance = await this.contract.connect(rpcProvider).allowance(ownerAddress, tokenAddress, spenderAddress);
       metrics.putMetric(`Permit2FetcherSuccess`, 1);
-    } catch(e) {
+    } catch (e) {
       log.error(e, 'Permit2FetcherErr');
       metrics.putMetric(`Permit2FetcherErr`, 1);
     }

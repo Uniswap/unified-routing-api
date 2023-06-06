@@ -1,8 +1,8 @@
 import * as _ from 'lodash';
+import { NATIVE_ADDRESS } from '../../../../lib/constants';
 import { TokenFetcher } from '../../../../lib/fetchers/TokenFetcher';
 import { ValidationError } from '../../../../lib/util/errors';
 import { TOKEN_IN, USDC_ADDRESS, USDC_ADDRESS_POLYGON } from '../../../constants';
-import { NATIVE_ADDRESS } from '../../../../lib/constants';
 import { FetcherTest } from '../../../types';
 
 const tests: FetcherTest[] = [
