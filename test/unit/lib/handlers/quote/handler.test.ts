@@ -91,16 +91,16 @@ describe('QuoteHandler', () => {
     };
     const TokenFetcherMock = (addresses: string[], isError = false): TokenFetcher => {
       const fetcher = {
-        getTokenAddressFromList: jest.fn(),
+        resolveTokenAddress: jest.fn(),
       };
 
       if (isError) {
-        fetcher.getTokenAddressFromList.mockRejectedValue(new Error('error'));
+        fetcher.resolveTokenAddress.mockRejectedValue(new Error('error'));
         return fetcher as unknown as TokenFetcher;
       }
 
       for (const address of addresses) {
-        fetcher.getTokenAddressFromList.mockResolvedValueOnce(address);
+        fetcher.resolveTokenAddress.mockResolvedValueOnce(address);
       }
       return fetcher as unknown as TokenFetcher;
     };
