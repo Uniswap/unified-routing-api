@@ -1,12 +1,15 @@
 import DEFAULT_TOKEN_LIST from '@uniswap/default-token-list';
+
 import {
   CachingTokenListProvider,
   ChainId,
   ITokenListProvider,
   ITokenProvider,
   NodeJSCache,
+  NATIVE_NAMES_BY_ID,
 } from '@uniswap/smart-order-router';
 import { ethers } from 'ethers';
+import { NATIVE_ADDRESS } from '../constants'
 import NodeCache from 'node-cache';
 import { ValidationError } from '../util/errors';
 
@@ -35,7 +38,12 @@ export class TokenFetcher {
    * Gets the token address for the provided token symbol or address from the DEFAULT_TOKEN_LIST.
    * Throws an error if the token is not found.
    */
-  public getTokenAddressFromList = async (chainId: ChainId, symbolOrAddress: string): Promise<string> => {
+  public resolveTokenAddress = async (chainId: ChainId, symbolOrAddress: string): Promise<string> => {
+    // check for native symbols first
+    if (NATIVE_NAMES_BY_ID[chainId]!.includes(symbolOrAddress)) {
+      return NATIVE_ADDRESS;
+    }
+
     try {
       // try to parse address normal way
       return ethers.utils.getAddress(symbolOrAddress);

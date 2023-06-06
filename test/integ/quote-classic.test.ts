@@ -38,7 +38,7 @@ import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { Permit2__factory } from '../../lib/types/ext';
 import { resetAndFundAtBlock } from '../utils/forkAndFund';
 import { getBalance, getBalanceAndApprove } from '../utils/getBalanceAndApprove';
-import { DAI_ON, getAmount, getAmountFromToken, UNI_MAINNET, USDC_ON, USDT_ON, WNATIVE_ON } from '../utils/tokens';
+import { getAmount, getAmountFromToken, UNI_MAINNET, DAI_ON, USDC_ON, USDT_ON, WNATIVE_ON } from '../utils/tokens';
 
 const { ethers } = hre;
 
@@ -98,7 +98,7 @@ const isTesterPKEnvironmentSet = (): boolean => {
 
 const MAX_UINT160 = '0xffffffffffffffffffffffffffffffffffffffff';
 
-xdescribe('quote', function () {
+describe('quote', function () {
   // Help with test flakiness by retrying.
   this.retries(3);
 
@@ -196,12 +196,12 @@ xdescribe('quote', function () {
     block = parseInt(blockNumber) - 10;
 
     alice = await resetAndFundAtBlock(alice, block, [
-      parseAmount('8000000', USDC_MAINNET),
-      parseAmount('5000000', USDT_MAINNET),
-      parseAmount('10', WBTC_MAINNET),
-      parseAmount('1000', UNI_MAINNET),
-      parseAmount('4000', WETH9[1]),
-      parseAmount('5000000', DAI_MAINNET),
+      parseAmount('80000000', USDC_MAINNET),
+      parseAmount('50000000', USDT_MAINNET),
+      parseAmount('100', WBTC_MAINNET),
+      parseAmount('10000', UNI_MAINNET),
+      parseAmount('40000', WETH9[1]),
+      parseAmount('50000000', DAI_MAINNET),
     ]);
   });
 
