@@ -2,6 +2,7 @@ import * as _ from 'lodash';
 import { TokenFetcher } from '../../../../lib/fetchers/TokenFetcher';
 import { ValidationError } from '../../../../lib/util/errors';
 import { TOKEN_IN, USDC_ADDRESS, USDC_ADDRESS_POLYGON } from '../../../constants';
+import { NATIVE_ADDRESS } from '../../../../lib/constants';
 import { FetcherTest } from '../../../types';
 
 const tests: FetcherTest[] = [
@@ -20,6 +21,22 @@ const tests: FetcherTest[] = [
       address: 'USDC',
     },
     output: USDC_ADDRESS,
+  },
+  {
+    testName: 'Succeeds - ETH',
+    input: {
+      chainId: 1,
+      address: 'ETH',
+    },
+    output: NATIVE_ADDRESS,
+  },
+  {
+    testName: 'Succeeds - MATIC',
+    input: {
+      chainId: 137,
+      address: 'MATIC',
+    },
+    output: NATIVE_ADDRESS,
   },
   {
     testName: 'Succeeds - Symbol Polygon',

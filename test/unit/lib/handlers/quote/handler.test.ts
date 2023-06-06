@@ -113,7 +113,7 @@ describe('QuoteHandler', () => {
         fetcher.fetchAllowance.mockRejectedValue(new Error('error'));
         return fetcher as unknown as Permit2Fetcher;
       }
-      
+
       fetcher.fetchAllowance.mockResolvedValueOnce(permitDetails);
       return fetcher as unknown as Permit2Fetcher;
     };
@@ -365,7 +365,7 @@ describe('QuoteHandler', () => {
             getEvent(QUOTE_REQUEST_BODY_MULTI),
             {} as unknown as Context
           );
-         
+
           const responseBody = JSON.parse(res.body)
           expect(res.statusCode).toBe(500);
           expect(responseBody.errorCode).toBe('INTERNAL_ERROR');
@@ -384,7 +384,7 @@ describe('QuoteHandler', () => {
         );
 
         const responseBody = JSON.parse(response.body)
-        const quote = responseBody.quote 
+        const quote = responseBody.quote
         expect(quote.encodedOrder).not.toBe(null);
       });
     });
@@ -437,19 +437,19 @@ describe('QuoteHandler', () => {
     describe('parseAndValidateRequest', () => {
       it('Succeeds - Classic Quote', async ()  => {
         const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE) };
-        const event = { 
+        const event = {
           body: JSON.stringify(CLASSIC_REQUEST_BODY),
         } as APIGatewayProxyEvent;
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT])
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
 
-        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).parseAndValidateRequest(event, logger as unknown as Logger,);         
+        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).parseAndValidateRequest(event, logger as unknown as Logger,);
         expect(res.state).toBe('valid');
       });
 
       it('Succeeds - Bad offerer address', async ()  => {
         const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE) };
-        const event = { 
+        const event = {
           body: JSON.stringify({
             ...CLASSIC_REQUEST_BODY,
             offerer: 'bad address'
@@ -458,19 +458,19 @@ describe('QuoteHandler', () => {
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT])
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
 
-        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).parseAndValidateRequest(event, logger as unknown as Logger,);         
+        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).parseAndValidateRequest(event, logger as unknown as Logger,);
         expect(res.state).toBe('invalid');
       });
 
       it('Succeeds - Gouda Quote', async ()  => {
         const quoters = { [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER) };
-        const event = { 
+        const event = {
           body: JSON.stringify(DL_REQUEST_BODY),
         } as APIGatewayProxyEvent;
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT])
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
 
-        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).parseAndValidateRequest(event, logger as unknown as Logger,);  
+        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).parseAndValidateRequest(event, logger as unknown as Logger,);
         expect(res.state).toBe('valid');
       });
     });
