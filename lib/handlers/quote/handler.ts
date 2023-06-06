@@ -124,7 +124,7 @@ export class QuoteHandler extends APIGLambdaHandler<
           // note the best quote is duplicated, but this allows callers
           // to easily map their original request configs to quotes by index
           allQuotes: resolvedQuotes.map((q) => (q ? quoteToResponse(q) : null)),
-        },
+        }
       ),
     };
   }

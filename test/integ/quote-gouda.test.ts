@@ -417,7 +417,6 @@ describe('quoteGouda', function () {
             expect(parseInt(order.info.input.startAmount.toString())).to.be.gte(
               parseInt(BigNumber.from(adjustedAmountInClassic).div(2).toString())
             );
-
           }
 
           const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(

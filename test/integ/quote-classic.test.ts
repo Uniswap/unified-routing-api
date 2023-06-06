@@ -38,7 +38,7 @@ import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { Permit2__factory } from '../../lib/types/ext';
 import { resetAndFundAtBlock } from '../utils/forkAndFund';
 import { getBalance, getBalanceAndApprove } from '../utils/getBalanceAndApprove';
-import { getAmount, getAmountFromToken, UNI_MAINNET, DAI_ON, USDC_ON, USDT_ON, WNATIVE_ON } from '../utils/tokens';
+import { DAI_ON, getAmount, getAmountFromToken, UNI_MAINNET, USDC_ON, USDT_ON, WNATIVE_ON } from '../utils/tokens';
 
 const { ethers } = hre;
 
