@@ -43,9 +43,9 @@ type Amounts = {
 
 export class DutchLimitQuote implements Quote {
   public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
-  // TODO: replace with better values
-  public static improvementExactIn = BigNumber.from(10000);
-  public static improvementExactOut = BigNumber.from(10000);
+  // Add 1bps price improvmement to break ties in favor of Dutch
+  public static improvementExactIn = BigNumber.from(10001);
+  public static improvementExactOut = BigNumber.from(10001);
 
   // build a dutch quote from an RFQ response
   public static fromResponseBody(
