@@ -173,36 +173,69 @@ describe('quoteGouda', function () {
     ]);
   });
 
+  // size filter may not apply for exact output
+  // as input value can be scaled to always account for gas
+  describe('EXACT_INPUT size filter', () => {
+    const type = 'EXACT_INPUT';
+
+    it(`stable -> stable, tiny trade should be filtered out due to gas`, async () => {
+      const quoteReq: QuoteRequestBodyJSON = {
+        requestId: 'id',
+        tokenIn: USDC_MAINNET.address,
+        tokenInChainId: 1,
+        tokenOut: USDT_MAINNET.address,
+        tokenOutChainId: 1,
+        amount: await getAmount(1, type, 'USDC', 'USDT', '0.1'),
+        type,
+        slippageTolerance: SLIPPAGE,
+        configs: [
+          {
+            routingType: RoutingType.DUTCH_LIMIT,
+            offerer: alice.address,
+          },
+        ] as RoutingConfigJSON[],
+      };
+      await callAndExpectFail(quoteReq, {
+        status: 404,
+        data: {
+          detail: 'No quotes available',
+          errorCode: 'QUOTE_ERROR',
+        },
+      });
+    });
+
+    it(`stable -> stable by name, tiny trade should be filtered out due to gas`, async () => {
+      const quoteReq: QuoteRequestBodyJSON = {
+        requestId: 'id',
+        tokenIn: 'USDC',
+        tokenInChainId: 1,
+        tokenOut: 'USDT',
+        tokenOutChainId: 1,
+        amount: await getAmount(1, type, 'USDC', 'USDT', '0.1'),
+        type,
+        slippageTolerance: SLIPPAGE,
+        configs: [
+          {
+            routingType: RoutingType.DUTCH_LIMIT,
+            offerer: alice.address,
+          },
+        ] as RoutingConfigJSON[],
+      };
+
+      await callAndExpectFail(quoteReq, {
+        status: 404,
+        data: {
+          detail: 'No quotes available',
+          errorCode: 'QUOTE_ERROR',
+        },
+      });
+    });
+  });
+
   // TODO: add exactOutput when we support it
   for (const type of ['EXACT_INPUT', 'EXACT_OUTPUT']) {
     describe(`${ID_TO_NETWORK_NAME(1)} ${type} 2xx`, () => {
       describe(`+ Execute Swap`, () => {
-        it(`stable -> stable, tiny trade should be filterd out due to gas`, async () => {
-          const quoteReq: QuoteRequestBodyJSON = {
-            requestId: 'id',
-            tokenIn: USDC_MAINNET.address,
-            tokenInChainId: 1,
-            tokenOut: USDT_MAINNET.address,
-            tokenOutChainId: 1,
-            amount: await getAmount(1, type, 'USDC', 'USDT', '0.1'),
-            type,
-            slippageTolerance: SLIPPAGE,
-            configs: [
-              {
-                routingType: RoutingType.DUTCH_LIMIT,
-                offerer: alice.address,
-              },
-            ] as RoutingConfigJSON[],
-          };
-          await callAndExpectFail(quoteReq, {
-            status: 404,
-            data: {
-              detail: 'No quotes available',
-              errorCode: 'QUOTE_ERROR',
-            },
-          });
-        });
-
         it(`stable -> stable, large trade should return valid quote`, async () => {
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
@@ -258,33 +291,6 @@ describe('quoteGouda', function () {
               CurrencyAmount.fromRawAmount(USDC_MAINNET, order.info.input.startAmount.toString())
             );
           }
-        });
-
-        it(`stable -> stable by name, tiny trade should be filtered out due to gas`, async () => {
-          const quoteReq: QuoteRequestBodyJSON = {
-            requestId: 'id',
-            tokenIn: 'USDC',
-            tokenInChainId: 1,
-            tokenOut: 'USDT',
-            tokenOutChainId: 1,
-            amount: await getAmount(1, type, 'USDC', 'USDT', '0.1'),
-            type,
-            slippageTolerance: SLIPPAGE,
-            configs: [
-              {
-                routingType: RoutingType.DUTCH_LIMIT,
-                offerer: alice.address,
-              },
-            ] as RoutingConfigJSON[],
-          };
-
-          await callAndExpectFail(quoteReq, {
-            status: 404,
-            data: {
-              detail: 'No quotes available',
-              errorCode: 'QUOTE_ERROR',
-            },
-          });
         });
 
         it(`stable -> stable by name, large trade should return value quote`, async () => {
@@ -411,7 +417,6 @@ describe('quoteGouda', function () {
             expect(parseInt(order.info.input.startAmount.toString())).to.be.gte(
               parseInt(BigNumber.from(adjustedAmountInClassic).div(2).toString())
             );
-
           }
 
           const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(

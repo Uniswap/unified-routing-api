@@ -1,14 +1,13 @@
 import { TradeType } from '@uniswap/sdk-core';
+import { NATIVE_NAMES_BY_ID } from '@uniswap/smart-order-router';
 import querystring from 'querystring';
 import axios from './helpers';
 
 import { NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { ClassicQuote, ClassicRequest, Quote } from '../../entities';
-import { log as globalLog } from '../../util/log';
+import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import { Quoter, QuoterType } from './index';
-
-const log = globalLog.child({ quoter: 'RoutingApiQuoter' });
 
 export class RoutingApiQuoter implements Quoter {
   static readonly type: QuoterType.ROUTING_API;
@@ -40,9 +39,9 @@ export class RoutingApiQuoter implements Quoter {
       this.routingApiUrl +
       'quote?' +
       querystring.stringify({
-        tokenInAddress: mapNative(request.info.tokenIn),
+        tokenInAddress: mapNative(request.info.tokenIn, request.info.tokenInChainId),
         tokenInChainId: request.info.tokenInChainId,
-        tokenOutAddress: mapNative(request.info.tokenOut),
+        tokenOutAddress: mapNative(request.info.tokenOut, request.info.tokenInChainId),
         tokenOutChainId: request.info.tokenOutChainId,
         amount: request.info.amount.toString(),
         type: tradeType,
@@ -72,7 +71,7 @@ export class RoutingApiQuoter implements Quoter {
   }
 }
 
-function mapNative(token: string): string {
-  if (token === NATIVE_ADDRESS) return 'ETH';
+function mapNative(token: string, chainId: number): string {
+  if (token === NATIVE_ADDRESS) return NATIVE_NAMES_BY_ID[chainId][0];
   return token;
 }

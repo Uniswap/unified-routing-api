@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+import { NATIVE_ADDRESS } from '../../../../lib/constants';
 import { TokenFetcher } from '../../../../lib/fetchers/TokenFetcher';
 import { ValidationError } from '../../../../lib/util/errors';
 import { TOKEN_IN, USDC_ADDRESS, USDC_ADDRESS_POLYGON } from '../../../constants';
@@ -20,6 +21,22 @@ const tests: FetcherTest[] = [
       address: 'USDC',
     },
     output: USDC_ADDRESS,
+  },
+  {
+    testName: 'Succeeds - ETH',
+    input: {
+      chainId: 1,
+      address: 'ETH',
+    },
+    output: NATIVE_ADDRESS,
+  },
+  {
+    testName: 'Succeeds - MATIC',
+    input: {
+      chainId: 137,
+      address: 'MATIC',
+    },
+    output: NATIVE_ADDRESS,
   },
   {
     testName: 'Succeeds - Symbol Polygon',
@@ -53,7 +70,7 @@ describe('TokenFetcher Unit Tests', () => {
       const { input, output } = t;
 
       try {
-        const result = await new TokenFetcher().getTokenAddressFromList(input.chainId, input.address);
+        const result = await new TokenFetcher().resolveTokenAddress(input.chainId, input.address);
         expect(_.isEqual(result, output)).toBe(true);
       } catch (e: any) {
         expect(e).toBeInstanceOf(t.errorType);

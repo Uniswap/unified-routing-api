@@ -1,4 +1,4 @@
-import { RoutingType  } from '../../../../lib/constants';
+import { RoutingType } from '../../../../lib/constants';
 import {
   ClassicConfigJSON,
   ClassicRequest,
@@ -59,7 +59,6 @@ const EXACT_OUTPUT_MOCK_REQUEST_JSON: QuoteRequestBodyJSON = {
   configs: [MOCK_DL_CONFIG_JSON, CLASSIC_CONFIG_JSON],
 };
 
-
 describe('QuoteRequest', () => {
   for (const request of [EXACT_INPUT_MOCK_REQUEST_JSON, EXACT_OUTPUT_MOCK_REQUEST_JSON]) {
     describe(request.type, () => {
@@ -107,7 +106,7 @@ describe('QuoteRequest', () => {
         const config = DutchLimitRequest.fromRequestBody(info, MOCK_DL_CONFIG_JSON);
 
         expect(config.info.offerer).toEqual(OFFERER);
-      })
+      });
 
       it('includes offerer in info for classic', () => {
         const { quoteRequests: requests } = parseQuoteRequests(request);
@@ -115,8 +114,7 @@ describe('QuoteRequest', () => {
         const config = ClassicRequest.fromRequestBody(info, CLASSIC_CONFIG_JSON);
 
         expect(config.info.offerer).toEqual(OFFERER);
-      })
-
+      });
     });
   }
 });
