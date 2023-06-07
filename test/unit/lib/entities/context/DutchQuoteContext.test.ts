@@ -103,7 +103,10 @@ describe('DutchQuoteContext', () => {
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchLimitQuote({ amountOut: '1', filler }, 'EXACT_INPUT');
       expect(rfqQuote.filler).toEqual(filler);
-      const classicQuote = createClassicQuote({ quote: '10000000000', quoteGasAdjusted: '9999000000' }, { type: 'EXACT_INPUT' });
+      const classicQuote = createClassicQuote(
+        { quote: '10000000000', quoteGasAdjusted: '9999000000' },
+        { type: 'EXACT_INPUT' }
+      );
       context.dependencies();
 
       const quote = await context.resolve({
@@ -125,7 +128,10 @@ describe('DutchQuoteContext', () => {
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchLimitQuote({ amountOut: '1', filler }, 'EXACT_INPUT');
       expect(rfqQuote.filler).toEqual(filler);
-      const classicQuote = createClassicQuote({ quote: '10000000000', quoteGasAdjusted: '9999000000' }, { type: 'EXACT_INPUT' });
+      const classicQuote = createClassicQuote(
+        { quote: '10000000000', quoteGasAdjusted: '9999000000' },
+        { type: 'EXACT_INPUT' }
+      );
       context.dependencies();
 
       const quote = await context.resolve({
@@ -143,7 +149,10 @@ describe('DutchQuoteContext', () => {
       const native = WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(1)].address;
       const rfqQuote = createDutchLimitQuote({ amountOut: '1', tokenOut: native, filler }, 'EXACT_INPUT');
       expect(rfqQuote.filler).toEqual(filler);
-      const classicQuote = createClassicQuote({ quote: '10000000000', quoteGasAdjusted: '9999000000' }, { type: 'EXACT_INPUT' });
+      const classicQuote = createClassicQuote(
+        { quote: '10000000000', quoteGasAdjusted: '9999000000' },
+        { type: 'EXACT_INPUT' }
+      );
       context.dependencies();
 
       const quote = await context.resolve({
