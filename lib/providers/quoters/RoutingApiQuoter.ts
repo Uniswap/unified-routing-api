@@ -5,11 +5,9 @@ import axios from './helpers';
 
 import { NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { ClassicQuote, ClassicRequest, Quote } from '../../entities';
-import { log as globalLog } from '../../util/log';
+import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import { Quoter, QuoterType } from './index';
-
-const log = globalLog.child({ quoter: 'RoutingApiQuoter' });
 
 export class RoutingApiQuoter implements Quoter {
   static readonly type: QuoterType.ROUTING_API;

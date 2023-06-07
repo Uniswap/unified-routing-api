@@ -5,11 +5,9 @@ import axios from './helpers';
 
 import { NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { DutchLimitQuote, DutchLimitRequest, Quote } from '../../entities';
-import { log as globalLog } from '../../util/log';
+import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import { Quoter, QuoterType } from './index';
-
-const log = globalLog.child({ quoter: 'RfqQuoter' });
 
 export class RfqQuoter implements Quoter {
   static readonly type: QuoterType.GOUDA_RFQ;
