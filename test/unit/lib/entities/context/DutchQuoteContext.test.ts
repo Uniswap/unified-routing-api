@@ -1,10 +1,10 @@
 import { DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
 import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
 import Logger from 'bunyan';
-import { ethers } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 
 import { RoutingType } from '../../../../../lib/constants';
-import { DutchQuoteContext } from '../../../../../lib/entities';
+import { DutchLimitQuote, DutchQuoteContext } from '../../../../../lib/entities';
 import {
   createClassicQuote,
   createDutchLimitQuote,
@@ -118,6 +118,8 @@ describe('DutchQuoteContext', () => {
       expect((quote?.toJSON() as DutchLimitOrderInfoJSON).exclusiveFiller).toEqual(
         '0x0000000000000000000000000000000000000000'
       );
+      // Synthetic starts at quoteGasAdjusted + 1bp
+      expect(quote?.amountOut.toString()).toEqual(BigNumber.from(9999000000).mul(DutchLimitQuote.improvementExactIn).div(10000).toString());
     });
 
     it('skips synthetic if no route to eth', async () => {
@@ -163,6 +165,7 @@ describe('DutchQuoteContext', () => {
       expect((quote?.toJSON() as DutchLimitOrderInfoJSON).exclusiveFiller).toEqual(
         '0x0000000000000000000000000000000000000000'
       );
+      expect(quote?.amountOut.toString()).toEqual(BigNumber.from(9999000000).mul(DutchLimitQuote.improvementExactIn).div(10000).toString());
     });
 
     it('skips synthetic if very small', async () => {
