@@ -22,6 +22,7 @@ export type DutchLimitQuoteDataJSON = DutchLimitOrderInfoJSON & {
   quoteId: string;
   requestId: string;
   encodedOrder: string;
+  auctionPeriodSecs: number;
 };
 
 export type DutchLimitQuoteJSON = {
@@ -154,6 +155,7 @@ export class DutchLimitQuote implements Quote {
       encodedOrder: this.toOrder().serialize(),
       quoteId: this.quoteId,
       requestId: this.requestId,
+      auctionPeriodSecs: this.request.config.auctionPeriodSecs,
     };
   }
 

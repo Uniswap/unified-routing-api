@@ -1,6 +1,5 @@
 import { defaultRequestKey, QuoteRequest, QuoteRequestInfo } from '.';
 import {
-  DEFAULT_AUCTION_PERIOD_SECS,
   DEFAULT_EXCLUSIVITY_OVERRIDE_BPS,
   DEFAULT_SLIPPAGE_TOLERANCE,
   NATIVE_ADDRESS,
@@ -33,12 +32,24 @@ export class DutchLimitRequest implements QuoteRequest {
       {
         offerer: body.offerer ?? NATIVE_ADDRESS,
         exclusivityOverrideBps: body.exclusivityOverrideBps ?? DEFAULT_EXCLUSIVITY_OVERRIDE_BPS,
-        auctionPeriodSecs: body.auctionPeriodSecs ?? DEFAULT_AUCTION_PERIOD_SECS,
+        auctionPeriodSecs: body.auctionPeriodSecs ?? DutchLimitRequest.defaultAuctionPeriodSecs(info.tokenInChainId),
       }
     );
   }
 
   constructor(public readonly info: QuoteRequestInfo, public readonly config: DutchLimitConfig) {}
+
+  // TODO: parameterize this based on other factors
+  public static defaultAuctionPeriodSecs(chainId: number): number {
+    switch (chainId) {
+      case 1:
+        return 60;
+      case 137:
+        return 60;
+      default:
+        return 60;
+    }
+  }
 
   public toJSON(): DutchLimitConfigJSON {
     return Object.assign({}, this.config, {
