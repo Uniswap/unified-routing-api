@@ -114,6 +114,10 @@ export class APIPipeline extends Stack {
       secretCompleteArn: 'arn:aws:secretsmanager:us-east-2:644039819003:secret:routing-api-internal-api-key-Z68NmB',
     })
 
+    const parameterizationApiKeySecret = sm.Secret.fromSecretAttributes(this, 'parameterization-api-api-key', {
+      secretCompleteArn: 'arn:aws:secretsmanager:us-east-2:644039819003:secret:gouda-parameterization-api-internal-api-key-uw4sIa',
+    })
+
     // Beta us-east-2
     const betaUsEast2Stage = new APIStage(this, 'beta-us-east-2', {
       env: { account: '665191769009', region: 'us-east-2' },
@@ -124,6 +128,7 @@ export class APIPipeline extends Stack {
         ...envVars,
         ...jsonRpcProviders,
         ROUTING_API_KEY: routingApiKeySecret.secretValue.toString(),
+        PARAMETERIZATION_API_KEY: parameterizationApiKeySecret.secretValue.toString(),
         PARAMETERIZATION_API_URL: urlSecrets.secretValueFromJson('PARAMETERIZATION_API_BETA').toString(),
         ROUTING_API_URL: urlSecrets.secretValueFromJson('ROUTING_API_BETA').toString(),
         SERVICE_URL: urlSecrets.secretValueFromJson('GOUDA_SERVICE_BETA').toString(),
@@ -146,6 +151,7 @@ export class APIPipeline extends Stack {
         ...envVars,
         ...jsonRpcProviders,
         ROUTING_API_KEY: routingApiKeySecret.secretValue.toString(),
+        PARAMETERIZATION_API_KEY: parameterizationApiKeySecret.secretValue.toString(),
         PARAMETERIZATION_API_URL: urlSecrets.secretValueFromJson('PARAMETERIZATION_API_PROD').toString(),
         ROUTING_API_URL: urlSecrets.secretValueFromJson('ROUTING_API_PROD').toString(),
         SERVICE_URL: urlSecrets.secretValueFromJson('GOUDA_SERVICE_PROD').toString(),
@@ -238,6 +244,7 @@ envVars['SERVICE_URL'] = process.env['SERVICE_URL'] || '';
 envVars['REQUEST_DESTINATION_ARN'] = process.env['REQUEST_DESTINATION_ARN'] || '';
 envVars['RESPONSE_DESTINATION_ARN'] = process.env['RESPONSE_DESTINATION_ARN'] || '';
 envVars['ROUTING_API_KEY'] = process.env['ROUTING_API_KEY'] || 'test-api-key';
+envVars['PARAMETERIZATION_API_KEY'] = process.env['PARAMETERIZATION_API_KEY'] || 'test-api-key';
 
 const jsonRpcProviders = {} as { [chainKey: string]: string }
     SUPPORTED_CHAINS[RoutingType.CLASSIC].forEach((chainId: ChainId) => {
