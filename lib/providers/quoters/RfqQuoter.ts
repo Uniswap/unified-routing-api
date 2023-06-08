@@ -12,7 +12,7 @@ import { Quoter, QuoterType } from './index';
 export class RfqQuoter implements Quoter {
   static readonly type: QuoterType.GOUDA_RFQ;
 
-  constructor(private rfqUrl: string, private serviceUrl: string) {}
+  constructor(private rfqUrl: string, private serviceUrl: string, private paramApiKey: string) {}
 
   async quote(request: DutchLimitRequest): Promise<Quote | null> {
     if (request.routingType !== RoutingType.DUTCH_LIMIT) {
@@ -22,16 +22,20 @@ export class RfqQuoter implements Quoter {
 
     const offerer = request.config.offerer;
     const requests = [
-      axios.post(`${this.rfqUrl}quote`, {
-        tokenInChainId: request.info.tokenInChainId,
-        tokenOutChainId: request.info.tokenOutChainId,
-        tokenIn: mapNative(request.info.tokenIn, request.info.tokenInChainId),
-        tokenOut: mapNative(request.info.tokenOut, request.info.tokenInChainId),
-        amount: request.info.amount.toString(),
-        offerer: offerer,
-        requestId: request.info.requestId,
-        type: TradeType[request.info.type],
-      }),
+      axios.post(
+        `${this.rfqUrl}quote`,
+        {
+          tokenInChainId: request.info.tokenInChainId,
+          tokenOutChainId: request.info.tokenOutChainId,
+          tokenIn: mapNative(request.info.tokenIn, request.info.tokenInChainId),
+          tokenOut: mapNative(request.info.tokenOut, request.info.tokenInChainId),
+          amount: request.info.amount.toString(),
+          offerer: offerer,
+          requestId: request.info.requestId,
+          type: TradeType[request.info.type],
+        },
+        { headers: { 'x-api-key': this.paramApiKey } }
+      ),
       axios.get(`${this.serviceUrl}dutch-auction/nonce?address=${offerer}`),
     ];
 
