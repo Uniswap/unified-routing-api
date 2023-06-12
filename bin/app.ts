@@ -7,13 +7,13 @@ import { CodeBuildStep, CodePipeline, CodePipelineSource } from 'aws-cdk-lib/pip
 import { Construct } from 'constructs';
 import dotenv from 'dotenv';
 
+import { ChainId } from '@uniswap/smart-order-router';
 import { PipelineNotificationEvents } from 'aws-cdk-lib/aws-codepipeline';
+import { SUPPORTED_CHAINS } from '../lib/config/chains';
+import { RoutingType } from '../lib/constants';
 import { STAGE } from '../lib/util/stage';
 import { SERVICE_NAME } from './constants';
 import { APIStack } from './stacks/api-stack';
-import { SUPPORTED_CHAINS } from '../lib/config/chains';
-import { RoutingType } from '../lib/constants';
-import { ChainId } from '@uniswap/smart-order-router';
 
 dotenv.config();
 
@@ -102,21 +102,22 @@ export class APIPipeline extends Stack {
     const jsonRpcProvidersSecret = sm.Secret.fromSecretAttributes(this, 'RPCProviderUrls', {
       // Infura RPC urls
       secretCompleteArn: 'arn:aws:secretsmanager:us-east-2:644039819003:secret:gouda-service-rpc-urls-2-9spgjc',
-    })
+    });
 
-    const jsonRpcProviders = {} as { [chainKey: string]: string }
+    const jsonRpcProviders = {} as { [chainKey: string]: string };
     SUPPORTED_CHAINS[RoutingType.CLASSIC].forEach((chainId: ChainId) => {
-      const mapKey = `RPC_${chainId}`
-      jsonRpcProviders[mapKey] = jsonRpcProvidersSecret.secretValueFromJson(mapKey).toString()
-    })
+      const mapKey = `RPC_${chainId}`;
+      jsonRpcProviders[mapKey] = jsonRpcProvidersSecret.secretValueFromJson(mapKey).toString();
+    });
 
     const routingApiKeySecret = sm.Secret.fromSecretAttributes(this, 'routing-api-key', {
       secretCompleteArn: 'arn:aws:secretsmanager:us-east-2:644039819003:secret:routing-api-internal-api-key-Z68NmB',
-    })
+    });
 
     const parameterizationApiKeySecret = sm.Secret.fromSecretAttributes(this, 'parameterization-api-api-key', {
-      secretCompleteArn: 'arn:aws:secretsmanager:us-east-2:644039819003:secret:gouda-parameterization-api-internal-api-key-uw4sIa',
-    })
+      secretCompleteArn:
+        'arn:aws:secretsmanager:us-east-2:644039819003:secret:gouda-parameterization-api-internal-api-key-uw4sIa',
+    });
 
     // Beta us-east-2
     const betaUsEast2Stage = new APIStage(this, 'beta-us-east-2', {
@@ -246,13 +247,14 @@ envVars['RESPONSE_DESTINATION_ARN'] = process.env['RESPONSE_DESTINATION_ARN'] ||
 envVars['ROUTING_API_KEY'] = process.env['ROUTING_API_KEY'] || 'test-api-key';
 envVars['PARAMETERIZATION_API_KEY'] = process.env['PARAMETERIZATION_API_KEY'] || 'test-api-key';
 
-const jsonRpcProviders = {} as { [chainKey: string]: string }
-    SUPPORTED_CHAINS[RoutingType.CLASSIC].forEach((chainId: ChainId) => {
-      const mapKey = `RPC_${chainId}`
-      jsonRpcProviders[mapKey] = process.env[mapKey] || '';
-})
+const jsonRpcProviders = {} as { [chainKey: string]: string };
+SUPPORTED_CHAINS[RoutingType.CLASSIC].forEach((chainId: ChainId) => {
+  const mapKey = `RPC_${chainId}`;
+  jsonRpcProviders[mapKey] = process.env[mapKey] || '';
+});
 
 new APIStack(app, `${SERVICE_NAME}Stack`, {
+  env: { region: 'us-east-1' },
   provisionedConcurrency: process.env.PROVISION_CONCURRENCY ? parseInt(process.env.PROVISION_CONCURRENCY) : 0,
   throttlingOverride: process.env.THROTTLE_PER_FIVE_MINS,
   chatbotSNSArn: process.env.CHATBOT_SNS_ARN,

@@ -17,8 +17,6 @@ import _ from 'lodash';
 import { SUPPORTED_CHAINS } from '../../lib/config/chains';
 import { STAGE } from '../../lib/util/stage';
 import { SERVICE_NAME } from '../constants';
-import { AnalyticsStack } from './analytics-stack';
-import { DashboardStack } from './dashboard-stack';
 
 const ALL_SUPPORTED_CHAINS = _.uniq([...SUPPORTED_CHAINS.CLASSIC, ...SUPPORTED_CHAINS.DUTCH_LIMIT]);
 
@@ -189,16 +187,16 @@ export class APIStack extends cdk.Stack {
     }
 
     /* Analytics */
-    new AnalyticsStack(this, 'AnalyticsStack', {
-      quoteLambda,
-      envVars: props.envVars,
-    });
+    // new AnalyticsStack(this, 'AnalyticsStack', {
+    //   quoteLambda,
+    //   envVars: props.envVars,
+    // });
 
-    /* Dashboard */
-    new DashboardStack(this, 'DashboardStack', {
-      apiName: api.restApiName,
-      quoteLambdaName: quoteLambda.functionName,
-    });
+    // /* Dashboard */
+    // new DashboardStack(this, 'DashboardStack', {
+    //   apiName: api.restApiName,
+    //   quoteLambdaName: quoteLambda.functionName,
+    // });
 
     /* Quote Endpoint */
     const quoteLambdaIntegration = new aws_apigateway.LambdaIntegration(quoteLambdaAlias, {});
@@ -475,7 +473,7 @@ export class APIStack extends cdk.Stack {
       apiAlarm4xxSev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       apiAlarmLatencySev2.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       apiAlarmLatencySev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
-      
+
       percent5XXByChainAlarm.forEach((alarm) => {
         alarm.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       });
