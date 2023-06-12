@@ -44,9 +44,9 @@ type Amounts = {
 
 export class DutchLimitQuote implements Quote {
   public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
-  // Add 1bps price improvmement to break ties in favor of Dutch
+  // Add 1bps price improvmement to favor Dutch
   public static improvementExactIn = BigNumber.from(10001);
-  public static improvementExactOut = BigNumber.from(10001);
+  public static improvementExactOut = BigNumber.from(9999);
 
   // build a dutch quote from an RFQ response
   public static fromResponseBody(
@@ -93,9 +93,9 @@ export class DutchLimitQuote implements Quote {
       uuidv4(), // synthetic quote doesn't receive a quoteId from RFQ api, so generate one
       request.info.tokenIn,
       quote.request.info.tokenOut,
-      quote.amountInGasAdjusted.mul(this.improvementExactIn).div(HUNDRED_PERCENT),
+      this.applyPriceImprovementAmountIn(quote.amountInGasAdjusted),
       amountInEnd,
-      quote.amountOutGasAdjusted.mul(this.improvementExactOut).div(HUNDRED_PERCENT),
+      this.applyPriceImprovementAmountOut(quote.amountOutGasAdjusted),
       amountOutEnd,
       request.config.offerer,
       '', // synthetic quote has no filler
@@ -249,19 +249,12 @@ export class DutchLimitQuote implements Quote {
     }
   }
 
-  static applyPriceImprovement(classicQuote: ClassicQuote): { amountIn: BigNumber; amountOut: BigNumber } {
-    const info = classicQuote.request.info;
-    if (info.type === TradeType.EXACT_INPUT) {
-      return {
-        amountIn: info.amount,
-        amountOut: classicQuote.amountOut.mul(DutchLimitQuote.improvementExactIn).div(HUNDRED_PERCENT),
-      };
-    } else {
-      return {
-        amountIn: classicQuote.amountIn.mul(DutchLimitQuote.improvementExactOut).div(HUNDRED_PERCENT),
-        amountOut: info.amount,
-      };
-    }
+  static applyPriceImprovementAmountIn(amountIn: BigNumber, improvementExactOutBps = DutchLimitQuote.improvementExactOut): BigNumber {
+    return amountIn.mul(improvementExactOutBps).div(HUNDRED_PERCENT);
+  }
+
+  static applyPriceImprovementAmountOut(amountOut: BigNumber, improvementExactInBps = DutchLimitQuote.improvementExactIn): BigNumber {
+    return amountOut.mul(improvementExactInBps).div(HUNDRED_PERCENT);
   }
 
   // Calculates the gas adjustment for the given quote if processed through Gouda
@@ -279,14 +272,14 @@ export class DutchLimitQuote implements Quote {
     if (info.type === TradeType.EXACT_INPUT) {
       const amountOut = newGasUseEstimateQuote.gt(classicQuote.amountOut)
         ? BigNumber.from(0)
-        : DutchLimitQuote.applyPriceImprovement(classicQuote).amountOut.sub(newGasUseEstimateQuote);
+        : DutchLimitQuote.applyPriceImprovementAmountOut(classicQuote.amountOutGasAdjusted).sub(newGasUseEstimateQuote);
       return {
         amountIn: info.amount,
         amountOut: amountOut.lt(0) ? BigNumber.from(0) : amountOut,
       };
     } else {
       return {
-        amountIn: DutchLimitQuote.applyPriceImprovement(classicQuote).amountIn
+        amountIn: DutchLimitQuote.applyPriceImprovementAmountIn(classicQuote.amountInGasAdjusted)
           .add(newGasUseEstimateQuote),
         amountOut: info.amount,
       };
