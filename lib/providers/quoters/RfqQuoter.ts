@@ -36,7 +36,7 @@ export class RfqQuoter implements Quoter {
         },
         { headers: { 'x-api-key': this.paramApiKey } }
       ),
-      axios.get(`${this.serviceUrl}dutch-auction/nonce?address=${offerer}`),
+      axios.get(`${this.serviceUrl}dutch-auction/nonce?address=${offerer}&chainId=${request.info.tokenInChainId}`), // should also work for cross-chain?
     ];
 
     let quote: Quote | null = null;
