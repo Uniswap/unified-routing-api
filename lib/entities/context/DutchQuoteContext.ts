@@ -172,6 +172,7 @@ export class DutchQuoteContext implements QuoteContext {
     }
 
     const quoteGasThreshold = routingApiQuote.mul(GAS_PROPORTION_THRESHOLD_BPS).div(BPS);
+
     if (gasUsedQuote.gte(quoteGasThreshold)) {
       log.info(
         { routingApiQuote: routingApiQuote.toString(), gasUsedQuote: gasUsedQuote.toString() },
