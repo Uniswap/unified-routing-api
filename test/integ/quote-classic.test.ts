@@ -54,6 +54,7 @@ if (!process.env.UNISWAP_API || !process.env.ARCHIVE_NODE_RPC) {
 const API = `${process.env.UNISWAP_API!}quote`;
 
 const SLIPPAGE = '5';
+const LARGE_SLIPPAGE = '10';
 
 const axios = axiosStatic.create();
 axiosRetry(axios, {
@@ -608,7 +609,7 @@ describe('quote', function () {
                   ? await getAmount(1, type, 'ETH', 'UNI', '10')
                   : await getAmount(1, type, 'ETH', 'UNI', '10000'),
               type,
-              slippageTolerance: SLIPPAGE,
+              slippageTolerance: type == 'EXACT_OUTPUT' ? LARGE_SLIPPAGE : SLIPPAGE, // for exact out somehow the liquidation wasn't sufficient, hence higher slippage
               configs: [
                 {
                   routingType: RoutingType.CLASSIC,
@@ -659,7 +660,7 @@ describe('quote', function () {
                   ? await getAmount(1, type, 'ETH', 'UNI', '1')
                   : await getAmount(1, type, 'ETH', 'UNI', '100'),
               type,
-              slippageTolerance: SLIPPAGE,
+              slippageTolerance: type == 'EXACT_OUTPUT' ? LARGE_SLIPPAGE : SLIPPAGE, // for exact out somehow the liquidation wasn't sufficient, hence higher slippage
               configs: [
                 {
                   routingType: RoutingType.CLASSIC,
@@ -1461,7 +1462,7 @@ describe('quote', function () {
                     ? await getAmount(1, type, 'ETH', 'UNI', '10')
                     : await getAmount(1, type, 'ETH', 'UNI', '10000'),
                 type,
-                slippageTolerance: SLIPPAGE,
+                slippageTolerance: type == 'EXACT_OUTPUT' ? LARGE_SLIPPAGE : SLIPPAGE, // for exact out somehow the liquidation wasn't sufficient, hence higher slippage
                 configs: [
                   {
                     routingType: RoutingType.CLASSIC,
@@ -1510,7 +1511,7 @@ describe('quote', function () {
                     ? await getAmount(1, type, 'ETH', 'UNI', '1')
                     : await getAmount(1, type, 'ETH', 'UNI', '100'),
                 type,
-                slippageTolerance: SLIPPAGE,
+                slippageTolerance: type == 'EXACT_OUTPUT' ? LARGE_SLIPPAGE : SLIPPAGE, // for exact out somehow the liquidation wasn't sufficient, hence higher slippage
                 configs: [
                   {
                     routingType: RoutingType.CLASSIC,
