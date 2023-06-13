@@ -1,4 +1,4 @@
-import { DutchLimitOrder, parseValidation, ValidationType } from '@uniswap/gouda-sdk';
+import { DutchOrder, parseValidation, ValidationType } from '@uniswap/gouda-sdk';
 import { BigNumber } from 'ethers';
 
 import {
@@ -72,7 +72,7 @@ describe('QuoteResponse', () => {
         },
       ],
     });
-    const order = DutchLimitOrder.fromJSON(quote.toOrder().toJSON(), quote.chainId);
+    const order = DutchOrder.fromJSON(quote.toOrder().toJSON(), quote.chainId);
     expect(order.info.exclusiveFiller).toEqual(FILLER);
     expect(order.info.exclusivityOverrideBps.toString()).toEqual('12');
 
@@ -97,7 +97,7 @@ describe('QuoteResponse', () => {
         },
       ],
     });
-    const order = DutchLimitOrder.fromJSON(quote.toOrder().toJSON(), quote.chainId);
+    const order = DutchOrder.fromJSON(quote.toOrder().toJSON(), quote.chainId);
     const parsedValidation = parseValidation(order.info);
     expect(parsedValidation.type).toEqual(ValidationType.None);
     expect(BigNumber.from(quote.toOrder().toJSON().nonce).gt(0)).toBeTruthy();

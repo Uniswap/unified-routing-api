@@ -1,4 +1,4 @@
-import { DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
+import { DutchOrderInfoJSON } from '@uniswap/gouda-sdk';
 import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
 import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
@@ -71,7 +71,7 @@ describe('DutchQuoteContext', () => {
         [QUOTE_REQUEST_DL.key()]: rfqQuote,
       });
       expect(quote).toMatchObject(rfqQuote);
-      expect((quote?.toJSON() as DutchLimitOrderInfoJSON).exclusiveFiller).toEqual(filler);
+      expect((quote?.toJSON() as DutchOrderInfoJSON).exclusiveFiller).toEqual(filler);
     });
 
     it('returns null if tokenIn is not in tokenlist', async () => {
@@ -115,11 +115,13 @@ describe('DutchQuoteContext', () => {
         [context.routeToNativeKey]: classicQuote,
       });
       expect(quote?.routingType).toEqual(RoutingType.DUTCH_LIMIT);
-      expect((quote?.toJSON() as DutchLimitOrderInfoJSON).exclusiveFiller).toEqual(
+      expect((quote?.toJSON() as DutchOrderInfoJSON).exclusiveFiller).toEqual(
         '0x0000000000000000000000000000000000000000'
       );
       // Synthetic starts at quoteGasAdjusted + 1bp
-      expect(quote?.amountOut.toString()).toEqual(BigNumber.from(9999000000).mul(DutchLimitQuote.improvementExactIn).div(10000).toString());
+      expect(quote?.amountOut.toString()).toEqual(
+        BigNumber.from(9999000000).mul(DutchLimitQuote.amountOutImprovementExactIn).div(10000).toString()
+      );
     });
 
     it('skips synthetic if no route to eth', async () => {
@@ -162,10 +164,12 @@ describe('DutchQuoteContext', () => {
         [context.classicKey]: classicQuote,
       });
       expect(quote?.routingType).toEqual(RoutingType.DUTCH_LIMIT);
-      expect((quote?.toJSON() as DutchLimitOrderInfoJSON).exclusiveFiller).toEqual(
+      expect((quote?.toJSON() as DutchOrderInfoJSON).exclusiveFiller).toEqual(
         '0x0000000000000000000000000000000000000000'
       );
-      expect(quote?.amountOut.toString()).toEqual(BigNumber.from(9999000000).mul(DutchLimitQuote.improvementExactIn).div(10000).toString());
+      expect(quote?.amountOut.toString()).toEqual(
+        BigNumber.from(9999000000).mul(DutchLimitQuote.amountOutImprovementExactIn).div(10000).toString()
+      );
     });
 
     it('skips synthetic if very small', async () => {
@@ -192,7 +196,10 @@ describe('DutchQuoteContext', () => {
       it('returns true if quote == quoteGasAdjusted', async () => {
         const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL);
         const amountOut = ethers.utils.parseEther('1');
-        const classicQuote = createClassicQuote({ quote: amountOut.toString(), quoteGasAdjusted: amountOut.toString() }, { type: 'EXACT_INPUT' });
+        const classicQuote = createClassicQuote(
+          { quote: amountOut.toString(), quoteGasAdjusted: amountOut.toString() },
+          { type: 'EXACT_INPUT' }
+        );
         const hasSize = context.hasOrderSizeForSynthetic(logger, classicQuote);
         expect(hasSize).toEqual(true);
       });
