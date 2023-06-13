@@ -100,7 +100,6 @@ describe('quoteGouda', function () {
     tokenOutAfter: CurrencyAmount<Currency>;
     tokenOutBefore: CurrencyAmount<Currency>;
   }> => {
-    //console.log(order);
     const reactor = ExclusiveDutchLimitOrderReactor__factory.connect(order.info.reactor, filler);
 
     // Approve Permit2
@@ -260,8 +259,6 @@ describe('quoteGouda', function () {
             data: { quote },
             status,
           } = response;
-
-          console.log(`quote:\n${JSON.stringify(quote, null, 2)}`);
 
           const order = new DutchOrder(quote as any, 1);
           expect(status).to.equal(200);
