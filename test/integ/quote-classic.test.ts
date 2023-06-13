@@ -609,7 +609,7 @@ describe('quote', function () {
                   ? await getAmount(1, type, 'ETH', 'UNI', '10')
                   : await getAmount(1, type, 'ETH', 'UNI', '10000'),
               type,
-              slippageTolerance: type == 'EXACT_OUTPUT' ? LARGE_SLIPPAGE : SLIPPAGE, // for exact out somehow the liquidation wasn't sufficient, hence higher slippage
+              slippageTolerance: type == 'EXACT_OUTPUT' ? LARGE_SLIPPAGE : SLIPPAGE, // for exact out somehow the liquidity wasn't sufficient, hence higher slippage
               configs: [
                 {
                   routingType: RoutingType.CLASSIC,
@@ -660,7 +660,7 @@ describe('quote', function () {
                   ? await getAmount(1, type, 'ETH', 'UNI', '1')
                   : await getAmount(1, type, 'ETH', 'UNI', '100'),
               type,
-              slippageTolerance: type == 'EXACT_OUTPUT' ? LARGE_SLIPPAGE : SLIPPAGE, // for exact out somehow the liquidation wasn't sufficient, hence higher slippage
+              slippageTolerance: type == 'EXACT_OUTPUT' ? LARGE_SLIPPAGE : SLIPPAGE, // for exact out somehow the liquidity wasn't sufficient, hence higher slippage
               configs: [
                 {
                   routingType: RoutingType.CLASSIC,
@@ -1462,7 +1462,7 @@ describe('quote', function () {
                     ? await getAmount(1, type, 'ETH', 'UNI', '10')
                     : await getAmount(1, type, 'ETH', 'UNI', '10000'),
                 type,
-                slippageTolerance: type == 'EXACT_OUTPUT' ? LARGE_SLIPPAGE : SLIPPAGE, // for exact out somehow the liquidation wasn't sufficient, hence higher slippage
+                slippageTolerance: type == 'EXACT_OUTPUT' ? LARGE_SLIPPAGE : SLIPPAGE, // for exact out somehow the liquidity wasn't sufficient, hence higher slippage
                 configs: [
                   {
                     routingType: RoutingType.CLASSIC,
@@ -1511,7 +1511,7 @@ describe('quote', function () {
                     ? await getAmount(1, type, 'ETH', 'UNI', '1')
                     : await getAmount(1, type, 'ETH', 'UNI', '100'),
                 type,
-                slippageTolerance: type == 'EXACT_OUTPUT' ? LARGE_SLIPPAGE : SLIPPAGE, // for exact out somehow the liquidation wasn't sufficient, hence higher slippage
+                slippageTolerance: type == 'EXACT_OUTPUT' ? LARGE_SLIPPAGE : SLIPPAGE, // for exact out somehow the liquidity wasn't sufficient, hence higher slippage
                 configs: [
                   {
                     routingType: RoutingType.CLASSIC,
