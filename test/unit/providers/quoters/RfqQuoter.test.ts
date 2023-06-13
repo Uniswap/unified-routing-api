@@ -7,7 +7,9 @@ import { AMOUNT_IN, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
 import { QUOTE_REQUEST_DL, QUOTE_REQUEST_DL_EXACT_OUT } from '../../../utils/fixtures';
 
 describe('RfqQuoter test', () => {
-  const getSpy = (nonce?: string) => jest.spyOn(axios, 'get').mockResolvedValue({ data: { nonce: nonce } });
+  const getSpy = (nonce?: string) => {
+    return jest.spyOn(axios, 'get').mockResolvedValue({ data: { nonce: nonce } });
+  };
   const postSpy = (responseData: DutchLimitQuoteJSON) =>
     jest.spyOn(axios, 'post').mockResolvedValue({ data: responseData });
   const quoter = new RfqQuoter('https://api.uniswap.org/', 'https://api.uniswap.org/', 'test-api-key');
@@ -68,6 +70,14 @@ describe('RfqQuoter test', () => {
       expect(quote?.toJSON()).toMatchObject({
         nonce: '124',
       });
+    });
+
+    it('get nonce by address and chainId', async () => {
+      const spy = getSpy('123');
+      await quoter.quote(QUOTE_REQUEST_DL);
+      expect(spy).toBeCalledWith(
+        'https://api.uniswap.org/dutch-auction/nonce?address=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&chainId=1'
+      );
     });
   });
 });
