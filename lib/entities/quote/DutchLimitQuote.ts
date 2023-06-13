@@ -1,4 +1,4 @@
-import { DutchLimitOrder, DutchLimitOrderBuilder, DutchLimitOrderInfoJSON } from '@uniswap/gouda-sdk';
+import { DutchOrder, DutchOrderBuilder, DutchOrderInfoJSON } from '@uniswap/gouda-sdk';
 import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber, ethers } from 'ethers';
 
@@ -18,7 +18,7 @@ import { currentTimestampInSeconds } from '../../util/time';
 import { ClassicQuote } from './ClassicQuote';
 import { LogJSON } from './index';
 
-export type DutchLimitQuoteDataJSON = DutchLimitOrderInfoJSON & {
+export type DutchLimitQuoteDataJSON = DutchOrderInfoJSON & {
   quoteId: string;
   requestId: string;
   encodedOrder: string;
@@ -45,8 +45,8 @@ type Amounts = {
 export class DutchLimitQuote implements Quote {
   public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
   // Add 1bps price improvmement to favor Dutch
-  public static improvementExactIn = BigNumber.from(10001);
-  public static improvementExactOut = BigNumber.from(9999);
+  public static amountOutImprovementExactIn = BigNumber.from(10001);
+  public static amountInImprovementExactOut = BigNumber.from(9999);
 
   // build a dutch quote from an RFQ response
   public static fromResponseBody(
@@ -79,11 +79,20 @@ export class DutchLimitQuote implements Quote {
 
   // build a synthetic dutch quote from a classic quote
   public static fromClassicQuote(request: DutchLimitRequest, quote: ClassicQuote): DutchLimitQuote {
-    const { amountIn: dutchAdjustedAmountIn, amountOut: dutchAdjustedAmountOut } = DutchLimitQuote.applyGasAdjustment(quote);
+    const adjustedAmountIn =
+      request.info.type === TradeType.EXACT_INPUT
+        ? quote.amountIn
+        : this.applyPriceImprovementAmountIn(quote.amountInGasAdjusted);
+
+    const adjustedAmountOut =
+      request.info.type === TradeType.EXACT_OUTPUT
+        ? quote.amountOut
+        : this.applyPriceImprovementAmountOut(quote.amountOutGasAdjusted);
+
     const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchLimitQuote.calculateEndAmountFromSlippage(
       request.info,
-      dutchAdjustedAmountIn,
-      dutchAdjustedAmountOut
+      adjustedAmountIn,
+      adjustedAmountOut
     );
     return new DutchLimitQuote(
       quote.createdAt,
@@ -93,9 +102,9 @@ export class DutchLimitQuote implements Quote {
       uuidv4(), // synthetic quote doesn't receive a quoteId from RFQ api, so generate one
       request.info.tokenIn,
       quote.request.info.tokenOut,
-      this.applyPriceImprovementAmountIn(quote.amountInGasAdjusted),
+      adjustedAmountIn,
       amountInEnd,
-      this.applyPriceImprovementAmountOut(quote.amountOutGasAdjusted),
+      adjustedAmountOut,
       amountOutEnd,
       request.config.offerer,
       '', // synthetic quote has no filler
@@ -159,8 +168,8 @@ export class DutchLimitQuote implements Quote {
     };
   }
 
-  public toOrder(): DutchLimitOrder {
-    const orderBuilder = new DutchLimitOrderBuilder(this.chainId);
+  public toOrder(): DutchOrder {
+    const orderBuilder = new DutchOrderBuilder(this.chainId);
     const startTime = Math.floor(Date.now() / 1000);
     const nonce = this.nonce ?? this.generateRandomNonce();
     const decayStartTime = startTime;
@@ -249,11 +258,17 @@ export class DutchLimitQuote implements Quote {
     }
   }
 
-  static applyPriceImprovementAmountIn(amountIn: BigNumber, improvementExactOutBps = DutchLimitQuote.improvementExactOut): BigNumber {
+  static applyPriceImprovementAmountIn(
+    amountIn: BigNumber,
+    improvementExactOutBps = DutchLimitQuote.amountInImprovementExactOut
+  ): BigNumber {
     return amountIn.mul(improvementExactOutBps).div(HUNDRED_PERCENT);
   }
 
-  static applyPriceImprovementAmountOut(amountOut: BigNumber, improvementExactInBps = DutchLimitQuote.improvementExactIn): BigNumber {
+  static applyPriceImprovementAmountOut(
+    amountOut: BigNumber,
+    improvementExactInBps = DutchLimitQuote.amountOutImprovementExactIn
+  ): BigNumber {
     return amountOut.mul(improvementExactInBps).div(HUNDRED_PERCENT);
   }
 
@@ -279,8 +294,9 @@ export class DutchLimitQuote implements Quote {
       };
     } else {
       return {
-        amountIn: DutchLimitQuote.applyPriceImprovementAmountIn(classicQuote.amountInGasAdjusted)
-          .add(newGasUseEstimateQuote),
+        amountIn: DutchLimitQuote.applyPriceImprovementAmountIn(classicQuote.amountInGasAdjusted).add(
+          newGasUseEstimateQuote
+        ),
         amountOut: info.amount,
       };
     }

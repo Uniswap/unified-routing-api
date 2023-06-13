@@ -1,5 +1,5 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { DutchLimitOrder } from '@uniswap/gouda-sdk';
+import { DutchOrder } from '@uniswap/gouda-sdk';
 import { Currency, CurrencyAmount, Fraction, WETH9 } from '@uniswap/sdk-core';
 import {
   DAI_MAINNET,
@@ -91,7 +91,7 @@ describe('quoteGouda', function () {
   let block: number;
 
   const executeSwap = async (
-    order: DutchLimitOrder,
+    order: DutchOrder,
     currencyIn: Currency,
     currencyOut: Currency
   ): Promise<{
@@ -100,6 +100,7 @@ describe('quoteGouda', function () {
     tokenOutAfter: CurrencyAmount<Currency>;
     tokenOutBefore: CurrencyAmount<Currency>;
   }> => {
+    //console.log(order);
     const reactor = ExclusiveDutchLimitOrderReactor__factory.connect(order.info.reactor, filler);
 
     // Approve Permit2
@@ -260,7 +261,9 @@ describe('quoteGouda', function () {
             status,
           } = response;
 
-          const order = new DutchLimitOrder(quote as any, 1);
+          console.log(`quote:\n${JSON.stringify(quote, null, 2)}`);
+
+          const order = new DutchOrder(quote as any, 1);
           expect(status).to.equal(200);
 
           expect(order.info.offerer).to.equal(alice.address);
@@ -318,7 +321,7 @@ describe('quoteGouda', function () {
             status,
           } = response;
 
-          const order = new DutchLimitOrder(quote as any, 1);
+          const order = new DutchOrder(quote as any, 1);
           expect(status).to.equal(200);
 
           expect(order.info.offerer).to.equal(alice.address);
@@ -393,7 +396,7 @@ describe('quoteGouda', function () {
           );
           expect(routingResponse.status).to.equal(200);
 
-          const order = new DutchLimitOrder(quote as any, 1);
+          const order = new DutchOrder(quote as any, 1);
           expect(status).to.equal(200);
           const routingQuote = routingResponse.data.quoteGasAdjusted;
           // account for gas and slippage
