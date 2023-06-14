@@ -5,7 +5,7 @@ import { BigNumber, ethers } from 'ethers';
 import { PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteJSON } from '.';
-import { DutchLimitRequest, QuoteRequestInfo } from '..';
+import { DutchLimitRequest } from '..';
 import {
   GOUDA_BASE_GAS,
   HUNDRED_PERCENT,
@@ -18,11 +18,13 @@ import { currentTimestampInSeconds } from '../../util/time';
 import { ClassicQuote } from './ClassicQuote';
 import { LogJSON } from './index';
 
-export type DutchLimitQuoteDataJSON = DutchOrderInfoJSON & {
+export type DutchLimitQuoteDataJSON = {
+  orderInfo: DutchOrderInfoJSON;
   quoteId: string;
   requestId: string;
   encodedOrder: string;
   auctionPeriodSecs: number;
+  slippageTolerance: string;
 };
 
 export type DutchLimitQuoteJSON = {
@@ -55,7 +57,7 @@ export class DutchLimitQuote implements Quote {
     nonce?: string
   ): DutchLimitQuote {
     const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchLimitQuote.calculateEndAmountFromSlippage(
-      request.info,
+      request,
       BigNumber.from(body.amountIn),
       BigNumber.from(body.amountOut)
     );
@@ -90,7 +92,7 @@ export class DutchLimitQuote implements Quote {
         : this.applyPriceImprovementAmountOut(quote.amountOutGasAdjusted);
 
     const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchLimitQuote.calculateEndAmountFromSlippage(
-      request.info,
+      request,
       adjustedAmountIn,
       adjustedAmountOut
     );
@@ -117,7 +119,7 @@ export class DutchLimitQuote implements Quote {
     if (!classic) return quote;
     const { amountIn: amountInClassic, amountOut: amountOutClassic } = DutchLimitQuote.applyGasAdjustment(classic);
     const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchLimitQuote.calculateEndAmountFromSlippage(
-      quote.request.info,
+      quote.request,
       amountInClassic,
       amountOutClassic
     );
@@ -160,11 +162,12 @@ export class DutchLimitQuote implements Quote {
 
   public toJSON(): QuoteJSON {
     return {
-      ...this.toOrder().toJSON(),
+      orderInfo: this.toOrder().toJSON(),
       encodedOrder: this.toOrder().serialize(),
       quoteId: this.quoteId,
       requestId: this.requestId,
       auctionPeriodSecs: this.request.config.auctionPeriodSecs,
+      slippageTolerance: this.request.slippageTolerance,
     };
   }
 
@@ -216,7 +219,7 @@ export class DutchLimitQuote implements Quote {
       offerer: this.offerer,
       filler: this.filler,
       routing: RoutingType[this.routingType],
-      slippage: this.request.info.slippageTolerance ? parseFloat(this.request.info.slippageTolerance) : -1,
+      slippage: parseFloat(this.request.slippageTolerance),
       createdAt: this.createdAt,
     };
   }
@@ -240,19 +243,23 @@ export class DutchLimitQuote implements Quote {
   // static helpers
 
   static calculateEndAmountFromSlippage(
-    info: QuoteRequestInfo,
+    request: DutchLimitRequest,
     amountInStart: BigNumber,
     amountOutStart: BigNumber
   ): Amounts {
-    const isExactIn = info.type === TradeType.EXACT_INPUT;
+    const isExactIn = request.info.type === TradeType.EXACT_INPUT;
     if (isExactIn) {
       return {
         amountIn: amountInStart,
-        amountOut: amountOutStart.mul(HUNDRED_PERCENT.sub(BigNumber.from(info.slippageTolerance))).div(HUNDRED_PERCENT),
+        amountOut: amountOutStart
+          .mul(HUNDRED_PERCENT.sub(BigNumber.from(request.slippageTolerance)))
+          .div(HUNDRED_PERCENT),
       };
     } else {
       return {
-        amountIn: amountInStart.mul(HUNDRED_PERCENT.add(BigNumber.from(info.slippageTolerance))).div(HUNDRED_PERCENT),
+        amountIn: amountInStart
+          .mul(HUNDRED_PERCENT.add(BigNumber.from(request.slippageTolerance)))
+          .div(HUNDRED_PERCENT),
         amountOut: amountOutStart,
       };
     }

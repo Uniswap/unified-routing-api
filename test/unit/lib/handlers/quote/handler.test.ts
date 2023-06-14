@@ -172,7 +172,7 @@ describe('QuoteHandler', () => {
           getEvent(DL_REQUEST_BODY),
           {} as unknown as Context
         );
-        const quoteJSON = JSON.parse(res.body).quote as DutchOrderInfoJSON;
+        const quoteJSON = JSON.parse(res.body).quote.orderInfo as DutchOrderInfoJSON;
         expect(quoteJSON.outputs[0].startAmount).toBe(DL_QUOTE_EXACT_IN_BETTER.amountOut.toString());
       });
 
@@ -196,7 +196,7 @@ describe('QuoteHandler', () => {
           getEvent(request),
           {} as unknown as Context
         );
-        const quoteJSON = JSON.parse(res.body).quote as DutchOrderInfoJSON;
+        const quoteJSON = JSON.parse(res.body).quote.orderInfo as DutchOrderInfoJSON;
         expect(quoteJSON.input.startAmount).toBe(DL_QUOTE_EXACT_OUT_BETTER.amountIn.toString());
       });
 
@@ -214,7 +214,7 @@ describe('QuoteHandler', () => {
         );
         const { amountOut: amountOutClassic } = DutchLimitQuote.applyGasAdjustment(CLASSIC_QUOTE_EXACT_IN_WORSE);
         const slippageAdjustedAmountOut = amountOutClassic.mul(95).div(100);
-        const quoteJSON = JSON.parse(res.body).quote as DutchOrderInfoJSON;
+        const quoteJSON = JSON.parse(res.body).quote.orderInfo as DutchOrderInfoJSON;
         expect(quoteJSON.outputs.length).toBe(1);
         expect(quoteJSON.outputs[0].endAmount).toBe(slippageAdjustedAmountOut.toString());
       });
@@ -291,7 +291,7 @@ describe('QuoteHandler', () => {
 
         const responseBody = JSON.parse(response.body);
         const permitData = responseBody.permitData;
-        const quote = responseBody.quote as DutchOrderInfoJSON;
+        const quote = responseBody.quote.orderInfo as DutchOrderInfoJSON;
         expect(permitData.values.permitted.token).toBe(quote.input.token);
         expect(permitData.values.witness.inputToken).toBe(quote.input.token);
         expect(permitData.values.witness.outputs[0].token).toBe(quote.outputs[0].token);

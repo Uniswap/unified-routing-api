@@ -1,10 +1,9 @@
-import { DutchOrderInfoJSON } from '@uniswap/gouda-sdk';
 import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
 import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
 
 import { RoutingType } from '../../../../../lib/constants';
-import { DutchLimitQuote, DutchQuoteContext } from '../../../../../lib/entities';
+import { DutchLimitQuote, DutchLimitQuoteDataJSON, DutchQuoteContext } from '../../../../../lib/entities';
 import {
   createClassicQuote,
   createDutchLimitQuote,
@@ -71,7 +70,7 @@ describe('DutchQuoteContext', () => {
         [QUOTE_REQUEST_DL.key()]: rfqQuote,
       });
       expect(quote).toMatchObject(rfqQuote);
-      expect((quote?.toJSON() as DutchOrderInfoJSON).exclusiveFiller).toEqual(filler);
+      expect((quote?.toJSON() as DutchLimitQuoteDataJSON).orderInfo.exclusiveFiller).toEqual(filler);
     });
 
     it('returns null if tokenIn is not in tokenlist', async () => {
@@ -115,7 +114,7 @@ describe('DutchQuoteContext', () => {
         [context.routeToNativeKey]: classicQuote,
       });
       expect(quote?.routingType).toEqual(RoutingType.DUTCH_LIMIT);
-      expect((quote?.toJSON() as DutchOrderInfoJSON).exclusiveFiller).toEqual(
+      expect((quote?.toJSON() as DutchLimitQuoteDataJSON).orderInfo.exclusiveFiller).toEqual(
         '0x0000000000000000000000000000000000000000'
       );
       // Synthetic starts at quoteGasAdjusted + 1bp
@@ -164,7 +163,7 @@ describe('DutchQuoteContext', () => {
         [context.classicKey]: classicQuote,
       });
       expect(quote?.routingType).toEqual(RoutingType.DUTCH_LIMIT);
-      expect((quote?.toJSON() as DutchOrderInfoJSON).exclusiveFiller).toEqual(
+      expect((quote?.toJSON() as DutchLimitQuoteDataJSON).orderInfo.exclusiveFiller).toEqual(
         '0x0000000000000000000000000000000000000000'
       );
       expect(quote?.amountOut.toString()).toEqual(

@@ -23,18 +23,11 @@ export class DutchLimitRequest implements QuoteRequest {
   public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
 
   public static fromRequestBody(info: QuoteRequestInfo, body: DutchLimitConfigJSON): DutchLimitRequest {
-    const convertedSlippage = (parseFloat(info.slippageTolerance ?? DEFAULT_SLIPPAGE_TOLERANCE) * 100).toString();
-    return new DutchLimitRequest(
-      {
-        ...info,
-        slippageTolerance: convertedSlippage,
-      },
-      {
-        offerer: body.offerer ?? NATIVE_ADDRESS,
-        exclusivityOverrideBps: body.exclusivityOverrideBps ?? DEFAULT_EXCLUSIVITY_OVERRIDE_BPS,
-        auctionPeriodSecs: body.auctionPeriodSecs ?? DutchLimitRequest.defaultAuctionPeriodSecs(info.tokenInChainId),
-      }
-    );
+    return new DutchLimitRequest(info, {
+      offerer: body.offerer ?? NATIVE_ADDRESS,
+      exclusivityOverrideBps: body.exclusivityOverrideBps ?? DEFAULT_EXCLUSIVITY_OVERRIDE_BPS,
+      auctionPeriodSecs: body.auctionPeriodSecs ?? DutchLimitRequest.defaultAuctionPeriodSecs(info.tokenInChainId),
+    });
   }
 
   constructor(public readonly info: QuoteRequestInfo, public readonly config: DutchLimitConfig) {}
@@ -59,5 +52,9 @@ export class DutchLimitRequest implements QuoteRequest {
 
   public key(): string {
     return defaultRequestKey(this);
+  }
+
+  public get slippageTolerance(): string {
+    return (parseFloat(this.info.slippageTolerance ?? DEFAULT_SLIPPAGE_TOLERANCE) * 100).toString();
   }
 }
