@@ -26,11 +26,13 @@ export class FieldValidator {
     return value;
   });
 
+  public static readonly uuid = Joi.string().uuid({ version: 'uuidv4' });
+
   public static readonly classicChainId = Joi.number()
     .integer()
     .valid(...SUPPORTED_CHAINS.CLASSIC);
 
-  public static readonly dutchLimitChainId = Joi.number()
+  public static readonly dutchChainId = Joi.number()
     .integer()
     .valid(...SUPPORTED_CHAINS.DUTCH_LIMIT);
 

@@ -5,6 +5,7 @@ import axios from './helpers';
 
 import { NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { DutchLimitQuote, DutchLimitRequest, Quote } from '../../entities';
+import { PostQuoteResponseJoi } from '../../handlers/quote';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import { Quoter, QuoterType } from './index';
@@ -45,20 +46,29 @@ export class RfqQuoter implements Quoter {
       if (results[0].status == 'rejected') {
         log.error(results[0].reason, 'RfqQuoterErr');
         metrics.putMetric(`RfqQuoterRfqErr`, 1);
-      } else if (results[1].status == 'rejected') {
-        log.debug(results[1].reason, 'RfqQuoterErr: GET nonce failed');
-        log.info(results[0].value.data, 'RfqQuoter: POST quote request success');
-        metrics.putMetric(`RfqQuoterNonceErr`, 1);
-        quote = DutchLimitQuote.fromResponseBody(request, results[0].value.data);
       } else {
-        log.info(results[1].value.data, 'RfqQuoter: GET nonce success');
-        log.info(results[0].value.data, 'RfqQuoter: POST quote request success');
-        metrics.putMetric(`RfqQuoterSuccess`, 1);
-        quote = DutchLimitQuote.fromResponseBody(
-          request,
-          results[0].value.data,
-          BigNumber.from(results[1].value.data.nonce).add(1).toString()
-        );
+        const response = results[0].value.data;
+        log.info(response, 'RfqQuoter: POST quote request success');
+        const validated = PostQuoteResponseJoi.validate(response);
+        if (validated.error) {
+          log.error({ validationError: validated.error }, 'RfqQuoterErr: POST quote response invalid');
+          metrics.putMetric(`RfqQuoterValidationErr`, 1);
+        } else {
+          quote = DutchLimitQuote.fromResponseBody(request, response);
+          if (results[1].status == 'rejected') {
+            log.debug(results[1].reason, 'RfqQuoterErr: GET nonce failed');
+            metrics.putMetric(`RfqQuoterNonceErr`, 1);
+            quote = DutchLimitQuote.fromResponseBody(request, response);
+          } else {
+            log.info(results[1].value.data, 'RfqQuoter: GET nonce success');
+            metrics.putMetric(`RfqQuoterSuccess`, 1);
+            quote = DutchLimitQuote.fromResponseBody(
+              request,
+              response,
+              BigNumber.from(results[1].value.data.nonce).add(1).toString()
+            );
+          }
+        }
       }
     });
 
