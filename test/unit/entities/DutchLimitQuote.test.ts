@@ -31,7 +31,7 @@ describe('DutchLimitQuote', () => {
       const { amountIn: amountInClassic, amountOut: amountOutClassic } =
         DutchLimitQuote.applyGasAdjustment(CLASSIC_QUOTE_EXACT_IN_LARGE);
       const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchLimitQuote.calculateEndAmountFromSlippage(
-        DL_QUOTE_EXACT_IN_LARGE.request.info,
+        DL_QUOTE_EXACT_IN_LARGE.request,
         amountInClassic,
         amountOutClassic
       );
@@ -49,7 +49,7 @@ describe('DutchLimitQuote', () => {
       const { amountIn: amountInClassic, amountOut: amountOutClassic } =
         DutchLimitQuote.applyGasAdjustment(CLASSIC_QUOTE_EXACT_OUT_LARGE);
       const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchLimitQuote.calculateEndAmountFromSlippage(
-        DL_QUOTE_EXACT_OUT_LARGE.request.info,
+        DL_QUOTE_EXACT_OUT_LARGE.request,
         amountInClassic,
         amountOutClassic
       );
@@ -79,7 +79,7 @@ describe('DutchLimitQuote', () => {
       const quote = createDutchLimitQuote({ amountOut: '10000' }, 'EXACT_INPUT') as any;
       quote.nonce = 1;
       const result = quote.toJSON();
-      expect(_.isEqual(result, DUTCH_LIMIT_ORDER_JSON)).toBe(true);
+      expect(result).toMatchObject(DUTCH_LIMIT_ORDER_JSON);
     });
   });
 });

@@ -1,6 +1,6 @@
 import { BigNumber, ethers } from 'ethers';
 
-import { DutchLimitQuote, DutchLimitQuoteJSON } from '../../../../lib/entities';
+import { DutchLimitQuote, DutchLimitQuoteDataJSON, DutchLimitQuoteJSON } from '../../../../lib/entities';
 import { RfqQuoter } from '../../../../lib/providers/quoters';
 import axios from '../../../../lib/providers/quoters/helpers';
 import { AMOUNT_IN, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
@@ -87,7 +87,7 @@ describe('RfqQuoter test', () => {
     it('uses nonce returned by UniX service and increment by 1', async () => {
       getSpy('123');
       const quote = await quoter.quote(QUOTE_REQUEST_DL);
-      expect(quote?.toJSON()).toMatchObject({
+      expect((quote?.toJSON() as DutchLimitQuoteDataJSON).orderInfo).toMatchObject({
         nonce: '124',
       });
     });

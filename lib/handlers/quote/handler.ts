@@ -97,6 +97,7 @@ export class QuoteHandler extends APIGLambdaHandler<
       };
     }
 
+    // TODO: generate and put at quote-level
     let allowance = undefined;
     if (bestQuote.routingType === RoutingType.CLASSIC && requestBody.offerer) {
       allowance = await permit2Fetcher.fetchAllowance(
@@ -111,11 +112,9 @@ export class QuoteHandler extends APIGLambdaHandler<
       statusCode: 200,
       body: Object.assign(
         quoteToResponse(bestQuote),
-        {
-          permitData: bestQuote.getPermit(allowance),
-        },
         // additional info to return alongside the main quote
         {
+          permitData: bestQuote.getPermit(allowance),
           // note the best quote is duplicated, but this allows callers
           // to easily map their original request configs to quotes by index
           allQuotes: resolvedQuotes.map((q) => (q ? quoteToResponse(q) : null)),
