@@ -1,10 +1,12 @@
 import { BigNumber, ethers } from 'ethers';
 
-import { DutchLimitQuote, DutchLimitQuoteJSON } from '../../../../lib/entities/quote/DutchLimitQuote';
+import { DutchLimitQuote, DutchLimitQuoteJSON } from '../../../../lib/entities';
+import { RfqQuoter } from '../../../../lib/providers/quoters';
 import axios from '../../../../lib/providers/quoters/helpers';
-import { RfqQuoter } from '../../../../lib/providers/quoters/RfqQuoter';
 import { AMOUNT_IN, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
 import { QUOTE_REQUEST_DL, QUOTE_REQUEST_DL_EXACT_OUT } from '../../../utils/fixtures';
+
+const UUID = 'c67c2882-24aa-4a68-a90b-53250ef81517';
 
 describe('RfqQuoter test', () => {
   const getSpy = (nonce?: string) => {
@@ -19,14 +21,32 @@ describe('RfqQuoter test', () => {
       jest.clearAllMocks();
       postSpy({
         chainId: 1,
-        requestId: '123',
-        quoteId: '321',
+        requestId: UUID,
+        quoteId: UUID,
         tokenIn: TOKEN_IN,
         amountIn: AMOUNT_IN,
         tokenOut: TOKEN_OUT,
         amountOut: AMOUNT_IN,
         offerer: OFFERER,
+        filler: OFFERER,
       });
+    });
+
+    it('returns null if quote response is invalid', async () => {
+      jest.spyOn(axios, 'post').mockResolvedValueOnce({
+        data: {
+          chainId: 1,
+          requestId: UUID,
+          quoteId: UUID,
+          tokenIn: TOKEN_IN,
+          amountIn: AMOUNT_IN,
+          tokenOut: TOKEN_OUT,
+          amountOut: AMOUNT_IN,
+          offerer: OFFERER,
+        },
+      });
+      const quote = await quoter.quote(QUOTE_REQUEST_DL);
+      expect(quote).toBeNull();
     });
 
     it('returns EXACT_INPUT quote', async () => {
