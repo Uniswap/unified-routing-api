@@ -1,12 +1,15 @@
+import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import Logger from 'bunyan';
 import { QuoteByKey, QuoteContext } from '.';
-import { ClassicRequest, Quote, QuoteRequest } from '../../entities';
+import { RoutingType } from '../../constants';
+import { ClassicQuote, ClassicRequest, Quote, QuoteRequest } from '../../entities';
+import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
 
 // manages context around a single top level classic quote request
 export class ClassicQuoteContext implements QuoteContext {
   private log: Logger;
 
-  constructor(_log: Logger, public request: ClassicRequest) {
+  constructor(_log: Logger, public request: ClassicRequest, private permit2Fetcher: Permit2Fetcher) {
     this.log = _log.child({ context: 'ClassicQuoteContext' });
   }
 
@@ -20,6 +23,17 @@ export class ClassicQuoteContext implements QuoteContext {
     const quote = dependencies[this.request.key()];
 
     if (!quote) return null;
+
+    if (quote.request.info.offerer && quote.routingType === RoutingType.CLASSIC) {
+      const allowance = await this.permit2Fetcher.fetchAllowance(
+        quote.request.info.tokenInChainId,
+        quote.request.info.offerer,
+        quote.request.info.tokenIn,
+        UNIVERSAL_ROUTER_ADDRESS(quote.request.info.tokenInChainId)
+      );
+
+      (quote as ClassicQuote).setAllowanceData(allowance);
+    }
 
     return quote;
   }

@@ -1,5 +1,3 @@
-import * as _ from 'lodash';
-
 import { MaxSigDeadline, MaxUint160 } from '@uniswap/permit2-sdk';
 import { PERMIT2, PERMIT_DETAILS } from '../../constants';
 import { UtilityTest } from '../../types';
@@ -17,7 +15,7 @@ const tests: UtilityTest[] = [
       },
     },
     output: {
-      permit: null,
+      permit: undefined,
     },
   },
   {
@@ -27,7 +25,7 @@ const tests: UtilityTest[] = [
       permitDetails: PERMIT_DETAILS,
     },
     output: {
-      permit: null,
+      permit: undefined,
     },
   },
   {
@@ -81,8 +79,14 @@ describe('ClassicQuote Unit Tests', () => {
         now: 0,
       });
 
-      const result = input.quote.getPermit(input.permitDetails);
-      expect(_.isEqual(result, output.permit)).toBe(true);
+      input.quote.setAllowanceData(input.permitDetails);
+      const result = input.quote.getPermitData();
+
+      if (!output.permit) {
+        expect(result).toBeUndefined();
+      } else {
+        expect(result).toMatchObject(output.permit);
+      }
       jest.clearAllTimers();
     });
   }

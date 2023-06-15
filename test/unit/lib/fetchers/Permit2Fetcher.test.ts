@@ -10,8 +10,8 @@ describe('Permit2Fetcher Unit Tests', () => {
       const rpcUrlMap = new Map();
       rpcUrlMap.set(ChainId.MAINNET, 'mainnet rpc url');
       const fetcher = new Permit2Fetcher(rpcUrlMap);
-      expect(fetcher.permitAddress).toBe(PERMIT2_ADDRESS);
-      expect(fetcher.permitAbi).toBe(PERMIT2_CONTRACT.abi);
+      expect(fetcher.permit2Address).toBe(PERMIT2_ADDRESS);
+      expect(fetcher.permit2Abi).toBe(PERMIT2_CONTRACT.abi);
     });
 
     it('returns undefined if an error occurs', async () => {

@@ -25,6 +25,7 @@ export type DutchLimitQuoteDataJSON = {
   encodedOrder: string;
   auctionPeriodSecs: number;
   slippageTolerance: string;
+  permitData: PermitTransferFromData;
 };
 
 export type DutchLimitQuoteJSON = {
@@ -168,6 +169,7 @@ export class DutchLimitQuote implements Quote {
       requestId: this.requestId,
       auctionPeriodSecs: this.request.config.auctionPeriodSecs,
       slippageTolerance: this.request.slippageTolerance,
+      permitData: this.getPermitData(),
     };
   }
 
@@ -224,7 +226,7 @@ export class DutchLimitQuote implements Quote {
     };
   }
 
-  getPermit(): PermitTransferFromData {
+  getPermitData(): PermitTransferFromData {
     return this.toOrder().permitData();
   }
 

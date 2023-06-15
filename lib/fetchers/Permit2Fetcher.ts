@@ -6,16 +6,16 @@ import { log } from '../util/log';
 import { metrics } from '../util/metrics';
 
 export class Permit2Fetcher {
-  public readonly permitAddress: string;
-  public readonly permitAbi: ethers.ContractInterface;
+  public readonly permit2Address: string;
+  public readonly permit2Abi: ethers.ContractInterface;
+  private readonly permit2: ethers.Contract;
   private readonly rpcUrlMap: Map<ChainId, string>;
-  private readonly contract: ethers.Contract;
 
   constructor(rpcUrlMap: Map<ChainId, string>) {
     this.rpcUrlMap = rpcUrlMap;
-    this.permitAddress = PERMIT2_ADDRESS;
-    this.permitAbi = PERMIT2_CONTRACT.abi;
-    this.contract = new ethers.Contract(this.permitAddress, this.permitAbi);
+    this.permit2Address = PERMIT2_ADDRESS;
+    this.permit2Abi = PERMIT2_CONTRACT.abi;
+    this.permit2 = new ethers.Contract(this.permit2Address, this.permit2Abi);
   }
 
   public async fetchAllowance(
@@ -29,7 +29,7 @@ export class Permit2Fetcher {
     try {
       const rpcUrl = this.rpcUrlMap.get(chainId);
       const rpcProvider = new ethers.providers.JsonRpcProvider(rpcUrl);
-      allowance = await this.contract.connect(rpcProvider).allowance(ownerAddress, tokenAddress, spenderAddress);
+      allowance = await this.permit2.connect(rpcProvider).allowance(ownerAddress, tokenAddress, spenderAddress);
       metrics.putMetric(`Permit2FetcherSuccess`, 1);
     } catch (e) {
       log.error(e, 'Permit2FetcherErr');

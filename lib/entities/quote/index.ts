@@ -1,6 +1,5 @@
 import { BigNumber } from 'ethers';
 
-import { PermitDetails, PermitSingleData, PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { DutchLimitQuoteDataJSON, QuoteRequest } from '..';
 import { RoutingType } from '../../constants';
 import { ClassicQuoteDataJSON } from './ClassicQuote';
@@ -38,5 +37,4 @@ export interface Quote {
   toJSON(): QuoteJSON;
   request: QuoteRequest;
   toLog(): LogJSON;
-  getPermit(currentPermit?: PermitDetails): PermitSingleData | PermitTransferFromData | null;
 }
