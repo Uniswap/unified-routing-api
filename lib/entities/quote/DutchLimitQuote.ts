@@ -7,13 +7,14 @@ import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteJSON } from '.';
 import { DutchLimitRequest } from '..';
 import {
+  BPS,
   GOUDA_BASE_GAS,
-  HUNDRED_PERCENT,
   NATIVE_ADDRESS,
   RoutingType,
   WETH_UNWRAP_GAS,
   WETH_WRAP_GAS,
 } from '../../constants';
+import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInSeconds } from '../../util/time';
 import { ClassicQuote } from './ClassicQuote';
 import { LogJSON } from './index';
@@ -111,7 +112,7 @@ export class DutchLimitQuote implements Quote {
       amountOutEnd,
       request.config.offerer,
       '', // synthetic quote has no filler
-      undefined // synthetic quote has no nonce
+      generateRandomNonce() // synthetic quote has no nonce
     );
   }
 
@@ -168,7 +169,7 @@ export class DutchLimitQuote implements Quote {
       quoteId: this.quoteId,
       requestId: this.requestId,
       auctionPeriodSecs: this.request.config.auctionPeriodSecs,
-      slippageTolerance: this.request.slippageTolerance,
+      slippageTolerance: this.request.info.slippageTolerance,
       permitData: this.getPermitData(),
     };
   }
@@ -176,7 +177,7 @@ export class DutchLimitQuote implements Quote {
   public toOrder(): DutchOrder {
     const orderBuilder = new DutchOrderBuilder(this.chainId);
     const startTime = Math.floor(Date.now() / 1000);
-    const nonce = this.nonce ?? this.generateRandomNonce();
+    const nonce = this.nonce ?? generateRandomNonce();
     const decayStartTime = startTime;
 
     const builder = orderBuilder
@@ -221,17 +222,13 @@ export class DutchLimitQuote implements Quote {
       offerer: this.offerer,
       filler: this.filler,
       routing: RoutingType[this.routingType],
-      slippage: parseFloat(this.request.slippageTolerance),
+      slippage: parseFloat(this.request.info.slippageTolerance),
       createdAt: this.createdAt,
     };
   }
 
   getPermitData(): PermitTransferFromData {
     return this.toOrder().permitData();
-  }
-
-  private generateRandomNonce(): string {
-    return ethers.BigNumber.from(ethers.utils.randomBytes(31)).shl(8).toString();
   }
 
   public get amountOut(): BigNumber {
@@ -253,15 +250,11 @@ export class DutchLimitQuote implements Quote {
     if (isExactIn) {
       return {
         amountIn: amountInStart,
-        amountOut: amountOutStart
-          .mul(HUNDRED_PERCENT.sub(BigNumber.from(request.slippageTolerance)))
-          .div(HUNDRED_PERCENT),
+        amountOut: amountOutStart.mul(BPS - parseSlippageToleranceBps(request.info.slippageTolerance)).div(BPS),
       };
     } else {
       return {
-        amountIn: amountInStart
-          .mul(HUNDRED_PERCENT.add(BigNumber.from(request.slippageTolerance)))
-          .div(HUNDRED_PERCENT),
+        amountIn: amountInStart.mul(BPS + parseSlippageToleranceBps(request.info.slippageTolerance)).div(BPS),
         amountOut: amountOutStart,
       };
     }
@@ -271,14 +264,14 @@ export class DutchLimitQuote implements Quote {
     amountIn: BigNumber,
     improvementExactOutBps = DutchLimitQuote.amountInImprovementExactOut
   ): BigNumber {
-    return amountIn.mul(improvementExactOutBps).div(HUNDRED_PERCENT);
+    return amountIn.mul(improvementExactOutBps).div(BPS);
   }
 
   static applyPriceImprovementAmountOut(
     amountOut: BigNumber,
     improvementExactInBps = DutchLimitQuote.amountOutImprovementExactIn
   ): BigNumber {
-    return amountOut.mul(improvementExactInBps).div(HUNDRED_PERCENT);
+    return amountOut.mul(improvementExactInBps).div(BPS);
   }
 
   // Calculates the gas adjustment for the given quote if processed through Gouda
@@ -335,4 +328,10 @@ export class DutchLimitQuote implements Quote {
 
     return result;
   }
+}
+
+// parses a slippage tolerance as a percent string
+// and returns it as a number between 0 and 10000
+function parseSlippageToleranceBps(slippageTolerance: string): number {
+  return Math.round(parseFloat(slippageTolerance) * 100);
 }

@@ -17,7 +17,7 @@ import {
   QuoteRequestBodyJSON,
   QuoteRequestInfo,
 } from '../../entities';
-import { ValidationError } from '../../util/errors';
+import { NoQuotesAvailable, ValidationError } from '../../util/errors';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import { currentTimestampInSeconds } from '../../util/time';
@@ -82,11 +82,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     const uniswapXRequested = requests.filter((request) => request.routingType === RoutingType.DUTCH_LIMIT).length > 0;
     const bestQuote = await getBestQuote(resolvedQuotes.filter((q) => q !== null) as Quote[], uniswapXRequested);
     if (!bestQuote) {
-      return {
-        statusCode: 404,
-        detail: 'No quotes available',
-        errorCode: 'QUOTE_ERROR',
-      };
+      throw new NoQuotesAvailable();
     }
 
     return {

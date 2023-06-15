@@ -191,5 +191,5 @@ export const DUTCH_LIMIT_ORDER_JSON = {
   quoteId: 'quoteId',
   requestId: 'requestId',
   auctionPeriodSecs: 60,
-  slippageTolerance: '50',
+  slippageTolerance: '0.5',
 };
