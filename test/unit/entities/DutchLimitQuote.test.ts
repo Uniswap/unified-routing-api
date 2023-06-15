@@ -24,7 +24,7 @@ describe('DutchLimitQuote', () => {
       expect(reparameterized).toMatchObject(DL_QUOTE_EXACT_IN_LARGE);
     });
 
-    it.only('slippage is in percent terms', async () => {
+    it('slippage is in percent terms', async () => {
       const amountIn = BigNumber.from('1000000000');
       const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchLimitQuote.calculateEndAmountFromSlippage(
         Object.assign({}, DL_QUOTE_EXACT_IN_LARGE.request, {
