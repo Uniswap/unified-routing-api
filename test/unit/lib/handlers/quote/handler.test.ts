@@ -1,7 +1,6 @@
 import { TradeType } from '@uniswap/sdk-core';
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { default as Logger } from 'bunyan';
-import * as _ from 'lodash';
 import {
   BASE_REQUEST_INFO_EXACT_OUT,
   CLASSIC_QUOTE_EXACT_IN_BETTER,
@@ -238,27 +237,6 @@ describe('QuoteHandler', () => {
         expect(allQuotes[1].routing).toEqual('CLASSIC');
       });
 
-      it('returns allQuotes without permitData', async () => {
-        const quoters = {
-          [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
-          [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),
-        };
-        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
-        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
-
-        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(
-          getEvent(QUOTE_REQUEST_BODY_MULTI),
-          {} as unknown as Context
-        );
-
-        const allQuotes = JSON.parse(res.body).allQuotes;
-        expect(allQuotes.length).toEqual(2);
-        expect(allQuotes[0].routing).toEqual('DUTCH_LIMIT');
-        expect(allQuotes[1].routing).toEqual('CLASSIC');
-        expect(allQuotes[0].permitData).toBeUndefined();
-        expect(allQuotes[1].permitData).toBeUndefined();
-      });
-
       it('returns null in allQuotes on quote failure', async () => {
         const quoters = {
           [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),
@@ -290,7 +268,7 @@ describe('QuoteHandler', () => {
         );
 
         const responseBody = JSON.parse(response.body);
-        const permitData = responseBody.permitData;
+        const permitData = responseBody.quote.permitData;
         const quote = responseBody.quote.orderInfo as DutchOrderInfoJSON;
         expect(permitData.values.permitted.token).toBe(quote.input.token);
         expect(permitData.values.witness.inputToken).toBe(quote.input.token);
@@ -320,7 +298,7 @@ describe('QuoteHandler', () => {
         );
         const responseBody = JSON.parse(response.body);
 
-        expect(_.isEqual(responseBody.permitData, PERMIT2)).toBe(true);
+        expect(responseBody.quote.permitData).toMatchObject(PERMIT2);
         expect(permit2Fetcher.fetchAllowance).toHaveBeenCalledWith(
           CLASSIC_REQUEST_BODY.tokenInChainId,
           OFFERER,
@@ -346,7 +324,7 @@ describe('QuoteHandler', () => {
         );
         const responseBody = JSON.parse(response.body);
 
-        expect(_.isEqual(responseBody.permitData, null)).toBe(true);
+        expect(responseBody.quote.permitData).toBeUndefined();
         expect(permit2Fetcher.fetchAllowance).toHaveBeenCalledWith(
           CLASSIC_REQUEST_BODY.tokenInChainId,
           OFFERER,
@@ -377,7 +355,7 @@ describe('QuoteHandler', () => {
         );
         const responseBody = JSON.parse(response.body);
 
-        expect(_.isEqual(responseBody.permitData, null)).toBe(true);
+        expect(responseBody.quote.permitData).toBeUndefined();
         expect(permit2Fetcher.fetchAllowance).not.toHaveBeenCalled();
         jest.clearAllTimers();
       });

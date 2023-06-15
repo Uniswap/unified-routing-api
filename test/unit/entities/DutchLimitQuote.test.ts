@@ -86,7 +86,7 @@ describe('DutchLimitQuote', () => {
       const quote = createDutchLimitQuote({ amountOut: '10000' }, 'EXACT_INPUT') as any;
       quote.nonce = 1;
       const dlQuote = quote as DutchLimitQuote;
-      const result = dlQuote.getPermit();
+      const result = dlQuote.getPermitData();
       const expected = DL_PERMIT;
       expect(_.isEqual(JSON.stringify(result), JSON.stringify(expected))).toBe(true);
       jest.clearAllTimers();

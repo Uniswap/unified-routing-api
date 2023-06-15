@@ -2,7 +2,7 @@ import { TradeType } from '@uniswap/sdk-core';
 import { MethodParameters } from '@uniswap/smart-order-router';
 import { BigNumber } from 'ethers';
 
-import { PermitDetails, PermitSingleData } from '@uniswap/permit2-sdk';
+import { PermitDetails, PermitSingleData, PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteRequest } from '..';
 import { RoutingType } from '../../constants';
@@ -66,23 +66,21 @@ export type ClassicQuoteDataJSON = {
   route: Array<(V3PoolInRouteJSON | V2PoolInRouteJSON)[]>;
   routeString: string;
   methodParameters?: MethodParameters;
+  permitData?: PermitSingleData | PermitTransferFromData;
 };
 
 export class ClassicQuote implements Quote {
   public routingType: RoutingType.CLASSIC = RoutingType.CLASSIC;
   public createdAt: string;
   public readonly quoteId: string = uuidv4();
+  private allowanceData?: PermitDetails;
 
   public static fromResponseBody(request: QuoteRequest, body: ClassicQuoteDataJSON): ClassicQuote {
     return new ClassicQuote(request, body);
   }
 
-  constructor(
-    public request: QuoteRequest,
-    private quoteData: ClassicQuoteDataJSON,
-    createdAt: string = currentTimestampInSeconds()
-  ) {
-    this.createdAt = createdAt;
+  constructor(public request: QuoteRequest, private quoteData: ClassicQuoteDataJSON) {
+    this.createdAt = currentTimestampInSeconds();
   }
 
   public toJSON(): ClassicQuoteDataJSON {
@@ -90,6 +88,7 @@ export class ClassicQuote implements Quote {
       ...this.quoteData,
       quoteId: this.quoteId,
       requestId: this.request.info.requestId,
+      permitData: this.getPermitData(),
     };
   }
 
@@ -115,19 +114,19 @@ export class ClassicQuote implements Quote {
     };
   }
 
-  getPermit(currentPermit?: PermitDetails): PermitSingleData | null {
+  getPermitData(): PermitSingleData | undefined {
     if (
       !this.request.info.offerer ||
-      (currentPermit &&
-        BigNumber.from(currentPermit.amount).gte(this.amountOut) &&
-        BigNumber.from(currentPermit.expiration).gt(Math.floor(new Date().getTime() / 1000)))
+      (this.allowanceData &&
+        BigNumber.from(this.allowanceData.amount).gte(this.amountOut) &&
+        BigNumber.from(this.allowanceData.expiration).gt(Math.floor(new Date().getTime() / 1000)))
     )
-      return null;
+      return undefined;
 
     return createPermitData(
       this.request.info.tokenIn,
       this.request.info.tokenInChainId,
-      currentPermit?.nonce.toString() || '0'
+      this.allowanceData?.nonce.toString() || '0'
     );
   }
 
@@ -157,5 +156,9 @@ export class ClassicQuote implements Quote {
 
   public get gasPriceWei(): string {
     return this.quoteData.gasPriceWei;
+  }
+
+  public setAllowanceData(data?: PermitDetails): void {
+    this.allowanceData = data;
   }
 }

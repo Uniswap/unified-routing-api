@@ -4,8 +4,6 @@ import { TradeType } from '@uniswap/sdk-core';
 import { Unit } from 'aws-embedded-metrics';
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 
-import { PermitSingleData, PermitTransferFromData } from '@uniswap/permit2-sdk';
-import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { RoutingType } from '../../constants';
 import {
@@ -35,12 +33,6 @@ export interface SingleQuoteJSON {
 
 export interface QuoteResponseJSON extends SingleQuoteJSON {
   allQuotes: (SingleQuoteJSON | null)[];
-  /**
-   * The value depends on whether the quote is CLASSIC or DUTCH_LIMIT.
-   * CLASSIC quotes have optional permit (PermitSingleData) as they user might have already approved the router.
-   * DUTCH_LIMIT quotes have mandatory permit (PermitTransferFromData) as the permit is the order as well as the signature transfer approval.
-   */
-  permitData: PermitSingleData | PermitTransferFromData | null;
 }
 
 export class QuoteHandler extends APIGLambdaHandler<
@@ -77,7 +69,7 @@ export class QuoteHandler extends APIGLambdaHandler<
 
     log.info({ requestBody: request }, 'request');
     const { quoteRequests, quoteInfo } = parseQuoteRequests(requestWithTokenAddresses);
-    const contextHandler = new QuoteContextManager(parseQuoteContexts(quoteRequests));
+    const contextHandler = new QuoteContextManager(parseQuoteContexts(quoteRequests, permit2Fetcher));
     const requests = contextHandler.getRequests();
     log.info({ requests }, 'requests');
     const quotes = await getQuotes(quoters, requests);
@@ -93,24 +85,12 @@ export class QuoteHandler extends APIGLambdaHandler<
       throw new NoQuotesAvailable();
     }
 
-    // TODO: generate and put at quote-level
-    let allowance = undefined;
-    if (bestQuote.routingType === RoutingType.CLASSIC && requestBody.offerer) {
-      allowance = await permit2Fetcher.fetchAllowance(
-        requestBody.tokenInChainId,
-        requestBody.offerer,
-        request.tokenIn,
-        UNIVERSAL_ROUTER_ADDRESS(request.tokenInChainId)
-      );
-    }
-
     return {
       statusCode: 200,
       body: Object.assign(
         quoteToResponse(bestQuote),
         // additional info to return alongside the main quote
         {
-          permitData: bestQuote.getPermit(allowance),
           // note the best quote is duplicated, but this allows callers
           // to easily map their original request configs to quotes by index
           allQuotes: resolvedQuotes.map((q) => (q ? quoteToResponse(q) : null)),
