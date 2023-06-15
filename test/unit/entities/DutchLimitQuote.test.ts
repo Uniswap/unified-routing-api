@@ -7,6 +7,7 @@ import { DL_PERMIT, DUTCH_LIMIT_ORDER_JSON } from '../../constants';
 import {
   CLASSIC_QUOTE_EXACT_IN_LARGE,
   CLASSIC_QUOTE_EXACT_OUT_LARGE,
+  createClassicQuote,
   createDutchLimitQuote,
   DL_QUOTE_EXACT_IN_LARGE,
   DL_QUOTE_EXACT_OUT_LARGE,
@@ -98,6 +99,17 @@ describe('DutchLimitQuote', () => {
       quote.nonce = 1;
       const result = quote.toJSON();
       expect(result).toMatchObject(DUTCH_LIMIT_ORDER_JSON);
+    });
+  });
+
+  describe('fromClassicQuote', () => {
+    it('Succeeds - Generates nonce on initialization', () => {
+      const classicQuote = createClassicQuote({}, {});
+      const dutchLimitQuote = createDutchLimitQuote({}, 'EXACT_INPUT');
+      const result = DutchLimitQuote.fromClassicQuote(dutchLimitQuote.request, classicQuote);
+      const firstNonce = result.toOrder().info.nonce;
+      const secondNonce = result.toOrder().info.nonce;
+      expect(firstNonce).toEqual(secondNonce);
     });
   });
 });
