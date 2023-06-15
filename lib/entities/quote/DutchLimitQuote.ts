@@ -6,14 +6,7 @@ import { PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteJSON } from '.';
 import { DutchLimitRequest } from '..';
-import {
-  GOUDA_BASE_GAS,
-  HUNDRED_PERCENT,
-  NATIVE_ADDRESS,
-  RoutingType,
-  WETH_UNWRAP_GAS,
-  WETH_WRAP_GAS,
-} from '../../constants';
+import { BPS, GOUDA_BASE_GAS, NATIVE_ADDRESS, RoutingType, WETH_UNWRAP_GAS, WETH_WRAP_GAS } from '../../constants';
 import { currentTimestampInSeconds } from '../../util/time';
 import { ClassicQuote } from './ClassicQuote';
 import { LogJSON } from './index';
@@ -251,15 +244,11 @@ export class DutchLimitQuote implements Quote {
     if (isExactIn) {
       return {
         amountIn: amountInStart,
-        amountOut: amountOutStart
-          .mul(HUNDRED_PERCENT.sub(BigNumber.from(request.info.slippageTolerance)))
-          .div(HUNDRED_PERCENT),
+        amountOut: amountOutStart.mul(BPS - parseSlippageToleranceBps(request.info.slippageTolerance)).div(BPS),
       };
     } else {
       return {
-        amountIn: amountInStart
-          .mul(HUNDRED_PERCENT.add(BigNumber.from(request.info.slippageTolerance)))
-          .div(HUNDRED_PERCENT),
+        amountIn: amountInStart.mul(BPS + parseSlippageToleranceBps(request.info.slippageTolerance)).div(BPS),
         amountOut: amountOutStart,
       };
     }
@@ -269,14 +258,14 @@ export class DutchLimitQuote implements Quote {
     amountIn: BigNumber,
     improvementExactOutBps = DutchLimitQuote.amountInImprovementExactOut
   ): BigNumber {
-    return amountIn.mul(improvementExactOutBps).div(HUNDRED_PERCENT);
+    return amountIn.mul(improvementExactOutBps).div(BPS);
   }
 
   static applyPriceImprovementAmountOut(
     amountOut: BigNumber,
     improvementExactInBps = DutchLimitQuote.amountOutImprovementExactIn
   ): BigNumber {
-    return amountOut.mul(improvementExactInBps).div(HUNDRED_PERCENT);
+    return amountOut.mul(improvementExactInBps).div(BPS);
   }
 
   // Calculates the gas adjustment for the given quote if processed through Gouda
@@ -333,4 +322,10 @@ export class DutchLimitQuote implements Quote {
 
     return result;
   }
+}
+
+// parses a slippage tolerance as a percent string
+// and returns it as a number between 0 and 10000
+function parseSlippageToleranceBps(slippageTolerance: string): number {
+  return Math.round(parseFloat(slippageTolerance) * 100);
 }

@@ -27,7 +27,7 @@ export class DutchLimitRequest implements QuoteRequest {
   public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
 
   public static fromRequestBody(info: QuoteRequestInfo, body: DutchLimitConfigJSON): DutchLimitRequest {
-    const convertedSlippage = (parseFloat(info.slippageTolerance ?? DEFAULT_SLIPPAGE_TOLERANCE) * 100).toString();
+    const convertedSlippage = info.slippageTolerance ?? DEFAULT_SLIPPAGE_TOLERANCE;
     return new DutchLimitRequest(
       {
         ...info,
