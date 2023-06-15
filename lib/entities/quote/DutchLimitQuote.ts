@@ -110,7 +110,8 @@ export class DutchLimitQuote implements Quote {
       amountOutEnd,
       request.config.offerer,
       '', // synthetic quote has no filler
-      undefined // synthetic quote has no nonce
+      // undefined // synthetic quote has no nonce
+      this.generateRandomNonce()
     );
   }
 
@@ -174,7 +175,7 @@ export class DutchLimitQuote implements Quote {
   public toOrder(): DutchOrder {
     const orderBuilder = new DutchOrderBuilder(this.chainId);
     const startTime = Math.floor(Date.now() / 1000);
-    const nonce = this.nonce ?? this.generateRandomNonce();
+    const nonce = this.nonce ?? DutchLimitQuote.generateRandomNonce();
     const decayStartTime = startTime;
 
     const builder = orderBuilder
@@ -228,7 +229,7 @@ export class DutchLimitQuote implements Quote {
     return this.toOrder().permitData();
   }
 
-  private generateRandomNonce(): string {
+  private static generateRandomNonce(): string {
     return ethers.BigNumber.from(ethers.utils.randomBytes(31)).shl(8).toString();
   }
 
