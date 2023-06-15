@@ -1,5 +1,9 @@
 import { APIGatewayProxyResult } from 'aws-lambda';
 
+export enum ERROR_CODE {
+  VALIDATION_ERROR = 'VALIDATION_ERROR',
+}
+
 export class ValidationError extends Error {
   constructor(message: string) {
     super(message);
@@ -11,7 +15,7 @@ export class ValidationError extends Error {
     return {
       statusCode: 400,
       body: JSON.stringify({
-        errorCode: 'VALIDATION_ERROR',
+        errorCode: ERROR_CODE.VALIDATION_ERROR,
         detail: this.message,
         id,
       }),

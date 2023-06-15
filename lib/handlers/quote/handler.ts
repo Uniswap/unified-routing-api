@@ -19,7 +19,7 @@ import {
   QuoteRequestBodyJSON,
   QuoteRequestInfo,
 } from '../../entities';
-import { ValidationError } from '../../util/errors';
+import { ERROR_CODE, ValidationError } from '../../util/errors';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import { currentTimestampInSeconds } from '../../util/time';
@@ -162,11 +162,18 @@ export class QuoteHandler extends APIGLambdaHandler<
 
   protected afterResponseHook(event: APIGatewayProxyEvent, _context: Context, response: APIGatewayProxyResult): void {
     const { statusCode } = response;
+    const responseBody = JSON.parse(response.body!);
+    const rawBody = JSON.parse(event.body!);
+
+    log.info({ rawBody }, 'rawBody');
+    if (statusCode != 200 && responseBody.errorCode == ERROR_CODE.VALIDATION_ERROR) {
+      metrics.putMetric(`QuoteRequestValidationError`, 1);
+      return;
+    }
 
     // Try and extract the chain id from the raw json.
     let chainId = '0';
     try {
-      const rawBody = JSON.parse(event.body!);
       chainId = rawBody.tokenInChainId ?? rawBody.chainId;
     } catch (err) {
       // no-op. If we can't get chainId still log the metric as chain 0

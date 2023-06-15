@@ -8,7 +8,6 @@ import * as aws_iam from 'aws-cdk-lib/aws-iam';
 import * as aws_lambda from 'aws-cdk-lib/aws-lambda';
 import * as aws_lambda_nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as aws_logs from 'aws-cdk-lib/aws-logs';
-import * as aws_waf from 'aws-cdk-lib/aws-wafv2';
 import { Construct } from 'constructs';
 import * as path from 'path';
 
@@ -79,64 +78,6 @@ export class APIStack extends cdk.Stack {
         allowOrigins: aws_apigateway.Cors.ALL_ORIGINS,
         allowMethods: aws_apigateway.Cors.ALL_METHODS,
       },
-    });
-
-    const ipThrottlingACL = new aws_waf.CfnWebACL(this, `${SERVICE_NAME}IPThrottlingACL`, {
-      defaultAction: { allow: {} },
-      scope: 'REGIONAL',
-      visibilityConfig: {
-        sampledRequestsEnabled: true,
-        cloudWatchMetricsEnabled: true,
-        metricName: `${SERVICE_NAME}IPBasedThrottling`,
-      },
-      customResponseBodies: {
-        [`${SERVICE_NAME}ThrottledResponseBody`]: {
-          contentType: 'APPLICATION_JSON',
-          content: '{"errorCode": "TOO_MANY_REQUESTS"}',
-        },
-      },
-      name: `${SERVICE_NAME}IPThrottling`,
-      rules: [
-        {
-          name: 'ip',
-          priority: 0,
-          statement: {
-            rateBasedStatement: {
-              // Limit is per 5 mins, i.e. 120 requests every 5 mins
-              limit: props.throttlingOverride ? parseInt(props.throttlingOverride) : 120,
-              // API is of type EDGE so is fronted by Cloudfront as a proxy.
-              // Use the ip set in X-Forwarded-For by Cloudfront, not the regular IP
-              // which would just resolve to Cloudfronts IP.
-              aggregateKeyType: 'FORWARDED_IP',
-              forwardedIpConfig: {
-                headerName: 'X-Forwarded-For',
-                fallbackBehavior: 'MATCH',
-              },
-            },
-          },
-          action: {
-            block: {
-              customResponse: {
-                responseCode: 429,
-                customResponseBodyKey: `${SERVICE_NAME}ThrottledResponseBody`,
-              },
-            },
-          },
-          visibilityConfig: {
-            sampledRequestsEnabled: true,
-            cloudWatchMetricsEnabled: true,
-            metricName: `${SERVICE_NAME}IPBasedThrottlingRule`,
-          },
-        },
-      ],
-    });
-
-    const region = cdk.Stack.of(this).region;
-    const apiArn = `arn:aws:apigateway:${region}::/restapis/${api.restApiId}/stages/${api.deploymentStage.stageName}`;
-
-    new aws_waf.CfnWebACLAssociation(this, `${SERVICE_NAME}IPThrottlingAssociation`, {
-      resourceArn: apiArn,
-      webAclArn: ipThrottlingACL.getAtt('Arn').toString(),
     });
 
     /*
