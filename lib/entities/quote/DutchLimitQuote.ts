@@ -168,7 +168,7 @@ export class DutchLimitQuote implements Quote {
       quoteId: this.quoteId,
       requestId: this.requestId,
       auctionPeriodSecs: this.request.config.auctionPeriodSecs,
-      slippageTolerance: this.request.slippageTolerance,
+      slippageTolerance: this.request.info.slippageTolerance,
     };
   }
 
@@ -220,7 +220,7 @@ export class DutchLimitQuote implements Quote {
       offerer: this.offerer,
       filler: this.filler,
       routing: RoutingType[this.routingType],
-      slippage: parseFloat(this.request.slippageTolerance),
+      slippage: parseFloat(this.request.info.slippageTolerance),
       createdAt: this.createdAt,
     };
   }
@@ -249,13 +249,13 @@ export class DutchLimitQuote implements Quote {
       return {
         amountIn: amountInStart,
         amountOut: amountOutStart
-          .mul(HUNDRED_PERCENT.sub(BigNumber.from(request.slippageTolerance)))
+          .mul(HUNDRED_PERCENT.sub(BigNumber.from(request.info.slippageTolerance)))
           .div(HUNDRED_PERCENT),
       };
     } else {
       return {
         amountIn: amountInStart
-          .mul(HUNDRED_PERCENT.add(BigNumber.from(request.slippageTolerance)))
+          .mul(HUNDRED_PERCENT.add(BigNumber.from(request.info.slippageTolerance)))
           .div(HUNDRED_PERCENT),
         amountOut: amountOutStart,
       };
