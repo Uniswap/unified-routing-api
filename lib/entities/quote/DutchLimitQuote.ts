@@ -14,6 +14,7 @@ import {
   WETH_UNWRAP_GAS,
   WETH_WRAP_GAS,
 } from '../../constants';
+import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInSeconds } from '../../util/time';
 import { ClassicQuote } from './ClassicQuote';
 import { LogJSON } from './index';
@@ -110,7 +111,7 @@ export class DutchLimitQuote implements Quote {
       amountOutEnd,
       request.config.offerer,
       '', // synthetic quote has no filler
-      undefined // synthetic quote has no nonce
+      generateRandomNonce() // synthetic quote has no nonce
     );
   }
 
@@ -174,7 +175,7 @@ export class DutchLimitQuote implements Quote {
   public toOrder(): DutchOrder {
     const orderBuilder = new DutchOrderBuilder(this.chainId);
     const startTime = Math.floor(Date.now() / 1000);
-    const nonce = this.nonce ?? this.generateRandomNonce();
+    const nonce = this.nonce ?? generateRandomNonce();
     const decayStartTime = startTime;
 
     const builder = orderBuilder
@@ -226,10 +227,6 @@ export class DutchLimitQuote implements Quote {
 
   getPermit(): PermitTransferFromData {
     return this.toOrder().permitData();
-  }
-
-  private generateRandomNonce(): string {
-    return ethers.BigNumber.from(ethers.utils.randomBytes(31)).shl(8).toString();
   }
 
   public get amountOut(): BigNumber {
