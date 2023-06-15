@@ -260,7 +260,7 @@ describe('quoteGouda', function () {
             status,
           } = response;
 
-          const order = new DutchOrder(quote as any, 1);
+          const order = new DutchOrder((quote as any).orderInfo, 1);
           expect(status).to.equal(200);
 
           expect(order.info.offerer).to.equal(alice.address);
@@ -318,7 +318,7 @@ describe('quoteGouda', function () {
             status,
           } = response;
 
-          const order = new DutchOrder(quote as any, 1);
+          const order = new DutchOrder((quote as any).orderInfo, 1);
           expect(status).to.equal(200);
 
           expect(order.info.offerer).to.equal(alice.address);
@@ -393,7 +393,7 @@ describe('quoteGouda', function () {
           );
           expect(routingResponse.status).to.equal(200);
 
-          const order = new DutchOrder(quote as any, 1);
+          const order = new DutchOrder((quote as any).orderInfo, 1);
           expect(status).to.equal(200);
           const routingQuote = routingResponse.data.quoteGasAdjusted;
           // account for gas and slippage
