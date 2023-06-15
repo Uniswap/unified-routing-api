@@ -308,7 +308,7 @@ export abstract class APIGLambdaHandler<
     if (bodyRaw && bodySchema) {
       const bodyValidation = bodySchema.validate(bodyRaw, {
         allowUnknown: true, // Makes API schema changes and rollbacks easier.
-        stripUnknown: false,
+        stripUnknown: true,
       });
 
       if (bodyValidation.error) {
