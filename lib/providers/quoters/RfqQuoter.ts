@@ -9,6 +9,7 @@ import { PostQuoteResponseJoi } from '../../handlers/quote';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import { Quoter, QuoterType } from './index';
+import { generateRandomNonce } from '../../util/nonce';
 
 export class RfqQuoter implements Quoter {
   static readonly type: QuoterType.GOUDA_RFQ;
@@ -54,11 +55,10 @@ export class RfqQuoter implements Quoter {
           log.error({ validationError: validated.error }, 'RfqQuoterErr: POST quote response invalid');
           metrics.putMetric(`RfqQuoterValidationErr`, 1);
         } else {
-          quote = DutchLimitQuote.fromResponseBody(request, response);
           if (results[1].status == 'rejected') {
             log.debug(results[1].reason, 'RfqQuoterErr: GET nonce failed');
             metrics.putMetric(`RfqQuoterNonceErr`, 1);
-            quote = DutchLimitQuote.fromResponseBody(request, response);
+            quote = DutchLimitQuote.fromResponseBody(request, response, generateRandomNonce());
           } else {
             log.info(results[1].value.data, 'RfqQuoter: GET nonce success');
             metrics.putMetric(`RfqQuoterSuccess`, 1);

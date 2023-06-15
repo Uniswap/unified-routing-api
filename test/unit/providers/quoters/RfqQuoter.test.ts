@@ -80,7 +80,7 @@ describe('RfqQuoter test', () => {
     it('gracefully handles GET nonce error', async () => {
       jest.spyOn(axios, 'get').mockRejectedValue(new Error('GET nonce error'));
       const quote = (await quoter.quote(QUOTE_REQUEST_DL)) as DutchLimitQuote;
-      const nonce = BigNumber.from(quote?.toOrder().toJSON().nonce);
+      const nonce = BigNumber.from(quote.nonce);
       expect(nonce.gt(0) && nonce.lt(ethers.constants.MaxUint256)).toBeTruthy();
     });
 
