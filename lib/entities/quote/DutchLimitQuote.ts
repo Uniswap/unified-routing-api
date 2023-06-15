@@ -110,8 +110,7 @@ export class DutchLimitQuote implements Quote {
       amountOutEnd,
       request.config.offerer,
       '', // synthetic quote has no filler
-      // undefined // synthetic quote has no nonce
-      this.generateRandomNonce()
+      this.generateRandomNonce() // synthetic quote has no nonce
     );
   }
 
