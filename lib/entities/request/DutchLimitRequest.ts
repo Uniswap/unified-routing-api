@@ -15,6 +15,10 @@ export interface DutchLimitConfig {
   auctionPeriodSecs: number;
 }
 
+export interface DutchQuoteRequestInfo extends QuoteRequestInfo {
+  slippageTolerance: string;
+}
+
 export interface DutchLimitConfigJSON extends DutchLimitConfig {
   routingType: RoutingType.DUTCH_LIMIT;
 }
@@ -23,14 +27,21 @@ export class DutchLimitRequest implements QuoteRequest {
   public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
 
   public static fromRequestBody(info: QuoteRequestInfo, body: DutchLimitConfigJSON): DutchLimitRequest {
-    return new DutchLimitRequest(info, {
-      offerer: body.offerer ?? NATIVE_ADDRESS,
-      exclusivityOverrideBps: body.exclusivityOverrideBps ?? DEFAULT_EXCLUSIVITY_OVERRIDE_BPS,
-      auctionPeriodSecs: body.auctionPeriodSecs ?? DutchLimitRequest.defaultAuctionPeriodSecs(info.tokenInChainId),
-    });
+    const convertedSlippage = (parseFloat(info.slippageTolerance ?? DEFAULT_SLIPPAGE_TOLERANCE) * 100).toString();
+    return new DutchLimitRequest(
+      {
+        ...info,
+        slippageTolerance: convertedSlippage,
+      },
+      {
+        offerer: body.offerer ?? NATIVE_ADDRESS,
+        exclusivityOverrideBps: body.exclusivityOverrideBps ?? DEFAULT_EXCLUSIVITY_OVERRIDE_BPS,
+        auctionPeriodSecs: body.auctionPeriodSecs ?? DutchLimitRequest.defaultAuctionPeriodSecs(info.tokenInChainId),
+      }
+    );
   }
 
-  constructor(public readonly info: QuoteRequestInfo, public readonly config: DutchLimitConfig) {}
+  constructor(public readonly info: DutchQuoteRequestInfo, public readonly config: DutchLimitConfig) {}
 
   // TODO: parameterize this based on other factors
   public static defaultAuctionPeriodSecs(chainId: number): number {
@@ -52,9 +63,5 @@ export class DutchLimitRequest implements QuoteRequest {
 
   public key(): string {
     return defaultRequestKey(this);
-  }
-
-  public get slippageTolerance(): string {
-    return (parseFloat(this.info.slippageTolerance ?? DEFAULT_SLIPPAGE_TOLERANCE) * 100).toString();
   }
 }
