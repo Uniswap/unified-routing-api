@@ -7,9 +7,9 @@ import {
 } from '../../constants';
 
 export * from './ClassicRequest';
-export * from './DutchLimitRequest';
+export * from './DutchRequest';
 
-export interface DutchLimitConfig {
+export interface DutchConfig {
   offerer: string;
   exclusivityOverrideBps: number;
   auctionPeriodSecs: number;
@@ -19,16 +19,16 @@ export interface DutchQuoteRequestInfo extends QuoteRequestInfo {
   slippageTolerance: string;
 }
 
-export interface DutchLimitConfigJSON extends DutchLimitConfig {
+export interface DutchConfigJSON extends DutchConfig {
   routingType: RoutingType.DUTCH_LIMIT;
 }
 
-export class DutchLimitRequest implements QuoteRequest {
+export class DutchRequest implements QuoteRequest {
   public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
 
-  public static fromRequestBody(info: QuoteRequestInfo, body: DutchLimitConfigJSON): DutchLimitRequest {
+  public static fromRequestBody(info: QuoteRequestInfo, body: DutchConfigJSON): DutchRequest {
     const convertedSlippage = info.slippageTolerance ?? DEFAULT_SLIPPAGE_TOLERANCE;
-    return new DutchLimitRequest(
+    return new DutchRequest(
       {
         ...info,
         slippageTolerance: convertedSlippage,
@@ -36,12 +36,12 @@ export class DutchLimitRequest implements QuoteRequest {
       {
         offerer: body.offerer ?? NATIVE_ADDRESS,
         exclusivityOverrideBps: body.exclusivityOverrideBps ?? DEFAULT_EXCLUSIVITY_OVERRIDE_BPS,
-        auctionPeriodSecs: body.auctionPeriodSecs ?? DutchLimitRequest.defaultAuctionPeriodSecs(info.tokenInChainId),
+        auctionPeriodSecs: body.auctionPeriodSecs ?? DutchRequest.defaultAuctionPeriodSecs(info.tokenInChainId),
       }
     );
   }
 
-  constructor(public readonly info: DutchQuoteRequestInfo, public readonly config: DutchLimitConfig) {}
+  constructor(public readonly info: DutchQuoteRequestInfo, public readonly config: DutchConfig) {}
 
   // TODO: parameterize this based on other factors
   public static defaultAuctionPeriodSecs(chainId: number): number {
@@ -55,7 +55,7 @@ export class DutchLimitRequest implements QuoteRequest {
     }
   }
 
-  public toJSON(): DutchLimitConfigJSON {
+  public toJSON(): DutchConfigJSON {
     return Object.assign({}, this.config, {
       routingType: RoutingType.DUTCH_LIMIT as RoutingType.DUTCH_LIMIT,
     });

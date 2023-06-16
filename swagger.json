@@ -59,7 +59,7 @@
           "DUTCH_LIMIT"
         ]
       },
-      "DutchLimitConfig": {
+      "DutchConfig": {
         "type": "object",
         "properties": {
           "routingType": {
@@ -187,7 +187,7 @@
       "RoutingConfig": {
         "oneOf": [
           {
-            "$ref": "#/components/schemas/DutchLimitConfig"
+            "$ref": "#/components/schemas/DutchConfig"
           },
           {
             "$ref": "#/components/schemas/ClassicConfig"

@@ -2,15 +2,15 @@ import { RoutingType } from '../../../../lib/constants';
 import {
   ClassicConfigJSON,
   ClassicRequest,
-  DutchLimitConfigJSON,
-  DutchLimitRequest,
+  DutchConfigJSON,
+  DutchRequest,
   parseQuoteRequests,
   QuoteRequestBodyJSON,
 } from '../../../../lib/entities';
 import { ValidationError } from '../../../../lib/util/errors';
 import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
 
-const MOCK_DL_CONFIG_JSON: DutchLimitConfigJSON = {
+const MOCK_DL_CONFIG_JSON: DutchConfigJSON = {
   routingType: RoutingType.DUTCH_LIMIT,
   offerer: OFFERER,
   exclusivityOverrideBps: 24,
@@ -66,7 +66,7 @@ describe('QuoteRequest', () => {
         const { quoteRequests: requests } = parseQuoteRequests(request);
         const info = requests[0].info;
 
-        const config = DutchLimitRequest.fromRequestBody(info, MOCK_DL_CONFIG_JSON);
+        const config = DutchRequest.fromRequestBody(info, MOCK_DL_CONFIG_JSON);
         expect(config.toJSON()).toEqual(MOCK_DL_CONFIG_JSON);
       });
 
@@ -74,7 +74,7 @@ describe('QuoteRequest', () => {
         const { quoteRequests: requests } = parseQuoteRequests(request);
         const info = requests[0].info;
 
-        const config = DutchLimitRequest.fromRequestBody(info, MOCK_DL_CONFIG_JSON);
+        const config = DutchRequest.fromRequestBody(info, MOCK_DL_CONFIG_JSON);
         expect(config.toJSON()).toEqual(MOCK_DL_CONFIG_JSON);
       });
 
@@ -103,7 +103,7 @@ describe('QuoteRequest', () => {
       it('includes offerer in info for dutch limit', () => {
         const { quoteRequests: requests } = parseQuoteRequests(request);
         const info = requests[0].info;
-        const config = DutchLimitRequest.fromRequestBody(info, MOCK_DL_CONFIG_JSON);
+        const config = DutchRequest.fromRequestBody(info, MOCK_DL_CONFIG_JSON);
 
         expect(config.info.offerer).toEqual(OFFERER);
       });

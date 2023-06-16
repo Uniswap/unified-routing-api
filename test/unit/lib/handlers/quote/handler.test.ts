@@ -24,7 +24,7 @@ import { PermitDetails } from '@uniswap/permit2-sdk';
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { MetricsLogger } from 'aws-embedded-metrics';
 import { RoutingType } from '../../../../../lib/constants';
-import { ClassicQuote, ClassicQuoteDataJSON, DutchLimitQuote, Quote } from '../../../../../lib/entities';
+import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, Quote } from '../../../../../lib/entities';
 import { QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index';
 import { Permit2Fetcher } from '../../../../../lib/fetchers/Permit2Fetcher';
 import { TokenFetcher } from '../../../../../lib/fetchers/TokenFetcher';
@@ -82,7 +82,7 @@ describe('QuoteHandler', () => {
       permit2Fetcher: Permit2Fetcher
     ) => new QuoteHandler('quote', injectorPromiseMock(quoters, tokenFetcher, permit2Fetcher));
 
-    const RfqQuoterMock = (dlQuote: DutchLimitQuote): Quoter => {
+    const RfqQuoterMock = (dlQuote: DutchQuote): Quoter => {
       return {
         quote: jest.fn().mockResolvedValue(dlQuote),
       };
@@ -211,7 +211,7 @@ describe('QuoteHandler', () => {
           getEvent(QUOTE_REQUEST_BODY_MULTI),
           {} as unknown as Context
         );
-        const { amountOut: amountOutClassic } = DutchLimitQuote.applyGasAdjustment(CLASSIC_QUOTE_EXACT_IN_WORSE);
+        const { amountOut: amountOutClassic } = DutchQuote.applyGasAdjustment(CLASSIC_QUOTE_EXACT_IN_WORSE);
         const slippageAdjustedAmountOut = amountOutClassic.mul(95).div(100);
         const quoteJSON = JSON.parse(res.body).quote.orderInfo as DutchOrderInfoJSON;
         expect(quoteJSON.outputs.length).toBe(1);

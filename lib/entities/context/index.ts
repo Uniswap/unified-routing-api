@@ -1,5 +1,5 @@
 import { RoutingType } from '../../constants';
-import { ClassicRequest, DutchLimitRequest, Quote, QuoteRequest } from '../../entities';
+import { ClassicRequest, DutchRequest, Quote, QuoteRequest } from '../../entities';
 
 import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
 import { log } from '../../util/log';
@@ -81,7 +81,7 @@ export function parseQuoteContexts(requests: QuoteRequest[], permit2Fetcher: Per
   return requests.map((request) => {
     switch (request.routingType) {
       case RoutingType.DUTCH_LIMIT:
-        return new DutchQuoteContext(log, request as DutchLimitRequest);
+        return new DutchQuoteContext(log, request as DutchRequest);
       case RoutingType.CLASSIC:
         return new ClassicQuoteContext(log, request as ClassicRequest, permit2Fetcher);
       default:

@@ -4,9 +4,9 @@ import { BigNumber } from 'ethers';
 import {
   ClassicQuote,
   ClassicQuoteDataJSON,
-  DutchLimitQuote,
-  DutchLimitQuoteJSON,
-  DutchLimitRequest,
+  DutchQuote,
+  DutchQuoteJSON,
+  DutchRequest,
 } from '../../../../lib/entities';
 import { AMOUNT_IN, CHAIN_IN_ID, FILLER, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
 import {
@@ -15,7 +15,7 @@ import {
   QUOTE_REQUEST_DL,
 } from '../../../utils/fixtures';
 
-const DL_QUOTE_JSON: DutchLimitQuoteJSON = {
+const DL_QUOTE_JSON: DutchQuoteJSON = {
   chainId: CHAIN_IN_ID,
   requestId: '0xrequestId',
   quoteId: '0xquoteId',
@@ -48,14 +48,14 @@ const CLASSIC_QUOTE_JSON: ClassicQuoteDataJSON = {
 };
 
 describe('QuoteResponse', () => {
-  const config: DutchLimitRequest = QUOTE_REQUEST_DL;
+  const config: DutchRequest = QUOTE_REQUEST_DL;
 
   it('parses dutch limit quote from param-api properly', () => {
-    expect(() => DutchLimitQuote.fromResponseBody(config, DL_QUOTE_JSON)).not.toThrow();
+    expect(() => DutchQuote.fromResponseBody(config, DL_QUOTE_JSON)).not.toThrow();
   });
 
   it('produces dutch limit order info from param-api response and config', () => {
-    const quote = DutchLimitQuote.fromResponseBody(config, DL_QUOTE_JSON);
+    const quote = DutchQuote.fromResponseBody(config, DL_QUOTE_JSON);
     expect(quote.toOrder().toJSON()).toMatchObject({
       offerer: OFFERER,
       input: {
@@ -80,7 +80,7 @@ describe('QuoteResponse', () => {
   });
 
   it('produces dutch limit order info from param-api response and config without filler', () => {
-    const quote = DutchLimitQuote.fromResponseBody(config, Object.assign({}, DL_QUOTE_JSON, { filler: undefined }));
+    const quote = DutchQuote.fromResponseBody(config, Object.assign({}, DL_QUOTE_JSON, { filler: undefined }));
     expect(quote.toOrder().toJSON()).toMatchObject({
       offerer: OFFERER,
       input: {

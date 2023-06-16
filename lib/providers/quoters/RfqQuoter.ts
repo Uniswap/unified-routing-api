@@ -4,7 +4,7 @@ import { BigNumber } from 'ethers';
 import axios from './helpers';
 
 import { NATIVE_ADDRESS, RoutingType } from '../../constants';
-import { DutchLimitQuote, DutchLimitRequest, Quote } from '../../entities';
+import { DutchQuote, DutchRequest, Quote } from '../../entities';
 import { PostQuoteResponseJoi } from '../../handlers/quote';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
@@ -16,7 +16,7 @@ export class RfqQuoter implements Quoter {
 
   constructor(private rfqUrl: string, private serviceUrl: string, private paramApiKey: string) {}
 
-  async quote(request: DutchLimitRequest): Promise<Quote | null> {
+  async quote(request: DutchRequest): Promise<Quote | null> {
     if (request.routingType !== RoutingType.DUTCH_LIMIT) {
       log.error(`Invalid routing config type: ${request.routingType}`);
       return null;
@@ -58,11 +58,11 @@ export class RfqQuoter implements Quoter {
           if (results[1].status == 'rejected') {
             log.debug(results[1].reason, 'RfqQuoterErr: GET nonce failed');
             metrics.putMetric(`RfqQuoterNonceErr`, 1);
-            quote = DutchLimitQuote.fromResponseBody(request, response, generateRandomNonce());
+            quote = DutchQuote.fromResponseBody(request, response, generateRandomNonce());
           } else {
             log.info(results[1].value.data, 'RfqQuoter: GET nonce success');
             metrics.putMetric(`RfqQuoterSuccess`, 1);
-            quote = DutchLimitQuote.fromResponseBody(
+            quote = DutchQuote.fromResponseBody(
               request,
               response,
               BigNumber.from(results[1].value.data.nonce).add(1).toString()
