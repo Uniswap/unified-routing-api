@@ -6,14 +6,7 @@ import { PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteJSON } from '.';
 import { DutchLimitRequest } from '..';
-import {
-  BPS,
-  GOUDA_BASE_GAS,
-  NATIVE_ADDRESS,
-  RoutingType,
-  WETH_UNWRAP_GAS,
-  WETH_WRAP_GAS,
-} from '../../constants';
+import { BPS, GOUDA_BASE_GAS, NATIVE_ADDRESS, RoutingType, WETH_UNWRAP_GAS, WETH_WRAP_GAS } from '../../constants';
 import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInSeconds } from '../../util/time';
 import { ClassicQuote } from './ClassicQuote';
@@ -49,8 +42,8 @@ type Amounts = {
 export class DutchLimitQuote implements Quote {
   public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
   // Add 1bps price improvmement to favor Dutch
-  public static amountOutImprovementExactIn = BigNumber.from(10001);
-  public static amountInImprovementExactOut = BigNumber.from(9999);
+  public static amountOutImprovementExactIn = BigNumber.from(10000);
+  public static amountInImprovementExactOut = BigNumber.from(10000);
 
   // build a dutch quote from an RFQ response
   public static fromResponseBody(

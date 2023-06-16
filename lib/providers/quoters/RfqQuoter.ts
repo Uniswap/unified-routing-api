@@ -8,8 +8,8 @@ import { DutchLimitQuote, DutchLimitRequest, Quote } from '../../entities';
 import { PostQuoteResponseJoi } from '../../handlers/quote';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
-import { Quoter, QuoterType } from './index';
 import { generateRandomNonce } from '../../util/nonce';
+import { Quoter, QuoterType } from './index';
 
 export class RfqQuoter implements Quoter {
   static readonly type: QuoterType.GOUDA_RFQ;
