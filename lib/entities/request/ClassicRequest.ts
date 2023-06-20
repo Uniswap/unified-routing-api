@@ -3,7 +3,6 @@ import { BigNumber } from 'ethers';
 
 import { defaultRequestKey, QuoteRequest, QuoteRequestInfo } from '.';
 import { RoutingType } from '../../constants';
-import { DutchLimitRequest } from './DutchLimitRequest';
 
 export interface ClassicConfig {
   protocols?: Protocol[];
@@ -18,6 +17,7 @@ export interface ClassicConfig {
   recipient?: string;
   algorithm?: string;
   deadline?: number;
+  slippageTolerance?: string;
   minSplits?: number;
   forceCrossProtocol?: boolean;
   forceMixedRoutes?: boolean;
@@ -41,12 +41,6 @@ export class ClassicRequest implements QuoteRequest {
         permitAmount: body.permitAmount ? BigNumber.from(body.permitAmount) : undefined,
       })
     );
-  }
-
-  public static fromDutchLimitRequest(request: DutchLimitRequest): ClassicRequest {
-    return new ClassicRequest(request.info, {
-      protocols: [Protocol.V2, Protocol.V3, Protocol.MIXED],
-    });
   }
 
   constructor(public readonly info: QuoteRequestInfo, public readonly config: ClassicConfig) {}

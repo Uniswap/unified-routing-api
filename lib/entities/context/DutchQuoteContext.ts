@@ -47,6 +47,14 @@ export class DutchQuoteContext implements QuoteContext {
   dependencies(): QuoteRequest[] {
     const classicRequest = new ClassicRequest(this.request.info, {
       protocols: [Protocol.MIXED, Protocol.V2, Protocol.V3],
+      // Use the offerer address as the simulateFromAddress for the synthetic classic request
+      simulateFromAddress: this.request.config.offerer,
+      // No permits needed for SwapRouter02
+      enableUniversalRouter: false,
+      // Need these SwapOptions for simulate to work
+      recipient: this.request.config.offerer,
+      slippageTolerance: this.request.info.slippageTolerance,
+      deadline: Math.floor(Date.now() / 1000) + this.request.config.auctionPeriodSecs,
     });
     this.classicKey = classicRequest.key();
     this.log.info({ classicRequest: classicRequest.info }, 'Adding synthetic classic request');
