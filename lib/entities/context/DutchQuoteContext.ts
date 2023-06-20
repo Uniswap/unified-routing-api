@@ -15,8 +15,8 @@ import {
   ClassicQuote,
   ClassicQuoteDataJSON,
   ClassicRequest,
-  DutchLimitQuote,
-  DutchLimitRequest,
+  DutchQuote,
+  DutchRequest,
   Quote,
   QuoteRequest,
 } from '../../entities';
@@ -35,7 +35,7 @@ export class DutchQuoteContext implements QuoteContext {
   public routeToNativeKey: string;
   public needsRouteToNative: boolean;
 
-  constructor(_log: Logger, public request: DutchLimitRequest) {
+  constructor(_log: Logger, public request: DutchRequest) {
     this.log = _log.child({ context: 'DutchQuoteContext' });
     this.requestKey = this.request.key();
     this.needsRouteToNative = false;
@@ -84,7 +84,7 @@ export class DutchQuoteContext implements QuoteContext {
   async resolve(dependencies: QuoteByKey): Promise<Quote | null> {
     const classicQuote = dependencies[this.classicKey] as ClassicQuote;
     const routeBackToNative = dependencies[this.routeToNativeKey] as ClassicQuote;
-    const rfqQuote = dependencies[this.requestKey] as DutchLimitQuote;
+    const rfqQuote = dependencies[this.requestKey] as DutchQuote;
 
     const quote = await this.getRfqQuote(rfqQuote, classicQuote);
     const syntheticQuote = this.getSyntheticQuote(classicQuote, routeBackToNative);
@@ -107,7 +107,7 @@ export class DutchQuoteContext implements QuoteContext {
     }
   }
 
-  async getRfqQuote(quote?: DutchLimitQuote, classicQuote?: ClassicQuote): Promise<DutchLimitQuote | null> {
+  async getRfqQuote(quote?: DutchQuote, classicQuote?: ClassicQuote): Promise<DutchQuote | null> {
     if (!quote) return null;
 
     // if quote tokens are not in tokenlist return null
@@ -127,12 +127,12 @@ export class DutchQuoteContext implements QuoteContext {
       return null;
     }
 
-    return DutchLimitQuote.reparameterize(quote, classicQuote as ClassicQuote);
+    return DutchQuote.reparameterize(quote, classicQuote as ClassicQuote);
   }
 
   // transform a classic quote into a synthetic dutch quote
   // if it makes sense to do so
-  getSyntheticQuote(classicQuote?: Quote, routeBackToNative?: Quote): DutchLimitQuote | null {
+  getSyntheticQuote(classicQuote?: Quote, routeBackToNative?: Quote): DutchQuote | null {
     // no classic quote to build synthetic from
     if (!classicQuote) {
       this.log.info('No classic quote, skipping synthetic');
@@ -151,7 +151,7 @@ export class DutchQuoteContext implements QuoteContext {
       return null;
     }
 
-    return DutchLimitQuote.fromClassicQuote(this.request, classicQuote as ClassicQuote);
+    return DutchQuote.fromClassicQuote(this.request, classicQuote as ClassicQuote);
   }
 
   hasOrderSizeForSynthetic(log: Logger, classicQuote: Quote): boolean {

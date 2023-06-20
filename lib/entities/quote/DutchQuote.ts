@@ -5,14 +5,14 @@ import { BigNumber, ethers } from 'ethers';
 import { PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteJSON } from '.';
-import { DutchLimitRequest } from '..';
+import { DutchRequest } from '..';
 import { BPS, GOUDA_BASE_GAS, NATIVE_ADDRESS, RoutingType, WETH_UNWRAP_GAS, WETH_WRAP_GAS } from '../../constants';
 import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInSeconds } from '../../util/time';
 import { ClassicQuote } from './ClassicQuote';
 import { LogJSON } from './index';
 
-export type DutchLimitQuoteDataJSON = {
+export type DutchQuoteDataJSON = {
   orderInfo: DutchOrderInfoJSON;
   quoteId: string;
   requestId: string;
@@ -22,7 +22,7 @@ export type DutchLimitQuoteDataJSON = {
   permitData: PermitTransferFromData;
 };
 
-export type DutchLimitQuoteJSON = {
+export type DutchQuoteJSON = {
   chainId: number;
   requestId: string;
   quoteId: string;
@@ -39,7 +39,7 @@ type Amounts = {
   amountOut: BigNumber;
 };
 
-export class DutchLimitQuote implements Quote {
+export class DutchQuote implements Quote {
   public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
   // Add 1bps price improvmement to favor Dutch
   public static amountOutImprovementExactIn = BigNumber.from(10001);
@@ -47,16 +47,16 @@ export class DutchLimitQuote implements Quote {
 
   // build a dutch quote from an RFQ response
   public static fromResponseBody(
-    request: DutchLimitRequest,
-    body: DutchLimitQuoteJSON,
+    request: DutchRequest,
+    body: DutchQuoteJSON,
     nonce?: string
-  ): DutchLimitQuote {
-    const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchLimitQuote.calculateEndAmountFromSlippage(
+  ): DutchQuote {
+    const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchQuote.calculateEndAmountFromSlippage(
       request,
       BigNumber.from(body.amountIn),
       BigNumber.from(body.amountOut)
     );
-    return new DutchLimitQuote(
+    return new DutchQuote(
       currentTimestampInSeconds(),
       request,
       body.chainId,
@@ -75,7 +75,7 @@ export class DutchLimitQuote implements Quote {
   }
 
   // build a synthetic dutch quote from a classic quote
-  public static fromClassicQuote(request: DutchLimitRequest, quote: ClassicQuote): DutchLimitQuote {
+  public static fromClassicQuote(request: DutchRequest, quote: ClassicQuote): DutchQuote {
     const adjustedAmountIn =
       request.info.type === TradeType.EXACT_INPUT
         ? quote.amountIn
@@ -86,12 +86,12 @@ export class DutchLimitQuote implements Quote {
         ? quote.amountOut
         : this.applyPriceImprovementAmountOut(quote.amountOutGasAdjusted);
 
-    const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchLimitQuote.calculateEndAmountFromSlippage(
+    const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchQuote.calculateEndAmountFromSlippage(
       request,
       adjustedAmountIn,
       adjustedAmountOut
     );
-    return new DutchLimitQuote(
+    return new DutchQuote(
       quote.createdAt,
       request,
       request.info.tokenInChainId,
@@ -110,15 +110,15 @@ export class DutchLimitQuote implements Quote {
   }
 
   // reparameterize an RFQ quote with awareness of classic
-  public static reparameterize(quote: DutchLimitQuote, classic?: ClassicQuote): DutchLimitQuote {
+  public static reparameterize(quote: DutchQuote, classic?: ClassicQuote): DutchQuote {
     if (!classic) return quote;
-    const { amountIn: amountInClassic, amountOut: amountOutClassic } = DutchLimitQuote.applyGasAdjustment(classic);
-    const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchLimitQuote.calculateEndAmountFromSlippage(
+    const { amountIn: amountInClassic, amountOut: amountOutClassic } = DutchQuote.applyGasAdjustment(classic);
+    const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchQuote.calculateEndAmountFromSlippage(
       quote.request,
       amountInClassic,
       amountOutClassic
     );
-    return new DutchLimitQuote(
+    return new DutchQuote(
       quote.createdAt,
       quote.request,
       quote.chainId,
@@ -138,7 +138,7 @@ export class DutchLimitQuote implements Quote {
 
   constructor(
     public readonly createdAt: string,
-    public readonly request: DutchLimitRequest,
+    public readonly request: DutchRequest,
     public readonly chainId: number,
     public readonly requestId: string,
     public readonly quoteId: string,
@@ -235,7 +235,7 @@ export class DutchLimitQuote implements Quote {
   // static helpers
 
   static calculateEndAmountFromSlippage(
-    request: DutchLimitRequest,
+    request: DutchRequest,
     amountInStart: BigNumber,
     amountOutStart: BigNumber
   ): Amounts {
@@ -255,14 +255,14 @@ export class DutchLimitQuote implements Quote {
 
   static applyPriceImprovementAmountIn(
     amountIn: BigNumber,
-    improvementExactOutBps = DutchLimitQuote.amountInImprovementExactOut
+    improvementExactOutBps = DutchQuote.amountInImprovementExactOut
   ): BigNumber {
     return amountIn.mul(improvementExactOutBps).div(BPS);
   }
 
   static applyPriceImprovementAmountOut(
     amountOut: BigNumber,
-    improvementExactInBps = DutchLimitQuote.amountOutImprovementExactIn
+    improvementExactInBps = DutchQuote.amountOutImprovementExactIn
   ): BigNumber {
     return amountOut.mul(improvementExactInBps).div(BPS);
   }
@@ -270,7 +270,7 @@ export class DutchLimitQuote implements Quote {
   // Calculates the gas adjustment for the given quote if processed through Gouda
   static applyGasAdjustment(classicQuote: ClassicQuote): { amountIn: BigNumber; amountOut: BigNumber } {
     const info = classicQuote.request.info;
-    const gasAdjustment = DutchLimitQuote.getGasAdjustment(classicQuote);
+    const gasAdjustment = DutchQuote.getGasAdjustment(classicQuote);
 
     // get ratio of gas used to gas used with WETH wrap
     const gasUseEstimate = BigNumber.from(classicQuote.toJSON().gasUseEstimate);
@@ -282,14 +282,14 @@ export class DutchLimitQuote implements Quote {
     if (info.type === TradeType.EXACT_INPUT) {
       const amountOut = newGasUseEstimateQuote.gt(classicQuote.amountOut)
         ? BigNumber.from(0)
-        : DutchLimitQuote.applyPriceImprovementAmountOut(classicQuote.amountOutGasAdjusted).sub(newGasUseEstimateQuote);
+        : DutchQuote.applyPriceImprovementAmountOut(classicQuote.amountOutGasAdjusted).sub(newGasUseEstimateQuote);
       return {
         amountIn: info.amount,
         amountOut: amountOut.lt(0) ? BigNumber.from(0) : amountOut,
       };
     } else {
       return {
-        amountIn: DutchLimitQuote.applyPriceImprovementAmountIn(classicQuote.amountInGasAdjusted).add(
+        amountIn: DutchQuote.applyPriceImprovementAmountIn(classicQuote.amountInGasAdjusted).add(
           newGasUseEstimateQuote
         ),
         amountOut: info.amount,
@@ -299,7 +299,7 @@ export class DutchLimitQuote implements Quote {
 
   // Returns the number of gas units extra required to execute this quote through Gouda
   static getGasAdjustment(classicQuote: ClassicQuote): BigNumber {
-    const wethAdjustment = DutchLimitQuote.getWETHGasAdjustment(classicQuote);
+    const wethAdjustment = DutchQuote.getWETHGasAdjustment(classicQuote);
     return wethAdjustment.add(GOUDA_BASE_GAS);
   }
 

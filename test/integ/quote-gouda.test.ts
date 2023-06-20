@@ -24,7 +24,7 @@ import qs from 'qs';
 import { RoutingType } from '../../lib/constants';
 import { ClassicQuoteDataJSON, QuoteRequestBodyJSON, RoutingConfigJSON } from '../../lib/entities';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
-import { ExclusiveDutchLimitOrderReactor__factory } from '../../lib/types/ext';
+import { ExclusiveDutchOrderReactor__factory } from '../../lib/types/ext';
 import { fund, resetAndFundAtBlock } from '../utils/forkAndFund';
 import { getBalance, getBalanceAndApprove, getBalanceAndApprovePermit2 } from '../utils/getBalanceAndApprove';
 import { RoutingApiQuoteResponse } from '../utils/quoteResponse';
@@ -100,7 +100,7 @@ describe('quoteGouda', function () {
     tokenOutAfter: CurrencyAmount<Currency>;
     tokenOutBefore: CurrencyAmount<Currency>;
   }> => {
-    const reactor = ExclusiveDutchLimitOrderReactor__factory.connect(order.info.reactor, filler);
+    const reactor = ExclusiveDutchOrderReactor__factory.connect(order.info.reactor, filler);
 
     // Approve Permit2
     const tokenInBefore = await getBalanceAndApprove(alice, PERMIT2_ADDRESS, currencyIn);

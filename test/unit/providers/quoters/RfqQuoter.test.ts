@@ -1,6 +1,6 @@
 import { BigNumber, ethers } from 'ethers';
 
-import { DutchLimitQuote, DutchLimitQuoteDataJSON, DutchLimitQuoteJSON } from '../../../../lib/entities';
+import { DutchQuote, DutchQuoteDataJSON, DutchQuoteJSON } from '../../../../lib/entities';
 import { RfqQuoter } from '../../../../lib/providers/quoters';
 import axios from '../../../../lib/providers/quoters/helpers';
 import { AMOUNT_IN, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
@@ -12,7 +12,7 @@ describe('RfqQuoter test', () => {
   const getSpy = (nonce?: string) => {
     return jest.spyOn(axios, 'get').mockResolvedValue({ data: { nonce: nonce } });
   };
-  const postSpy = (responseData: DutchLimitQuoteJSON) =>
+  const postSpy = (responseData: DutchQuoteJSON) =>
     jest.spyOn(axios, 'post').mockResolvedValue({ data: responseData });
   const quoter = new RfqQuoter('https://api.uniswap.org/', 'https://api.uniswap.org/', 'test-api-key');
 
@@ -73,13 +73,13 @@ describe('RfqQuoter test', () => {
 
     it('returns null if rfq POST times out', async () => {
       jest.spyOn(axios, 'post').mockRejectedValue(new Error('RfqQuoterErr'));
-      const quote = (await quoter.quote(QUOTE_REQUEST_DL)) as DutchLimitQuote;
+      const quote = (await quoter.quote(QUOTE_REQUEST_DL)) as DutchQuote;
       expect(quote).toBeNull();
     });
 
     it('gracefully handles GET nonce error', async () => {
       jest.spyOn(axios, 'get').mockRejectedValue(new Error('GET nonce error'));
-      const quote = (await quoter.quote(QUOTE_REQUEST_DL)) as DutchLimitQuote;
+      const quote = (await quoter.quote(QUOTE_REQUEST_DL)) as DutchQuote;
       const nonce = BigNumber.from(quote.nonce);
       expect(nonce.gt(0) && nonce.lt(ethers.constants.MaxUint256)).toBeTruthy();
     });
@@ -87,7 +87,7 @@ describe('RfqQuoter test', () => {
     it('uses nonce returned by UniX service and increment by 1', async () => {
       getSpy('123');
       const quote = await quoter.quote(QUOTE_REQUEST_DL);
-      expect((quote?.toJSON() as DutchLimitQuoteDataJSON).orderInfo).toMatchObject({
+      expect((quote?.toJSON() as DutchQuoteDataJSON).orderInfo).toMatchObject({
         nonce: '124',
       });
     });

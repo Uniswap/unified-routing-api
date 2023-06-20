@@ -3,14 +3,14 @@ import { RoutingType } from '../../lib/constants';
 import {
   ClassicQuote,
   ClassicQuoteDataJSON,
-  DutchLimitQuote,
-  DutchLimitQuoteJSON,
-  DutchLimitRequest,
+  DutchQuote,
+  DutchQuoteJSON,
+  DutchRequest,
   Quote,
   QuoteRequest,
 } from '../../lib/entities';
 
-type ReceivedQuoteData = DutchLimitQuoteJSON | ClassicQuoteDataJSON;
+type ReceivedQuoteData = DutchQuoteJSON | ClassicQuoteDataJSON;
 
 type TokenInRoute = {
   address: string;
@@ -83,7 +83,7 @@ function parseQuote(request: QuoteRequest, routing: RoutingType, quote: Received
   switch (routing) {
     case RoutingType.DUTCH_LIMIT:
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      return DutchLimitQuote.fromResponseBody(request as DutchLimitRequest, quote as DutchLimitQuoteJSON);
+      return DutchQuote.fromResponseBody(request as DutchRequest, quote as DutchQuoteJSON);
     case RoutingType.CLASSIC:
       // TODO: figure out how to determine tradetype from output JSON
       // also: is this parsing quote responses even needed outside of testing?

@@ -3,7 +3,7 @@ import { BigNumber } from 'ethers';
 
 import { defaultRequestKey, QuoteRequest, QuoteRequestInfo } from '.';
 import { RoutingType } from '../../constants';
-import { DutchLimitRequest } from './DutchLimitRequest';
+import { DutchRequest } from './DutchRequest';
 
 export interface ClassicConfig {
   protocols?: Protocol[];
@@ -43,7 +43,7 @@ export class ClassicRequest implements QuoteRequest {
     );
   }
 
-  public static fromDutchLimitRequest(request: DutchLimitRequest): ClassicRequest {
+  public static fromDutchRequest(request: DutchRequest): ClassicRequest {
     return new ClassicRequest(request.info, {
       protocols: [Protocol.V2, Protocol.V3, Protocol.MIXED],
     });

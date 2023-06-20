@@ -4,12 +4,12 @@ import { NATIVE_ADDRESS, RoutingType } from '../../lib/constants';
 import {
   ClassicQuoteDataJSON,
   ClassicRequest,
-  DutchLimitQuoteJSON,
-  DutchLimitRequest,
+  DutchQuoteJSON,
+  DutchRequest,
   parseQuoteRequests,
   QuoteRequestBodyJSON,
 } from '../../lib/entities';
-import { ClassicQuote, DutchLimitQuote, Quote } from '../../lib/entities/quote';
+import { ClassicQuote, DutchQuote, Quote } from '../../lib/entities/quote';
 import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, FILLER, OFFERER, TOKEN_IN, TOKEN_OUT } from '../constants';
 import { buildQuoteResponse } from './quoteResponse';
 
@@ -90,7 +90,7 @@ export function makeClassicRequest(overrides: Partial<QuoteRequestBodyJSON>): Cl
 
 export const QUOTE_REQUEST_CLASSIC = makeClassicRequest({});
 
-export function makeDutchLimitRequest(overrides: Partial<QuoteRequestBodyJSON>): DutchLimitRequest {
+export function makeDutchRequest(overrides: Partial<QuoteRequestBodyJSON>): DutchRequest {
   const requestInfo = Object.assign({}, BASE_REQUEST_INFO_EXACT_IN, overrides);
   return parseQuoteRequests({
     ...requestInfo,
@@ -102,15 +102,15 @@ export function makeDutchLimitRequest(overrides: Partial<QuoteRequestBodyJSON>):
         auctionPeriodSecs: 60,
       },
     ],
-  }).quoteRequests[0] as DutchLimitRequest;
+  }).quoteRequests[0] as DutchRequest;
 }
 
-export const QUOTE_REQUEST_DL = makeDutchLimitRequest({});
-export const QUOTE_REQUEST_DL_EXACT_OUT = makeDutchLimitRequest({ type: 'EXACT_OUTPUT' });
-export const QUOTE_REQUEST_DL_NATIVE_IN = makeDutchLimitRequest({
+export const QUOTE_REQUEST_DL = makeDutchRequest({});
+export const QUOTE_REQUEST_DL_EXACT_OUT = makeDutchRequest({ type: 'EXACT_OUTPUT' });
+export const QUOTE_REQUEST_DL_NATIVE_IN = makeDutchRequest({
   tokenIn: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_IN_ID)].address,
 });
-export const QUOTE_REQUEST_DL_NATIVE_OUT = makeDutchLimitRequest({
+export const QUOTE_REQUEST_DL_NATIVE_OUT = makeDutchRequest({
   tokenOut: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_OUT_ID)].address,
 });
 
@@ -203,13 +203,13 @@ export const CLASSIC_QUOTE_DATA = {
   },
 };
 
-export function createDutchLimitQuote(overrides: Partial<DutchLimitQuoteJSON>, type: string): DutchLimitQuote {
+export function createDutchQuote(overrides: Partial<DutchQuoteJSON>, type: string): DutchQuote {
   return buildQuoteResponse(
     Object.assign({}, DL_QUOTE_DATA, {
       quote: { ...DL_QUOTE_DATA.quote, type: RoutingType.DUTCH_LIMIT, ...overrides },
     }),
-    makeDutchLimitRequest({ type })
-  ) as DutchLimitQuote;
+    makeDutchRequest({ type })
+  ) as DutchQuote;
 }
 
 export function createClassicQuote(
@@ -238,17 +238,17 @@ export function createRouteBackToNativeQuote(overrides: Partial<ClassicQuoteData
   );
 }
 
-export const DL_QUOTE_EXACT_IN_BETTER = createDutchLimitQuote({ amountOut: '2' }, 'EXACT_INPUT');
-export const DL_QUOTE_NATIVE_EXACT_IN_BETTER = createDutchLimitQuote(
+export const DL_QUOTE_EXACT_IN_BETTER = createDutchQuote({ amountOut: '2' }, 'EXACT_INPUT');
+export const DL_QUOTE_NATIVE_EXACT_IN_BETTER = createDutchQuote(
   { amountOut: '2', tokenIn: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_OUT_ID)].address },
   'EXACT_INPUT'
 );
-export const DL_QUOTE_EXACT_IN_WORSE_PREFERENCE = createDutchLimitQuote({ amountOut: '100000' }, 'EXACT_INPUT');
-export const DL_QUOTE_EXACT_IN_WORSE = createDutchLimitQuote({ amountOut: '1' }, 'EXACT_INPUT');
-export const DL_QUOTE_EXACT_IN_LARGE = createDutchLimitQuote({ amountOut: '10000' }, 'EXACT_INPUT');
-export const DL_QUOTE_EXACT_OUT_BETTER = createDutchLimitQuote({ amountIn: '1' }, 'EXACT_OUTPUT');
-export const DL_QUOTE_EXACT_OUT_WORSE = createDutchLimitQuote({ amountIn: '2' }, 'EXACT_OUTPUT');
-export const DL_QUOTE_EXACT_OUT_LARGE = createDutchLimitQuote({ amountOut: '10000' }, 'EXACT_INPUT');
+export const DL_QUOTE_EXACT_IN_WORSE_PREFERENCE = createDutchQuote({ amountOut: '100000' }, 'EXACT_INPUT');
+export const DL_QUOTE_EXACT_IN_WORSE = createDutchQuote({ amountOut: '1' }, 'EXACT_INPUT');
+export const DL_QUOTE_EXACT_IN_LARGE = createDutchQuote({ amountOut: '10000' }, 'EXACT_INPUT');
+export const DL_QUOTE_EXACT_OUT_BETTER = createDutchQuote({ amountIn: '1' }, 'EXACT_OUTPUT');
+export const DL_QUOTE_EXACT_OUT_WORSE = createDutchQuote({ amountIn: '2' }, 'EXACT_OUTPUT');
+export const DL_QUOTE_EXACT_OUT_LARGE = createDutchQuote({ amountOut: '10000' }, 'EXACT_INPUT');
 
 export const CLASSIC_QUOTE_EXACT_IN_BETTER_PREFERENCE = createClassicQuote(
   { quote: '100100', quoteGasAdjusted: '100100' },
