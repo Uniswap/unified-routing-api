@@ -237,6 +237,23 @@ describe('QuoteHandler', () => {
         expect(allQuotes[1].routing).toEqual('CLASSIC');
       });
 
+      it('returns requestId', async () => {
+        const quoters = {
+          [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
+          [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),
+        };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+
+        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(
+          getEvent(QUOTE_REQUEST_BODY_MULTI),
+          {} as unknown as Context
+        );
+
+        const requestId = JSON.parse(res.body).requestId;
+        expect(requestId).toBeDefined();
+      });
+
       it('returns null in allQuotes on quote failure', async () => {
         const quoters = {
           [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),

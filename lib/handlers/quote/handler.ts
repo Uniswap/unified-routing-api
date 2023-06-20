@@ -32,6 +32,7 @@ export interface SingleQuoteJSON {
 }
 
 export interface QuoteResponseJSON extends SingleQuoteJSON {
+  requestId: string;
   allQuotes: (SingleQuoteJSON | null)[];
 }
 
@@ -91,6 +92,7 @@ export class QuoteHandler extends APIGLambdaHandler<
         quoteToResponse(bestQuote),
         // additional info to return alongside the main quote
         {
+          requestId: request.requestId,
           // note the best quote is duplicated, but this allows callers
           // to easily map their original request configs to quotes by index
           allQuotes: resolvedQuotes.map((q) => (q ? quoteToResponse(q) : null)),
