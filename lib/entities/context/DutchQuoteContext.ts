@@ -51,7 +51,7 @@ export class DutchQuoteContext implements QuoteContext {
     this.classicKey = classicRequest.key();
     this.log.info({ classicRequest: classicRequest.info }, 'Adding synthetic classic request');
 
-    const result = [this.request, classicRequest];
+    const result = [this.request];
 
     const native = WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(this.request.info.tokenOutChainId)].address;
     if (this.request.info.tokenOut !== native) {
@@ -69,7 +69,7 @@ export class DutchQuoteContext implements QuoteContext {
         }
       );
       this.routeToNativeKey = routeBackToNativeRequest.key();
-      result.push(routeBackToNativeRequest);
+      // result.push(routeBackToNativeRequest);
 
       this.log.info(
         { routeBackToNativeRequest: routeBackToNativeRequest.info },
