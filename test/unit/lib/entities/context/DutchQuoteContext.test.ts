@@ -3,7 +3,7 @@ import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
 
 import { RoutingType } from '../../../../../lib/constants';
-import { DutchQuote, DutchQuoteDataJSON, DutchQuoteContext } from '../../../../../lib/entities';
+import { DutchQuote, DutchQuoteContext, DutchQuoteDataJSON } from '../../../../../lib/entities';
 import {
   createClassicQuote,
   createDutchQuote,

@@ -18,6 +18,7 @@ export type DutchQuoteDataJSON = {
   requestId: string;
   encodedOrder: string;
   auctionPeriodSecs: number;
+  deadlineBufferSecs: number;
   slippageTolerance: string;
   permitData: PermitTransferFromData;
 };
@@ -46,11 +47,7 @@ export class DutchQuote implements Quote {
   public static amountInImprovementExactOut = BigNumber.from(9999);
 
   // build a dutch quote from an RFQ response
-  public static fromResponseBody(
-    request: DutchRequest,
-    body: DutchQuoteJSON,
-    nonce?: string
-  ): DutchQuote {
+  public static fromResponseBody(request: DutchRequest, body: DutchQuoteJSON, nonce?: string): DutchQuote {
     const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchQuote.calculateEndAmountFromSlippage(
       request,
       BigNumber.from(body.amountIn),
@@ -162,6 +159,7 @@ export class DutchQuote implements Quote {
       quoteId: this.quoteId,
       requestId: this.requestId,
       auctionPeriodSecs: this.request.config.auctionPeriodSecs,
+      deadlineBufferSecs: this.request.config.deadlineBufferSecs,
       slippageTolerance: this.request.info.slippageTolerance,
       permitData: this.getPermitData(),
     };
@@ -176,7 +174,7 @@ export class DutchQuote implements Quote {
     const builder = orderBuilder
       .startTime(decayStartTime)
       .endTime(decayStartTime + this.request.config.auctionPeriodSecs)
-      .deadline(decayStartTime + this.request.config.auctionPeriodSecs)
+      .deadline(decayStartTime + this.request.config.auctionPeriodSecs + this.request.config.deadlineBufferSecs)
       .offerer(ethers.utils.getAddress(this.request.config.offerer))
       .nonce(BigNumber.from(nonce))
       .input({

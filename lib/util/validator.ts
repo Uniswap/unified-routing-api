@@ -94,6 +94,7 @@ export class FieldValidator {
     offerer: FieldValidator.address.optional(),
     exclusivityOverrideBps: FieldValidator.positiveNumber.optional(),
     auctionPeriodSecs: FieldValidator.positiveNumber.optional(),
+    deadlineBufferSecs: FieldValidator.positiveNumber.optional(),
     slippageTolerance: FieldValidator.slippageTolerance.optional(),
   });
 }

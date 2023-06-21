@@ -43,6 +43,7 @@ export const QUOTE_REQUEST_BODY_MULTI: QuoteRequestBodyJSON = {
       offerer: OFFERER,
       exclusivityOverrideBps: 12,
       auctionPeriodSecs: 60,
+      deadlineBufferSecs: 12,
     },
     {
       routingType: RoutingType.CLASSIC,
@@ -59,6 +60,7 @@ export const DL_REQUEST_BODY = {
       offerer: OFFERER,
       exclusivityOverrideBps: 12,
       auctionPeriodSecs: 60,
+      deadlineBufferSecs: 12,
     },
   ],
 };
@@ -100,6 +102,7 @@ export function makeDutchRequest(overrides: Partial<QuoteRequestBodyJSON>): Dutc
         offerer: OFFERER,
         exclusivityOverrideBps: 12,
         auctionPeriodSecs: 60,
+        deadlineBufferSecs: 12,
       },
     ],
   }).quoteRequests[0] as DutchRequest;
@@ -122,6 +125,7 @@ export const { quoteRequests: QUOTE_REQUEST_MULTI } = parseQuoteRequests({
       offerer: OFFERER,
       exclusivityOverrideBps: 12,
       auctionPeriodSecs: 60,
+      deadlineBufferSecs: 12,
     },
     {
       routingType: RoutingType.CLASSIC,
@@ -139,6 +143,7 @@ export const QUOTE_REQUEST_ETH_IN_MULTI = parseQuoteRequests({
       offerer: OFFERER,
       exclusivityOverrideBps: 12,
       auctionPeriodSecs: 60,
+      deadlineBufferSecs: 12,
     },
     {
       routingType: RoutingType.CLASSIC,
@@ -156,6 +161,7 @@ export const QUOTE_REQUEST_MULTI_EXACT_OUT = parseQuoteRequests({
       offerer: OFFERER,
       exclusivityOverrideBps: 12,
       auctionPeriodSecs: 60,
+      deadlineBufferSecs: 12,
     },
     {
       routingType: RoutingType.CLASSIC,

@@ -13,6 +13,7 @@ export interface DutchConfig {
   offerer: string;
   exclusivityOverrideBps: number;
   auctionPeriodSecs: number;
+  deadlineBufferSecs: number;
 }
 
 export interface DutchQuoteRequestInfo extends QuoteRequestInfo {
@@ -37,6 +38,7 @@ export class DutchRequest implements QuoteRequest {
         offerer: body.offerer ?? NATIVE_ADDRESS,
         exclusivityOverrideBps: body.exclusivityOverrideBps ?? DEFAULT_EXCLUSIVITY_OVERRIDE_BPS,
         auctionPeriodSecs: body.auctionPeriodSecs ?? DutchRequest.defaultAuctionPeriodSecs(info.tokenInChainId),
+        deadlineBufferSecs: body.deadlineBufferSecs ?? DutchRequest.defaultDeadlineBufferSecs(info.tokenInChainId),
       }
     );
   }
@@ -52,6 +54,17 @@ export class DutchRequest implements QuoteRequest {
         return 60;
       default:
         return 60;
+    }
+  }
+
+  public static defaultDeadlineBufferSecs(chainId: number): number {
+    switch (chainId) {
+      case 1:
+        return 12;
+      case 137:
+        return 5;
+      default:
+        return 5;
     }
   }
 
