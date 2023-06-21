@@ -33,7 +33,7 @@ import { compareQuotes, getBestQuote, getQuotes, QuoteHandler } from '../../../.
 import { ContainerInjected, QuoterByRoutingType } from '../../../../../lib/handlers/quote/injector';
 import { Quoter } from '../../../../../lib/providers/quoters';
 import { setGlobalLogger } from '../../../../../lib/util/log';
-import { OFFERER, PERMIT2, PERMIT_DETAILS, TOKEN_IN, TOKEN_OUT } from '../../../../constants';
+import { OFFERER, PERMIT2_USED, PERMIT_DETAILS, TOKEN_IN, TOKEN_OUT } from '../../../../constants';
 
 describe('QuoteHandler', () => {
   describe('handler', () => {
@@ -322,7 +322,7 @@ describe('QuoteHandler', () => {
         );
         const responseBody = JSON.parse(response.body);
 
-        expect(responseBody.quote.permitData).toMatchObject(PERMIT2);
+        expect(responseBody.quote.permitData).toMatchObject(PERMIT2_USED);
         expect(permit2Fetcher.fetchAllowance).toHaveBeenCalledWith(
           CLASSIC_REQUEST_BODY.tokenInChainId,
           OFFERER,

@@ -25,7 +25,7 @@ export const CLASSIC_CONFIG = {
   protocols: ['V2', 'V3', 'MIXED'],
 };
 
-export const PERMIT2 = {
+export const PERMIT2_USED = {
   domain: { name: 'Permit2', chainId: 1, verifyingContract: '0x000000000022D473030F116dDEE9F6B43aC78BA3' },
   types: {
     PermitSingle: [
@@ -45,12 +45,23 @@ export const PERMIT2 = {
       token: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
       amount: '1461501637330902918203684832716283019655932542975',
       expiration: 2592000,
-      nonce: '0',
+      nonce: '1',
     },
     spender: UNIVERSAL_ROUTER_ADDRESS(1),
     sigDeadline: 1800,
   },
 };
+
+export const PERMIT2_FIRST = {
+  ...PERMIT2_USED,
+  values: {
+    ...PERMIT2_USED.values,
+    details: {
+      ...PERMIT2_USED.values.details,
+      nonce: '0',
+    },
+  },
+}
 
 export const PERMIT2_POLYGON = {
   domain: { name: 'Permit2', chainId: 137, verifyingContract: '0x000000000022D473030F116dDEE9F6B43aC78BA3' },
@@ -82,7 +93,7 @@ export const PERMIT2_POLYGON = {
 export const PERMIT_DETAILS = {
   amount: AMOUNT_IN,
   expiration: 2592000,
-  nonce: 0,
+  nonce: 1,
   token: TOKEN_IN,
 };
 

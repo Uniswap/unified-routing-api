@@ -67,6 +67,8 @@ export type ClassicQuoteDataJSON = {
   routeString: string;
   methodParameters?: MethodParameters;
   permitData?: PermitSingleData | PermitTransferFromData;
+  permitNonce: string;
+  tradeType: string;
 };
 
 export class ClassicQuote implements Quote {
@@ -89,6 +91,8 @@ export class ClassicQuote implements Quote {
       quoteId: this.quoteId,
       requestId: this.request.info.requestId,
       permitData: this.getPermitData(),
+      permitNonce: this.allowanceData?.nonce.toString() ?? '0', 
+      tradeType: this.request.info.type === TradeType.EXACT_INPUT ? 'exactIn' : 'exactOut',
     };
   }
 

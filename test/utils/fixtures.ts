@@ -206,6 +206,8 @@ export const CLASSIC_QUOTE_DATA = {
     blockNumber: '1234',
     route: [],
     routeString: 'USD-ETH',
+    permitNonce: '1',
+    tradeType: 'exactIn',
   },
 };
 

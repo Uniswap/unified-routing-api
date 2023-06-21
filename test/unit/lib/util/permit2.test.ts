@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { createPermitData } from '../../../../lib/util/permit2';
-import { PERMIT2, PERMIT2_POLYGON, TOKEN_IN } from '../../../constants';
+import { PERMIT2_POLYGON, TOKEN_IN, PERMIT2_FIRST } from '../../../constants';
 import { UtilityTest } from '../../../types';
 
 const tests: UtilityTest[] = [
@@ -12,7 +12,7 @@ const tests: UtilityTest[] = [
       nonce: '0',
     },
     output: {
-      permit: PERMIT2,
+      permit: PERMIT2_FIRST,
     },
   },
   {
