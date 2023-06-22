@@ -47,6 +47,7 @@ const CLASSIC_QUOTE_JSON: ClassicQuoteDataJSON = {
   routeString: 'USD-ETH',
   permitNonce: '1',
   tradeType: 'exactIn',
+  slippage: 0.5,
 };
 
 describe('QuoteResponse', () => {

@@ -208,6 +208,7 @@ export const CLASSIC_QUOTE_DATA = {
     routeString: 'USD-ETH',
     permitNonce: '1',
     tradeType: 'exactIn',
+    slippage: 0.5,
   },
 };
 
