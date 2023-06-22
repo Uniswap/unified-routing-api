@@ -46,7 +46,7 @@ const CLASSIC_QUOTE_JSON: ClassicQuoteDataJSON = {
   route: [],
   routeString: 'USD-ETH',
   permitNonce: '1',
-  tradeType: 'exactIn',
+  tradeType: 'EXACT_INPUT',
   slippage: 0.5,
 };
 
@@ -113,7 +113,7 @@ describe('QuoteResponse', () => {
       ...CLASSIC_QUOTE_JSON,
       quoteId: expect.any(String),
       requestId: expect.any(String),
-      tradeType: 'exactIn',
+      tradeType: 'EXACT_INPUT',
     });
     expect(quote.amountIn.toString()).toEqual(CLASSIC_QUOTE_JSON.amount);
     expect(quote.amountOut.toString()).toEqual(CLASSIC_QUOTE_JSON.quote);
@@ -126,7 +126,7 @@ describe('QuoteResponse', () => {
       ...CLASSIC_QUOTE_JSON,
       quoteId: expect.any(String),
       requestId: expect.any(String),
-      tradeType: 'exactOut',
+      tradeType: 'EXACT_OUTPUT',
     });
     expect(quote.amountIn.toString()).toEqual(CLASSIC_QUOTE_JSON.quote);
     expect(quote.amountOut.toString()).toEqual(CLASSIC_QUOTE_JSON.amount);
