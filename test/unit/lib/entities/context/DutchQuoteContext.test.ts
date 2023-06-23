@@ -12,7 +12,7 @@ import {
   QUOTE_REQUEST_DL,
 } from '../../../../utils/fixtures';
 
-xdescribe('DutchQuoteContext', () => {
+describe('DutchQuoteContext', () => {
   const logger = Logger.createLogger({ name: 'test' });
   logger.level(Logger.FATAL);
 

@@ -35,7 +35,7 @@ import { Quoter } from '../../../../../lib/providers/quoters';
 import { setGlobalLogger } from '../../../../../lib/util/log';
 import { OFFERER, PERMIT2, PERMIT_DETAILS, TOKEN_IN, TOKEN_OUT } from '../../../../constants';
 
-xdescribe('QuoteHandler', () => {
+describe('QuoteHandler', () => {
   describe('handler', () => {
     const logger = {
       info: jest.fn(),
