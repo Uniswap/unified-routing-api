@@ -184,6 +184,7 @@ describe('QuoteHandler', () => {
               offerer: '0x0000000000000000000000000000000000000000',
               exclusivityOverrideBps: 12,
               auctionPeriodSecs: 60,
+              deadlineBufferSecs: 12,
             },
           ],
         };

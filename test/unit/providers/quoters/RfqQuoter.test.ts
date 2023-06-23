@@ -12,8 +12,7 @@ describe('RfqQuoter test', () => {
   const getSpy = (nonce?: string) => {
     return jest.spyOn(axios, 'get').mockResolvedValue({ data: { nonce: nonce } });
   };
-  const postSpy = (responseData: DutchQuoteJSON) =>
-    jest.spyOn(axios, 'post').mockResolvedValue({ data: responseData });
+  const postSpy = (responseData: DutchQuoteJSON) => jest.spyOn(axios, 'post').mockResolvedValue({ data: responseData });
   const quoter = new RfqQuoter('https://api.uniswap.org/', 'https://api.uniswap.org/', 'test-api-key');
 
   describe('quote test', () => {

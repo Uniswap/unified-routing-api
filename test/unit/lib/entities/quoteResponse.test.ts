@@ -1,13 +1,7 @@
 import { DutchOrder, parseValidation, ValidationType } from '@uniswap/gouda-sdk';
 import { BigNumber } from 'ethers';
 
-import {
-  ClassicQuote,
-  ClassicQuoteDataJSON,
-  DutchQuote,
-  DutchQuoteJSON,
-  DutchRequest,
-} from '../../../../lib/entities';
+import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, DutchQuoteJSON, DutchRequest } from '../../../../lib/entities';
 import { AMOUNT_IN, CHAIN_IN_ID, FILLER, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
