@@ -84,27 +84,28 @@ export class DutchQuoteContext implements QuoteContext {
   async resolve(dependencies: QuoteByKey): Promise<Quote | null> {
     const classicQuote = dependencies[this.classicKey] as ClassicQuote;
     const routeBackToNative = dependencies[this.routeToNativeKey] as ClassicQuote;
-    const rfqQuote = dependencies[this.requestKey] as DutchQuote;
+    // const rfqQuote = dependencies[this.requestKey] as DutchQuote;
 
-    const quote = await this.getRfqQuote(rfqQuote, classicQuote);
+    // const quote = await this.getRfqQuote(rfqQuote, classicQuote);
     const syntheticQuote = this.getSyntheticQuote(classicQuote, routeBackToNative);
+    return syntheticQuote;
 
-    // handle cases where we only either have RFQ or synthetic
-    if (!quote && !syntheticQuote) {
-      this.log.warn('No quote or synthetic quote available');
-      return null;
-    } else if (!quote) {
-      return syntheticQuote;
-    } else if (!syntheticQuote) {
-      return quote;
-    }
-
-    // return the better of the two
-    if (this.request.info.type === TradeType.EXACT_INPUT) {
-      return quote.amountOut.gte(syntheticQuote.amountOut) ? quote : syntheticQuote;
-    } else {
-      return quote.amountIn.lte(syntheticQuote.amountIn) ? quote : syntheticQuote;
-    }
+    // // handle cases where we only either have RFQ or synthetic
+    // if (!quote && !syntheticQuote) {
+    //   this.log.warn('No quote or synthetic quote available');
+    //   return null;
+    // } else if (!quote) {
+    //   return syntheticQuote;
+    // } else if (!syntheticQuote) {
+    //   return quote;
+    // }
+    //
+    // // return the better of the two
+    // if (this.request.info.type === TradeType.EXACT_INPUT) {
+    //   return quote.amountOut.gte(syntheticQuote.amountOut) ? quote : syntheticQuote;
+    // } else {
+    //   return quote.amountIn.lte(syntheticQuote.amountIn) ? quote : syntheticQuote;
+    // }
   }
 
   async getRfqQuote(quote?: DutchQuote, classicQuote?: ClassicQuote): Promise<DutchQuote | null> {
