@@ -48,7 +48,7 @@ describe('DutchQuote', () => {
       expect(reparameterized.amountOutStart).toEqual(DL_QUOTE_EXACT_IN_LARGE.amountOutStart);
 
       const { amountIn: amountInClassic, amountOut: amountOutClassic } =
-        DutchQuote.applyGasAdjustment(CLASSIC_QUOTE_EXACT_IN_LARGE);
+        DutchQuote.applyGasAdjustment(CLASSIC_QUOTE_EXACT_IN_LARGE.amountInGasAdjusted, CLASSIC_QUOTE_EXACT_IN_LARGE.amountOutGasAdjusted, CLASSIC_QUOTE_EXACT_IN_LARGE);
       const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchQuote.calculateEndAmountFromSlippage(
         DL_QUOTE_EXACT_IN_LARGE.request,
         amountInClassic,
@@ -66,7 +66,7 @@ describe('DutchQuote', () => {
       expect(reparameterized.amountOutStart).toEqual(DL_QUOTE_EXACT_OUT_LARGE.amountOutStart);
 
       const { amountIn: amountInClassic, amountOut: amountOutClassic } =
-        DutchQuote.applyGasAdjustment(CLASSIC_QUOTE_EXACT_OUT_LARGE);
+        DutchQuote.applyGasAdjustment(CLASSIC_QUOTE_EXACT_OUT_LARGE.amountInGasAdjusted, CLASSIC_QUOTE_EXACT_OUT_LARGE.amountOutGasAdjusted, CLASSIC_QUOTE_EXACT_OUT_LARGE);
       const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchQuote.calculateEndAmountFromSlippage(
         DL_QUOTE_EXACT_OUT_LARGE.request,
         amountInClassic,
@@ -110,6 +110,25 @@ describe('DutchQuote', () => {
       const firstNonce = result.toOrder().info.nonce;
       const secondNonce = result.toOrder().info.nonce;
       expect(firstNonce).toEqual(secondNonce);
+    });
+
+    it('applies gas adjustment to endAmount', () => {
+      const amount = '10000000000000000';
+      const classicQuote = createClassicQuote({ amount }, {});
+      const dutchQuote = createDutchQuote({ amountIn: amount }, 'EXACT_INPUT');
+      const result = DutchQuote.fromClassicQuote(dutchQuote.request, classicQuote);
+      const firstNonce = result.toOrder().info.nonce;
+      const secondNonce = result.toOrder().info.nonce;
+      expect(firstNonce).toEqual(secondNonce);
+      expect(result.amountInStart).toEqual(classicQuote.amountInGasAdjusted);
+      // greater because of price improvement
+      expect(result.amountOutStart.gt(classicQuote.amountOutGasAdjusted)).toBeTruthy();
+
+      const { amountIn: slippageAdjustedAmountIn, amountOut: slippageAdjustedAmountOut } = DutchQuote.calculateEndAmountFromSlippage(dutchQuote.request, classicQuote.amountInGasAdjusted, classicQuote.amountOutGasAdjusted);
+      expect(result.amountInEnd).toEqual(slippageAdjustedAmountIn);
+      expect(result.amountInEnd).toEqual(result.amountInStart);
+      // should have extra adjustment for gas to amountOut
+      expect(result.amountOutEnd.lte(slippageAdjustedAmountOut)).toBeTruthy();
     });
   });
 });

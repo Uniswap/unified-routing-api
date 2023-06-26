@@ -73,20 +73,21 @@ export class DutchQuote implements Quote {
 
   // build a synthetic dutch quote from a classic quote
   public static fromClassicQuote(request: DutchRequest, quote: ClassicQuote): DutchQuote {
-    const adjustedAmountIn =
+    const startAmountIn =
       request.info.type === TradeType.EXACT_INPUT
         ? quote.amountIn
         : this.applyPriceImprovementAmountIn(quote.amountInGasAdjusted);
 
-    const adjustedAmountOut =
+    const startAmountOut =
       request.info.type === TradeType.EXACT_OUTPUT
         ? quote.amountOut
         : this.applyPriceImprovementAmountOut(quote.amountOutGasAdjusted);
 
-    const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchQuote.calculateEndAmountFromSlippage(
+    const { amountIn: gasAdjustedAmountIn, amountOut: gasAdjustedAmountOut } = this.applyGasAdjustment(startAmountIn, startAmountOut, quote);
+    const { amountIn: endAmountIn, amountOut: endAmountOut } = DutchQuote.calculateEndAmountFromSlippage(
       request,
-      adjustedAmountIn,
-      adjustedAmountOut
+      gasAdjustedAmountIn,
+      gasAdjustedAmountOut
     );
     return new DutchQuote(
       quote.createdAt,
@@ -96,10 +97,10 @@ export class DutchQuote implements Quote {
       uuidv4(), // synthetic quote doesn't receive a quoteId from RFQ api, so generate one
       request.info.tokenIn,
       quote.request.info.tokenOut,
-      adjustedAmountIn,
-      amountInEnd,
-      adjustedAmountOut,
-      amountOutEnd,
+      startAmountIn,
+      endAmountIn,
+      startAmountOut,
+      endAmountOut,
       request.config.offerer,
       '', // synthetic quote has no filler
       generateRandomNonce() // synthetic quote has no nonce
@@ -109,7 +110,7 @@ export class DutchQuote implements Quote {
   // reparameterize an RFQ quote with awareness of classic
   public static reparameterize(quote: DutchQuote, classic?: ClassicQuote): DutchQuote {
     if (!classic) return quote;
-    const { amountIn: amountInClassic, amountOut: amountOutClassic } = DutchQuote.applyGasAdjustment(classic);
+    const { amountIn: amountInClassic, amountOut: amountOutClassic } = DutchQuote.applyGasAdjustment(classic.amountInGasAdjusted, classic.amountOutGasAdjusted, classic);
     const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchQuote.calculateEndAmountFromSlippage(
       quote.request,
       amountInClassic,
@@ -266,7 +267,7 @@ export class DutchQuote implements Quote {
   }
 
   // Calculates the gas adjustment for the given quote if processed through Gouda
-  static applyGasAdjustment(classicQuote: ClassicQuote): { amountIn: BigNumber; amountOut: BigNumber } {
+  static applyGasAdjustment(startAmountIn: BigNumber, startAmountOut: BigNumber, classicQuote: ClassicQuote): { amountIn: BigNumber; amountOut: BigNumber } {
     const info = classicQuote.request.info;
     const gasAdjustment = DutchQuote.getGasAdjustment(classicQuote);
 
@@ -280,17 +281,17 @@ export class DutchQuote implements Quote {
     if (info.type === TradeType.EXACT_INPUT) {
       const amountOut = newGasUseEstimateQuote.gt(classicQuote.amountOut)
         ? BigNumber.from(0)
-        : DutchQuote.applyPriceImprovementAmountOut(classicQuote.amountOutGasAdjusted).sub(newGasUseEstimateQuote);
+        : DutchQuote.applyPriceImprovementAmountOut(startAmountOut).sub(newGasUseEstimateQuote);
       return {
-        amountIn: info.amount,
+        amountIn: startAmountIn,
         amountOut: amountOut.lt(0) ? BigNumber.from(0) : amountOut,
       };
     } else {
       return {
-        amountIn: DutchQuote.applyPriceImprovementAmountIn(classicQuote.amountInGasAdjusted).add(
+        amountIn: DutchQuote.applyPriceImprovementAmountIn(startAmountIn).add(
           newGasUseEstimateQuote
         ),
-        amountOut: info.amount,
+        amountOut: startAmountOut,
       };
     }
   }
