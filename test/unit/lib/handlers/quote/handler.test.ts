@@ -212,7 +212,13 @@ describe('QuoteHandler', () => {
           getEvent(QUOTE_REQUEST_BODY_MULTI),
           {} as unknown as Context
         );
-        const { amountOut: amountOutClassic } = DutchQuote.applyGasAdjustment(CLASSIC_QUOTE_EXACT_IN_WORSE.amountInGasAdjusted, CLASSIC_QUOTE_EXACT_IN_WORSE.amountOutGasAdjusted, CLASSIC_QUOTE_EXACT_IN_WORSE);
+        const { amountOut: amountOutClassic } = DutchQuote.applyGasAdjustment(
+          {
+            amountIn: CLASSIC_QUOTE_EXACT_IN_WORSE.amountInGasAdjusted,
+            amountOut: CLASSIC_QUOTE_EXACT_IN_WORSE.amountOutGasAdjusted,
+          },
+          CLASSIC_QUOTE_EXACT_IN_WORSE
+        );
         const slippageAdjustedAmountOut = amountOutClassic.mul(95).div(100);
         const quoteJSON = JSON.parse(res.body).quote.orderInfo as DutchOrderInfoJSON;
         expect(quoteJSON.outputs.length).toBe(1);
