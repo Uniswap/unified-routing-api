@@ -46,7 +46,7 @@ export const PERMIT2 = {
       expiration: 2592000,
       nonce: '0',
     },
-    spender: '0xEf1c6E67703c7BD7107eed8303Fbe6EC2554BF6B',
+    spender: '0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD',
     sigDeadline: 1800,
   },
 };
@@ -73,7 +73,7 @@ export const PERMIT2_POLYGON = {
       expiration: 2592000,
       nonce: '0',
     },
-    spender: '0x4C60051384bd2d3C01bfc845Cf5F4b44bcbE9de5',
+    spender: '0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD',
     sigDeadline: 1800,
   },
 };
