@@ -228,7 +228,9 @@ export class DutchQuote implements Quote {
     if (isExactIn) {
       return {
         amountIn: amountInStart,
-        amountOut: amountOutStart.mul(BPS - parseSlippageToleranceBps(request.info.slippageTolerance)).div(BPS),
+        // TODO: remove this hardcoded slippage after the mainnet large scale burst test
+        // This set's the slippage tolerance to 25%
+        amountOut: amountOutStart.mul(BPS - 2500).div(BPS),
       };
     } else {
       return {
