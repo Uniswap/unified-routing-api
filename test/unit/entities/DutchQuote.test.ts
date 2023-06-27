@@ -24,7 +24,7 @@ describe('DutchQuote', () => {
       expect(reparameterized).toMatchObject(DL_QUOTE_EXACT_IN_LARGE);
     });
 
-    xit('slippage is in percent terms', async () => {
+    it('slippage is in percent terms', async () => {
       const amountIn = BigNumber.from('1000000000');
       const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchQuote.applySlippage(
         { amountIn, amountOut: amountIn },
@@ -85,7 +85,7 @@ describe('DutchQuote', () => {
     });
   });
 
-  xdescribe('getPermit', () => {
+  describe('getPermit', () => {
     it('Succeeds - Basic', () => {
       jest.useFakeTimers({
         now: 0,
@@ -100,7 +100,7 @@ describe('DutchQuote', () => {
     });
   });
 
-  xdescribe('toJSON', () => {
+  describe('toJSON', () => {
     it('Succeeds - Basic', () => {
       const quote = createDutchQuote({ amountOut: '10000' }, 'EXACT_INPUT') as any;
       quote.nonce = 1;
