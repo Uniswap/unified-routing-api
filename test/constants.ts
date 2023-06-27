@@ -1,3 +1,4 @@
+import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { getAddress } from 'ethers/lib/utils';
 import { RoutingType } from '../lib/constants';
 
@@ -46,7 +47,7 @@ export const PERMIT2 = {
       expiration: 2592000,
       nonce: '0',
     },
-    spender: '0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD',
+    spender: UNIVERSAL_ROUTER_ADDRESS(1),
     sigDeadline: 1800,
   },
 };
@@ -73,7 +74,7 @@ export const PERMIT2_POLYGON = {
       expiration: 2592000,
       nonce: '0',
     },
-    spender: '0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD',
+    spender: UNIVERSAL_ROUTER_ADDRESS(137),
     sigDeadline: 1800,
   },
 };
