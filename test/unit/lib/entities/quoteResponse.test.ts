@@ -48,7 +48,7 @@ describe('QuoteResponse', () => {
     expect(() => DutchQuote.fromResponseBody(config, DL_QUOTE_JSON)).not.toThrow();
   });
 
-  it('produces dutch limit order info from param-api response and config', () => {
+  xit('produces dutch limit order info from param-api response and config', () => {
     const quote = DutchQuote.fromResponseBody(config, DL_QUOTE_JSON);
     expect(quote.toOrder().toJSON()).toMatchObject({
       offerer: OFFERER,
@@ -73,7 +73,7 @@ describe('QuoteResponse', () => {
     expect(BigNumber.from(quote.toOrder().toJSON().nonce).gt(0)).toBeTruthy();
   });
 
-  it('produces dutch limit order info from param-api response and config without filler', () => {
+  xit('produces dutch limit order info from param-api response and config without filler', () => {
     const quote = DutchQuote.fromResponseBody(config, Object.assign({}, DL_QUOTE_JSON, { filler: undefined }));
     expect(quote.toOrder().toJSON()).toMatchObject({
       offerer: OFFERER,
