@@ -261,37 +261,53 @@ export class DutchQuote implements Quote {
   // and should be applied ot startAmounts
   // e.g. ETH wraps
   static applyPreSwapGasAdjustment(amounts: Amounts, classicQuote: ClassicQuote): Amounts {
-    return DutchQuote.getGasAdjustedAmounts(amounts, DutchQuote.getPreSwapGasAdjustment(classicQuote), classicQuote);
+    const gasAdjustment = DutchQuote.getPreSwapGasAdjustment(classicQuote);
+    if (gasAdjustment.eq(0)) return amounts;
+    return DutchQuote.getGasAdjustedAmounts(amounts, gasAdjustment, classicQuote);
   }
 
   // Calculates the gas adjustment for the given quote if processed through Gouda
   // Swap gas adjustments are paid by the filler in the process of filling a trade
   // and should be applied to endAmounts
   static applyGasAdjustment(amounts: Amounts, classicQuote: ClassicQuote): Amounts {
-    return DutchQuote.getGasAdjustedAmounts(amounts, DutchQuote.getGasAdjustment(classicQuote), classicQuote);
+    const gasAdjustment = DutchQuote.getGasAdjustment(classicQuote);
+    if (gasAdjustment.eq(0)) return amounts;
+    return DutchQuote.getGasAdjustedAmounts(
+      amounts,
+      // apply both the gouda gas adjustment and the routing gas adjustment
+      gasAdjustment.add(classicQuote.toJSON().gasUseEstimate),
+      classicQuote
+    );
   }
 
+  // return the amounts, with the gasAdjustment value taken out
+  // classicQuote used to get the gas price values in quote token
   static getGasAdjustedAmounts(amounts: Amounts, gasAdjustment: BigNumber, classicQuote: ClassicQuote): Amounts {
     const { amountIn: startAmountIn, amountOut: startAmountOut } = amounts;
     const info = classicQuote.request.info;
+
     // get ratio of gas used to gas used with WETH wrap
     const gasUseEstimate = BigNumber.from(classicQuote.toJSON().gasUseEstimate);
-    const gasUseRatio = gasUseEstimate.add(gasAdjustment).mul(100).div(gasUseEstimate);
+    const originalGasQuote = BigNumber.from(classicQuote.toJSON().gasUseEstimateQuote);
+    const gasPriceWei = BigNumber.from(classicQuote.toJSON().gasPriceWei);
 
-    // multiply the original gasUseEstimate in quoteToken by the ratio
-    const newGasUseEstimateQuote = BigNumber.from(classicQuote.toJSON().gasUseEstimateQuote).mul(gasUseRatio).div(100);
+    const originalGasNative = gasUseEstimate.mul(gasPriceWei);
+    const gasAdjustmentNative = gasAdjustment.mul(gasPriceWei);
+    // use the ratio of original gas in nativeand original gas in quote tokens
+    // to calculate the gas adjustment in quote tokens
+    const gasAdjustmentQuote = originalGasQuote.mul(gasAdjustmentNative).div(originalGasNative);
 
     if (info.type === TradeType.EXACT_INPUT) {
-      const amountOut = newGasUseEstimateQuote.gt(classicQuote.amountOut)
+      const amountOut = gasAdjustmentQuote.gt(startAmountOut)
         ? BigNumber.from(0)
-        : startAmountOut.sub(newGasUseEstimateQuote);
+        : startAmountOut.sub(gasAdjustmentQuote);
       return {
         amountIn: startAmountIn,
         amountOut: amountOut.lt(0) ? BigNumber.from(0) : amountOut,
       };
     } else {
       return {
-        amountIn: startAmountIn.add(newGasUseEstimateQuote),
+        amountIn: startAmountIn.add(gasAdjustmentQuote),
         amountOut: startAmountOut,
       };
     }

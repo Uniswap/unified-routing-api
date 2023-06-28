@@ -2,15 +2,17 @@ import Logger from 'bunyan';
 import { BigNumber } from 'ethers';
 import * as _ from 'lodash';
 
-import { DutchQuote } from '../../../lib/entities';
+import { ClassicQuote, DutchQuote } from '../../../lib/entities';
 import { DL_PERMIT, DUTCH_LIMIT_ORDER_JSON } from '../../constants';
 import {
   CLASSIC_QUOTE_EXACT_IN_LARGE,
+  CLASSIC_QUOTE_EXACT_IN_NATIVE,
   CLASSIC_QUOTE_EXACT_OUT_LARGE,
   createClassicQuote,
   createDutchQuote,
   DL_QUOTE_EXACT_IN_LARGE,
   DL_QUOTE_EXACT_OUT_LARGE,
+  DL_QUOTE_NATIVE_EXACT_IN_LARGE,
 } from '../../utils/fixtures';
 
 describe('DutchQuote', () => {
@@ -80,6 +82,29 @@ describe('DutchQuote', () => {
         DL_QUOTE_EXACT_OUT_LARGE.request
       );
 
+      expect(reparameterized.amountInEnd).toEqual(amountInEnd);
+      expect(reparameterized.amountOutEnd).toEqual(amountOutEnd);
+    });
+
+    it('reparameterizes with wrap factored into startAmount', async () => {
+      const classicQuote = CLASSIC_QUOTE_EXACT_IN_NATIVE as ClassicQuote;
+      const reparameterized = DutchQuote.reparameterize(DL_QUOTE_NATIVE_EXACT_IN_LARGE, classicQuote);
+      expect(reparameterized.request).toMatchObject(DL_QUOTE_NATIVE_EXACT_IN_LARGE.request);
+
+      const { amountIn: amountInClassic, amountOut: amountOutClassic } = DutchQuote.applyGasAdjustment(
+        {
+          amountIn: classicQuote.amountInGasAdjusted,
+          amountOut: classicQuote.amountOutGasAdjusted,
+        },
+        classicQuote
+      );
+      const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchQuote.applySlippage(
+        { amountIn: amountInClassic, amountOut: amountOutClassic },
+        DL_QUOTE_NATIVE_EXACT_IN_LARGE.request
+      );
+
+      expect(reparameterized.amountInStart).toEqual(DL_QUOTE_NATIVE_EXACT_IN_LARGE.amountInStart);
+      expect(reparameterized.amountOutStart.lt(DL_QUOTE_NATIVE_EXACT_IN_LARGE.amountOutStart)).toBeTruthy();
       expect(reparameterized.amountInEnd).toEqual(amountInEnd);
       expect(reparameterized.amountOutEnd).toEqual(amountOutEnd);
     });
