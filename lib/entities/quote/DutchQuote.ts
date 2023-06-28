@@ -72,9 +72,12 @@ export class DutchQuote implements Quote {
 
   // build a synthetic dutch quote from a classic quote
   public static fromClassicQuote(request: DutchRequest, quote: ClassicQuote): DutchQuote {
-    const startAmounts = this.applyPriceImprovement(
-      { amountIn: quote.amountInGasAdjusted, amountOut: quote.amountOutGasAdjusted },
-      request.info.type
+    const startAmounts = this.applyPreSwapGasAdjustment(
+      this.applyPriceImprovement(
+        { amountIn: quote.amountInGasAdjusted, amountOut: quote.amountOutGasAdjusted },
+        request.info.type
+      ),
+      quote
     );
 
     const gasAdjustedAmounts = this.applyGasAdjustment(startAmounts, quote);
@@ -100,6 +103,12 @@ export class DutchQuote implements Quote {
   // reparameterize an RFQ quote with awareness of classic
   public static reparameterize(quote: DutchQuote, classic?: ClassicQuote): DutchQuote {
     if (!classic) return quote;
+
+    const { amountIn: amountInStart, amountOut: amountOutStart } = this.applyPreSwapGasAdjustment(
+      { amountIn: quote.amountInStart, amountOut: quote.amountOutStart },
+      classic
+    );
+
     const classicAmounts = this.applyGasAdjustment(
       { amountIn: classic.amountInGasAdjusted, amountOut: classic.amountOutGasAdjusted },
       classic
@@ -113,9 +122,9 @@ export class DutchQuote implements Quote {
       quote.quoteId,
       quote.tokenIn,
       quote.tokenOut,
-      quote.amountInStart,
+      amountInStart,
       amountInEnd,
-      quote.amountOutStart,
+      amountOutStart,
       amountOutEnd,
       quote.offerer,
       quote.filler,
@@ -247,12 +256,24 @@ export class DutchQuote implements Quote {
     }
   }
 
+  // Calculates the pre-swap gas adjustment for the given quote if processed through Gouda
+  // pre-swap gas adjustments are paid directly by the user pre-swap
+  // and should be applied ot startAmounts
+  // e.g. ETH wraps
+  static applyPreSwapGasAdjustment(amounts: Amounts, classicQuote: ClassicQuote): Amounts {
+    return DutchQuote.getGasAdjustedAmounts(amounts, DutchQuote.getPreSwapGasAdjustment(classicQuote), classicQuote);
+  }
+
   // Calculates the gas adjustment for the given quote if processed through Gouda
+  // Swap gas adjustments are paid by the filler in the process of filling a trade
+  // and should be applied to endAmounts
   static applyGasAdjustment(amounts: Amounts, classicQuote: ClassicQuote): Amounts {
+    return DutchQuote.getGasAdjustedAmounts(amounts, DutchQuote.getGasAdjustment(classicQuote), classicQuote);
+  }
+
+  static getGasAdjustedAmounts(amounts: Amounts, gasAdjustment: BigNumber, classicQuote: ClassicQuote): Amounts {
     const { amountIn: startAmountIn, amountOut: startAmountOut } = amounts;
     const info = classicQuote.request.info;
-    const gasAdjustment = DutchQuote.getGasAdjustment(classicQuote);
-
     // get ratio of gas used to gas used with WETH wrap
     const gasUseEstimate = BigNumber.from(classicQuote.toJSON().gasUseEstimate);
     const gasUseRatio = gasUseEstimate.add(gasAdjustment).mul(100).div(gasUseEstimate);
@@ -276,29 +297,28 @@ export class DutchQuote implements Quote {
     }
   }
 
-  // Returns the number of gas units extra required to execute this quote through Gouda
-  static getGasAdjustment(classicQuote: ClassicQuote): BigNumber {
-    const wethAdjustment = DutchQuote.getWETHGasAdjustment(classicQuote);
-    return wethAdjustment.add(GOUDA_BASE_GAS);
-  }
-
-  // Returns the number of gas units to wrap ETH if required
-  static getWETHGasAdjustment(quote: ClassicQuote): BigNumber {
-    const info = quote.request.info;
+  // Returns the number of gas units extra paid by the user before the swap
+  static getPreSwapGasAdjustment(classicQuote: ClassicQuote): BigNumber {
     let result = BigNumber.from(0);
 
     // gouda does not naturally support ETH input, but user still has to wrap it
     // so should be considered in the quote pricing
-    if (info.tokenIn === NATIVE_ADDRESS) {
+    if (classicQuote.request.info.tokenIn === NATIVE_ADDRESS) {
       result = result.add(WETH_WRAP_GAS);
     }
+    return result;
+  }
+
+  // Returns the number of gas units extra required to execute this quote through Gouda
+  static getGasAdjustment(classicQuote: ClassicQuote): BigNumber {
+    let result = BigNumber.from(0);
 
     // fill contract must unwrap WETH output tokens
-    if (info.tokenOut === NATIVE_ADDRESS) {
+    if (classicQuote.request.info.tokenOut === NATIVE_ADDRESS) {
       result = result.add(WETH_UNWRAP_GAS);
     }
 
-    return result;
+    return result.add(GOUDA_BASE_GAS);
   }
 }
 
