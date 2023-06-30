@@ -48,7 +48,7 @@ export const PERMIT2_USED = {
       nonce: '1',
     },
     spender: UNIVERSAL_ROUTER_ADDRESS(1),
-    sigDeadline: 1800,
+    sigDeadline: '1800',
   },
 };
 
@@ -86,7 +86,7 @@ export const PERMIT2_POLYGON = {
       nonce: '0',
     },
     spender: UNIVERSAL_ROUTER_ADDRESS(137),
-    sigDeadline: 1800,
+    sigDeadline: '1800',
   },
 };
 
