@@ -1,5 +1,5 @@
 import { MaxSigDeadline, MaxUint160 } from '@uniswap/permit2-sdk';
-import { PERMIT2_FIRST, PERMIT2_USED, PERMIT_DETAILS } from '../../constants';
+import { PERMIT2, PERMIT2_USED, PERMIT_DETAILS } from '../../constants';
 import { UtilityTest } from '../../types';
 import { createClassicQuote } from '../../utils/fixtures';
 
@@ -35,7 +35,7 @@ const tests: UtilityTest[] = [
       permitDetails: null,
     },
     output: {
-      permit: PERMIT2_FIRST,
+      permit: PERMIT2,
     },
   },
   {

@@ -52,7 +52,7 @@ export const PERMIT2_USED = {
   },
 };
 
-export const PERMIT2_FIRST = {
+export const PERMIT2 = {
   ...PERMIT2_USED,
   values: {
     ...PERMIT2_USED.values,
