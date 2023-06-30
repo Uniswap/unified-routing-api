@@ -1,8 +1,14 @@
 import { DutchOrder, parseValidation, ValidationType } from '@uniswap/gouda-sdk';
 import { BigNumber } from 'ethers';
 
-import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, DutchQuoteJSON, DutchRequest } from '../../../../lib/entities';
-import { AMOUNT_IN, CHAIN_IN_ID, FILLER, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
+import {
+  ClassicQuote,
+  ClassicQuoteDataJSON,
+  DutchQuote,
+  DutchQuoteJSON,
+  DutchRequest,
+} from '../../../../lib/entities';
+import { AMOUNT_IN, CHAIN_IN_ID, FILLER, OFFERER, PERMIT_DETAILS, TOKEN_IN, TOKEN_OUT } from '../../../constants';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_OUT_BETTER,
@@ -39,6 +45,8 @@ const CLASSIC_QUOTE_JSON: ClassicQuoteDataJSON = {
   blockNumber: '1234',
   route: [],
   routeString: 'USD-ETH',
+  tradeType: 'EXACT_INPUT',
+  slippage: 0.5,
 };
 
 describe('QuoteResponse', () => {
@@ -99,10 +107,12 @@ describe('QuoteResponse', () => {
 
   it('parses classic quote exactInput', () => {
     const quote = ClassicQuote.fromResponseBody(CLASSIC_QUOTE_EXACT_IN_BETTER.request, CLASSIC_QUOTE_JSON);
+    quote.setAllowanceData(PERMIT_DETAILS);
     expect(quote.toJSON()).toMatchObject({
       ...CLASSIC_QUOTE_JSON,
       quoteId: expect.any(String),
       requestId: expect.any(String),
+      tradeType: 'EXACT_INPUT',
     });
     expect(quote.amountIn.toString()).toEqual(CLASSIC_QUOTE_JSON.amount);
     expect(quote.amountOut.toString()).toEqual(CLASSIC_QUOTE_JSON.quote);
@@ -110,10 +120,12 @@ describe('QuoteResponse', () => {
 
   it('parses classic quote exactOutput', () => {
     const quote = ClassicQuote.fromResponseBody(CLASSIC_QUOTE_EXACT_OUT_BETTER.request, CLASSIC_QUOTE_JSON);
+    quote.setAllowanceData(PERMIT_DETAILS);
     expect(quote.toJSON()).toMatchObject({
       ...CLASSIC_QUOTE_JSON,
       quoteId: expect.any(String),
       requestId: expect.any(String),
+      tradeType: 'EXACT_OUTPUT',
     });
     expect(quote.amountIn.toString()).toEqual(CLASSIC_QUOTE_JSON.quote);
     expect(quote.amountOut.toString()).toEqual(CLASSIC_QUOTE_JSON.amount);
