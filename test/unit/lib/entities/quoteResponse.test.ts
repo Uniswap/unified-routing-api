@@ -45,7 +45,6 @@ const CLASSIC_QUOTE_JSON: ClassicQuoteDataJSON = {
   blockNumber: '1234',
   route: [],
   routeString: 'USD-ETH',
-  permitNonce: '1',
   tradeType: 'EXACT_INPUT',
   slippage: 0.5,
 };

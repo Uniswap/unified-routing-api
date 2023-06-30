@@ -44,7 +44,7 @@ export const PERMIT2_USED = {
     details: {
       token: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
       amount: '1461501637330902918203684832716283019655932542975',
-      expiration: 2592000,
+      expiration: '2592000',
       nonce: '1',
     },
     spender: UNIVERSAL_ROUTER_ADDRESS(1),
@@ -82,7 +82,7 @@ export const PERMIT2_POLYGON = {
     details: {
       token: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
       amount: '1461501637330902918203684832716283019655932542975',
-      expiration: 2592000,
+      expiration: '2592000',
       nonce: '0',
     },
     spender: UNIVERSAL_ROUTER_ADDRESS(137),
@@ -92,8 +92,8 @@ export const PERMIT2_POLYGON = {
 
 export const PERMIT_DETAILS = {
   amount: AMOUNT_IN,
-  expiration: 2592000,
-  nonce: 1,
+  expiration: '2592000',
+  nonce: '1',
   token: TOKEN_IN,
 };
 
