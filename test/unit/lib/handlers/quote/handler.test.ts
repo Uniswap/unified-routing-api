@@ -33,7 +33,7 @@ import { compareQuotes, getBestQuote, getQuotes, QuoteHandler } from '../../../.
 import { ContainerInjected, QuoterByRoutingType } from '../../../../../lib/handlers/quote/injector';
 import { Quoter } from '../../../../../lib/providers/quoters';
 import { setGlobalLogger } from '../../../../../lib/util/log';
-import { OFFERER, PERMIT2_USED, PERMIT_DETAILS, TOKEN_IN, TOKEN_OUT } from '../../../../constants';
+import { PERMIT2_USED, PERMIT_DETAILS, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../../constants';
 
 describe('QuoteHandler', () => {
   describe('handler', () => {
@@ -181,7 +181,7 @@ describe('QuoteHandler', () => {
           configs: [
             {
               routingType: RoutingType.DUTCH_LIMIT,
-              offerer: '0x0000000000000000000000000000000000000000',
+              swapper: '0x0000000000000000000000000000000000000000',
               exclusivityOverrideBps: 12,
               auctionPeriodSecs: 60,
               deadlineBufferSecs: 12,
@@ -300,7 +300,7 @@ describe('QuoteHandler', () => {
         expect(permit2Fetcher.fetchAllowance).not.toHaveBeenCalled();
       });
 
-      it('returns permit for Classic with offerer and current permit invalid', async () => {
+      it('returns permit for Classic with swapper and current permit invalid', async () => {
         const quoters = {
           [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
         };
@@ -316,7 +316,7 @@ describe('QuoteHandler', () => {
         const response = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(
           getEvent({
             ...CLASSIC_REQUEST_BODY,
-            offerer: OFFERER,
+            swapper: SWAPPER,
           }),
           {} as unknown as Context
         );
@@ -325,14 +325,14 @@ describe('QuoteHandler', () => {
         expect(responseBody.quote.permitData).toMatchObject(PERMIT2_USED);
         expect(permit2Fetcher.fetchAllowance).toHaveBeenCalledWith(
           CLASSIC_REQUEST_BODY.tokenInChainId,
-          OFFERER,
+          SWAPPER,
           CLASSIC_REQUEST_BODY.tokenIn,
           UNIVERSAL_ROUTER_ADDRESS(1)
         );
         jest.clearAllTimers();
       });
 
-      it('does not return permit for Classic with offerer and current permit valid', async () => {
+      it('does not return permit for Classic with swapper and current permit valid', async () => {
         const quoters = {
           [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
         };
@@ -351,17 +351,17 @@ describe('QuoteHandler', () => {
         expect(responseBody.quote.permitData).toBeUndefined();
         expect(permit2Fetcher.fetchAllowance).toHaveBeenCalledWith(
           CLASSIC_REQUEST_BODY.tokenInChainId,
-          OFFERER,
+          SWAPPER,
           CLASSIC_REQUEST_BODY.tokenIn,
           UNIVERSAL_ROUTER_ADDRESS(1)
         );
         jest.clearAllTimers();
       });
 
-      it('does not return permit for Classic with no offerer', async () => {
+      it('does not return permit for Classic with no swapper', async () => {
         const quoters = {
           [RoutingType.CLASSIC]: ClassicQuoterMock(
-            createClassicQuote({ quote: '1', quoteGasAdjusted: '1' }, { type: 'EXACT_INPUT', offerer: undefined })
+            createClassicQuote({ quote: '1', quoteGasAdjusted: '1' }, { type: 'EXACT_INPUT', swapper: undefined })
           ),
         };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
@@ -373,7 +373,7 @@ describe('QuoteHandler', () => {
         const response = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(
           getEvent({
             ...CLASSIC_REQUEST_BODY,
-            offerer: undefined,
+            swapper: undefined,
           }),
           {} as unknown as Context
         );
@@ -439,7 +439,7 @@ describe('QuoteHandler', () => {
               tokenOut: QUOTE_REQUEST_BODY_MULTI.tokenOut,
               amount: QUOTE_REQUEST_BODY_MULTI.amount,
               type: QUOTE_REQUEST_BODY_MULTI.type,
-              offerer: OFFERER,
+              swapper: SWAPPER,
               configs: 'DUTCH_LIMIT,CLASSIC',
               createdAt: expect.any(String),
             }),
@@ -457,7 +457,7 @@ describe('QuoteHandler', () => {
               tokenOut: QUOTE_REQUEST_BODY_MULTI.tokenOut,
               amountIn: DL_QUOTE_EXACT_IN_BETTER.amountIn.toString(),
               amountOut: DL_QUOTE_EXACT_IN_BETTER.amountOut.toString(),
-              offerer: DL_QUOTE_EXACT_IN_BETTER.offerer,
+              swapper: DL_QUOTE_EXACT_IN_BETTER.swapper,
               filler: DL_QUOTE_EXACT_IN_BETTER.filler,
               routing: DL_QUOTE_EXACT_IN_BETTER.routingType,
               createdAt: expect.any(String),
@@ -483,12 +483,12 @@ describe('QuoteHandler', () => {
         expect(res.state).toBe('valid');
       });
 
-      it('Succeeds - Bad offerer address', async () => {
+      it('Succeeds - Bad swapper address', async () => {
         const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE) };
         const event = {
           body: JSON.stringify({
             ...CLASSIC_REQUEST_BODY,
-            offerer: 'bad address',
+            swapper: 'bad address',
           }),
         } as APIGatewayProxyEvent;
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);

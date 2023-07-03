@@ -91,7 +91,7 @@ export class FieldValidator {
 
   public static readonly dutchLimitConfig = Joi.object({
     routingType: FieldValidator.routingType.required(),
-    offerer: FieldValidator.address.optional(),
+    swapper: FieldValidator.address.optional(),
     exclusivityOverrideBps: FieldValidator.positiveNumber.optional(),
     auctionPeriodSecs: FieldValidator.positiveNumber.optional(),
     deadlineBufferSecs: FieldValidator.positiveNumber.optional(),

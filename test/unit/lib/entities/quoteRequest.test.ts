@@ -8,11 +8,11 @@ import {
   QuoteRequestBodyJSON,
 } from '../../../../lib/entities';
 import { ValidationError } from '../../../../lib/util/errors';
-import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
+import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
 
 const MOCK_DL_CONFIG_JSON: DutchConfigJSON = {
   routingType: RoutingType.DUTCH_LIMIT,
-  offerer: OFFERER,
+  swapper: SWAPPER,
   exclusivityOverrideBps: 24,
   auctionPeriodSecs: 60,
   deadlineBufferSecs: 12,
@@ -33,7 +33,7 @@ const DUPLICATE_REQUEST_JSON = {
   amount: AMOUNT_IN,
   type: 'EXACT_INPUT',
   configs: [MOCK_DL_CONFIG_JSON, CLASSIC_CONFIG_JSON, MOCK_DL_CONFIG_JSON],
-  offerer: OFFERER,
+  swapper: SWAPPER,
 };
 
 const EXACT_INPUT_MOCK_REQUEST_JSON: QuoteRequestBodyJSON = {
@@ -44,7 +44,7 @@ const EXACT_INPUT_MOCK_REQUEST_JSON: QuoteRequestBodyJSON = {
   tokenOut: TOKEN_OUT,
   amount: AMOUNT_IN,
   type: 'EXACT_INPUT',
-  offerer: OFFERER,
+  swapper: SWAPPER,
   configs: [MOCK_DL_CONFIG_JSON, CLASSIC_CONFIG_JSON],
 };
 
@@ -56,7 +56,7 @@ const EXACT_OUTPUT_MOCK_REQUEST_JSON: QuoteRequestBodyJSON = {
   tokenOut: TOKEN_OUT,
   amount: AMOUNT_IN,
   type: 'EXACT_OUTPUT',
-  offerer: OFFERER,
+  swapper: SWAPPER,
   configs: [MOCK_DL_CONFIG_JSON, CLASSIC_CONFIG_JSON],
 };
 
@@ -101,20 +101,20 @@ describe('QuoteRequest', () => {
         expect(threw).toBeTruthy();
       });
 
-      it('includes offerer in info for dutch limit', () => {
+      it('includes swapper in info for dutch limit', () => {
         const { quoteRequests: requests } = parseQuoteRequests(request);
         const info = requests[0].info;
         const config = DutchRequest.fromRequestBody(info, MOCK_DL_CONFIG_JSON);
 
-        expect(config.info.offerer).toEqual(OFFERER);
+        expect(config.info.swapper).toEqual(SWAPPER);
       });
 
-      it('includes offerer in info for classic', () => {
+      it('includes swapper in info for classic', () => {
         const { quoteRequests: requests } = parseQuoteRequests(request);
         const info = requests[0].info;
         const config = ClassicRequest.fromRequestBody(info, CLASSIC_CONFIG_JSON);
 
-        expect(config.info.offerer).toEqual(OFFERER);
+        expect(config.info.swapper).toEqual(SWAPPER);
       });
     });
   }

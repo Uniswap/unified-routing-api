@@ -19,7 +19,7 @@ export function createPermitData(tokenAddress: string, chainId: number, nonce: s
       nonce: nonce,
     },
     spender: UNIVERSAL_ROUTER_ADDRESS(chainId),
-    sigDeadline: toDeadline(PERMIT_SIG_EXPIRATION).toString() ,
+    sigDeadline: toDeadline(PERMIT_SIG_EXPIRATION).toString(),
   };
 
   return AllowanceTransfer.getPermitData(permit, PERMIT2_ADDRESS, chainId) as PermitSingleData;

@@ -31,7 +31,7 @@ export type DutchQuoteJSON = {
   amountIn: string;
   tokenOut: string;
   amountOut: string;
-  offerer: string;
+  swapper: string;
   filler?: string;
 };
 
@@ -64,7 +64,7 @@ export class DutchQuote implements Quote {
       amountInEnd,
       BigNumber.from(body.amountOut),
       amountOutEnd,
-      body.offerer,
+      body.swapper,
       body.filler,
       nonce
     );
@@ -94,7 +94,7 @@ export class DutchQuote implements Quote {
       endAmounts.amountIn,
       startAmounts.amountOut,
       endAmounts.amountOut,
-      request.config.offerer,
+      request.config.swapper,
       '', // synthetic quote has no filler
       generateRandomNonce() // synthetic quote has no nonce
     );
@@ -126,7 +126,7 @@ export class DutchQuote implements Quote {
       amountInEnd,
       amountOutStart,
       amountOutEnd,
-      quote.offerer,
+      quote.swapper,
       quote.filler,
       quote.nonce
     );
@@ -144,7 +144,7 @@ export class DutchQuote implements Quote {
     public readonly amountInEnd: BigNumber,
     public readonly amountOutStart: BigNumber,
     public readonly amountOutEnd: BigNumber,
-    public readonly offerer: string,
+    public readonly swapper: string,
     public readonly filler?: string,
     public readonly nonce?: string
   ) {
@@ -166,15 +166,14 @@ export class DutchQuote implements Quote {
 
   public toOrder(): DutchOrder {
     const orderBuilder = new DutchOrderBuilder(this.chainId);
-    const startTime = Math.floor(Date.now() / 1000);
+    const decayStartTime = Math.floor(Date.now() / 1000);
     const nonce = this.nonce ?? generateRandomNonce();
-    const decayStartTime = startTime;
 
     const builder = orderBuilder
-      .startTime(decayStartTime)
-      .endTime(decayStartTime + this.request.config.auctionPeriodSecs)
+      .decayStartTime(decayStartTime)
+      .decayEndTime(decayStartTime + this.request.config.auctionPeriodSecs)
       .deadline(decayStartTime + this.request.config.auctionPeriodSecs + this.request.config.deadlineBufferSecs)
-      .offerer(ethers.utils.getAddress(this.request.config.offerer))
+      .swapper(ethers.utils.getAddress(this.request.config.swapper))
       .nonce(BigNumber.from(nonce))
       .input({
         token: this.tokenIn,
@@ -185,7 +184,7 @@ export class DutchQuote implements Quote {
         token: this.tokenOut,
         startAmount: this.amountOutStart,
         endAmount: this.amountOutEnd,
-        recipient: this.request.config.offerer,
+        recipient: this.request.config.swapper,
       });
 
     if (this.filler) {
@@ -209,7 +208,7 @@ export class DutchQuote implements Quote {
       endAmountOut: this.amountOutEnd.toString(),
       amountInGasAdjusted: this.amountInStart.toString(),
       amountOutGasAdjusted: this.amountOutStart.toString(),
-      offerer: this.offerer,
+      swapper: this.swapper,
       filler: this.filler,
       routing: RoutingType[this.routingType],
       slippage: parseFloat(this.request.info.slippageTolerance),

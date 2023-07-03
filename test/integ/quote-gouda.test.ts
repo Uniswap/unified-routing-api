@@ -191,7 +191,7 @@ describe('quoteGouda', function () {
         configs: [
           {
             routingType: RoutingType.DUTCH_LIMIT,
-            offerer: alice.address,
+            swapper: alice.address,
           },
         ] as RoutingConfigJSON[],
       };
@@ -217,7 +217,7 @@ describe('quoteGouda', function () {
         configs: [
           {
             routingType: RoutingType.DUTCH_LIMIT,
-            offerer: alice.address,
+            swapper: alice.address,
           },
         ] as RoutingConfigJSON[],
       };
@@ -249,7 +249,7 @@ describe('quoteGouda', function () {
             configs: [
               {
                 routingType: RoutingType.DUTCH_LIMIT,
-                offerer: alice.address,
+                swapper: alice.address,
               },
             ] as RoutingConfigJSON[],
           };
@@ -263,7 +263,7 @@ describe('quoteGouda', function () {
           const order = new DutchOrder((quote as any).orderInfo, 1);
           expect(status).to.equal(200);
 
-          expect(order.info.offerer).to.equal(alice.address);
+          expect(order.info.swapper).to.equal(alice.address);
           expect(order.info.outputs.length).to.equal(1);
           expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.greaterThan(9000000000);
           expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.lessThan(11000000000);
@@ -306,7 +306,7 @@ describe('quoteGouda', function () {
             configs: [
               {
                 routingType: RoutingType.DUTCH_LIMIT,
-                offerer: alice.address,
+                swapper: alice.address,
               },
             ] as RoutingConfigJSON[],
           };
@@ -321,7 +321,7 @@ describe('quoteGouda', function () {
           const order = new DutchOrder((quote as any).orderInfo, 1);
           expect(status).to.equal(200);
 
-          expect(order.info.offerer).to.equal(alice.address);
+          expect(order.info.swapper).to.equal(alice.address);
           expect(order.info.outputs.length).to.equal(1);
           expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.greaterThan(9000000000);
           expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.lessThan(11000000000);
@@ -365,7 +365,7 @@ describe('quoteGouda', function () {
             configs: [
               {
                 routingType: RoutingType.DUTCH_LIMIT,
-                offerer: alice.address,
+                swapper: alice.address,
               },
             ] as RoutingConfigJSON[],
           };
@@ -397,7 +397,7 @@ describe('quoteGouda', function () {
           expect(status).to.equal(200);
           const routingQuote = routingResponse.data.quoteGasAdjusted;
           // account for gas and slippage
-          expect(order.info.offerer).to.equal(alice.address);
+          expect(order.info.swapper).to.equal(alice.address);
           expect(order.info.outputs.length).to.equal(1);
           if (type === 'EXACT_INPUT') {
             const adjustedAmountOutClassic = BigNumber.from(routingQuote).mul(90).div(100);
@@ -455,7 +455,7 @@ describe('quoteGouda', function () {
             configs: [
               {
                 routingType: RoutingType.DUTCH_LIMIT,
-                offerer: alice.address,
+                swapper: alice.address,
               },
             ] as RoutingConfigJSON[],
           };
@@ -482,7 +482,7 @@ describe('quoteGouda', function () {
             configs: [
               {
                 routingType: RoutingType.DUTCH_LIMIT,
-                offerer: alice.address,
+                swapper: alice.address,
                 exclusivityOverrideBps: -1,
               },
             ] as RoutingConfigJSON[],
@@ -510,7 +510,7 @@ describe('quoteGouda', function () {
             configs: [
               {
                 routingType: RoutingType.DUTCH_LIMIT,
-                offerer: alice.address,
+                swapper: alice.address,
                 auctionPeriodSecs: -1,
               },
             ] as RoutingConfigJSON[],
@@ -539,7 +539,7 @@ describe('quoteGouda', function () {
           configs: [
             {
               routingType: RoutingType.DUTCH_LIMIT,
-              offerer: alice.address,
+              swapper: alice.address,
             },
           ] as RoutingConfigJSON[],
         };
