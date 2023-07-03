@@ -22,7 +22,7 @@ export class RfqQuoter implements Quoter {
       return null;
     }
 
-    const offerer = request.config.offerer;
+    const swapper = request.config.swapper;
     const requests = [
       axios.post(
         `${this.rfqUrl}quote`,
@@ -32,13 +32,13 @@ export class RfqQuoter implements Quoter {
           tokenIn: mapNative(request.info.tokenIn, request.info.tokenInChainId),
           tokenOut: mapNative(request.info.tokenOut, request.info.tokenInChainId),
           amount: request.info.amount.toString(),
-          offerer: offerer,
+          swapper: swapper,
           requestId: request.info.requestId,
           type: TradeType[request.info.type],
         },
         { headers: { 'x-api-key': this.paramApiKey } }
       ),
-      axios.get(`${this.serviceUrl}dutch-auction/nonce?address=${offerer}&chainId=${request.info.tokenInChainId}`), // should also work for cross-chain?
+      axios.get(`${this.serviceUrl}dutch-auction/nonce?address=${swapper}&chainId=${request.info.tokenInChainId}`), // should also work for cross-chain?
     ];
 
     let quote: Quote | null = null;

@@ -10,7 +10,7 @@ import {
   QuoteRequestBodyJSON,
 } from '../../lib/entities';
 import { ClassicQuote, DutchQuote, Quote } from '../../lib/entities/quote';
-import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, FILLER, OFFERER, TOKEN_IN, TOKEN_OUT } from '../constants';
+import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, FILLER, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../constants';
 import { buildQuoteResponse } from './quoteResponse';
 
 export const BASE_REQUEST_INFO_EXACT_IN = {
@@ -21,7 +21,7 @@ export const BASE_REQUEST_INFO_EXACT_IN = {
   tokenOut: TOKEN_OUT,
   amount: AMOUNT_IN,
   type: 'EXACT_INPUT',
-  offerer: OFFERER,
+  swapper: SWAPPER,
 };
 
 export const REQUEST_INFO_ETH_EXACT_IN = {
@@ -40,7 +40,7 @@ export const QUOTE_REQUEST_BODY_MULTI: QuoteRequestBodyJSON = {
   configs: [
     {
       routingType: RoutingType.DUTCH_LIMIT,
-      offerer: OFFERER,
+      swapper: SWAPPER,
       exclusivityOverrideBps: 12,
       auctionPeriodSecs: 60,
       deadlineBufferSecs: 12,
@@ -57,7 +57,7 @@ export const DL_REQUEST_BODY = {
   configs: [
     {
       routingType: RoutingType.DUTCH_LIMIT,
-      offerer: OFFERER,
+      swapper: SWAPPER,
       exclusivityOverrideBps: 12,
       auctionPeriodSecs: 60,
       deadlineBufferSecs: 12,
@@ -99,7 +99,7 @@ export function makeDutchRequest(overrides: Partial<QuoteRequestBodyJSON>): Dutc
     configs: [
       {
         routingType: RoutingType.DUTCH_LIMIT,
-        offerer: OFFERER,
+        swapper: SWAPPER,
         exclusivityOverrideBps: 12,
         auctionPeriodSecs: 60,
         deadlineBufferSecs: 12,
@@ -122,7 +122,7 @@ export const { quoteRequests: QUOTE_REQUEST_MULTI } = parseQuoteRequests({
   configs: [
     {
       routingType: RoutingType.DUTCH_LIMIT,
-      offerer: OFFERER,
+      swapper: SWAPPER,
       exclusivityOverrideBps: 12,
       auctionPeriodSecs: 60,
       deadlineBufferSecs: 12,
@@ -140,7 +140,7 @@ export const QUOTE_REQUEST_ETH_IN_MULTI = parseQuoteRequests({
   configs: [
     {
       routingType: RoutingType.DUTCH_LIMIT,
-      offerer: OFFERER,
+      swapper: SWAPPER,
       exclusivityOverrideBps: 12,
       auctionPeriodSecs: 60,
       deadlineBufferSecs: 12,
@@ -158,7 +158,7 @@ export const QUOTE_REQUEST_MULTI_EXACT_OUT = parseQuoteRequests({
   configs: [
     {
       routingType: RoutingType.DUTCH_LIMIT,
-      offerer: OFFERER,
+      swapper: SWAPPER,
       exclusivityOverrideBps: 12,
       auctionPeriodSecs: 60,
       deadlineBufferSecs: 12,
@@ -181,7 +181,7 @@ const DL_QUOTE_DATA = {
     amountIn: '1',
     tokenOut: TOKEN_OUT,
     amountOut: '1',
-    offerer: OFFERER,
+    swapper: SWAPPER,
     filler: FILLER,
   },
 };

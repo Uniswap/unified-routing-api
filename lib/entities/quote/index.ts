@@ -22,7 +22,7 @@ export type LogJSON = {
   amountOutGasAdjusted?: string;
   tokenInChainId: number;
   tokenOutChainId: number;
-  offerer: string;
+  swapper: string;
   routing: string;
   createdAt: string;
   slippage: number;

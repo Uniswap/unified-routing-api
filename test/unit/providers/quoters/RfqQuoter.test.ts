@@ -3,7 +3,7 @@ import { BigNumber, ethers } from 'ethers';
 import { DutchQuote, DutchQuoteDataJSON, DutchQuoteJSON } from '../../../../lib/entities';
 import { RfqQuoter } from '../../../../lib/providers/quoters';
 import axios from '../../../../lib/providers/quoters/helpers';
-import { AMOUNT_IN, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
+import { AMOUNT_IN, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
 import { QUOTE_REQUEST_DL, QUOTE_REQUEST_DL_EXACT_OUT } from '../../../utils/fixtures';
 
 const UUID = 'c67c2882-24aa-4a68-a90b-53250ef81517';
@@ -26,8 +26,8 @@ describe('RfqQuoter test', () => {
         amountIn: AMOUNT_IN,
         tokenOut: TOKEN_OUT,
         amountOut: AMOUNT_IN,
-        offerer: OFFERER,
-        filler: OFFERER,
+        swapper: SWAPPER,
+        filler: SWAPPER,
       });
     });
 
@@ -41,7 +41,7 @@ describe('RfqQuoter test', () => {
           amountIn: AMOUNT_IN,
           tokenOut: TOKEN_OUT,
           amountOut: AMOUNT_IN,
-          offerer: OFFERER,
+          swapper: SWAPPER,
         },
       });
       const quote = await quoter.quote(QUOTE_REQUEST_DL);
