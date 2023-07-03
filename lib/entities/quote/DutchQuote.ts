@@ -258,7 +258,7 @@ export class DutchQuote implements Quote {
 
   // Calculates the pre-swap gas adjustment for the given quote if processed through Gouda
   // pre-swap gas adjustments are paid directly by the user pre-swap
-  // and should be applied ot startAmounts
+  // and should be applied to startAmounts
   // e.g. ETH wraps
   static applyPreSwapGasAdjustment(amounts: Amounts, classicQuote: ClassicQuote): Amounts {
     const gasAdjustment = DutchQuote.getPreSwapGasAdjustment(classicQuote);
@@ -274,8 +274,9 @@ export class DutchQuote implements Quote {
     if (gasAdjustment.eq(0)) return amounts;
     return DutchQuote.getGasAdjustedAmounts(
       amounts,
-      // apply both the gouda gas adjustment and the routing gas adjustment
-      gasAdjustment.add(classicQuote.toJSON().gasUseEstimate),
+      // routing api gas adjustment is already applied
+      // apply both the gouda gas adjustment
+      gasAdjustment,
       classicQuote
     );
   }
@@ -293,7 +294,7 @@ export class DutchQuote implements Quote {
 
     const originalGasNative = gasUseEstimate.mul(gasPriceWei);
     const gasAdjustmentNative = gasAdjustment.mul(gasPriceWei);
-    // use the ratio of original gas in nativeand original gas in quote tokens
+    // use the ratio of original gas in native and original gas in quote tokens
     // to calculate the gas adjustment in quote tokens
     const gasAdjustmentQuote = originalGasQuote.mul(gasAdjustmentNative).div(originalGasNative);
 
