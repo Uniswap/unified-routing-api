@@ -252,6 +252,10 @@ export const DL_QUOTE_NATIVE_EXACT_IN_BETTER = createDutchQuote(
   { amountOut: '2', tokenIn: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_OUT_ID)].address },
   'EXACT_INPUT'
 );
+export const DL_QUOTE_NATIVE_EXACT_IN_LARGE = createDutchQuote(
+  { amountOut: '2000000000000000000', tokenIn: NATIVE_ADDRESS },
+  'EXACT_INPUT'
+);
 export const DL_QUOTE_EXACT_IN_WORSE_PREFERENCE = createDutchQuote({ amountOut: '100000' }, 'EXACT_INPUT');
 export const DL_QUOTE_EXACT_IN_WORSE = createDutchQuote({ amountOut: '1' }, 'EXACT_INPUT');
 export const DL_QUOTE_EXACT_IN_LARGE = createDutchQuote({ amountOut: '10000' }, 'EXACT_INPUT');
@@ -293,7 +297,7 @@ export const CLASSIC_QUOTE_EXACT_IN_NATIVE = buildQuoteResponse(
       quote: '10000000000000000000000',
       quoteGasAdjusted: '9000000000000000000000',
       gasUseEstimate: '100000',
-      gasUseEstimateQuote: '1000000000000000000000',
+      gasUseEstimateQuote: '10000000000000000',
     },
   }),
   makeClassicRequest({ type: 'EXACT_INPUT', tokenIn: NATIVE_ADDRESS, tokenOut: TOKEN_IN })
