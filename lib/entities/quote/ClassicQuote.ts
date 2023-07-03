@@ -67,6 +67,8 @@ export type ClassicQuoteDataJSON = {
   routeString: string;
   methodParameters?: MethodParameters;
   permitData?: PermitSingleData | PermitTransferFromData;
+  tradeType: string;
+  slippage: number;
 };
 
 export class ClassicQuote implements Quote {
@@ -89,6 +91,8 @@ export class ClassicQuote implements Quote {
       quoteId: this.quoteId,
       requestId: this.request.info.requestId,
       permitData: this.getPermitData(),
+      tradeType: this.request.info.type === TradeType.EXACT_INPUT ? 'EXACT_INPUT' : 'EXACT_OUTPUT',
+      slippage: this.slippage,
     };
   }
 
@@ -108,7 +112,7 @@ export class ClassicQuote implements Quote {
       amountOutGasAdjusted: this.amountOutGasAdjusted.toString(),
       offerer: '',
       routing: RoutingType[this.routingType],
-      slippage: this.request.info.slippageTolerance ? parseFloat(this.request.info.slippageTolerance) : -1,
+      slippage: this.slippage,
       createdAt: this.createdAt,
       gasPriceWei: this.gasPriceWei,
     };
@@ -160,5 +164,9 @@ export class ClassicQuote implements Quote {
 
   public setAllowanceData(data?: PermitDetails): void {
     this.allowanceData = data;
+  }
+
+  public get slippage(): number {
+    return this.request.info.slippageTolerance ? parseFloat(this.request.info.slippageTolerance) : -1;
   }
 }
