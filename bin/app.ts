@@ -67,6 +67,10 @@ export class APIPipeline extends Stack {
             value: 'github-token-2',
             type: BuildEnvironmentVariableType.SECRETS_MANAGER,
           },
+          VERSION: {
+            value: '1',
+            type: BuildEnvironmentVariableType.PLAINTEXT,
+          },
         },
       },
       commands: [
@@ -176,7 +180,7 @@ export class APIPipeline extends Stack {
     const slackChannel = chatbot.SlackChannelConfiguration.fromSlackChannelConfigurationArn(
       this,
       'SlackChannel',
-      'arn:aws:chatbot::644039819003:chat-configuration/slack-channel/eng-ops-slack-chatbot'
+      'arn:aws:chatbot::644039819003:chat-configuration/slack-channel/eng-ops-protocols-slack-chatbot'
     );
 
     pipeline.buildPipeline();
