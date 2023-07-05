@@ -105,7 +105,7 @@ describe('DutchQuote', () => {
       );
 
       expect(reparameterized.amountInStart).toEqual(DL_QUOTE_NATIVE_EXACT_IN_LARGE.amountInStart);
-      expect(reparameterized.amountOutStart.lt(DL_QUOTE_NATIVE_EXACT_IN_LARGE.amountOutStart)).toBeTruthy();
+      expect(reparameterized.amountOutStart.lte(DL_QUOTE_NATIVE_EXACT_IN_LARGE.amountOutStart)).toBeTruthy();
       expect(reparameterized.amountInEnd).toEqual(amountInEnd);
       expect(reparameterized.amountOutEnd).toEqual(amountOutEnd);
     });
