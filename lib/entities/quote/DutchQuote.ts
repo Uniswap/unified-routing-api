@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteJSON } from '.';
 import { DutchRequest } from '..';
 import { BPS, GOUDA_BASE_GAS, NATIVE_ADDRESS, RoutingType, WETH_UNWRAP_GAS, WETH_WRAP_GAS } from '../../constants';
+import { log } from '../../util/log';
 import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInSeconds } from '../../util/time';
 import { ClassicQuote } from './ClassicQuote';
@@ -72,16 +73,26 @@ export class DutchQuote implements Quote {
 
   // build a synthetic dutch quote from a classic quote
   public static fromClassicQuote(request: DutchRequest, quote: ClassicQuote): DutchQuote {
-    const startAmounts = this.applyPreSwapGasAdjustment(
-      this.applyPriceImprovement(
-        { amountIn: quote.amountInGasAdjusted, amountOut: quote.amountOutGasAdjusted },
-        request.info.type
-      ),
-      quote
+    const priceImprovedStartAmounts = this.applyPriceImprovement(
+      { amountIn: quote.amountInGasAdjusted, amountOut: quote.amountOutGasAdjusted },
+      request.info.type
     );
+    const startAmounts = this.applyPreSwapGasAdjustment(priceImprovedStartAmounts, quote);
 
     const gasAdjustedAmounts = this.applyGasAdjustment(startAmounts, quote);
     const endAmounts = this.applySlippage(gasAdjustedAmounts, request);
+
+    log.info('Synthetic quote parameterization', {
+      priceImprovedAmountIn: priceImprovedStartAmounts.amountIn.toString(),
+      priceImprovedAmountOut: priceImprovedStartAmounts.amountOut.toString(),
+      startAmountIn: startAmounts.amountIn.toString(),
+      startAmountOut: startAmounts.amountOut.toString(),
+      gasAdjustedAmountIn: gasAdjustedAmounts.amountIn.toString(),
+      gasAdjustedAmountOut: gasAdjustedAmounts.amountOut.toString(),
+      slippageAdjustedAmountIn: endAmounts.amountIn.toString(),
+      slippageAdjustedAmountOut: endAmounts.amountOut.toString(),
+    });
+
     return new DutchQuote(
       quote.createdAt,
       request,
@@ -114,6 +125,16 @@ export class DutchQuote implements Quote {
       classic
     );
     const { amountIn: amountInEnd, amountOut: amountOutEnd } = this.applySlippage(classicAmounts, quote.request);
+
+    log.info('RFQ quote parameterization', {
+      startAmountIn: amountInStart.toString(),
+      startAmountOut: amountOutStart.toString(),
+      gasAdjustedClassicAmountIn: classicAmounts.amountIn.toString(),
+      gasAdjustedClassicAmountOut: classicAmounts.amountOut.toString(),
+      slippageAdjustedClassicAmountIn: amountInEnd.toString(),
+      slippageAdjustedClassicAmountOut: amountOutEnd.toString(),
+    });
+
     return new DutchQuote(
       quote.createdAt,
       quote.request,
