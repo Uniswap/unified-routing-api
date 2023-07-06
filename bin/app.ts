@@ -216,7 +216,7 @@ export class APIPipeline extends Stack {
             value: 'archive-node-rpc-url-default-kms',
             type: BuildEnvironmentVariableType.SECRETS_MANAGER,
           },
-          ROUTING_API_URL: {
+          ROUTING_API: {
             value: `${stage}/routing-api/url`,
             type: BuildEnvironmentVariableType.SECRETS_MANAGER,
           },
@@ -226,7 +226,7 @@ export class APIPipeline extends Stack {
         'git config --global url."https://${GH_TOKEN}@github.com/".insteadOf ssh://git@github.com/',
         'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc',
         'echo "UNISWAP_API=${UNISWAP_API}" >> .env',
-        'echo "ROUTING_API_URL=${ROUTING_API_URL}" >> .env',
+        'echo "ROUTING_API_URL=${ROUTING_API}" >> .env',
         'echo "ARCHIVE_NODE_RPC=${ARCHIVE_NODE_RPC}" >> .env',
         'yarn install --frozen-lockfile --network-concurrency 1',
         'yarn build',

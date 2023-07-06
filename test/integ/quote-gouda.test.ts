@@ -38,12 +38,12 @@ chai.use(chaiSubset);
 const DIRECT_TAKER = '0x0000000000000000000000000000000000000001';
 const NO_LIQ_TOKEN = '0x69b148395Ce0015C13e36BFfBAd63f49EF874E03';
 
-if (!process.env.UNISWAP_API || !process.env.ARCHIVE_NODE_RPC || !process.env.ROUTING_API_URL) {
-  throw new Error('Must set [UNISWAP_API, ARCHIVE_NODE_RPC, ROUTING_API_URL] env variables for integ tests. See README');
+if (!process.env.UNISWAP_API || !process.env.ARCHIVE_NODE_RPC || !process.env.ROUTING_API) {
+  throw new Error('Must set [UNISWAP_API, ARCHIVE_NODE_RPC, ROUTING_API] env variables for integ tests. See README');
 }
 
 const API = `${process.env.UNISWAP_API!}quote`;
-const ROUTING_API = `${process.env.ROUTING_API_URL!}/quote`;
+const ROUTING_API = `${process.env.ROUTING_API!}/quote`;
 
 const SLIPPAGE = '5';
 
