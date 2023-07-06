@@ -38,12 +38,12 @@ chai.use(chaiSubset);
 const DIRECT_TAKER = '0x0000000000000000000000000000000000000001';
 const NO_LIQ_TOKEN = '0x69b148395Ce0015C13e36BFfBAd63f49EF874E03';
 
-if (!process.env.UNISWAP_API || !process.env.ARCHIVE_NODE_RPC || !process.env.ROUTING_API) {
-  throw new Error('Must set [UNISWAP_API, ARCHIVE_NODE_RPC, ROUTING_API] env variables for integ tests. See README');
+if (!process.env.UNISWAP_API || !process.env.ARCHIVE_NODE_RPC || !process.env.ROUTING_API_URL) {
+  throw new Error('Must set [UNISWAP_API, ARCHIVE_NODE_RPC, ROUTING_API_URL] env variables for integ tests. See README');
 }
 
 const API = `${process.env.UNISWAP_API!}quote`;
-const ROUTING_API = `${process.env.ROUTING_API!}/quote`;
+const ROUTING_API = `${process.env.ROUTING_API_URL!}/quote`;
 
 const SLIPPAGE = '5';
 
@@ -147,30 +147,38 @@ describe('quoteGouda', function () {
       ],
     };
 
-    const {
-      data: { quote },
-    } = await axios.post<QuoteResponseJSON>(`${API}`, quoteReq);
-    const { blockNumber } = quote as ClassicQuoteDataJSON;
+    console.log(quoteReq)
 
-    block = parseInt(blockNumber) - 10;
+    try {
+      const {
+        data: { quote },
+      } = await axios.post<QuoteResponseJSON>(`${API}`, quoteReq);
+      const { blockNumber } = quote as ClassicQuoteDataJSON;
 
-    alice = await resetAndFundAtBlock(alice, block, [
-      parseAmount('8000000', USDC_MAINNET),
-      parseAmount('5000000', USDT_MAINNET),
-      parseAmount('10', WBTC_MAINNET),
-      parseAmount('5000', UNI_MAINNET),
-      parseAmount('4000', WETH9[1]),
-      parseAmount('5000000', DAI_MAINNET),
-    ]);
+      block = parseInt(blockNumber) - 10;
 
-    filler = await fund(filler, [
-      parseAmount('8000000', USDC_MAINNET),
-      parseAmount('5000000', USDT_MAINNET),
-      parseAmount('10', WBTC_MAINNET),
-      parseAmount('5000', UNI_MAINNET),
-      parseAmount('4000', WETH9[1]),
-      parseAmount('5000000', DAI_MAINNET),
-    ]);
+      alice = await resetAndFundAtBlock(alice, block, [
+        parseAmount('8000000', USDC_MAINNET),
+        parseAmount('5000000', USDT_MAINNET),
+        parseAmount('10', WBTC_MAINNET),
+        parseAmount('5000', UNI_MAINNET),
+        parseAmount('4000', WETH9[1]),
+        parseAmount('5000000', DAI_MAINNET),
+      ]);
+
+      filler = await fund(filler, [
+        parseAmount('8000000', USDC_MAINNET),
+        parseAmount('5000000', USDT_MAINNET),
+        parseAmount('10', WBTC_MAINNET),
+        parseAmount('5000', UNI_MAINNET),
+        parseAmount('4000', WETH9[1]),
+        parseAmount('5000000', DAI_MAINNET),
+      ]);
+    }
+    catch(err) {
+      console.log(err);
+      throw err;
+    }
   });
 
   // size filter may not apply for exact output
