@@ -32,6 +32,7 @@ export interface SingleQuoteJSON {
 }
 
 export interface QuoteResponseJSON extends SingleQuoteJSON {
+  requestId: string;
   allQuotes: (SingleQuoteJSON | null)[];
 }
 
@@ -91,6 +92,7 @@ export class QuoteHandler extends APIGLambdaHandler<
         quoteToResponse(bestQuote),
         // additional info to return alongside the main quote
         {
+          requestId: request.requestId,
           // note the best quote is duplicated, but this allows callers
           // to easily map their original request configs to quotes by index
           allQuotes: resolvedQuotes.map((q) => (q ? quoteToResponse(q) : null)),
@@ -122,8 +124,8 @@ export class QuoteHandler extends APIGLambdaHandler<
         type: TradeType[info.type],
         configs: requests.map((r) => r.routingType).join(','),
         createdAt: currentTimestampInSeconds(),
-        // only log offerer if it's a dutch limit request
-        ...(info.offerer && { offerer: info.offerer }),
+        // only log swapper if it's a dutch limit request
+        ...(info.swapper && { swapper: info.swapper }),
       },
     });
 

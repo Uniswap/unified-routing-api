@@ -14,12 +14,12 @@ export function createPermitData(tokenAddress: string, chainId: number, nonce: s
   const permit = {
     details: {
       token: tokenAddress,
-      amount: PERMIT_AMOUNT,
-      expiration: toDeadline(PERMIT_EXPIRATION),
+      amount: PERMIT_AMOUNT.toString(),
+      expiration: toDeadline(PERMIT_EXPIRATION).toString(),
       nonce: nonce,
     },
     spender: UNIVERSAL_ROUTER_ADDRESS(chainId),
-    sigDeadline: toDeadline(PERMIT_SIG_EXPIRATION),
+    sigDeadline: toDeadline(PERMIT_SIG_EXPIRATION).toString(),
   };
 
   return AllowanceTransfer.getPermitData(permit, PERMIT2_ADDRESS, chainId) as PermitSingleData;

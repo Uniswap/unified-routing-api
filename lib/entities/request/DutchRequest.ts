@@ -7,41 +7,43 @@ import {
 } from '../../constants';
 
 export * from './ClassicRequest';
-export * from './DutchLimitRequest';
+export * from './DutchRequest';
 
-export interface DutchLimitConfig {
-  offerer: string;
+export interface DutchConfig {
+  swapper: string;
   exclusivityOverrideBps: number;
   auctionPeriodSecs: number;
+  deadlineBufferSecs: number;
 }
 
 export interface DutchQuoteRequestInfo extends QuoteRequestInfo {
   slippageTolerance: string;
 }
 
-export interface DutchLimitConfigJSON extends DutchLimitConfig {
+export interface DutchConfigJSON extends DutchConfig {
   routingType: RoutingType.DUTCH_LIMIT;
 }
 
-export class DutchLimitRequest implements QuoteRequest {
+export class DutchRequest implements QuoteRequest {
   public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
 
-  public static fromRequestBody(info: QuoteRequestInfo, body: DutchLimitConfigJSON): DutchLimitRequest {
+  public static fromRequestBody(info: QuoteRequestInfo, body: DutchConfigJSON): DutchRequest {
     const convertedSlippage = info.slippageTolerance ?? DEFAULT_SLIPPAGE_TOLERANCE;
-    return new DutchLimitRequest(
+    return new DutchRequest(
       {
         ...info,
         slippageTolerance: convertedSlippage,
       },
       {
-        offerer: body.offerer ?? NATIVE_ADDRESS,
+        swapper: body.swapper ?? NATIVE_ADDRESS,
         exclusivityOverrideBps: body.exclusivityOverrideBps ?? DEFAULT_EXCLUSIVITY_OVERRIDE_BPS,
-        auctionPeriodSecs: body.auctionPeriodSecs ?? DutchLimitRequest.defaultAuctionPeriodSecs(info.tokenInChainId),
+        auctionPeriodSecs: body.auctionPeriodSecs ?? DutchRequest.defaultAuctionPeriodSecs(info.tokenInChainId),
+        deadlineBufferSecs: body.deadlineBufferSecs ?? DutchRequest.defaultDeadlineBufferSecs(info.tokenInChainId),
       }
     );
   }
 
-  constructor(public readonly info: DutchQuoteRequestInfo, public readonly config: DutchLimitConfig) {}
+  constructor(public readonly info: DutchQuoteRequestInfo, public readonly config: DutchConfig) {}
 
   // TODO: parameterize this based on other factors
   public static defaultAuctionPeriodSecs(chainId: number): number {
@@ -55,7 +57,18 @@ export class DutchLimitRequest implements QuoteRequest {
     }
   }
 
-  public toJSON(): DutchLimitConfigJSON {
+  public static defaultDeadlineBufferSecs(chainId: number): number {
+    switch (chainId) {
+      case 1:
+        return 12;
+      case 137:
+        return 5;
+      default:
+        return 5;
+    }
+  }
+
+  public toJSON(): DutchConfigJSON {
     return Object.assign({}, this.config, {
       routingType: RoutingType.DUTCH_LIMIT as RoutingType.DUTCH_LIMIT,
     });

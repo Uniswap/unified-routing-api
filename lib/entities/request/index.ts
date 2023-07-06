@@ -5,16 +5,16 @@ import { SUPPORTED_CHAINS } from '../../config/chains';
 import { DEFAULT_SLIPPAGE_TOLERANCE, RoutingType } from '../../constants';
 import { ValidationError } from '../../util/errors';
 import { ClassicConfig, ClassicConfigJSON, ClassicRequest } from './ClassicRequest';
-import { DutchLimitConfig, DutchLimitConfigJSON, DutchLimitRequest } from './DutchLimitRequest';
+import { DutchConfig, DutchConfigJSON, DutchRequest } from './DutchRequest';
 
 export * from './ClassicRequest';
-export * from './DutchLimitRequest';
+export * from './DutchRequest';
 
 export type RequestByRoutingType = { [routingType in RoutingType]?: QuoteRequest };
 
 // config specific to the given routing type
-export type RoutingConfig = DutchLimitConfig | ClassicConfig;
-export type RoutingConfigJSON = DutchLimitConfigJSON | ClassicConfigJSON;
+export type RoutingConfig = DutchConfig | ClassicConfig;
+export type RoutingConfigJSON = DutchConfigJSON | ClassicConfigJSON;
 
 // shared info for all quote requests
 export interface QuoteRequestInfo {
@@ -26,7 +26,7 @@ export interface QuoteRequestInfo {
   amount: BigNumber;
   type: TradeType;
   slippageTolerance?: string;
-  offerer?: string;
+  swapper?: string;
 }
 
 export interface QuoteRequestBodyJSON extends Omit<QuoteRequestInfo, 'type' | 'amount'> {
@@ -57,7 +57,7 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON): {
     amount: BigNumber.from(body.amount),
     type: parseTradeType(body.type),
     slippageTolerance: body.slippageTolerance ?? DEFAULT_SLIPPAGE_TOLERANCE,
-    offerer: body.offerer,
+    swapper: body.swapper,
   };
 
   const requests = body.configs.flatMap((config) => {
@@ -68,7 +68,7 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON): {
       SUPPORTED_CHAINS[RoutingType.DUTCH_LIMIT].includes(info.tokenInChainId) &&
       info.tokenInChainId === info.tokenOutChainId
     ) {
-      return DutchLimitRequest.fromRequestBody(info, config as DutchLimitConfigJSON);
+      return DutchRequest.fromRequestBody(info, config as DutchConfigJSON);
     }
     return [];
   });

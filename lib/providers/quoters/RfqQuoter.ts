@@ -4,7 +4,7 @@ import { BigNumber } from 'ethers';
 import axios from './helpers';
 
 import { NATIVE_ADDRESS, RoutingType } from '../../constants';
-import { DutchLimitQuote, DutchLimitRequest, Quote } from '../../entities';
+import { DutchQuote, DutchRequest, Quote } from '../../entities';
 import { PostQuoteResponseJoi } from '../../handlers/quote';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
@@ -16,13 +16,13 @@ export class RfqQuoter implements Quoter {
 
   constructor(private rfqUrl: string, private serviceUrl: string, private paramApiKey: string) {}
 
-  async quote(request: DutchLimitRequest): Promise<Quote | null> {
+  async quote(request: DutchRequest): Promise<Quote | null> {
     if (request.routingType !== RoutingType.DUTCH_LIMIT) {
       log.error(`Invalid routing config type: ${request.routingType}`);
       return null;
     }
 
-    const offerer = request.config.offerer;
+    const swapper = request.config.swapper;
     const requests = [
       axios.post(
         `${this.rfqUrl}quote`,
@@ -32,13 +32,13 @@ export class RfqQuoter implements Quoter {
           tokenIn: mapNative(request.info.tokenIn, request.info.tokenInChainId),
           tokenOut: mapNative(request.info.tokenOut, request.info.tokenInChainId),
           amount: request.info.amount.toString(),
-          offerer: offerer,
+          swapper: swapper,
           requestId: request.info.requestId,
           type: TradeType[request.info.type],
         },
         { headers: { 'x-api-key': this.paramApiKey } }
       ),
-      axios.get(`${this.serviceUrl}dutch-auction/nonce?address=${offerer}&chainId=${request.info.tokenInChainId}`), // should also work for cross-chain?
+      axios.get(`${this.serviceUrl}dutch-auction/nonce?address=${swapper}&chainId=${request.info.tokenInChainId}`), // should also work for cross-chain?
     ];
 
     let quote: Quote | null = null;
@@ -58,11 +58,11 @@ export class RfqQuoter implements Quoter {
           if (results[1].status == 'rejected') {
             log.debug(results[1].reason, 'RfqQuoterErr: GET nonce failed');
             metrics.putMetric(`RfqQuoterNonceErr`, 1);
-            quote = DutchLimitQuote.fromResponseBody(request, response, generateRandomNonce());
+            quote = DutchQuote.fromResponseBody(request, response, generateRandomNonce());
           } else {
             log.info(results[1].value.data, 'RfqQuoter: GET nonce success');
             metrics.putMetric(`RfqQuoterSuccess`, 1);
-            quote = DutchLimitQuote.fromResponseBody(
+            quote = DutchQuote.fromResponseBody(
               request,
               response,
               BigNumber.from(results[1].value.data.nonce).add(1).toString()

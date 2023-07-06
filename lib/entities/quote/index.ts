@@ -1,13 +1,13 @@
 import { BigNumber } from 'ethers';
 
-import { DutchLimitQuoteDataJSON, QuoteRequest } from '..';
+import { DutchQuoteDataJSON, QuoteRequest } from '..';
 import { RoutingType } from '../../constants';
 import { ClassicQuoteDataJSON } from './ClassicQuote';
 
 export * from './ClassicQuote';
-export * from './DutchLimitQuote';
+export * from './DutchQuote';
 
-export type QuoteJSON = DutchLimitQuoteDataJSON | ClassicQuoteDataJSON;
+export type QuoteJSON = DutchQuoteDataJSON | ClassicQuoteDataJSON;
 
 export type LogJSON = {
   quoteId: string;
@@ -22,7 +22,7 @@ export type LogJSON = {
   amountOutGasAdjusted?: string;
   tokenInChainId: number;
   tokenOutChainId: number;
-  offerer: string;
+  swapper: string;
   routing: string;
   createdAt: string;
   slippage: number;
