@@ -9,6 +9,7 @@ import {
   CLASSIC_QUOTE_EXACT_OUT_WORSE,
   CLASSIC_REQUEST_BODY,
   createClassicQuote,
+  createDutchQuote,
   DL_QUOTE_EXACT_IN_BETTER,
   DL_QUOTE_EXACT_IN_WORSE,
   DL_QUOTE_EXACT_OUT_BETTER,
@@ -648,5 +649,14 @@ describe('QuoteHandler', () => {
       const bestQuote = await getBestQuote(quotes);
       expect(bestQuote).toEqual(DL_QUOTE_EXACT_IN_BETTER);
     });
+
+    it('filters out quotes that are 0 value', async () => {
+      const quoters: QuoterByRoutingType = {
+        DUTCH_LIMIT: quoterMock(createDutchQuote({ amountOut: '0' }, 'EXACT_INPUT')),
+        CLASSIC: quoterMock(createClassicQuote({ quote: '0' }, { type: 'EXACT_INPUT' })),
+      };
+      const quotes = await getQuotes(quoters, QUOTE_REQUEST_MULTI);
+      expect(quotes.length).toBe(0);
+    })
   });
 });
