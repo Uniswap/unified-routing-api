@@ -7,6 +7,7 @@ import { ClassicQuote, DutchQuote } from '../../../lib/entities';
 import { DL_PERMIT, DUTCH_LIMIT_ORDER_JSON } from '../../constants';
 import {
   CLASSIC_QUOTE_EXACT_IN_LARGE,
+  CLASSIC_QUOTE_EXACT_IN_LARGE_GAS,
   CLASSIC_QUOTE_EXACT_IN_NATIVE,
   CLASSIC_QUOTE_EXACT_OUT_LARGE,
   createClassicQuote,
@@ -41,6 +42,50 @@ describe('DutchQuote', () => {
 
       expect(amountInEnd).toEqual(amountIn);
       expect(amountOutEnd).toEqual(amountIn.mul(90).div(100));
+    });
+
+    it('adjustments should always decrease outputs for exactIn', async () => {
+      const quote = CLASSIC_QUOTE_EXACT_IN_LARGE_GAS;
+      const amountIn = quote.amountInGasAdjusted;
+      const amountOut = quote.amountOutGasAdjusted;
+      const { amountIn: amountInGasAdjusted, amountOut: amountOutGasAdjusted } = DutchQuote.applyGasAdjustment(
+        {
+          amountIn: amountIn,
+          amountOut: amountOut,
+        },
+        quote
+      );
+      expect(amountInGasAdjusted.eq(amountIn)).toBeTruthy();
+      expect(amountOutGasAdjusted.lt(amountOut)).toBeTruthy();
+      const { amountIn: amountInSlippageAdjusted, amountOut: amountOutSlippageAdjusted } = DutchQuote.applySlippage(
+        { amountIn: amountInGasAdjusted, amountOut: amountOutGasAdjusted },
+        DL_QUOTE_EXACT_IN_LARGE.request
+      );
+
+      expect(amountInSlippageAdjusted.eq(amountInGasAdjusted)).toBeTruthy();
+      expect(amountOutSlippageAdjusted.lt(amountOutGasAdjusted)).toBeTruthy();
+    });
+
+    it('adjustments should always increase inputs for exactOut', async () => {
+      const quote = CLASSIC_QUOTE_EXACT_OUT_LARGE;
+      const amountIn = quote.amountInGasAdjusted;
+      const amountOut = quote.amountOutGasAdjusted;
+      const { amountIn: amountInGasAdjusted, amountOut: amountOutGasAdjusted } = DutchQuote.applyGasAdjustment(
+        {
+          amountIn: amountIn,
+          amountOut: amountOut,
+        },
+        quote
+      );
+      expect(amountInGasAdjusted.gt(amountIn)).toBeTruthy();
+      expect(amountOutGasAdjusted.eq(amountOut)).toBeTruthy();
+      const { amountIn: amountInSlippageAdjusted, amountOut: amountOutSlippageAdjusted } = DutchQuote.applySlippage(
+        { amountIn: amountInGasAdjusted, amountOut: amountOutGasAdjusted },
+        DL_QUOTE_EXACT_OUT_LARGE.request
+      );
+
+      expect(amountInSlippageAdjusted.gte(amountInGasAdjusted)).toBeTruthy();
+      expect(amountOutSlippageAdjusted.eq(amountOutGasAdjusted)).toBeTruthy();
     });
 
     it('reparameterizes with classic quote for end', async () => {
