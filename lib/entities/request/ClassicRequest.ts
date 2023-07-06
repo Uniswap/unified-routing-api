@@ -3,7 +3,6 @@ import { BigNumber } from 'ethers';
 
 import { defaultRequestKey, QuoteRequest, QuoteRequestInfo } from '.';
 import { RoutingType } from '../../constants';
-import { DutchRequest } from './DutchRequest';
 
 export interface ClassicConfig {
   protocols?: Protocol[];
