@@ -93,10 +93,10 @@ export class DutchQuoteContext implements QuoteContext {
     if (!quote && !syntheticQuote) {
       this.log.warn('No quote or synthetic quote available');
       return null;
+    } else if (!syntheticQuote || !this.request.config.useSyntheticQuotes) {
+      return quote;
     } else if (!quote) {
       return syntheticQuote;
-    } else if (!syntheticQuote) {
-      return quote;
     }
 
     // return the better of the two
