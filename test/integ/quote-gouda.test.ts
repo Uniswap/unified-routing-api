@@ -192,6 +192,7 @@ describe('quoteGouda', function () {
           {
             routingType: RoutingType.DUTCH_LIMIT,
             swapper: alice.address,
+            useSyntheticQuotes: true,
           },
         ] as RoutingConfigJSON[],
       };
@@ -218,6 +219,7 @@ describe('quoteGouda', function () {
           {
             routingType: RoutingType.DUTCH_LIMIT,
             swapper: alice.address,
+            useSyntheticQuotes: true,
           },
         ] as RoutingConfigJSON[],
       };
@@ -250,6 +252,7 @@ describe('quoteGouda', function () {
               {
                 routingType: RoutingType.DUTCH_LIMIT,
                 swapper: alice.address,
+                useSyntheticQuotes: true,
               },
             ] as RoutingConfigJSON[],
           };
@@ -307,6 +310,7 @@ describe('quoteGouda', function () {
               {
                 routingType: RoutingType.DUTCH_LIMIT,
                 swapper: alice.address,
+                useSyntheticQuotes: true,
               },
             ] as RoutingConfigJSON[],
           };
@@ -366,6 +370,7 @@ describe('quoteGouda', function () {
               {
                 routingType: RoutingType.DUTCH_LIMIT,
                 swapper: alice.address,
+                useSyntheticQuotes: true,
               },
             ] as RoutingConfigJSON[],
           };
@@ -456,6 +461,7 @@ describe('quoteGouda', function () {
               {
                 routingType: RoutingType.DUTCH_LIMIT,
                 swapper: alice.address,
+                useSyntheticQuotes: true,
               },
             ] as RoutingConfigJSON[],
           };
@@ -483,6 +489,7 @@ describe('quoteGouda', function () {
               {
                 routingType: RoutingType.DUTCH_LIMIT,
                 swapper: alice.address,
+                useSyntheticQuotes: true,
                 exclusivityOverrideBps: -1,
               },
             ] as RoutingConfigJSON[],
@@ -511,6 +518,7 @@ describe('quoteGouda', function () {
               {
                 routingType: RoutingType.DUTCH_LIMIT,
                 swapper: alice.address,
+                useSyntheticQuotes: true,
                 auctionPeriodSecs: -1,
               },
             ] as RoutingConfigJSON[],
@@ -540,6 +548,7 @@ describe('quoteGouda', function () {
             {
               routingType: RoutingType.DUTCH_LIMIT,
               swapper: alice.address,
+              useSyntheticQuotes: true,
             },
           ] as RoutingConfigJSON[],
         };
