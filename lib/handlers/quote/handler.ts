@@ -181,7 +181,7 @@ export async function getQuotes(quoterByRoutingType: QuoterByRoutingType, reques
       return quoter.quote(request);
     })
   );
-  return quotes.filter((q): q is Quote => !!q && (!q.amountOut.eq(0) || q.amountIn.eq(0)));
+  return quotes.filter((q): q is Quote => !!q);
 }
 
 // determine and return the "best" quote of the given list

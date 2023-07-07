@@ -89,21 +89,25 @@ export class DutchQuoteContext implements QuoteContext {
     const quote = await this.getRfqQuote(rfqQuote, classicQuote);
     const syntheticQuote = this.getSyntheticQuote(classicQuote, routeBackToNative);
 
+    const notQuote = (quote: Quote | null): boolean => {
+      return quote === null || quote.amountOut.eq(0);
+    }
+
     // handle cases where we only either have RFQ or synthetic
-    if (!quote && !syntheticQuote) {
+    if (notQuote(quote) && notQuote(syntheticQuote)) {
       this.log.warn('No quote or synthetic quote available');
       return null;
-    } else if (!quote) {
+    } else if (notQuote(quote)) {
       return syntheticQuote;
-    } else if (!syntheticQuote) {
+    } else if (notQuote(syntheticQuote)) {
       return quote;
     }
 
     // return the better of the two
     if (this.request.info.type === TradeType.EXACT_INPUT) {
-      return quote.amountOut.gte(syntheticQuote.amountOut) ? quote : syntheticQuote;
+      return quote!.amountOut.gte(syntheticQuote!.amountOut) ? quote : syntheticQuote;
     } else {
-      return quote.amountIn.lte(syntheticQuote.amountIn) ? quote : syntheticQuote;
+      return quote!.amountIn.lte(syntheticQuote!.amountIn) ? quote : syntheticQuote;
     }
   }
 
