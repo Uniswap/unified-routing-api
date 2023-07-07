@@ -1,4 +1,4 @@
-import { DutchOrder, parseValidation, ValidationType } from '@uniswap/gouda-sdk';
+import { DutchOrder, parseValidation, ValidationType } from '@uniswap/uniswapx-sdk';
 import { BigNumber } from 'ethers';
 
 import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, DutchQuoteJSON, DutchRequest } from '../../../../lib/entities';

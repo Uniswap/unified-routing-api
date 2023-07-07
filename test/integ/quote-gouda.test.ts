@@ -1,5 +1,4 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { DutchOrder } from '@uniswap/gouda-sdk';
 import { Currency, CurrencyAmount, Fraction, WETH9 } from '@uniswap/sdk-core';
 import {
   DAI_MAINNET,
@@ -10,6 +9,7 @@ import {
   USDT_MAINNET,
   WBTC_MAINNET,
 } from '@uniswap/smart-order-router';
+import { DutchOrder } from '@uniswap/uniswapx-sdk';
 import { PERMIT2_ADDRESS } from '@uniswap/universal-router-sdk';
 import { fail } from 'assert';
 import axiosStatic, { AxiosResponse } from 'axios';
@@ -80,7 +80,7 @@ const checkQuoteToken = (
   expect(percentDiff.lessThan(new Fraction(parseInt(SLIPPAGE), 100))).to.be.true;
 };
 
-describe('quoteGouda', function () {
+describe('quoteUniswapX', function () {
   // Help with test flakiness by retrying.
   this.retries(2);
 

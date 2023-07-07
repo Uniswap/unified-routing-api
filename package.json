@@ -64,7 +64,7 @@
   "dependencies": {
     "@typechain/ethers-v5": "^7.0.1",
     "@uniswap/default-token-list": "^9.2.0",
-    "@uniswap/gouda-sdk": "1.0.0-alpha.4",
+    "@uniswap/uniswapx-sdk": "1.0.0",
     "@uniswap/permit2-sdk": "^1.2.0",
     "@uniswap/router-sdk": "^1.4.0",
     "@uniswap/sdk-core": "^3.1.1",
