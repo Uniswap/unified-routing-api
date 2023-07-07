@@ -1,5 +1,14 @@
 # Unified Routing API
 
+[![Lint](https://github.com/Uniswap/unified-routing-api/actions/workflows/lint.yml/badge.svg)](https://github.com/Uniswap/unified-routing-api/actions/workflows/lint.yml)
+[![Unit Tests](https://github.com/Uniswap/unified-routing-api/actions/workflows/test.yml/badge.svg)](https://github.com/Uniswap/unified-routing-api/actions/workflows/test.yml)
+
+Unified Routing API is a service to route and parameterize all Uniswap trade types.
+
+Currently supported routing types:
+- Classic: routes using [Uniswap Routing API](https://github.com/uniswap/routing-api) against the Uniswap v2 and Uniswap v3 AMM protocols
+- DutchLimit: parameterizes a UniswapX Dutch Order to be executed by off-chain fillers
+
 ## Deployment
 
 ### Dev Environment
