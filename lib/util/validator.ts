@@ -96,5 +96,6 @@ export class FieldValidator {
     auctionPeriodSecs: FieldValidator.positiveNumber.optional(),
     deadlineBufferSecs: FieldValidator.positiveNumber.optional(),
     slippageTolerance: FieldValidator.slippageTolerance.optional(),
+    useSyntheticQuotes: Joi.boolean().optional(),
   });
 }

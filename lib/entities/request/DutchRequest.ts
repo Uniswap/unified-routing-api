@@ -14,14 +14,20 @@ export interface DutchConfig {
   exclusivityOverrideBps: number;
   auctionPeriodSecs: number;
   deadlineBufferSecs: number;
+  useSyntheticQuotes: boolean;
 }
 
 export interface DutchQuoteRequestInfo extends QuoteRequestInfo {
   slippageTolerance: string;
 }
 
-export interface DutchConfigJSON extends DutchConfig {
+export interface DutchConfigJSON {
   routingType: RoutingType.DUTCH_LIMIT;
+  swapper?: string;
+  exclusivityOverrideBps?: number;
+  auctionPeriodSecs?: number;
+  deadlineBufferSecs?: number;
+  useSyntheticQuotes?: boolean;
 }
 
 export class DutchRequest implements QuoteRequest {
@@ -36,9 +42,10 @@ export class DutchRequest implements QuoteRequest {
       },
       {
         swapper: body.swapper ?? NATIVE_ADDRESS,
-        exclusivityOverrideBps: body.exclusivityOverrideBps ?? DEFAULT_EXCLUSIVITY_OVERRIDE_BPS,
+        exclusivityOverrideBps: body.exclusivityOverrideBps ?? DEFAULT_EXCLUSIVITY_OVERRIDE_BPS.toNumber(),
         auctionPeriodSecs: body.auctionPeriodSecs ?? DutchRequest.defaultAuctionPeriodSecs(info.tokenInChainId),
         deadlineBufferSecs: body.deadlineBufferSecs ?? DutchRequest.defaultDeadlineBufferSecs(info.tokenInChainId),
+        useSyntheticQuotes: body.useSyntheticQuotes ?? true,
       }
     );
   }

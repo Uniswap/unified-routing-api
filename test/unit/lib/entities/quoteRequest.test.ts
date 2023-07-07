@@ -16,6 +16,7 @@ const MOCK_DL_CONFIG_JSON: DutchConfigJSON = {
   exclusivityOverrideBps: 24,
   auctionPeriodSecs: 60,
   deadlineBufferSecs: 12,
+  useSyntheticQuotes: true,
 };
 
 const CLASSIC_CONFIG_JSON: ClassicConfigJSON = {
