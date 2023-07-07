@@ -151,7 +151,7 @@ describe('DutchQuoteContext', () => {
       });
       const context = new DutchQuoteContext(logger, request);
       const filler = '0x1111111111111111111111111111111111111111';
-      const rfqQuote = createDutchQuote({ amountOut: '1', filler }, 'EXACT_INPUT');
+      const rfqQuote = createDutchQuote({ amountOut: '1000000000000000000', filler }, 'EXACT_INPUT');
       expect(rfqQuote.filler).toEqual(filler);
       const classicQuote = createClassicQuote(
         { quote: '10000000000', quoteGasAdjusted: '9999000000' },
@@ -166,6 +166,27 @@ describe('DutchQuoteContext', () => {
       expect(quote?.request).toMatchObject(rfqQuote.request);
       expect(quote?.amountIn).toEqual(rfqQuote?.amountIn);
       expect(quote?.amountOut).toEqual(rfqQuote?.amountOut);
+    });
+
+    it('skips rfq if reparameterization makes the decay inverted', async () => {
+      const request = makeDutchRequest({
+        tokenOut: '0x1111111111111111111111111111111111111111',
+      });
+      const context = new DutchQuoteContext(logger, request);
+      const filler = '0x1111111111111111111111111111111111111111';
+      const rfqQuote = createDutchQuote({ amountOut: '1', filler }, 'EXACT_INPUT');
+      expect(rfqQuote.filler).toEqual(filler);
+      const classicQuote = createClassicQuote(
+        { quote: '10000000000', quoteGasAdjusted: '9999000000' },
+        { type: 'EXACT_INPUT' }
+      );
+      context.dependencies();
+
+      const quote = await context.resolve({
+        [context.requestKey]: rfqQuote,
+        [context.classicKey]: classicQuote,
+      });
+      expect(quote).toBeNull();
     });
 
     it('keeps synthetic if output is weth', async () => {
