@@ -8,7 +8,7 @@ import {
   QuoteRequestBodyJSON,
 } from '../../../../lib/entities';
 import { ValidationError } from '../../../../lib/util/errors';
-import { AMOUNT_IN, CHAIN_IN_ID, CHAIN_OUT_ID, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
+import { AMOUNT, CHAIN_IN_ID, CHAIN_OUT_ID, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
 
 const MOCK_DL_CONFIG_JSON: DutchConfigJSON = {
   routingType: RoutingType.DUTCH_LIMIT,
@@ -31,7 +31,7 @@ const DUPLICATE_REQUEST_JSON = {
   tokenOutChainId: CHAIN_OUT_ID,
   tokenIn: TOKEN_IN,
   tokenOut: TOKEN_OUT,
-  amount: AMOUNT_IN,
+  amount: AMOUNT,
   type: 'EXACT_INPUT',
   configs: [MOCK_DL_CONFIG_JSON, CLASSIC_CONFIG_JSON, MOCK_DL_CONFIG_JSON],
   swapper: SWAPPER,
@@ -43,7 +43,7 @@ const EXACT_INPUT_MOCK_REQUEST_JSON: QuoteRequestBodyJSON = {
   tokenOutChainId: CHAIN_OUT_ID,
   tokenIn: TOKEN_IN,
   tokenOut: TOKEN_OUT,
-  amount: AMOUNT_IN,
+  amount: AMOUNT,
   type: 'EXACT_INPUT',
   swapper: SWAPPER,
   configs: [MOCK_DL_CONFIG_JSON, CLASSIC_CONFIG_JSON],
@@ -55,7 +55,7 @@ const EXACT_OUTPUT_MOCK_REQUEST_JSON: QuoteRequestBodyJSON = {
   tokenOutChainId: CHAIN_OUT_ID,
   tokenIn: TOKEN_IN,
   tokenOut: TOKEN_OUT,
-  amount: AMOUNT_IN,
+  amount: AMOUNT,
   type: 'EXACT_OUTPUT',
   swapper: SWAPPER,
   configs: [MOCK_DL_CONFIG_JSON, CLASSIC_CONFIG_JSON],

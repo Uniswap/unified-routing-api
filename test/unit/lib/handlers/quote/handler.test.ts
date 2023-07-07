@@ -219,7 +219,7 @@ describe('QuoteHandler', () => {
           },
           CLASSIC_QUOTE_EXACT_IN_WORSE
         );
-        const slippageAdjustedAmountOut = amountOutClassic.mul(95).div(100);
+        const slippageAdjustedAmountOut = amountOutClassic.mul(995).div(1000);
         const quoteJSON = JSON.parse(res.body).quote.orderInfo as DutchOrderInfoJSON;
         expect(quoteJSON.outputs.length).toBe(1);
         expect(quoteJSON.outputs[0].endAmount).toBe(slippageAdjustedAmountOut.toString());

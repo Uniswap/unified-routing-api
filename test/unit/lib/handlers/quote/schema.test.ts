@@ -1,7 +1,7 @@
 import { PostQuoteRequestBodyJoi } from '../../../../../lib/handlers/quote';
 import { FieldValidator } from '../../../../../lib/util/validator';
 import {
-  AMOUNT_IN,
+  AMOUNT,
   CHAIN_IN_ID,
   CHAIN_OUT_ID,
   CLASSIC_CONFIG,
@@ -25,7 +25,7 @@ const BASE_REQUEST_BODY = {
   tokenOutChainId: CHAIN_OUT_ID,
   tokenIn: TOKEN_IN,
   tokenOut: TOKEN_OUT,
-  amount: AMOUNT_IN,
+  amount: AMOUNT,
   type: 'EXACT_INPUT',
   configs: [DL_CONFIG_JSON, CLASSIC_CONFIG_JSON],
 };
@@ -221,7 +221,7 @@ describe('Post quote request validation', () => {
       tokenInChainId: CHAIN_IN_ID,
       tokenOutChainId: CHAIN_OUT_ID,
       tokenOut: TOKEN_OUT,
-      amount: AMOUNT_IN,
+      amount: AMOUNT,
       type: 'EXACT_INPUT',
       configs: [DL_CONFIG_JSON, CLASSIC_CONFIG_JSON],
     });

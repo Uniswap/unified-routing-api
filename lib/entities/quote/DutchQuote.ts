@@ -126,7 +126,7 @@ export class DutchQuote implements Quote {
     );
     const { amountIn: amountInEnd, amountOut: amountOutEnd } = this.applySlippage(classicAmounts, quote.request);
 
-    log.info('RFQ quote parameterization', {
+    console.log('RFQ quote parameterization', {
       startAmountIn: amountInStart.toString(),
       startAmountOut: amountOutStart.toString(),
       gasAdjustedClassicAmountIn: classicAmounts.amountIn.toString(),

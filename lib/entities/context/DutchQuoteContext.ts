@@ -80,8 +80,7 @@ export class DutchQuoteContext implements QuoteContext {
     return result;
   }
 
-  // return either the rfq quote or a synthetic quote from the classic dependency
-  async resolve(dependencies: QuoteByKey): Promise<Quote | null> {
+  async resolveHandler(dependencies: QuoteByKey): Promise<Quote | null> {
     const classicQuote = dependencies[this.classicKey] as ClassicQuote;
     const routeBackToNative = dependencies[this.routeToNativeKey] as ClassicQuote;
     const rfqQuote = dependencies[this.requestKey] as DutchQuote;
@@ -89,26 +88,30 @@ export class DutchQuoteContext implements QuoteContext {
     const quote = await this.getRfqQuote(rfqQuote, classicQuote);
     const syntheticQuote = this.getSyntheticQuote(classicQuote, routeBackToNative);
 
-    const notQuote = (quote: Quote | null): boolean => {
-      return quote === null || quote.amountOut.eq(0);
-    }
-
     // handle cases where we only either have RFQ or synthetic
-    if (notQuote(quote) && notQuote(syntheticQuote)) {
+    if (!quote && !syntheticQuote) {
       this.log.warn('No quote or synthetic quote available');
       return null;
-    } else if (notQuote(syntheticQuote) || !this.request.config.useSyntheticQuotes) {
+    } else if (!syntheticQuote || !this.request.config.useSyntheticQuotes) {
       return quote;
-    } else if (notQuote(quote)) {
+    } else if (!quote) {
       return syntheticQuote;
     }
 
     // return the better of the two
     if (this.request.info.type === TradeType.EXACT_INPUT) {
-      return quote!.amountOut.gte(syntheticQuote!.amountOut) ? quote : syntheticQuote;
+      return quote.amountOut.gte(syntheticQuote.amountOut) ? quote : syntheticQuote;
     } else {
-      return quote!.amountIn.lte(syntheticQuote!.amountIn) ? quote : syntheticQuote;
+      return quote.amountIn.lte(syntheticQuote.amountIn) ? quote : syntheticQuote;
     }
+  } 
+
+  // return either the rfq quote or a synthetic quote from the classic dependency
+  async resolve(dependencies: QuoteByKey): Promise<Quote | null> {
+    const quote = await this.resolveHandler(dependencies);
+    console.log('resolve:', quote, quote?.amountOut, (quote as DutchQuote)?.amountOutEnd)
+    if(!quote || (quote as DutchQuote).amountOutEnd.eq(0)) return null;
+    return quote;
   }
 
   async getRfqQuote(quote?: DutchQuote, classicQuote?: ClassicQuote): Promise<DutchQuote | null> {

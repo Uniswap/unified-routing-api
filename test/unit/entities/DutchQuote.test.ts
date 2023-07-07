@@ -4,7 +4,7 @@ import { BigNumber, ethers } from 'ethers';
 import * as _ from 'lodash';
 
 import { ClassicQuote, DutchQuote } from '../../../lib/entities';
-import { DL_PERMIT, DUTCH_LIMIT_ORDER_JSON } from '../../constants';
+import { AMOUNT_LARGE, DL_PERMIT, DUTCH_LIMIT_ORDER_JSON } from '../../constants';
 import {
   CLASSIC_QUOTE_EXACT_IN_LARGE,
   CLASSIC_QUOTE_EXACT_IN_LARGE_GAS,
@@ -161,7 +161,7 @@ describe('DutchQuote', () => {
       jest.useFakeTimers({
         now: 0,
       });
-      const quote = createDutchQuote({ amountOut: '10000' }, 'EXACT_INPUT') as any;
+      const quote = createDutchQuote({ amountOut: AMOUNT_LARGE }, 'EXACT_INPUT') as any;
       quote.nonce = 1;
       const dlQuote = quote as DutchQuote;
       const result = dlQuote.getPermitData();
