@@ -126,7 +126,7 @@ export class APIPipeline extends Stack {
 
     const parameterizationApiKeySecret = sm.Secret.fromSecretAttributes(this, 'parameterization-api-api-key', {
       secretCompleteArn:
-        'arn:aws:secretsmanager:us-east-2:644039819003:secret:gouda-parameterization-api-internal-api-key-uw4sIa',
+        'arn:aws:secretsmanager:us-east-2:644039819003:secret:uniswapx-parameterization-api-internal-api-key-64wa6H',
     });
 
     // Beta us-east-2
