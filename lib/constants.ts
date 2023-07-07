@@ -7,7 +7,7 @@ export const NATIVE_ADDRESS = '0x0000000000000000000000000000000000000000';
 export const WETH_WRAP_GAS = 0; // TODO: remove
 export const WETH_UNWRAP_GAS = 36000;
 export const DEFAULT_EXCLUSIVITY_OVERRIDE_BPS = BigNumber.from(100); // non-exclusive fillers must override price by this much
-export const GOUDA_BASE_GAS = 200000; // base gas overhead for filling an order through Gouda
+export const GOUDA_BASE_GAS = 250000; // base gas overhead for filling an order through Gouda
 
 export enum RoutingType {
   CLASSIC = 'CLASSIC',
