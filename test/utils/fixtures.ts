@@ -4,6 +4,7 @@ import { NATIVE_ADDRESS, RoutingType } from '../../lib/constants';
 import {
   ClassicQuoteDataJSON,
   ClassicRequest,
+  DutchConfig,
   DutchQuoteJSON,
   DutchRequest,
   parseQuoteRequests,
@@ -92,7 +93,10 @@ export function makeClassicRequest(overrides: Partial<QuoteRequestBodyJSON>): Cl
 
 export const QUOTE_REQUEST_CLASSIC = makeClassicRequest({});
 
-export function makeDutchRequest(overrides: Partial<QuoteRequestBodyJSON>): DutchRequest {
+export function makeDutchRequest(
+  overrides: Partial<QuoteRequestBodyJSON>,
+  configOverrides?: Partial<DutchConfig>
+): DutchRequest {
   const requestInfo = Object.assign({}, BASE_REQUEST_INFO_EXACT_IN, overrides);
   return parseQuoteRequests({
     ...requestInfo,
@@ -103,6 +107,7 @@ export function makeDutchRequest(overrides: Partial<QuoteRequestBodyJSON>): Dutc
         exclusivityOverrideBps: 12,
         auctionPeriodSecs: 60,
         deadlineBufferSecs: 12,
+        ...configOverrides,
       },
     ],
   }).quoteRequests[0] as DutchRequest;

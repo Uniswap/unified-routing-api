@@ -123,6 +123,27 @@ describe('DutchQuoteContext', () => {
       );
     });
 
+    it('skips synthetic if useSyntheticQuotes = false', async () => {
+      const request = makeDutchRequest({}, { useSyntheticQuotes: false });
+      const context = new DutchQuoteContext(logger, request);
+      const filler = '0x1111111111111111111111111111111111111111';
+      const rfqQuote = createDutchQuote({ amountOut: '1000000000000000000', filler }, 'EXACT_INPUT');
+      expect(rfqQuote.filler).toEqual(filler);
+      const classicQuote = createClassicQuote(
+        { quote: '10000000000', quoteGasAdjusted: '9999000000' },
+        { type: 'EXACT_INPUT' }
+      );
+      context.dependencies();
+
+      const quote = await context.resolve({
+        [context.requestKey]: rfqQuote,
+        [context.classicKey]: classicQuote,
+        [context.routeToNativeKey]: classicQuote,
+      });
+      expect(quote?.routingType).toEqual(RoutingType.DUTCH_LIMIT);
+      expect((quote?.toJSON() as DutchQuoteDataJSON).orderInfo.exclusiveFiller).toEqual(filler);
+    });
+
     it('skips synthetic if no route to eth', async () => {
       const request = makeDutchRequest({
         tokenOut: '0x1111111111111111111111111111111111111111',
