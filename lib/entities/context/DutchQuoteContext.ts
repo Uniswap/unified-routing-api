@@ -127,7 +127,10 @@ export class DutchQuoteContext implements QuoteContext {
       return null;
     }
 
-    return DutchQuote.reparameterize(quote, classicQuote as ClassicQuote);
+    const reparameterized = DutchQuote.reparameterize(quote, classicQuote as ClassicQuote);
+    // if its invalid for some reason, i.e. too much decay then return null
+    if (!reparameterized.validate()) return null;
+    return reparameterized;
   }
 
   // transform a classic quote into a synthetic dutch quote

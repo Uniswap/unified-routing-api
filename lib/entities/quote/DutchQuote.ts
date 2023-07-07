@@ -6,7 +6,7 @@ import { PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteJSON } from '.';
 import { DutchRequest } from '..';
-import { BPS, UNISWAPX_BASE_GAS, NATIVE_ADDRESS, RoutingType, WETH_UNWRAP_GAS, WETH_WRAP_GAS } from '../../constants';
+import { BPS, NATIVE_ADDRESS, RoutingType, UNISWAPX_BASE_GAS, WETH_UNWRAP_GAS, WETH_WRAP_GAS } from '../../constants';
 import { log } from '../../util/log';
 import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInSeconds } from '../../util/time';
@@ -247,6 +247,12 @@ export class DutchQuote implements Quote {
 
   public get amountIn(): BigNumber {
     return this.amountInStart;
+  }
+
+  validate(): boolean {
+    if (this.amountOutStart.lt(this.amountOutEnd)) return false;
+    if (this.amountInStart.gt(this.amountInEnd)) return false;
+    return true;
   }
 
   // static helpers
