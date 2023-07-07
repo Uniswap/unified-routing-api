@@ -111,7 +111,7 @@ export class DutchQuoteContext implements QuoteContext {
     if (!quote) return null;
 
     // if quote tokens are not in tokenlist return null
-    // TODO: make gouda-specific tokenlist
+    // TODO: make uniswapx-specific tokenlist
     const tokenList = new CachingTokenListProvider(quote.chainId, DEFAULT_TOKEN_LIST, new NodeJSCache(new NodeCache()));
     const [tokenIn, tokenOut] = await Promise.all([
       tokenList.getTokenByAddress(quote.tokenIn),

@@ -19,8 +19,8 @@ import {
   QUOTE_REQUEST_MULTI,
 } from '../../../../utils/fixtures';
 
-import { DutchOrderInfoJSON } from '@uniswap/gouda-sdk';
 import { PermitDetails } from '@uniswap/permit2-sdk';
+import { DutchOrderInfoJSON } from '@uniswap/uniswapx-sdk';
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { MetricsLogger } from 'aws-embedded-metrics';
 import { RoutingType } from '../../../../../lib/constants';
@@ -501,7 +501,7 @@ describe('QuoteHandler', () => {
         expect(res.state).toBe('invalid');
       });
 
-      it('Succeeds - Gouda Quote', async () => {
+      it('Succeeds - UniswapX Quote', async () => {
         const quoters = { [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER) };
         const event = {
           body: JSON.stringify(DL_REQUEST_BODY),

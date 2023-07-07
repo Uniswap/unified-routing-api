@@ -1,12 +1,12 @@
-import { DutchOrder, DutchOrderBuilder, DutchOrderInfoJSON } from '@uniswap/gouda-sdk';
 import { TradeType } from '@uniswap/sdk-core';
+import { DutchOrder, DutchOrderBuilder, DutchOrderInfoJSON } from '@uniswap/uniswapx-sdk';
 import { BigNumber, ethers } from 'ethers';
 
 import { PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteJSON } from '.';
 import { DutchRequest } from '..';
-import { BPS, GOUDA_BASE_GAS, NATIVE_ADDRESS, RoutingType, WETH_UNWRAP_GAS, WETH_WRAP_GAS } from '../../constants';
+import { BPS, UNISWAPX_BASE_GAS, NATIVE_ADDRESS, RoutingType, WETH_UNWRAP_GAS, WETH_WRAP_GAS } from '../../constants';
 import { log } from '../../util/log';
 import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInSeconds } from '../../util/time';
@@ -276,7 +276,7 @@ export class DutchQuote implements Quote {
     }
   }
 
-  // Calculates the pre-swap gas adjustment for the given quote if processed through Gouda
+  // Calculates the pre-swap gas adjustment for the given quote if processed through UniswapX
   // pre-swap gas adjustments are paid directly by the user pre-swap
   // and should be applied to startAmounts
   // e.g. ETH wraps
@@ -286,7 +286,7 @@ export class DutchQuote implements Quote {
     return DutchQuote.getGasAdjustedAmounts(amounts, gasAdjustment, classicQuote);
   }
 
-  // Calculates the gas adjustment for the given quote if processed through Gouda
+  // Calculates the gas adjustment for the given quote if processed through UniswapX
   // Swap gas adjustments are paid by the filler in the process of filling a trade
   // and should be applied to endAmounts
   static applyGasAdjustment(amounts: Amounts, classicQuote: ClassicQuote): Amounts {
@@ -295,7 +295,7 @@ export class DutchQuote implements Quote {
     return DutchQuote.getGasAdjustedAmounts(
       amounts,
       // routing api gas adjustment is already applied
-      // apply both the gouda gas adjustment
+      // apply both the uniswapx gas adjustment
       gasAdjustment,
       classicQuote
     );
@@ -338,7 +338,7 @@ export class DutchQuote implements Quote {
   static getPreSwapGasAdjustment(classicQuote: ClassicQuote): BigNumber {
     let result = BigNumber.from(0);
 
-    // gouda does not naturally support ETH input, but user still has to wrap it
+    // uniswapx does not naturally support ETH input, but user still has to wrap it
     // so should be considered in the quote pricing
     if (classicQuote.request.info.tokenIn === NATIVE_ADDRESS) {
       result = result.add(WETH_WRAP_GAS);
@@ -346,7 +346,7 @@ export class DutchQuote implements Quote {
     return result;
   }
 
-  // Returns the number of gas units extra required to execute this quote through Gouda
+  // Returns the number of gas units extra required to execute this quote through UniswapX
   static getGasAdjustment(classicQuote: ClassicQuote): BigNumber {
     let result = BigNumber.from(0);
 
@@ -355,7 +355,7 @@ export class DutchQuote implements Quote {
       result = result.add(WETH_UNWRAP_GAS);
     }
 
-    return result.add(GOUDA_BASE_GAS);
+    return result.add(UNISWAPX_BASE_GAS);
   }
 }
 

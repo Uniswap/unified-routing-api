@@ -12,7 +12,7 @@ import { generateRandomNonce } from '../../util/nonce';
 import { Quoter, QuoterType } from './index';
 
 export class RfqQuoter implements Quoter {
-  static readonly type: QuoterType.GOUDA_RFQ;
+  static readonly type: QuoterType.UNISWAPX_RFQ;
 
   constructor(private rfqUrl: string, private serviceUrl: string, private paramApiKey: string) {}
 
