@@ -143,7 +143,7 @@ export const DL_PERMIT = {
     ],
   },
   values: {
-    permitted: { token: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984', amount: { type: 'BigNumber', hex: '0x01' } },
+    permitted: { token: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984', amount: { type: 'BigNumber', hex: '0x0de0b6b3a7640000' } },
     spender: '0xe80bF394d190851E215D5F67B67f8F5A52783F1E',
     nonce: { type: 'BigNumber', hex: '0x01' },
     deadline: 72,
@@ -161,8 +161,8 @@ export const DL_PERMIT = {
       exclusiveFiller: '0x0000000000000000000000000000000000000000',
       exclusivityOverrideBps: { type: 'BigNumber', hex: '0x0c' },
       inputToken: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
-      inputStartAmount: { type: 'BigNumber', hex: '0x21e19e0c9bab2400000' },
-      inputEndAmount: { type: 'BigNumber', hex: '0x21e19e0c9bab2400000' },
+      inputStartAmount: { type: 'BigNumber', hex: '0x0de0b6b3a7640000' },
+      inputEndAmount: { type: 'BigNumber', hex: '0x0de0b6b3a7640000' },
       outputs: [
         {
           token: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
