@@ -4,6 +4,7 @@ import { BigNumber, ethers } from 'ethers';
 
 import { RoutingType } from '../../../../../lib/constants';
 import { DutchQuote, DutchQuoteContext, DutchQuoteDataJSON } from '../../../../../lib/entities';
+import { AMOUNT, AMOUNT_UNDER_GAS_THRESHOLD } from '../../../../constants';
 import {
   createClassicQuote,
   createDutchQuote,
@@ -11,7 +12,6 @@ import {
   makeDutchRequest,
   QUOTE_REQUEST_DL,
 } from '../../../../utils/fixtures';
-import { AMOUNT, AMOUNT_UNDER_GAS_THRESHOLD } from '../../../../constants';
 
 describe('DutchQuoteContext', () => {
   const logger = Logger.createLogger({ name: 'test' });
@@ -78,9 +78,11 @@ describe('DutchQuoteContext', () => {
       const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL);
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchQuote({ amountOut: '0', filler }, 'EXACT_INPUT');
-      expect(await context.resolve({
-        [QUOTE_REQUEST_DL.key()]: rfqQuote,
-      })).toBe(null);
+      expect(
+        await context.resolve({
+          [QUOTE_REQUEST_DL.key()]: rfqQuote,
+        })
+      ).toBe(null);
     });
 
     it('returns null if tokenIn is not in tokenlist', async () => {
@@ -234,7 +236,10 @@ describe('DutchQuoteContext', () => {
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchQuote({ amountOut: AMOUNT, filler }, 'EXACT_INPUT');
       expect(rfqQuote.filler).toEqual(filler);
-      const classicQuote = createClassicQuote({ quote: AMOUNT, quoteGasAdjusted: AMOUNT_UNDER_GAS_THRESHOLD }, { type: 'EXACT_INPUT' });
+      const classicQuote = createClassicQuote(
+        { quote: AMOUNT, quoteGasAdjusted: AMOUNT_UNDER_GAS_THRESHOLD },
+        { type: 'EXACT_INPUT' }
+      );
 
       const quote = await context.resolve({
         [context.requestKey]: rfqQuote,

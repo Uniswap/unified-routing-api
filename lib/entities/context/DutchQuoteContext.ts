@@ -104,12 +104,12 @@ export class DutchQuoteContext implements QuoteContext {
     } else {
       return quote.amountIn.lte(syntheticQuote.amountIn) ? quote : syntheticQuote;
     }
-  } 
+  }
 
   // return either the rfq quote or a synthetic quote from the classic dependency
   async resolve(dependencies: QuoteByKey): Promise<Quote | null> {
     const quote = await this.resolveHandler(dependencies);
-    if(!quote || (quote as DutchQuote).amountOutEnd.eq(0)) return null;
+    if (!quote || (quote as DutchQuote).amountOutEnd.eq(0)) return null;
     return quote;
   }
 

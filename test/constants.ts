@@ -12,7 +12,7 @@ export const AMOUNT = '1000000000000000000';
 export const AMOUNT_GAS_ADJUSTED = '900000000000000000';
 export const AMOUNT_UNDER_GAS_THRESHOLD = '400000000000000000';
 export const AMOUNT_BETTER = '2000000000000000000';
-export const AMOUNT_LARGE = '10000000000000000000000'
+export const AMOUNT_LARGE = '10000000000000000000000';
 export const AMOUNT_LARGE_GAS_ADJUSTED = '9000000000000000000000';
 export const FILLER = '0x0000000000000000000000000000000000000000';
 export const USDC_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
@@ -143,7 +143,10 @@ export const DL_PERMIT = {
     ],
   },
   values: {
-    permitted: { token: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984', amount: { type: 'BigNumber', hex: '0x0de0b6b3a7640000' } },
+    permitted: {
+      token: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
+      amount: { type: 'BigNumber', hex: '0x0de0b6b3a7640000' },
+    },
     spender: '0xe80bF394d190851E215D5F67B67f8F5A52783F1E',
     nonce: { type: 'BigNumber', hex: '0x01' },
     deadline: 72,

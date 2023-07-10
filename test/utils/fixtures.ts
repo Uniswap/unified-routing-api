@@ -11,7 +11,19 @@ import {
   QuoteRequestBodyJSON,
 } from '../../lib/entities';
 import { ClassicQuote, DutchQuote, Quote } from '../../lib/entities/quote';
-import { AMOUNT, AMOUNT_BETTER, AMOUNT_GAS_ADJUSTED, AMOUNT_LARGE, AMOUNT_LARGE_GAS_ADJUSTED, CHAIN_IN_ID, CHAIN_OUT_ID, FILLER, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../constants';
+import {
+  AMOUNT,
+  AMOUNT_BETTER,
+  AMOUNT_GAS_ADJUSTED,
+  AMOUNT_LARGE,
+  AMOUNT_LARGE_GAS_ADJUSTED,
+  CHAIN_IN_ID,
+  CHAIN_OUT_ID,
+  FILLER,
+  SWAPPER,
+  TOKEN_IN,
+  TOKEN_OUT,
+} from '../constants';
 import { buildQuoteResponse } from './quoteResponse';
 
 export const BASE_REQUEST_INFO_EXACT_IN = {
