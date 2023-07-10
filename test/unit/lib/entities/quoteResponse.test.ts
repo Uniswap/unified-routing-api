@@ -2,7 +2,7 @@ import { DutchOrder, parseValidation, ValidationType } from '@uniswap/uniswapx-s
 import { BigNumber } from 'ethers';
 
 import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, DutchQuoteJSON, DutchRequest } from '../../../../lib/entities';
-import { AMOUNT_IN, CHAIN_IN_ID, FILLER, PERMIT_DETAILS, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
+import { AMOUNT, CHAIN_IN_ID, FILLER, PERMIT_DETAILS, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_OUT_BETTER,
@@ -14,9 +14,9 @@ const DL_QUOTE_JSON: DutchQuoteJSON = {
   requestId: '0xrequestId',
   quoteId: '0xquoteId',
   tokenIn: TOKEN_IN,
-  amountIn: AMOUNT_IN,
+  amountIn: AMOUNT,
   tokenOut: TOKEN_OUT,
-  amountOut: AMOUNT_IN,
+  amountOut: AMOUNT,
   swapper: SWAPPER,
   filler: FILLER,
 };
@@ -24,11 +24,11 @@ const DL_QUOTE_JSON: DutchQuoteJSON = {
 const CLASSIC_QUOTE_JSON: ClassicQuoteDataJSON = {
   requestId: '0xrequestId',
   quoteId: '0xquoteId',
-  amount: AMOUNT_IN,
+  amount: AMOUNT,
   amountDecimals: '18',
   quote: '2000000',
   quoteDecimals: '18',
-  quoteGasAdjusted: AMOUNT_IN,
+  quoteGasAdjusted: AMOUNT,
   quoteGasAdjustedDecimals: '18',
   gasUseEstimate: '100',
   gasUseEstimateQuote: '100',
@@ -56,14 +56,14 @@ describe('QuoteResponse', () => {
       swapper: SWAPPER,
       input: {
         token: TOKEN_IN,
-        startAmount: AMOUNT_IN,
-        endAmount: AMOUNT_IN,
+        startAmount: AMOUNT,
+        endAmount: AMOUNT,
       },
       outputs: [
         {
           token: TOKEN_OUT,
-          startAmount: AMOUNT_IN,
-          endAmount: BigNumber.from(AMOUNT_IN).mul(995).div(1000).toString(), // default 5% slippage
+          startAmount: AMOUNT,
+          endAmount: BigNumber.from(AMOUNT).mul(995).div(1000).toString(), // default 5% slippage
           recipient: SWAPPER,
         },
       ],
@@ -81,14 +81,14 @@ describe('QuoteResponse', () => {
       swapper: SWAPPER,
       input: {
         token: TOKEN_IN,
-        startAmount: AMOUNT_IN,
-        endAmount: AMOUNT_IN,
+        startAmount: AMOUNT,
+        endAmount: AMOUNT,
       },
       outputs: [
         {
           token: TOKEN_OUT,
-          startAmount: AMOUNT_IN,
-          endAmount: BigNumber.from(AMOUNT_IN).mul(995).div(1000).toString(), // default 0.5% slippage
+          startAmount: AMOUNT,
+          endAmount: BigNumber.from(AMOUNT).mul(995).div(1000).toString(), // default 0.5% slippage
           recipient: SWAPPER,
         },
       ],

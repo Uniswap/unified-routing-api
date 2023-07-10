@@ -80,8 +80,7 @@ export class DutchQuoteContext implements QuoteContext {
     return result;
   }
 
-  // return either the rfq quote or a synthetic quote from the classic dependency
-  async resolve(dependencies: QuoteByKey): Promise<Quote | null> {
+  async resolveHandler(dependencies: QuoteByKey): Promise<Quote | null> {
     const classicQuote = dependencies[this.classicKey] as ClassicQuote;
     const routeBackToNative = dependencies[this.routeToNativeKey] as ClassicQuote;
     const rfqQuote = dependencies[this.requestKey] as DutchQuote;
@@ -105,6 +104,13 @@ export class DutchQuoteContext implements QuoteContext {
     } else {
       return quote.amountIn.lte(syntheticQuote.amountIn) ? quote : syntheticQuote;
     }
+  }
+
+  // return either the rfq quote or a synthetic quote from the classic dependency
+  async resolve(dependencies: QuoteByKey): Promise<Quote | null> {
+    const quote = await this.resolveHandler(dependencies);
+    if (!quote || (quote as DutchQuote).amountOutEnd.eq(0)) return null;
+    return quote;
   }
 
   async getRfqQuote(quote?: DutchQuote, classicQuote?: ClassicQuote): Promise<DutchQuote | null> {
