@@ -80,8 +80,7 @@ export class DutchQuoteContext implements QuoteContext {
     return result;
   }
 
-  // return either the rfq quote or a synthetic quote from the classic dependency
-  async resolve(dependencies: QuoteByKey): Promise<Quote | null> {
+  async resolveHandler(dependencies: QuoteByKey): Promise<Quote | null> {
     const classicQuote = dependencies[this.classicKey] as ClassicQuote;
     const routeBackToNative = dependencies[this.routeToNativeKey] as ClassicQuote;
     const rfqQuote = dependencies[this.requestKey] as DutchQuote;
@@ -93,10 +92,10 @@ export class DutchQuoteContext implements QuoteContext {
     if (!quote && !syntheticQuote) {
       this.log.warn('No quote or synthetic quote available');
       return null;
+    } else if (!syntheticQuote || !this.request.config.useSyntheticQuotes) {
+      return quote;
     } else if (!quote) {
       return syntheticQuote;
-    } else if (!syntheticQuote) {
-      return quote;
     }
 
     // return the better of the two
@@ -107,11 +106,18 @@ export class DutchQuoteContext implements QuoteContext {
     }
   }
 
+  // return either the rfq quote or a synthetic quote from the classic dependency
+  async resolve(dependencies: QuoteByKey): Promise<Quote | null> {
+    const quote = await this.resolveHandler(dependencies);
+    if (!quote || (quote as DutchQuote).amountOutEnd.eq(0)) return null;
+    return quote;
+  }
+
   async getRfqQuote(quote?: DutchQuote, classicQuote?: ClassicQuote): Promise<DutchQuote | null> {
     if (!quote) return null;
 
     // if quote tokens are not in tokenlist return null
-    // TODO: make gouda-specific tokenlist
+    // TODO: make uniswapx-specific tokenlist
     const tokenList = new CachingTokenListProvider(quote.chainId, DEFAULT_TOKEN_LIST, new NodeJSCache(new NodeCache()));
     const [tokenIn, tokenOut] = await Promise.all([
       tokenList.getTokenByAddress(quote.tokenIn),
@@ -127,7 +133,10 @@ export class DutchQuoteContext implements QuoteContext {
       return null;
     }
 
-    return DutchQuote.reparameterize(quote, classicQuote as ClassicQuote);
+    const reparameterized = DutchQuote.reparameterize(quote, classicQuote as ClassicQuote);
+    // if its invalid for some reason, i.e. too much decay then return null
+    if (!reparameterized.validate()) return null;
+    return reparameterized;
   }
 
   // transform a classic quote into a synthetic dutch quote

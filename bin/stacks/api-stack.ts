@@ -453,7 +453,7 @@ export class APIStack extends cdk.Stack {
       evaluationPeriods: 3,
     });
 
-    // Alarm on calls from URA to the nonce service (gouda service)
+    // Alarm on calls from URA to the nonce service (uniswapx service)
     const nonceAPIErrorMetric = new aws_cloudwatch.MathExpression({
       expression: '100*(error/invocations)',
       period: Duration.minutes(5),

@@ -110,7 +110,7 @@ export class ClassicQuote implements Quote {
       endAmountOut: this.amountOut.toString(),
       amountInGasAdjusted: this.amountInGasAdjusted.toString(),
       amountOutGasAdjusted: this.amountOutGasAdjusted.toString(),
-      offerer: '',
+      swapper: '',
       routing: RoutingType[this.routingType],
       slippage: this.slippage,
       createdAt: this.createdAt,
@@ -120,7 +120,7 @@ export class ClassicQuote implements Quote {
 
   getPermitData(): PermitSingleData | undefined {
     if (
-      !this.request.info.offerer ||
+      !this.request.info.swapper ||
       (this.allowanceData &&
         BigNumber.from(this.allowanceData.amount).gte(this.amountOut) &&
         BigNumber.from(this.allowanceData.expiration).gt(Math.floor(new Date().getTime() / 1000)))

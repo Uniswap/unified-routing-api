@@ -22,7 +22,7 @@ export const PostQuoteRequestBodyJoi = Joi.object({
     .messages({
       'array.unique': 'Duplicate routingType in configs',
     }),
-  offerer: FieldValidator.address.optional(),
+  swapper: FieldValidator.address.optional(),
 });
 
 export const PostQuoteResponseJoi = Joi.object({
@@ -33,6 +33,6 @@ export const PostQuoteResponseJoi = Joi.object({
   amountIn: FieldValidator.amount.required(),
   tokenOut: FieldValidator.address.required(),
   amountOut: FieldValidator.amount.required(),
-  offerer: FieldValidator.address.required(),
+  swapper: FieldValidator.address.required(),
   filler: FieldValidator.address.required(),
 });

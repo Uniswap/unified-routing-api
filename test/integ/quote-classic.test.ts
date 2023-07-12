@@ -202,7 +202,7 @@ describe('quote', function () {
       parseAmount('100', WBTC_MAINNET),
       parseAmount('10000', UNI_MAINNET),
       parseAmount('40000', WETH9[1]),
-      parseAmount('50000000', DAI_MAINNET),
+      parseAmount('5000000', DAI_MAINNET),
     ]);
   });
 

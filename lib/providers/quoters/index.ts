@@ -5,7 +5,7 @@ export * from './RoutingApiQuoter';
 
 export enum QuoterType {
   ROUTING_API = 'ROUTING_API',
-  GOUDA_RFQ = 'GOUDA_RFQ',
+  UNISWAPX_RFQ = 'UNISWAPX_RFQ',
 }
 
 export interface Quoter {

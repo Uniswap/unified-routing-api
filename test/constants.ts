@@ -4,18 +4,23 @@ import { RoutingType } from '../lib/constants';
 
 export const CHAIN_IN_ID = 1;
 export const CHAIN_OUT_ID = 1;
-export const OFFERER = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
-export const CHECKSUM_OFFERER = getAddress(OFFERER);
+export const SWAPPER = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
+export const CHECKSUM_SWAPPER = getAddress(SWAPPER);
 export const TOKEN_IN = '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984';
 export const TOKEN_OUT = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
-export const AMOUNT_IN = '1000000000000000000';
+export const AMOUNT = '1000000000000000000';
+export const AMOUNT_GAS_ADJUSTED = '900000000000000000';
+export const AMOUNT_UNDER_GAS_THRESHOLD = '400000000000000000';
+export const AMOUNT_BETTER = '2000000000000000000';
+export const AMOUNT_LARGE = '10000000000000000000000';
+export const AMOUNT_LARGE_GAS_ADJUSTED = '9000000000000000000000';
 export const FILLER = '0x0000000000000000000000000000000000000000';
 export const USDC_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
 export const USDC_ADDRESS_POLYGON = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
 
 export const DL_CONFIG = {
   routingType: RoutingType.DUTCH_LIMIT,
-  offerer: OFFERER,
+  swapper: SWAPPER,
   exclusivityOverrideBps: 24,
   auctionPeriodSecs: 60,
 };
@@ -61,7 +66,7 @@ export const PERMIT2 = {
       nonce: '0',
     },
   },
-}
+};
 
 export const PERMIT2_POLYGON = {
   domain: { name: 'Permit2', chainId: 137, verifyingContract: '0x000000000022D473030F116dDEE9F6B43aC78BA3' },
@@ -91,7 +96,7 @@ export const PERMIT2_POLYGON = {
 };
 
 export const PERMIT_DETAILS = {
-  amount: AMOUNT_IN,
+  amount: AMOUNT,
   expiration: '2592000',
   nonce: '1',
   token: TOKEN_IN,
@@ -105,16 +110,16 @@ export const DL_PERMIT = {
       { name: 'spender', type: 'address' },
       { name: 'nonce', type: 'uint256' },
       { name: 'deadline', type: 'uint256' },
-      { name: 'witness', type: 'ExclusiveDutchLimitOrder' },
+      { name: 'witness', type: 'ExclusiveDutchOrder' },
     ],
     TokenPermissions: [
       { name: 'token', type: 'address' },
       { name: 'amount', type: 'uint256' },
     ],
-    ExclusiveDutchLimitOrder: [
+    ExclusiveDutchOrder: [
       { name: 'info', type: 'OrderInfo' },
-      { name: 'startTime', type: 'uint256' },
-      { name: 'endTime', type: 'uint256' },
+      { name: 'decayStartTime', type: 'uint256' },
+      { name: 'decayEndTime', type: 'uint256' },
       { name: 'exclusiveFiller', type: 'address' },
       { name: 'exclusivityOverrideBps', type: 'uint256' },
       { name: 'inputToken', type: 'address' },
@@ -124,11 +129,11 @@ export const DL_PERMIT = {
     ],
     OrderInfo: [
       { name: 'reactor', type: 'address' },
-      { name: 'offerer', type: 'address' },
+      { name: 'swapper', type: 'address' },
       { name: 'nonce', type: 'uint256' },
       { name: 'deadline', type: 'uint256' },
-      { name: 'validationContract', type: 'address' },
-      { name: 'validationData', type: 'bytes' },
+      { name: 'additionalValidationContract', type: 'address' },
+      { name: 'additionalValidationData', type: 'bytes' },
     ],
     DutchOutput: [
       { name: 'token', type: 'address' },
@@ -138,31 +143,34 @@ export const DL_PERMIT = {
     ],
   },
   values: {
-    permitted: { token: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984', amount: { type: 'BigNumber', hex: '0x01' } },
-    spender: '0xbD7F9D0239f81C94b728d827a87b9864972661eC',
+    permitted: {
+      token: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
+      amount: { type: 'BigNumber', hex: '0x0de0b6b3a7640000' },
+    },
+    spender: '0xe80bF394d190851E215D5F67B67f8F5A52783F1E',
     nonce: { type: 'BigNumber', hex: '0x01' },
     deadline: 72,
     witness: {
       info: {
-        reactor: '0xbD7F9D0239f81C94b728d827a87b9864972661eC',
-        offerer: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+        reactor: '0xe80bF394d190851E215D5F67B67f8F5A52783F1E',
+        swapper: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
         nonce: { type: 'BigNumber', hex: '0x01' },
         deadline: 72,
-        validationContract: '0x0000000000000000000000000000000000000000',
-        validationData: '0x',
+        additionalValidationContract: '0x0000000000000000000000000000000000000000',
+        additionalValidationData: '0x',
       },
-      startTime: 0,
-      endTime: 60,
+      decayStartTime: 0,
+      decayEndTime: 60,
       exclusiveFiller: '0x0000000000000000000000000000000000000000',
       exclusivityOverrideBps: { type: 'BigNumber', hex: '0x0c' },
       inputToken: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
-      inputStartAmount: { type: 'BigNumber', hex: '0x01' },
-      inputEndAmount: { type: 'BigNumber', hex: '0x01' },
+      inputStartAmount: { type: 'BigNumber', hex: '0x0de0b6b3a7640000' },
+      inputEndAmount: { type: 'BigNumber', hex: '0x0de0b6b3a7640000' },
       outputs: [
         {
           token: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-          startAmount: { type: 'BigNumber', hex: '0x2710' },
-          endAmount: { type: 'BigNumber', hex: '0x26de' },
+          startAmount: { type: 'BigNumber', hex: '0x021e19e0c9bab2400000' },
+          endAmount: { type: 'BigNumber', hex: '0x021b63fd1aa400b80000' },
           recipient: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
         },
       ],
@@ -174,20 +182,20 @@ export const DUTCH_LIMIT_ORDER_JSON = {
   orderInfo: {
     chainId: 1,
     permit2Address: '0x000000000022d473030f116ddee9f6b43ac78ba3',
-    reactor: '0xbD7F9D0239f81C94b728d827a87b9864972661eC',
-    offerer: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+    reactor: '0xe80bF394d190851E215D5F67B67f8F5A52783F1E',
+    swapper: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
     nonce: '1',
     deadline: 72,
-    validationContract: '0x0000000000000000000000000000000000000000',
-    validationData: '0x',
-    startTime: 0,
-    endTime: 60,
+    additionalValidationContract: '0x0000000000000000000000000000000000000000',
+    additionalValidationData: '0x',
+    decayStartTime: 0,
+    decayEndTime: 60,
     exclusiveFiller: '0x0000000000000000000000000000000000000000',
     exclusivityOverrideBps: '12',
     input: {
       token: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
-      startAmount: '1',
-      endAmount: '1',
+      startAmount: AMOUNT,
+      endAmount: AMOUNT,
     },
     outputs: [
       {
@@ -199,7 +207,7 @@ export const DUTCH_LIMIT_ORDER_JSON = {
     ],
   },
   encodedOrder:
-    '0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000001f9840a85d5af5bf1d1762f925bdaddc4201f984000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000200000000000000000000000000bd7f9d0239f81c94b728d827a87b9864972661ec000000000000000000000000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000048000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2000000000000000000000000000000000000000000000000000000000000271000000000000000000000000000000000000000000000000000000000000026de000000000000000000000000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+    '0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000001f9840a85d5af5bf1d1762f925bdaddc4201f9840000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000e80bf394d190851e215d5f67b67f8f5a52783f1e000000000000000000000000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000048000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2000000000000000000000000000000000000000000000000000000000000271000000000000000000000000000000000000000000000000000000000000026de000000000000000000000000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
   quoteId: 'quoteId',
   requestId: 'requestId',
   auctionPeriodSecs: 60,
