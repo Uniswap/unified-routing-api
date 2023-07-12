@@ -45,7 +45,7 @@ export class DutchRequest implements QuoteRequest {
         exclusivityOverrideBps: body.exclusivityOverrideBps ?? DEFAULT_EXCLUSIVITY_OVERRIDE_BPS.toNumber(),
         auctionPeriodSecs: body.auctionPeriodSecs ?? DutchRequest.defaultAuctionPeriodSecs(info.tokenInChainId),
         deadlineBufferSecs: body.deadlineBufferSecs ?? DutchRequest.defaultDeadlineBufferSecs(info.tokenInChainId),
-        useSyntheticQuotes: body.useSyntheticQuotes ?? true,
+        useSyntheticQuotes: body.useSyntheticQuotes ?? false,
       }
     );
   }
