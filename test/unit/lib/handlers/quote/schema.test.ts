@@ -256,4 +256,21 @@ describe('Post quote request validation', () => {
     expect(error).toBeDefined();
     expect(error?.message).toEqual('Duplicate routingType in configs');
   });
+
+  it('should reject a malformed config among multiple', () => {
+    const { error } = PostQuoteRequestBodyJoi.validate({
+      ...BASE_REQUEST_BODY,
+      configs: [
+        {
+          ...CLASSIC_CONFIG_JSON,
+        },
+        {
+          ...DL_CONFIG_JSON,
+          auctionPeriodSeconds: -1
+        },
+      ],
+    });
+    expect(error).toBeDefined();
+    expect(error?.message).toEqual('\"configs[1]\" does not match any of the allowed types');
+  });
 });
