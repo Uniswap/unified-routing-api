@@ -15,6 +15,7 @@ import {
   DL_QUOTE_EXACT_OUT_WORSE,
   DL_REQUEST_BODY,
   QUOTE_REQUEST_BODY_MULTI,
+  QUOTE_REQUEST_CLASSIC,
   QUOTE_REQUEST_DL,
   QUOTE_REQUEST_MULTI,
 } from '../../../../utils/fixtures';
@@ -29,7 +30,13 @@ import { QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index'
 import { Permit2Fetcher } from '../../../../../lib/fetchers/Permit2Fetcher';
 import { TokenFetcher } from '../../../../../lib/fetchers/TokenFetcher';
 import { ApiInjector, ApiRInj } from '../../../../../lib/handlers/base';
-import { compareQuotes, getBestQuote, getQuotes, QuoteHandler } from '../../../../../lib/handlers/quote/handler';
+import {
+  compareQuotes,
+  getBestQuote,
+  getQuotes,
+  QuoteHandler,
+  removeDutchRequests,
+} from '../../../../../lib/handlers/quote/handler';
 import { ContainerInjected, QuoterByRoutingType } from '../../../../../lib/handlers/quote/injector';
 import { Quoter } from '../../../../../lib/providers/quoters';
 import { setGlobalLogger } from '../../../../../lib/util/log';
@@ -647,6 +654,13 @@ describe('QuoteHandler', () => {
       const quotes = await getQuotes(quoters, QUOTE_REQUEST_MULTI);
       const bestQuote = await getBestQuote(quotes);
       expect(bestQuote).toEqual(DL_QUOTE_EXACT_IN_BETTER);
+    });
+  });
+
+  describe('removeDutchRequests', () => {
+    it('removes all dutch limit requests', () => {
+      const requests = removeDutchRequests([QUOTE_REQUEST_DL, QUOTE_REQUEST_CLASSIC]);
+      expect(requests).toEqual([QUOTE_REQUEST_CLASSIC]);
     });
   });
 });
