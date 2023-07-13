@@ -141,7 +141,7 @@ export class APIPipeline extends Stack {
         ...jsonRpcProviders,
         ROUTING_API_KEY: routingApiKeySecret.secretValue.toString(),
         PARAMETERIZATION_API_KEY: parameterizationApiKeySecret.secretValue.toString(),
-        PARAMETERIZATION_API_URL: urlSecrets.secretValueFromJson('PARAMETERIZATION_API_BETA').toString(),
+        PARAMETERIZATION_API_URL: urlSecrets.secretValueFromJson('PARAMETERIZATION_API_PROD').toString(),
         ROUTING_API_URL: urlSecrets.secretValueFromJson('ROUTING_API_BETA').toString(),
         SERVICE_URL: urlSecrets.secretValueFromJson('GOUDA_SERVICE_BETA').toString(),
         REQUEST_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_REQUEST_DESTINATION_BETA').toString(),
