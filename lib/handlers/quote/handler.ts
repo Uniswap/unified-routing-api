@@ -147,7 +147,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     metrics.putMetric(`QuoteRequestedChainId${chainId.toString()}`, 1, Unit.Count);
   }
 
-  private emitQuoteResponsedMetrics(info: QuoteRequestInfo, bestQuote: Quote, _allQuotes: Quote[]) {
+  private emitQuoteResponseMetrics(info: QuoteRequestInfo, bestQuote: Quote, _allQuotes: Quote[]) {
     const { tokenInChainId: chainId, tokenIn, tokenOut } = info;
     const tokenInAbbr = tokenIn.slice(0, 6);
     const tokenOutAbbr = tokenOut.slice(0, 6);
