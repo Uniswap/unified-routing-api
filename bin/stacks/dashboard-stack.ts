@@ -33,6 +33,8 @@ export class DashboardStack extends cdk.NestedStack {
     // No CDK resource exists for contributor insights at the moment so use raw CloudFormation.
     const REQUESTED_QUOTES_RULE_NAME = 'URARequestedQuotes';
     const REQUESTED_QUOTES_BY_CHAIN_RULE_NAME = 'URARequestedQuotesByChain';
+    const RESPONSE_QUOTE_RULE_NAME = 'URAResponseQuotes';
+    const RESPONSE_QUOTE_BY_CHAIN_RULE_NAME = 'URAResponseQuotesByChain';
     new cdk.CfnResource(this, 'URAQuoteContributorInsights', {
       type: 'AWS::CloudWatch::InsightRule',
       properties: {
@@ -47,6 +49,10 @@ export class DashboardStack extends cdk.NestedStack {
               {
                 Match: '$.tokenPairSymbol',
                 IsPresent: true,
+              },
+              {
+                Match: '$.msg',
+                StartsWith: ['tokens and chains request'],
               },
             ],
             Keys: ['$.tokenPairSymbol'],
@@ -74,6 +80,10 @@ export class DashboardStack extends cdk.NestedStack {
                 Match: '$.tokenPairSymbolChain',
                 IsPresent: true,
               },
+              {
+                Match: '$.msg',
+                StartsWith: ['tokens and chains request'],
+              },
             ],
             Keys: ['$.tokenPairSymbolChain'],
           },
@@ -81,6 +91,66 @@ export class DashboardStack extends cdk.NestedStack {
           LogGroupNames: [`/aws/lambda/${quoteLambdaName}`],
         }),
         RuleName: REQUESTED_QUOTES_BY_CHAIN_RULE_NAME,
+        RuleState: 'ENABLED',
+      },
+    });
+
+    new cdk.CfnResource(this, 'URAResponseContributorInsights', {
+      type: 'AWS::CloudWatch::InsightRule',
+      properties: {
+        RuleBody: JSON.stringify({
+          Schema: {
+            Name: 'CloudWatchLogRule',
+            Version: 1,
+          },
+          AggregateOn: 'Count',
+          Contribution: {
+            Filters: [
+              {
+                Match: '$.tokenPairSymbol',
+                IsPresent: true,
+              },
+              {
+                Match: '$.msg',
+                StartsWith: ['tokens and chains response'],
+              },
+            ],
+            Keys: ['$.tokenPairSymbolBestQuote'],
+          },
+          LogFormat: 'JSON',
+          LogGroupNames: [`/aws/lambda/${quoteLambdaName}`],
+        }),
+        RuleName: RESPONSE_QUOTE_RULE_NAME,
+        RuleState: 'ENABLED',
+      },
+    });
+
+    new cdk.CfnResource(this, 'URAResponseByChainContributorInsights', {
+      type: 'AWS::CloudWatch::InsightRule',
+      properties: {
+        RuleBody: JSON.stringify({
+          Schema: {
+            Name: 'CloudWatchLogRule',
+            Version: 1,
+          },
+          AggregateOn: 'Count',
+          Contribution: {
+            Filters: [
+              {
+                Match: '$.tokenPairSymbolChain',
+                IsPresent: true,
+              },
+              {
+                Match: '$.msg',
+                StartsWith: ['tokens and chains response'],
+              },
+            ],
+            Keys: ['$.tokenPairSymbolChainBestQuote'],
+          },
+          LogFormat: 'JSON',
+          LogGroupNames: [`/aws/lambda/${quoteLambdaName}`],
+        }),
+        RuleName: RESPONSE_QUOTE_BY_CHAIN_RULE_NAME,
         RuleState: 'ENABLED',
       },
     });
@@ -171,6 +241,61 @@ export class DashboardStack extends cdk.NestedStack {
           {
             type: 'metric',
             x: 0,
+            y: 6,
+            width: 7,
+            height: 6,
+            properties: {
+              metrics: [
+                [
+                  'Uniswap',
+                  'QuoteResponseQuoteType-SYNTHETIC',
+                  'Service',
+                  SERVICE_NAME,
+                ],
+                ['.', 'QuoteResponseQuoteType-CLASSIC', '.', '.'],
+                ['.', 'QuoteResponseQuoteType-RFQ', '.', '.'],
+              ],
+              view: 'pie',
+              region,
+              period: 900,
+              stat: 'Sum',
+              title: 'Quote Response Types',
+            },
+          },
+          {
+            type: 'metric',
+            x: 7,
+            y: 6,
+            width: 17,
+            height: 6,
+            properties: {
+              metrics: [
+                [
+                  'Uniswap',
+                  'QuoteResponseQuoteType-SYNTHETIC',
+                  'Service',
+                  SERVICE_NAME,
+                ],
+                ['.', 'QuoteResponseQuoteType-CLASSIC', '.', '.'],
+                ['.', 'QuoteResponseQuoteType-RFQ', '.', '.'],
+              ],
+              view: 'timeSeries',
+              region,
+              period: 900,
+              stat: 'Sum',
+              stacked: true,
+              setPeriodToTimeRange: true,
+              yAxis: {
+                left: {
+                  showUnits: true,
+                },
+              },
+              title: 'Quote Response Types over Time',
+            },
+          },
+          {
+            type: 'metric',
+            x: 0,
             y: 12,
             width: 12,
             height: 7,
@@ -210,6 +335,52 @@ export class DashboardStack extends cdk.NestedStack {
               },
               region,
               title: 'Requested Quotes By Chain',
+              period: 300,
+              stat: 'Sum',
+            },
+          },
+          {
+            type: 'metric',
+            x: 0,
+            y: 12,
+            width: 12,
+            height: 7,
+            properties: {
+              view: 'timeSeries',
+              stacked: false,
+              insightRule: {
+                maxContributorCount: 25,
+                orderBy: 'Sum',
+                ruleName: RESPONSE_QUOTE_RULE_NAME,
+              },
+              legend: {
+                position: 'bottom',
+              },
+              region,
+              title: 'Response Quote with Type',
+              period: 300,
+              stat: 'Sum',
+            },
+          },
+          {
+            type: 'metric',
+            x: 12,
+            y: 12,
+            width: 12,
+            height: 7,
+            properties: {
+              view: 'timeSeries',
+              stacked: false,
+              insightRule: {
+                maxContributorCount: 25,
+                orderBy: 'Sum',
+                ruleName: RESPONSE_QUOTE_BY_CHAIN_RULE_NAME,
+              },
+              legend: {
+                position: 'bottom',
+              },
+              region,
+              title: 'Response Quote with Type By Chain',
               period: 300,
               stat: 'Sum',
             },

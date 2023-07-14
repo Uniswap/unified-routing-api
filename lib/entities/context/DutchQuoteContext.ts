@@ -11,6 +11,7 @@ import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
 import NodeCache from 'node-cache';
 import { QuoteByKey, QuoteContext } from '.';
+import { RoutingType } from '../../constants';
 import {
   ClassicQuote,
   ClassicQuoteDataJSON,
@@ -28,12 +29,14 @@ const BPS = 10000;
 
 // manages context around a single top level classic quote request
 export class DutchQuoteContext implements QuoteContext {
+  routingType: RoutingType.DUTCH_LIMIT;
   private log: Logger;
 
   public requestKey: string;
   public classicKey: string;
   public routeToNativeKey: string;
   public needsRouteToNative: boolean;
+  private synthetic: boolean | undefined;
 
   constructor(_log: Logger, public request: DutchRequest) {
     this.log = _log.child({ context: 'DutchQuoteContext' });
@@ -80,6 +83,13 @@ export class DutchQuoteContext implements QuoteContext {
     return result;
   }
 
+  public isSynthetic(): boolean {
+    if (!this.synthetic) {
+      throw new Error('Quote must be resolved before determining if it is synthetic');
+    }
+    return this.synthetic
+  }
+
   async resolveHandler(dependencies: QuoteByKey): Promise<Quote | null> {
     const classicQuote = dependencies[this.classicKey] as ClassicQuote;
     const routeBackToNative = dependencies[this.routeToNativeKey] as ClassicQuote;
@@ -93,8 +103,10 @@ export class DutchQuoteContext implements QuoteContext {
       this.log.warn('No quote or synthetic quote available');
       return null;
     } else if (!syntheticQuote || !this.request.config.useSyntheticQuotes) {
+      this.synthetic = false;
       return quote;
     } else if (!quote) {
+      this.synthetic = true;
       return syntheticQuote;
     }
 

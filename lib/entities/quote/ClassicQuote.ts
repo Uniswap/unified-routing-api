@@ -4,11 +4,11 @@ import { BigNumber } from 'ethers';
 
 import { PermitDetails, PermitSingleData, PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { v4 as uuidv4 } from 'uuid';
-import { Quote, QuoteRequest } from '..';
+import { QuoteRequest } from '..';
 import { RoutingType } from '../../constants';
 import { createPermitData } from '../../util/permit2';
 import { currentTimestampInSeconds } from '../../util/time';
-import { LogJSON } from './index';
+import { IQuote, LogJSON } from './index';
 
 export type V2ReserveJSON = {
   token: TokenInRouteJSON;
@@ -71,7 +71,7 @@ export type ClassicQuoteDataJSON = {
   slippage: number;
 };
 
-export class ClassicQuote implements Quote {
+export class ClassicQuote implements IQuote {
   public routingType: RoutingType.CLASSIC = RoutingType.CLASSIC;
   public createdAt: string;
   public readonly quoteId: string = uuidv4();
