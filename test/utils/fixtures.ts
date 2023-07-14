@@ -107,9 +107,10 @@ export const QUOTE_REQUEST_CLASSIC = makeClassicRequest({});
 
 export function makeDutchRequest(
   overrides: Partial<QuoteRequestBodyJSON>,
-  configOverrides?: Partial<DutchConfig>
+  configOverrides?: Partial<DutchConfig>,
+  baseRequestInfo = BASE_REQUEST_INFO_EXACT_IN
 ): DutchRequest {
-  const requestInfo = Object.assign({}, BASE_REQUEST_INFO_EXACT_IN, overrides);
+  const requestInfo = Object.assign({}, baseRequestInfo, overrides);
   return parseQuoteRequests({
     ...requestInfo,
     configs: [
