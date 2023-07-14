@@ -23,7 +23,7 @@ import {
 
 // if the gas is greater than this proportion of the whole trade size
 // then we will not route the order
-const GAS_PROPORTION_THRESHOLD_BPS = 5000;
+const GAS_PROPORTION_THRESHOLD_BPS = 2500;
 const BPS = 10000;
 
 // manages context around a single top level classic quote request

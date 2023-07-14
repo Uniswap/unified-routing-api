@@ -42,7 +42,7 @@ export class FieldValidator {
     'any.only': 'Invalid routingType',
   });
 
-  public static readonly algorithm = Joi.string().valid('alpha', 'legacy')
+  public static readonly algorithm = Joi.string().valid('alpha', 'legacy');
 
   public static readonly protocol = Joi.string().valid('V2', 'V3', 'MIXED');
 
@@ -74,7 +74,7 @@ export class FieldValidator {
 
   public static readonly classicConfig = Joi.object({
     routingType: FieldValidator.routingType.required(),
-    protocols: FieldValidator.protocols.optional(),
+    protocols: FieldValidator.protocols.required(),
     gasPriceWei: FieldValidator.gasPriceWei.optional(),
     simulateFromAddress: FieldValidator.address.optional(),
     recipient: FieldValidator.address.optional(),

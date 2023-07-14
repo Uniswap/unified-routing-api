@@ -26,6 +26,8 @@ import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../bas
 import { ContainerInjected, QuoterByRoutingType } from './injector';
 import { PostQuoteRequestBodyJoi } from './schema';
 
+const DISABLE_DUTCH_LIMIT_REQUESTS = false;
+
 export interface SingleQuoteJSON {
   routing: string;
   quote: QuoteJSON;
@@ -69,7 +71,15 @@ export class QuoteHandler extends APIGLambdaHandler<
     };
 
     log.info({ requestBody: request }, 'request');
-    const { quoteRequests, quoteInfo } = parseQuoteRequests(requestWithTokenAddresses);
+    const parsedRequests = parseQuoteRequests(requestWithTokenAddresses);
+    const { quoteInfo } = parsedRequests;
+    let { quoteRequests } = parsedRequests;
+
+    if (DISABLE_DUTCH_LIMIT_REQUESTS) {
+      log.info('Dutch Limit requests disabled, filtering out all Dutch Limit requests...');
+      quoteRequests = removeDutchRequests(quoteRequests);
+    }
+
     const contextHandler = new QuoteContextManager(parseQuoteContexts(quoteRequests, permit2Fetcher));
     const requests = contextHandler.getRequests();
     log.info({ requests }, 'requests');
@@ -233,4 +243,8 @@ export function quoteToResponse(quote: Quote): SingleQuoteJSON {
     routing: quote.routingType,
     quote: quote.toJSON(),
   };
+}
+
+export function removeDutchRequests(requests: QuoteRequest[]): QuoteRequest[] {
+  return requests.filter((request) => request.routingType !== RoutingType.DUTCH_LIMIT);
 }
