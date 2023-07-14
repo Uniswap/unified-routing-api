@@ -36,7 +36,6 @@ export class DutchQuoteContext implements QuoteContext {
   public classicKey: string;
   public routeToNativeKey: string;
   public needsRouteToNative: boolean;
-  private synthetic: boolean | undefined;
 
   constructor(_log: Logger, public request: DutchRequest) {
     this.log = _log.child({ context: 'DutchQuoteContext' });
@@ -81,13 +80,6 @@ export class DutchQuoteContext implements QuoteContext {
     }
 
     return result;
-  }
-
-  public isSynthetic(): boolean {
-    if (!this.synthetic) {
-      throw new Error('Quote must be resolved before determining if it is synthetic');
-    }
-    return this.synthetic
   }
 
   async resolveHandler(dependencies: QuoteByKey): Promise<Quote | null> {
