@@ -214,8 +214,13 @@ export class DutchQuoteContext implements QuoteContext {
       const tokenInChainId = this.request.info.tokenInChainId.toString();
       const tokenOutChainId = this.request.info.tokenOutChainId.toString();
 
-      tokenInEligibileTokens = syntheticEligibleTokensMap[tokenInChainId].map((token: string) => token.toLowerCase());
-      tokenOutEligibileTokens = syntheticEligibleTokensMap[tokenOutChainId].map((token: string) => token.toLowerCase());
+      // if we can't find the chainId in the map, then we assume there's no eligible tokens
+      tokenInEligibileTokens = (syntheticEligibleTokensMap[tokenInChainId] ?? []).map((token: string) =>
+        token.toLowerCase()
+      );
+      tokenOutEligibileTokens = (syntheticEligibleTokensMap[tokenOutChainId] ?? []).map((token: string) =>
+        token.toLowerCase()
+      );
     } catch (e) {
       throw new Error(`Error parsing SYNTHETIC_ELIGIBLE_TOKENS: ${e instanceof Error ? e.message : e}`);
     }
