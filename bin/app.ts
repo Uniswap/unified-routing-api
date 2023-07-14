@@ -131,10 +131,10 @@ export class APIPipeline extends Stack {
 
     const syntheticEligibleTokens = sm.Secret.fromSecretAttributes(
       this,
-      'all/unified-routing-api/synthetic-eligible-tokens-1',
+      'all/unified-routing-api/synthetic-eligible-tokens-2',
       {
         secretCompleteArn:
-          'arn:aws:secretsmanager:us-east-2:644039819003:secret:all/unified-routing-api/synthetic-eligible-tokens-1-H8tays',
+          'arn:aws:secretsmanager:us-east-2:644039819003:secret:all/unified-routing-api/synthetic-eligible-tokens-2-8VEJUV',
       }
     );
 
