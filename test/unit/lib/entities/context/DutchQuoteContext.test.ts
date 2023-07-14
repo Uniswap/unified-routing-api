@@ -4,7 +4,16 @@ import { BigNumber, ethers } from 'ethers';
 
 import { RoutingType } from '../../../../../lib/constants';
 import { DutchQuote, DutchQuoteContext, DutchQuoteDataJSON } from '../../../../../lib/entities';
-import { AMOUNT, AMOUNT_UNDER_GAS_THRESHOLD } from '../../../../constants';
+import {
+  AMOUNT,
+  AMOUNT_UNDER_GAS_THRESHOLD,
+  CHAIN_IN_ID,
+  CHAIN_OUT_ID,
+  INELIGIBLE_TOKEN,
+  SWAPPER,
+  TOKEN_IN,
+  TOKEN_OUT,
+} from '../../../../constants';
 import {
   createClassicQuote,
   createDutchQuote,
@@ -16,6 +25,20 @@ import {
 describe('DutchQuoteContext', () => {
   const logger = Logger.createLogger({ name: 'test' });
   logger.level(Logger.FATAL);
+
+  const OLD_ENV = process.env;
+
+  beforeAll(() => {
+    jest.resetModules(); // Most important - it clears the cache
+    process.env = {
+      ...OLD_ENV,
+      SYNTHETIC_ELIGIBLE_TOKENS: `{"1":["${TOKEN_IN.toLowerCase()}", "${TOKEN_OUT.toLowerCase()}"]}`,
+    }; // Make a copy
+  });
+
+  afterAll(() => {
+    process.env = OLD_ENV; // Restore old environment
+  });
 
   describe('dependencies', () => {
     it('returns expected dependencies when output is weth', () => {
@@ -345,6 +368,56 @@ describe('DutchQuoteContext', () => {
         const hasSize = context.hasOrderSizeForSynthetic(logger, classicQuote);
         expect(hasSize).toEqual(false);
       });
+    });
+  });
+
+  describe('hasSyntheticEligibleTokens', () => {
+    it('returns true if tokenOut and tokenIn are in SYNTHETIC_ELIGIBLE_TOKENS', async () => {
+      const baseRequest = {
+        tokenInChainId: CHAIN_IN_ID,
+        tokenOutChainId: CHAIN_OUT_ID,
+        requestId: 'requestId',
+        tokenIn: TOKEN_IN,
+        tokenOut: TOKEN_OUT,
+        amount: AMOUNT,
+        type: 'EXACT_INPUT',
+        swapper: SWAPPER,
+      };
+      const QUOTE_REQUEST_ELIGIBLE_TOKENS = makeDutchRequest({}, { useSyntheticQuotes: true }, baseRequest);
+      const context = new DutchQuoteContext(logger, QUOTE_REQUEST_ELIGIBLE_TOKENS);
+      expect(context.hasSyntheticEligibleTokens()).toEqual(true);
+    });
+
+    it('returns false if tokenIn not in SYNTHETIC_ELIGIBLE_TOKENS', async () => {
+      const baseRequest = {
+        tokenInChainId: CHAIN_IN_ID,
+        tokenOutChainId: CHAIN_OUT_ID,
+        requestId: 'requestId',
+        tokenIn: INELIGIBLE_TOKEN,
+        tokenOut: TOKEN_OUT,
+        amount: AMOUNT,
+        type: 'EXACT_INPUT',
+        swapper: SWAPPER,
+      };
+      const QUOTE_REQUEST_INELIGIBLE_TOKEN = makeDutchRequest({}, { useSyntheticQuotes: true }, baseRequest);
+      const context = new DutchQuoteContext(logger, QUOTE_REQUEST_INELIGIBLE_TOKEN);
+      expect(context.hasSyntheticEligibleTokens()).toEqual(false);
+    });
+
+    it('returns false if tokenOut not in SYNTHETIC_ELIGIBLE_TOKENS', async () => {
+      const baseRequest = {
+        tokenInChainId: CHAIN_IN_ID,
+        tokenOutChainId: CHAIN_OUT_ID,
+        requestId: 'requestId',
+        tokenIn: TOKEN_IN,
+        tokenOut: INELIGIBLE_TOKEN,
+        amount: AMOUNT,
+        type: 'EXACT_INPUT',
+        swapper: SWAPPER,
+      };
+      const QUOTE_REQUEST_INELIGIBLE_TOKEN = makeDutchRequest({}, { useSyntheticQuotes: true }, baseRequest);
+      const context = new DutchQuoteContext(logger, QUOTE_REQUEST_INELIGIBLE_TOKEN);
+      expect(context.hasSyntheticEligibleTokens()).toEqual(false);
     });
   });
 });

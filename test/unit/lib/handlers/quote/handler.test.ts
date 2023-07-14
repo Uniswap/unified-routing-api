@@ -43,6 +43,20 @@ import { setGlobalLogger } from '../../../../../lib/util/log';
 import { PERMIT2_USED, PERMIT_DETAILS, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../../constants';
 
 describe('QuoteHandler', () => {
+  const OLD_ENV = process.env;
+
+  beforeAll(() => {
+    jest.resetModules(); // Most important - it clears the cache
+    process.env = {
+      ...OLD_ENV,
+      SYNTHETIC_ELIGIBLE_TOKENS: `{"1":["${TOKEN_IN.toLowerCase()}", "${TOKEN_OUT.toLowerCase()}"]}`,
+    }; // Make a copy
+  });
+
+  afterAll(() => {
+    process.env = OLD_ENV; // Restore old environment
+  });
+
   describe('handler', () => {
     const logger = {
       info: jest.fn(),
