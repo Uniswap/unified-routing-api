@@ -99,7 +99,7 @@ export class QuoteHandler extends APIGLambdaHandler<
       throw new NoQuotesAvailable();
     }
 
-    this.emitQuoteResponsedMetrics(quoteInfo, bestQuote, resolvedValidQuotes);
+    this.emitQuoteResponseMetrics(quoteInfo, bestQuote, resolvedValidQuotes);
 
     return {
       statusCode: 200,
