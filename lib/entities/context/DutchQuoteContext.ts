@@ -20,6 +20,7 @@ import {
   Quote,
   QuoteRequest,
 } from '../../entities';
+import { checkDefined } from '../../util/preconditions';
 
 // if the gas is greater than this proportion of the whole trade size
 // then we will not route the order
@@ -160,6 +161,12 @@ export class DutchQuoteContext implements QuoteContext {
       return null;
     }
 
+    // tokens not eligible for synthetic; classic quote not usable
+    if (!this.hasSyntheticEligibleTokens()) {
+      this.log.info('Tokens not eligible for synthetic, skipping synthetic');
+      return null;
+    }
+
     return DutchQuote.fromClassicQuote(this.request, classicQuote as ClassicQuote);
   }
 
@@ -190,5 +197,32 @@ export class DutchQuoteContext implements QuoteContext {
       return false;
     }
     return true;
+  }
+
+  hasSyntheticEligibleTokens(): boolean {
+    let tokenInEligibileTokens: string[];
+    let tokenOutEligibileTokens: string[];
+
+    try {
+      const syntheticEligibleTokens = checkDefined(
+        process.env.SYNTHETIC_ELIGIBLE_TOKENS,
+        'SYNTHETIC_ELIGIBLE_TOKENS is not defined'
+      );
+
+      const syntheticEligibleTokensMap = JSON.parse(syntheticEligibleTokens);
+
+      const tokenInChainId = this.request.info.tokenInChainId.toString();
+      const tokenOutChainId = this.request.info.tokenOutChainId.toString();
+
+      tokenInEligibileTokens = syntheticEligibleTokensMap[tokenInChainId].map((token: string) => token.toLowerCase());
+      tokenOutEligibileTokens = syntheticEligibleTokensMap[tokenOutChainId].map((token: string) => token.toLowerCase());
+    } catch (e) {
+      throw new Error(`Error parsing SYNTHETIC_ELIGIBLE_TOKENS: ${e instanceof Error ? e.message : e}`);
+    }
+
+    return (
+      tokenInEligibileTokens.includes(this.request.info.tokenIn.toLowerCase()) &&
+      tokenOutEligibileTokens.includes(this.request.info.tokenOut.toLowerCase())
+    );
   }
 }

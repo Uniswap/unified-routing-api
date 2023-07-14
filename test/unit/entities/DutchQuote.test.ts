@@ -190,6 +190,15 @@ describe('DutchQuote', () => {
       expect(firstNonce).toEqual(secondNonce);
     });
 
+    it('Fails - not an eligible token', () => {
+      const classicQuote = createClassicQuote({}, {});
+      const dutchQuote = createDutchQuote({}, 'EXACT_INPUT');
+      const result = DutchQuote.fromClassicQuote(dutchQuote.request, classicQuote);
+      const firstNonce = result.toOrder().info.nonce;
+      const secondNonce = result.toOrder().info.nonce;
+      expect(firstNonce).toEqual(secondNonce);
+    });
+
     it('applies gas adjustment to endAmount', () => {
       const amount = '10000000000000000';
       const classicQuote = createClassicQuote({ amount }, {});
