@@ -18,6 +18,7 @@ export type QuoteByKey = {
 };
 
 export interface QuoteContext {
+  routingType: RoutingType;
   // base request of the context
   request: QuoteRequest;
 

@@ -10,8 +10,10 @@ import {
   QUOTE_REQUEST_DL_EXACT_OUT,
   QUOTE_REQUEST_DL_NATIVE_IN,
 } from '../../../../utils/fixtures';
+import { RoutingType } from '../../../../../lib/constants';
 
 class MockQuoteContext implements QuoteContext {
+  routingType: RoutingType.CLASSIC;
   private _dependencies: QuoteRequest[];
   private _quote: Quote | null;
   public _quoteDependencies: QuoteByKey;
