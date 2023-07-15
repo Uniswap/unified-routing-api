@@ -8,6 +8,7 @@ import { ClassicQuote, ClassicRequest, Quote } from '../../entities';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import { Quoter, QuoterType } from './index';
+import { AxiosError } from 'axios';
 
 export class RoutingApiQuoter implements Quoter {
   static readonly type: QuoterType.ROUTING_API;
@@ -26,6 +27,15 @@ export class RoutingApiQuoter implements Quoter {
       metrics.putMetric(`RoutingApiQuoterSuccess`, 1);
       return ClassicQuote.fromResponseBody(request, response.data);
     } catch (e) {
+      if (e instanceof AxiosError) {
+        if (e.response?.status?.toString().startsWith("4")) {
+          metrics.putMetric(`RoutingApiQuote4xxErr`, 1)
+        } else {
+          metrics.putMetric(`RoutingApiQuote5xxErr`, 1)
+        }
+      } else {
+        metrics.putMetric(`RoutingApiQuote5xxErr`, 1)
+      }
       log.error(e, 'RoutingApiQuoterErr');
       metrics.putMetric(`RoutingApiQuoterErr`, 1);
       return null;

@@ -246,12 +246,7 @@ export class DashboardStack extends cdk.NestedStack {
             height: 6,
             properties: {
               metrics: [
-                [
-                  'Uniswap',
-                  'QuoteResponseQuoteType-SYNTHETIC',
-                  'Service',
-                  SERVICE_NAME,
-                ],
+                ['Uniswap', 'QuoteResponseQuoteType-SYNTHETIC', 'Service', SERVICE_NAME],
                 ['.', 'QuoteResponseQuoteType-CLASSIC', '.', '.'],
                 ['.', 'QuoteResponseQuoteType-RFQ', '.', '.'],
               ],
@@ -270,12 +265,7 @@ export class DashboardStack extends cdk.NestedStack {
             height: 6,
             properties: {
               metrics: [
-                [
-                  'Uniswap',
-                  'QuoteResponseQuoteType-SYNTHETIC',
-                  'Service',
-                  SERVICE_NAME,
-                ],
+                ['Uniswap', 'QuoteResponseQuoteType-SYNTHETIC', 'Service', SERVICE_NAME],
                 ['.', 'QuoteResponseQuoteType-CLASSIC', '.', '.'],
                 ['.', 'QuoteResponseQuoteType-RFQ', '.', '.'],
               ],
@@ -478,13 +468,15 @@ export class DashboardStack extends cdk.NestedStack {
             height: 6,
             properties: {
               metrics: [
-                [{ expression: '(m3/m1)*100', label: 'RoutingAPIRequestErrorRate', id: 'e1' }],
+                [{ expression: '(m3/m1)*100', label: 'RoutingAPIRequest4xxErrorRate', id: 'e1' }],
                 [{ expression: '(m4/m5)*100', label: 'RFQAPIRequestErrorRate', id: 'e2' }],
+                [{ expression: '(m6/m1)*100', label: 'RoutingAPIRequest5xxErrorRate', id: 'e3' }],
                 ['Uniswap', 'RoutingApiQuoterRequest', 'Service', SERVICE_NAME, { id: 'm1', visible: false }],
                 ['.', 'RoutingApiQuoterSuccess', '.', '.', { id: 'm2', visible: false }],
-                ['.', 'RoutingApiQuoterErr', '.', '.', { id: 'm3', visible: false }],
+                ['.', 'RoutingApiQuoter4xxErr', '.', '.', { id: 'm3', visible: false }],
                 ['.', 'RfqQuoterErrRfq', '.', '.', { id: 'm4', visible: false }],
                 ['.', 'RfqQuoterRequest', '.', '.', { id: 'm5', visible: false }],
+                ['.', 'RoutingApiQuoter5xxErr', '.', '.', { id: 'm6', visible: false }],
               ],
               view: 'timeSeries',
               stacked: false,
