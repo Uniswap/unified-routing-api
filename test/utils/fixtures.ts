@@ -65,6 +65,24 @@ export const QUOTE_REQUEST_BODY_MULTI: QuoteRequestBodyJSON = {
   ],
 };
 
+export const QUOTE_REQUEST_BODY_MULTI_SYNTHETIC: QuoteRequestBodyJSON = {
+  ...BASE_REQUEST_INFO_EXACT_IN,
+  configs: [
+    {
+      routingType: RoutingType.DUTCH_LIMIT,
+      swapper: SWAPPER,
+      exclusivityOverrideBps: 12,
+      auctionPeriodSecs: 60,
+      deadlineBufferSecs: 12,
+      useSyntheticQuotes: true,
+    },
+    {
+      routingType: RoutingType.CLASSIC,
+      protocols: ['V3', 'V2', 'MIXED'],
+    },
+  ],
+};
+
 export const DL_REQUEST_BODY = {
   ...BASE_REQUEST_INFO_EXACT_IN,
   configs: [
