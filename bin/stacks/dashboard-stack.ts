@@ -444,7 +444,7 @@ export class DashboardStack extends cdk.NestedStack {
           {
             type: 'metric',
             x: 0,
-            y: 37,
+            y: 55,
             width: 24,
             height: 5,
             properties: {
@@ -506,6 +506,25 @@ export class DashboardStack extends cdk.NestedStack {
               region,
               period: 300,
               title: 'Dependency Services Requests/Responses',
+            },
+          },
+          {
+            type: 'metric',
+            x: 0,
+            y: 50,
+            width: 24,
+            height: 5,
+            properties: {
+              metrics: [
+                ['Uniswap', 'RfqQuoterLatency', 'Service', SERVICE_NAME],
+                ['.', 'RoutingApiQuoterLatency', '.', '.'],
+              ],
+              view: 'timeSeries',
+              stacked: false,
+              region,
+              stat: 'p99',
+              period: 300,
+              title: 'Dependency Services Latency p99',
             },
           },
         ],

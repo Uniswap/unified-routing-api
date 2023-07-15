@@ -3,12 +3,12 @@ import { NATIVE_NAMES_BY_ID } from '@uniswap/smart-order-router';
 import querystring from 'querystring';
 import axios from './helpers';
 
+import { AxiosError } from 'axios';
 import { NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { ClassicQuote, ClassicRequest, Quote } from '../../entities';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import { Quoter, QuoterType } from './index';
-import { AxiosError } from 'axios';
 
 export class RoutingApiQuoter implements Quoter {
   static readonly type: QuoterType.ROUTING_API;
@@ -23,18 +23,20 @@ export class RoutingApiQuoter implements Quoter {
     metrics.putMetric(`RoutingApiQuoterRequest`, 1);
     try {
       const req = this.buildRequest(request);
+      const now = Date.now();
       const response = await axios.get(req, { headers: { 'x-api-key': this.routingApiKey } });
       metrics.putMetric(`RoutingApiQuoterSuccess`, 1);
+      metrics.putMetric(`RoutingApiQuoterLatency`, Date.now() - now);
       return ClassicQuote.fromResponseBody(request, response.data);
     } catch (e) {
       if (e instanceof AxiosError) {
-        if (e.response?.status?.toString().startsWith("4")) {
-          metrics.putMetric(`RoutingApiQuote4xxErr`, 1)
+        if (e.response?.status?.toString().startsWith('4')) {
+          metrics.putMetric(`RoutingApiQuote4xxErr`, 1);
         } else {
-          metrics.putMetric(`RoutingApiQuote5xxErr`, 1)
+          metrics.putMetric(`RoutingApiQuote5xxErr`, 1);
         }
       } else {
-        metrics.putMetric(`RoutingApiQuote5xxErr`, 1)
+        metrics.putMetric(`RoutingApiQuote5xxErr`, 1);
       }
       log.error(e, 'RoutingApiQuoterErr');
       metrics.putMetric(`RoutingApiQuoterErr`, 1);

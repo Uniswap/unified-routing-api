@@ -23,6 +23,7 @@ export class RfqQuoter implements Quoter {
     }
 
     const swapper = request.config.swapper;
+    const now = Date.now()
     const requests = [
       axios.post(
         `${this.rfqUrl}quote`,
@@ -57,10 +58,12 @@ export class RfqQuoter implements Quoter {
         } else {
           if (results[1].status == 'rejected') {
             log.debug(results[1].reason, 'RfqQuoterErr: GET nonce failed');
+            metrics.putMetric(`RfqQuoterLatency`, Date.now() - now);
             metrics.putMetric(`RfqQuoterNonceErr`, 1);
             quote = DutchQuote.fromResponseBody(request, response, generateRandomNonce());
           } else {
             log.info(results[1].value.data, 'RfqQuoter: GET nonce success');
+            metrics.putMetric(`RfqQuoterLatency`, Date.now() - now);
             metrics.putMetric(`RfqQuoterSuccess`, 1);
             quote = DutchQuote.fromResponseBody(
               request,
@@ -71,6 +74,7 @@ export class RfqQuoter implements Quoter {
         }
       }
     });
+    
 
     return quote;
   }
