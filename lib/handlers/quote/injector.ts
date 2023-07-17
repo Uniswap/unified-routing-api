@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { default as bunyan, default as Logger } from 'bunyan';
 
-import { ChainId } from '@uniswap/smart-order-router';
+import { ChainId } from '@uniswap/sdk-core';
 import { MetricsLogger } from 'aws-embedded-metrics';
 import { SUPPORTED_CHAINS } from '../../config/chains';
 import { RoutingType } from '../../constants';
