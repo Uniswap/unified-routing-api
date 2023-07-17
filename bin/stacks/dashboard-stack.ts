@@ -286,6 +286,51 @@ export class DashboardStack extends cdk.NestedStack {
           {
             type: 'metric',
             x: 0,
+            y: 6,
+            width: 7,
+            height: 6,
+            properties: {
+              metrics: [
+                ['Uniswap', 'UniswapXQuoteResponseQuoteType-SYNTHETIC', 'Service', SERVICE_NAME],
+                ['.', 'UniswapXQuoteResponseQuoteType-CLASSIC', '.', '.'],
+                ['.', 'UniswapXQuoteResponseQuoteType-RFQ', '.', '.'],
+              ],
+              view: 'pie',
+              region,
+              period: 900,
+              stat: 'Sum',
+              title: 'UniswapX Requested: Quote Response Types',
+            },
+          },
+          {
+            type: 'metric',
+            x: 7,
+            y: 6,
+            width: 17,
+            height: 6,
+            properties: {
+              metrics: [
+                ['Uniswap', 'UniswapXQuoteResponseQuoteType-SYNTHETIC', 'Service', SERVICE_NAME],
+                ['.', 'UniswapXQuoteResponseQuoteType-CLASSIC', '.', '.'],
+                ['.', 'UniswapXQuoteResponseQuoteType-RFQ', '.', '.'],
+              ],
+              view: 'timeSeries',
+              region,
+              period: 900,
+              stat: 'Sum',
+              stacked: true,
+              setPeriodToTimeRange: true,
+              yAxis: {
+                left: {
+                  showUnits: true,
+                },
+              },
+              title: 'UniswapX Requested: Quote Response Types over Time',
+            },
+          },
+          {
+            type: 'metric',
+            x: 0,
             y: 12,
             width: 12,
             height: 7,
