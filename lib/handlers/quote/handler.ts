@@ -99,7 +99,7 @@ export class QuoteHandler extends APIGLambdaHandler<
       throw new NoQuotesAvailable();
     }
 
-    this.emitQuoteResponseMetrics(quoteInfo, bestQuote, resolvedValidQuotes);
+    this.emitQuoteResponseMetrics(quoteInfo, bestQuote, resolvedValidQuotes, uniswapXRequested);
 
     return {
       statusCode: 200,
@@ -147,7 +147,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     metrics.putMetric(`QuoteRequestedChainId${chainId.toString()}`, 1, Unit.Count);
   }
 
-  private emitQuoteResponseMetrics(info: QuoteRequestInfo, bestQuote: Quote, _allQuotes: Quote[]) {
+  private emitQuoteResponseMetrics(info: QuoteRequestInfo, bestQuote: Quote, _allQuotes: Quote[], _uniswapXRequested: boolean) {
     const { tokenInChainId: chainId, tokenIn, tokenOut } = info;
     const tokenInAbbr = tokenIn.slice(0, 6);
     const tokenOutAbbr = tokenOut.slice(0, 6);
@@ -188,6 +188,16 @@ export class QuoteHandler extends APIGLambdaHandler<
       'tokens and chains response'
     );
 
+    // UniswapX QuoteResponse metrics
+    if (_uniswapXRequested) {
+      metrics.putMetric(`UniswapXRequestedQuoteResponseQuoteType-${bestQuoteType}`, 1, Unit.Count);
+      metrics.putMetric(`UniswapXQuoteResponseRoutingType-${bestQuote.routingType}`, 1, Unit.Count);
+      metrics.putMetric(`UniswapXQuoteResponseQuoteType-${bestQuoteType}ChainId${chainId.toString()}`, 1, Unit.Count);
+      metrics.putMetric(`UniswapXQuoteResponseRoutingType-${bestQuote.routingType}ChainId${chainId.toString()}`, 1, Unit.Count);
+      metrics.putMetric(`UniswapXQuoteResponseChainId${chainId.toString()}`, 1, Unit.Count);
+    }
+
+    // Overall QuoteResponse metrics
     metrics.putMetric(`QuoteResponseRoutingType-${bestQuote.routingType}`, 1, Unit.Count);
     metrics.putMetric(`QuoteResponseQuoteType-${bestQuoteType}`, 1, Unit.Count);
     metrics.putMetric(`QuoteResponseRoutingType-${bestQuote.routingType}ChainId${chainId.toString()}`, 1, Unit.Count);
