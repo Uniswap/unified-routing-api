@@ -1,8 +1,8 @@
 import { BigNumber } from 'ethers';
 
-import { DutchQuoteDataJSON, QuoteRequest } from '..';
+import { DutchQuote, DutchQuoteDataJSON, QuoteRequest } from '..';
 import { RoutingType } from '../../constants';
-import { ClassicQuoteDataJSON } from './ClassicQuote';
+import { ClassicQuote, ClassicQuoteDataJSON } from './ClassicQuote';
 
 export * from './ClassicQuote';
 export * from './DutchQuote';
@@ -30,7 +30,7 @@ export type LogJSON = {
   gasPriceWei?: string;
 };
 
-export interface Quote {
+export interface IQuote {
   routingType: RoutingType;
   amountOut: BigNumber;
   amountIn: BigNumber;
@@ -38,3 +38,5 @@ export interface Quote {
   request: QuoteRequest;
   toLog(): LogJSON;
 }
+
+export type Quote = DutchQuote | ClassicQuote

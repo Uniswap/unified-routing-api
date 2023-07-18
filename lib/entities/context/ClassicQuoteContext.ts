@@ -7,6 +7,7 @@ import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
 
 // manages context around a single top level classic quote request
 export class ClassicQuoteContext implements QuoteContext {
+  routingType: RoutingType.CLASSIC;
   private log: Logger;
 
   constructor(_log: Logger, public request: ClassicRequest, private permit2Fetcher: Permit2Fetcher) {

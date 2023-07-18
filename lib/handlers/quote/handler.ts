@@ -4,10 +4,12 @@ import { TradeType } from '@uniswap/sdk-core';
 import { Unit } from 'aws-embedded-metrics';
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 
+import _ from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
 import { RoutingType } from '../../constants';
 import {
   ClassicQuote,
+  DutchQuoteType,
   parseQuoteContexts,
   parseQuoteRequests,
   Quote,
@@ -91,10 +93,13 @@ export class QuoteHandler extends APIGLambdaHandler<
     this.emitQuoteRequestedMetrics(quoteInfo, quoteRequests);
 
     const uniswapXRequested = requests.filter((request) => request.routingType === RoutingType.DUTCH_LIMIT).length > 0;
-    const bestQuote = await getBestQuote(resolvedQuotes.filter((q) => q !== null) as Quote[], uniswapXRequested);
+    const resolvedValidQuotes = resolvedQuotes.filter((q) => q !== null) as Quote[];
+    const bestQuote = await getBestQuote(resolvedValidQuotes, uniswapXRequested);
     if (!bestQuote) {
       throw new NoQuotesAvailable();
     }
+
+    this.emitQuoteResponseMetrics(quoteInfo, bestQuote, resolvedValidQuotes, uniswapXRequested);
 
     return {
       statusCode: 200,
@@ -119,7 +124,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     const tokenPairSymbolChain = `${tokenInAbbr}/${tokenOutAbbr}/${chainId}`;
 
     // This log is used to generate the quotes by token dashboard.
-    log.info({ tokenIn, tokenOut, chainId, tokenPairSymbol, tokenPairSymbolChain }, 'tokens and chains');
+    log.info({ tokenIn, tokenOut, chainId, tokenPairSymbol, tokenPairSymbolChain }, 'tokens and chains requests');
 
     // This log is used for ingesting into redshift for analytics purposes.
     log.info({
@@ -140,6 +145,64 @@ export class QuoteHandler extends APIGLambdaHandler<
     });
 
     metrics.putMetric(`QuoteRequestedChainId${chainId.toString()}`, 1, Unit.Count);
+  }
+
+  private emitQuoteResponseMetrics(info: QuoteRequestInfo, bestQuote: Quote, _allQuotes: Quote[], _uniswapXRequested: boolean) {
+    const { tokenInChainId: chainId, tokenIn, tokenOut } = info;
+    const tokenInAbbr = tokenIn.slice(0, 6);
+    const tokenOutAbbr = tokenOut.slice(0, 6);
+    const tokenPairSymbol = `${tokenInAbbr}/${tokenOutAbbr}`;
+    const tokenPairSymbolChain = `${tokenInAbbr}/${tokenOutAbbr}/${chainId}`;
+
+    enum QuoteType {
+      CLASSIC = 'CLASSIC',
+      SYNTHETIC = 'SYNTHETIC',
+      RFQ = 'RFQ',
+    }
+
+    let bestQuoteType: QuoteType;
+    if (bestQuote.routingType == RoutingType.DUTCH_LIMIT) {
+      if (bestQuote.quoteType == DutchQuoteType.RFQ) {
+        bestQuoteType = QuoteType.RFQ;
+      } else {
+        bestQuoteType = QuoteType.SYNTHETIC;
+      }
+    } else {
+      bestQuoteType = QuoteType.CLASSIC;
+    }
+
+    const tokenPairSymbolBestQuote = `${tokenInAbbr}/${tokenOutAbbr}/${bestQuoteType.toString()}`;
+    const tokenPairSymbolChainBestQuote = `${tokenInAbbr}/${tokenOutAbbr}/${chainId}/${bestQuoteType.toString()}`;
+
+    // This log is used to generate the requests/responses by token dashboard.
+    log.info(
+      {
+        tokenIn,
+        tokenOut,
+        tokenPairSymbolBestQuote,
+        tokenPairSymbolChainBestQuote,
+        routingType: bestQuote.routingType,
+        tokenPairSymbol,
+        tokenPairSymbolChain,
+      },
+      'tokens and chains response'
+    );
+
+    // UniswapX QuoteResponse metrics
+    if (_uniswapXRequested) {
+      metrics.putMetric(`UniswapXRequestedQuoteResponseQuoteType-${bestQuoteType}`, 1, Unit.Count);
+      metrics.putMetric(`UniswapXQuoteResponseRoutingType-${bestQuote.routingType}`, 1, Unit.Count);
+      metrics.putMetric(`UniswapXQuoteResponseQuoteType-${bestQuoteType}ChainId${chainId.toString()}`, 1, Unit.Count);
+      metrics.putMetric(`UniswapXQuoteResponseRoutingType-${bestQuote.routingType}ChainId${chainId.toString()}`, 1, Unit.Count);
+      metrics.putMetric(`UniswapXQuoteResponseChainId${chainId.toString()}`, 1, Unit.Count);
+    }
+
+    // Overall QuoteResponse metrics
+    metrics.putMetric(`QuoteResponseRoutingType-${bestQuote.routingType}`, 1, Unit.Count);
+    metrics.putMetric(`QuoteResponseQuoteType-${bestQuoteType}`, 1, Unit.Count);
+    metrics.putMetric(`QuoteResponseRoutingType-${bestQuote.routingType}ChainId${chainId.toString()}`, 1, Unit.Count);
+    metrics.putMetric(`QuoteResponseQuoteType-${bestQuoteType}ChainId${chainId.toString()}`, 1, Unit.Count);
+    metrics.putMetric(`QuoteResponseChainId${chainId.toString()}`, 1, Unit.Count);
   }
 
   protected afterResponseHook(event: APIGatewayProxyEvent, _context: Context, response: APIGatewayProxyResult): void {

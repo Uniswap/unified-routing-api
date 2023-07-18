@@ -4,7 +4,7 @@ import { BigNumber, ethers } from 'ethers';
 
 import { PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { v4 as uuidv4 } from 'uuid';
-import { Quote, QuoteJSON } from '.';
+import { IQuote, QuoteJSON } from '.';
 import { DutchRequest } from '..';
 import { BPS, NATIVE_ADDRESS, RoutingType, UNISWAPX_BASE_GAS, WETH_UNWRAP_GAS, WETH_WRAP_GAS } from '../../constants';
 import { log } from '../../util/log';
@@ -41,7 +41,12 @@ type Amounts = {
   amountOut: BigNumber;
 };
 
-export class DutchQuote implements Quote {
+export enum DutchQuoteType {
+  RFQ,
+  SYNTHETIC,
+}
+
+export class DutchQuote implements IQuote {
   public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
   // Add 1bps price improvmement to favor Dutch
   public static amountOutImprovementExactIn = BigNumber.from(10001);
@@ -66,6 +71,7 @@ export class DutchQuote implements Quote {
       BigNumber.from(body.amountOut),
       amountOutEnd,
       body.swapper,
+      DutchQuoteType.RFQ,
       body.filler,
       nonce
     );
@@ -106,6 +112,7 @@ export class DutchQuote implements Quote {
       startAmounts.amountOut,
       endAmounts.amountOut,
       request.config.swapper,
+      DutchQuoteType.SYNTHETIC,
       '', // synthetic quote has no filler
       generateRandomNonce() // synthetic quote has no nonce
     );
@@ -148,6 +155,7 @@ export class DutchQuote implements Quote {
       amountOutStart,
       amountOutEnd,
       quote.swapper,
+      quote.quoteType,
       quote.filler,
       quote.nonce
     );
@@ -166,6 +174,7 @@ export class DutchQuote implements Quote {
     public readonly amountOutStart: BigNumber,
     public readonly amountOutEnd: BigNumber,
     public readonly swapper: string,
+    public readonly quoteType: DutchQuoteType,
     public readonly filler?: string,
     public readonly nonce?: string
   ) {

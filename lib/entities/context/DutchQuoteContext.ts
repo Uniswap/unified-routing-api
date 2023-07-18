@@ -11,6 +11,7 @@ import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
 import NodeCache from 'node-cache';
 import { QuoteByKey, QuoteContext } from '.';
+import { RoutingType } from '../../constants';
 import {
   ClassicQuote,
   ClassicQuoteDataJSON,
@@ -29,6 +30,7 @@ const BPS = 10000;
 
 // manages context around a single top level classic quote request
 export class DutchQuoteContext implements QuoteContext {
+  routingType: RoutingType.DUTCH_LIMIT;
   private log: Logger;
 
   public requestKey: string;

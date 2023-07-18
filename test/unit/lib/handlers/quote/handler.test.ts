@@ -15,6 +15,7 @@ import {
   DL_QUOTE_EXACT_OUT_WORSE,
   DL_REQUEST_BODY,
   QUOTE_REQUEST_BODY_MULTI,
+  QUOTE_REQUEST_BODY_MULTI_SYNTHETIC,
   QUOTE_REQUEST_CLASSIC,
   QUOTE_REQUEST_DL,
   QUOTE_REQUEST_MULTI,
@@ -64,6 +65,7 @@ describe('QuoteHandler', () => {
       child: () => ({
         info: jest.fn(),
         error: jest.fn(),
+        warn: jest.fn(),
       }),
     };
 
@@ -437,6 +439,78 @@ describe('QuoteHandler', () => {
         const responseBody = JSON.parse(response.body);
         const quote = responseBody.quote;
         expect(quote.encodedOrder).not.toBe(null);
+      });
+
+      describe('Synthetic quote eligible token filtering', () => {
+        it('should not filter out synthetic quote when tokens are eligible', async () => {
+          const quoters = {
+            [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
+          };
+          const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+          const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+
+          const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(
+            getEvent(QUOTE_REQUEST_BODY_MULTI_SYNTHETIC),
+            {} as unknown as Context
+          );
+
+          const bodyJSON = JSON.parse(res.body);
+          expect(bodyJSON.routing).toEqual(RoutingType.DUTCH_LIMIT);
+        });
+      });
+
+      it('should filter out synthetic quote when the TOKEN_IN is not in the eligible token list', async () => {
+        // remove TOKEN_IN from eligible tokens
+        const OLD_ENV = process.env;
+        process.env = {
+          ...OLD_ENV,
+          SYNTHETIC_ELIGIBLE_TOKENS: `{"1":["${TOKEN_OUT.toLowerCase()}"]}`,
+        };
+
+        const quoters = {
+          [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
+        };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+
+        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(
+          getEvent(QUOTE_REQUEST_BODY_MULTI_SYNTHETIC),
+          {} as unknown as Context
+        );
+
+        const bodyJSON = JSON.parse(res.body);
+
+        // restore env
+        process.env = OLD_ENV;
+
+        expect(bodyJSON.routing).toEqual(RoutingType.CLASSIC);
+      });
+
+      it('should filter out synthetic quote when the TOKEN_OUT is not in the eligible token list', async () => {
+        // remove TOKEN_IN from eligible tokens
+        const OLD_ENV = process.env;
+        process.env = {
+          ...OLD_ENV,
+          SYNTHETIC_ELIGIBLE_TOKENS: `{"1":["${TOKEN_IN.toLowerCase()}"]}`,
+        };
+
+        const quoters = {
+          [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
+        };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+
+        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(
+          getEvent(QUOTE_REQUEST_BODY_MULTI_SYNTHETIC),
+          {} as unknown as Context
+        );
+
+        const bodyJSON = JSON.parse(res.body);
+
+        // restore env
+        process.env = OLD_ENV;
+
+        expect(bodyJSON.routing).toEqual(RoutingType.CLASSIC);
       });
     });
 
