@@ -1,10 +1,9 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { AllowanceTransfer, PermitSingle } from '@uniswap/permit2-sdk';
-import { Currency, CurrencyAmount, Ether, Fraction, Token, WETH9 } from '@uniswap/sdk-core';
+import { ChainId, Currency, CurrencyAmount, Ether, Fraction, Token, WETH9 } from '@uniswap/sdk-core';
 import {
   CEUR_CELO,
   CEUR_CELO_ALFAJORES,
-  ChainId,
   CUSD_CELO,
   CUSD_CELO_ALFAJORES,
   DAI_MAINNET,
@@ -38,7 +37,7 @@ import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { Permit2__factory } from '../../lib/types/ext';
 import { resetAndFundAtBlock } from '../utils/forkAndFund';
 import { getBalance, getBalanceAndApprove } from '../utils/getBalanceAndApprove';
-import { DAI_ON, getAmount, getAmountFromToken, UNI_MAINNET, USDC_ON, USDT_ON, WNATIVE_ON } from '../utils/tokens';
+import { DAI_ON, getAmount, getAmountFromToken, UNI_MAINNET, USDC_ON, WNATIVE_ON } from '../utils/tokens';
 
 const { ethers } = hre;
 
@@ -2205,59 +2204,45 @@ describe('quote', function () {
 
   const TEST_ERC20_1: { [chainId in ChainId]: null | Token } = {
     [ChainId.MAINNET]: USDC_ON(1),
-    [ChainId.ROPSTEN]: USDC_ON(ChainId.ROPSTEN),
-    [ChainId.RINKEBY]: USDC_ON(ChainId.RINKEBY),
-    [ChainId.GÖRLI]: USDC_ON(ChainId.GÖRLI),
-    [ChainId.KOVAN]: USDC_ON(ChainId.KOVAN),
     [ChainId.OPTIMISM]: USDC_ON(ChainId.OPTIMISM),
-    [ChainId.OPTIMISTIC_KOVAN]: USDC_ON(ChainId.OPTIMISTIC_KOVAN),
     [ChainId.OPTIMISM_GOERLI]: USDC_ON(ChainId.OPTIMISM_GOERLI),
     [ChainId.ARBITRUM_ONE]: USDC_ON(ChainId.ARBITRUM_ONE),
-    [ChainId.ARBITRUM_RINKEBY]: USDC_ON(ChainId.ARBITRUM_RINKEBY),
     [ChainId.POLYGON]: USDC_ON(ChainId.POLYGON),
     [ChainId.POLYGON_MUMBAI]: USDC_ON(ChainId.POLYGON_MUMBAI),
+    [ChainId.BNB]: USDC_ON(ChainId.BNB),
+    [ChainId.AVALANCHE]: USDC_ON(ChainId.AVALANCHE),
+    [ChainId.GOERLI]: USDC_ON(ChainId.GOERLI),
+    [ChainId.SEPOLIA]: USDC_ON(ChainId.SEPOLIA),
     [ChainId.CELO]: CUSD_CELO,
     [ChainId.CELO_ALFAJORES]: CUSD_CELO_ALFAJORES,
     [ChainId.MOONBEAM]: null,
     [ChainId.GNOSIS]: null,
     [ChainId.ARBITRUM_GOERLI]: null,
-    [ChainId.BSC]: USDC_ON(ChainId.BSC),
   };
 
   const TEST_ERC20_2: { [chainId in ChainId]: Token | null } = {
     [ChainId.MAINNET]: DAI_ON(1),
-    [ChainId.ROPSTEN]: DAI_ON(ChainId.ROPSTEN),
-    [ChainId.RINKEBY]: DAI_ON(ChainId.RINKEBY),
-    [ChainId.GÖRLI]: DAI_ON(ChainId.GÖRLI),
-    [ChainId.KOVAN]: DAI_ON(ChainId.KOVAN),
     [ChainId.OPTIMISM]: DAI_ON(ChainId.OPTIMISM),
-    [ChainId.OPTIMISTIC_KOVAN]: DAI_ON(ChainId.OPTIMISTIC_KOVAN),
     [ChainId.OPTIMISM_GOERLI]: DAI_ON(ChainId.OPTIMISM_GOERLI),
     [ChainId.ARBITRUM_ONE]: DAI_ON(ChainId.ARBITRUM_ONE),
-    [ChainId.ARBITRUM_RINKEBY]: DAI_ON(ChainId.ARBITRUM_RINKEBY),
     [ChainId.POLYGON]: DAI_ON(ChainId.POLYGON),
     [ChainId.POLYGON_MUMBAI]: DAI_ON(ChainId.POLYGON_MUMBAI),
+    [ChainId.BNB]: DAI_ON(ChainId.BNB),
+    [ChainId.AVALANCHE]: DAI_ON(ChainId.AVALANCHE),
+    [ChainId.GOERLI]: DAI_ON(ChainId.GOERLI),
+    [ChainId.SEPOLIA]: DAI_ON(ChainId.SEPOLIA),
     [ChainId.CELO]: CEUR_CELO,
     [ChainId.CELO_ALFAJORES]: CEUR_CELO_ALFAJORES,
     [ChainId.MOONBEAM]: null,
     [ChainId.GNOSIS]: null,
     [ChainId.ARBITRUM_GOERLI]: null,
-    [ChainId.BSC]: USDT_ON(ChainId.BSC),
   };
 
   // TODO: Find valid pools/tokens on optimistic kovan and polygon mumbai. We skip those tests for now.
   for (const chain of _.filter(
     SUPPORTED_CHAINS[RoutingType.CLASSIC],
     (c) =>
-      c != ChainId.OPTIMISTIC_KOVAN &&
-      c != ChainId.POLYGON_MUMBAI &&
-      c != ChainId.ARBITRUM_RINKEBY &&
-      c != ChainId.ARBITRUM_GOERLI &&
-      c != ChainId.CELO_ALFAJORES &&
-      c != ChainId.KOVAN &&
-      c != ChainId.RINKEBY &&
-      c != ChainId.ROPSTEN &&
-      c != ChainId.GÖRLI
+      c !== ChainId.POLYGON_MUMBAI && c !== ChainId.ARBITRUM_GOERLI && c !== ChainId.CELO_ALFAJORES && c !== ChainId.GOERLI && c !== ChainId.SEPOLIA
   )) {
     for (const type of ['EXACT_INPUT', 'EXACT_OUTPUT']) {
       const erc1 = TEST_ERC20_1[chain];

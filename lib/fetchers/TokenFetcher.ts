@@ -1,8 +1,8 @@
 import DEFAULT_TOKEN_LIST from '@uniswap/default-token-list';
 
+import { ChainId } from '@uniswap/sdk-core';
 import {
   CachingTokenListProvider,
-  ChainId,
   ITokenListProvider,
   ITokenProvider,
   NATIVE_NAMES_BY_ID,
