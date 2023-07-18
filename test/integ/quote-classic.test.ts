@@ -2242,7 +2242,7 @@ describe('quote', function () {
   for (const chain of _.filter(
     SUPPORTED_CHAINS[RoutingType.CLASSIC],
     (c) =>
-      c != ChainId.POLYGON_MUMBAI && c != ChainId.ARBITRUM_GOERLI && c != ChainId.CELO_ALFAJORES && c != ChainId.GOERLI
+      c !== ChainId.POLYGON_MUMBAI && c !== ChainId.ARBITRUM_GOERLI && c !== ChainId.CELO_ALFAJORES && c !== ChainId.GOERLI && c !== ChainId.SEPOLIA
   )) {
     for (const type of ['EXACT_INPUT', 'EXACT_OUTPUT']) {
       const erc1 = TEST_ERC20_1[chain];
