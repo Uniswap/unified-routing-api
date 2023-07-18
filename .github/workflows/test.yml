@@ -24,8 +24,7 @@ jobs:
       - name: Install dependencies
         run: |
           npm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_AUTH_TOKEN }}" \
-          && yarn install --frozen-lockfile
+          && yarn install --frozen-lockfile && yarn build
 
       - name: Install dependencies
         run: yarn test
-
