@@ -7,13 +7,13 @@ import { CodeBuildStep, CodePipeline, CodePipelineSource } from 'aws-cdk-lib/pip
 import { Construct } from 'constructs';
 import dotenv from 'dotenv';
 
-import { ChainId } from '@uniswap/smart-order-router';
 import { PipelineNotificationEvents } from 'aws-cdk-lib/aws-codepipeline';
 import { SUPPORTED_CHAINS } from '../lib/config/chains';
 import { RoutingType } from '../lib/constants';
 import { STAGE } from '../lib/util/stage';
 import { SERVICE_NAME } from './constants';
 import { APIStack } from './stacks/api-stack';
+import { ChainId } from '@uniswap/sdk-core';
 
 dotenv.config();
 

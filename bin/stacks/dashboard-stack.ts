@@ -1,4 +1,4 @@
-import { ChainId } from '@uniswap/smart-order-router';
+import { ChainId } from '@uniswap/sdk-core';
 import * as cdk from 'aws-cdk-lib';
 import * as aws_cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import { Construct } from 'constructs';

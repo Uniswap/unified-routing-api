@@ -12,7 +12,7 @@ import * as aws_waf from 'aws-cdk-lib/aws-wafv2';
 import { Construct } from 'constructs';
 import * as path from 'path';
 
-import { ChainId } from '@uniswap/smart-order-router';
+import { ChainId } from '@uniswap/sdk-core';
 import _ from 'lodash';
 import { SUPPORTED_CHAINS } from '../../lib/config/chains';
 import { STAGE } from '../../lib/util/stage';
@@ -23,15 +23,10 @@ import { DashboardStack } from './dashboard-stack';
 const ALL_SUPPORTED_CHAINS = _.uniq([...SUPPORTED_CHAINS.CLASSIC, ...SUPPORTED_CHAINS.DUTCH_LIMIT]);
 
 export const CHAINS_NOT_ALARMED = new Set<ChainId>([
-  ChainId.RINKEBY,
-  ChainId.ARBITRUM_RINKEBY,
   ChainId.ARBITRUM_GOERLI,
-  ChainId.ROPSTEN,
-  ChainId.KOVAN,
-  ChainId.GÖRLI,
   ChainId.CELO_ALFAJORES,
-  ChainId.OPTIMISTIC_KOVAN,
-  ChainId.GÖRLI,
+  ChainId.OPTIMISM_GOERLI,
+  ChainId.GOERLI,
   ChainId.POLYGON_MUMBAI,
 ]);
 
