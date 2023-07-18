@@ -1,5 +1,5 @@
 import { PERMIT2_ADDRESS } from '@uniswap/permit2-sdk';
-import { ChainId } from '@uniswap/smart-order-router';
+import { ChainId } from '@uniswap/sdk-core';
 import PERMIT2_CONTRACT from '../../../../lib/abis/Permit2.json';
 import { Permit2Fetcher } from '../../../../lib/fetchers/Permit2Fetcher';
 
