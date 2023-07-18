@@ -7,13 +7,13 @@ import { CodeBuildStep, CodePipeline, CodePipelineSource } from 'aws-cdk-lib/pip
 import { Construct } from 'constructs';
 import dotenv from 'dotenv';
 
+import { ChainId } from '@uniswap/sdk-core';
 import { PipelineNotificationEvents } from 'aws-cdk-lib/aws-codepipeline';
 import { SUPPORTED_CHAINS } from '../lib/config/chains';
 import { RoutingType } from '../lib/constants';
 import { STAGE } from '../lib/util/stage';
 import { SERVICE_NAME } from './constants';
 import { APIStack } from './stacks/api-stack';
-import { ChainId } from '@uniswap/sdk-core';
 
 dotenv.config();
 
@@ -111,7 +111,7 @@ export class APIPipeline extends Stack {
 
     const jsonRpcProvidersSecret = sm.Secret.fromSecretAttributes(this, 'RPCProviderUrls', {
       // Infura RPC urls
-      secretCompleteArn: 'arn:aws:secretsmanager:us-east-2:644039819003:secret:gouda-service-rpc-urls-2-9spgjc',
+      secretCompleteArn: 'arn:aws:secretsmanager:us-east-2:644039819003:secret:gouda-service-rpc-urls-3-SFaiCq',
     });
 
     const jsonRpcProviders = {} as { [chainKey: string]: string };
