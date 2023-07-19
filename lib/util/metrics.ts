@@ -51,9 +51,9 @@ export class MetricPair {
         return false;
       }
 
-      const amountIn = parse(amount, this.tokenIn);
+      const amountIn = this.parse(amount, this.tokenIn);
       for (const [low, high] of this.buckets) {
-        if (amountIn.lessThan(parse(high, this.tokenIn))) {
+        if (amountIn.lessThan(this.parse(high, this.tokenIn))) {
           log.info('emitting ' + this.metricKey(low, high, bestQuoteType))
           metrics.putMetric(this.metricKey(low, high, bestQuoteType), 1);
           return true;
@@ -91,12 +91,14 @@ export class MetricPair {
 
     return bucketKeys;
   }
+
+  private parse(value: string, currency: Currency): CurrencyAmount<Currency> {
+    const typedValueParsed = parseUnits(value, currency.decimals).toString();
+    return CurrencyAmount.fromRawAmount(currency, typedValueParsed);
+  }
 }
 
-export function parse(value: string, currency: Currency): CurrencyAmount<Currency> {
-  const typedValueParsed = parseUnits(value, currency.decimals).toString();
-  return CurrencyAmount.fromRawAmount(currency, typedValueParsed);
-}
+
 
 export const trackedPairs: MetricPair[] = [
   new MetricPair(1, Ether.onChain(1), USDC, [

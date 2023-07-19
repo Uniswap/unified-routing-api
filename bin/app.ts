@@ -263,6 +263,7 @@ const app = new cdk.App();
 
 const envVars: { [key: string]: string } = {};
 envVars['PARAMETERIZATION_API_URL'] = process.env['PARAMETERIZATION_API_URL'] || '';
+envVars['PARAMETERIZATION_API_KEY'] = process.env['PARAMETERIZATION_API_KEY'] || ''
 envVars['ROUTING_API_URL'] = process.env['ROUTING_API_URL'] || '';
 envVars['SERVICE_URL'] = process.env['SERVICE_URL'] || '';
 envVars['REQUEST_DESTINATION_ARN'] = process.env['REQUEST_DESTINATION_ARN'] || '';
