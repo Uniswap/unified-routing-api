@@ -6,7 +6,15 @@ import { PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { IQuote, QuoteJSON } from '.';
 import { DutchRequest } from '..';
-import { BPS, NATIVE_ADDRESS, RoutingType, UNISWAPX_BASE_GAS, WETH_UNWRAP_GAS, WETH_WRAP_GAS } from '../../constants';
+import {
+  BPS,
+  NATIVE_ADDRESS,
+  RoutingType,
+  UNISWAPX_BASE_GAS,
+  WETH_UNWRAP_GAS,
+  WETH_WRAP_GAS,
+  WETH_WRAP_GAS_ALREADY_APPROVED,
+} from '../../constants';
 import { log } from '../../util/log';
 import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInSeconds } from '../../util/time';
@@ -34,6 +42,10 @@ export type DutchQuoteJSON = {
   amountOut: string;
   swapper: string;
   filler?: string;
+};
+
+export type ParameterizationOptions = {
+  hasApprovedPermit2: boolean;
 };
 
 type Amounts = {
@@ -119,12 +131,17 @@ export class DutchQuote implements IQuote {
   }
 
   // reparameterize an RFQ quote with awareness of classic
-  public static reparameterize(quote: DutchQuote, classic?: ClassicQuote): DutchQuote {
+  public static reparameterize(
+    quote: DutchQuote,
+    classic?: ClassicQuote,
+    options?: ParameterizationOptions,
+  ): DutchQuote {
     if (!classic) return quote;
 
     const { amountIn: amountInStart, amountOut: amountOutStart } = this.applyPreSwapGasAdjustment(
       { amountIn: quote.amountInStart, amountOut: quote.amountOutStart },
-      classic
+      classic,
+      options
     );
 
     const classicAmounts = this.applyGasAdjustment(
@@ -295,8 +312,12 @@ export class DutchQuote implements IQuote {
   // pre-swap gas adjustments are paid directly by the user pre-swap
   // and should be applied to startAmounts
   // e.g. ETH wraps
-  static applyPreSwapGasAdjustment(amounts: Amounts, classicQuote: ClassicQuote): Amounts {
-    const gasAdjustment = DutchQuote.getPreSwapGasAdjustment(classicQuote);
+  static applyPreSwapGasAdjustment(
+    amounts: Amounts,
+    classicQuote: ClassicQuote,
+    options?: ParameterizationOptions
+  ): Amounts {
+    const gasAdjustment = DutchQuote.getPreSwapGasAdjustment(classicQuote, options);
     if (gasAdjustment.eq(0)) return amounts;
     return DutchQuote.getGasAdjustedAmounts(amounts, gasAdjustment, classicQuote);
   }
@@ -350,14 +371,16 @@ export class DutchQuote implements IQuote {
   }
 
   // Returns the number of gas units extra paid by the user before the swap
-  static getPreSwapGasAdjustment(classicQuote: ClassicQuote): BigNumber {
+  static getPreSwapGasAdjustment(classicQuote: ClassicQuote, options?: ParameterizationOptions): BigNumber {
     let result = BigNumber.from(0);
 
     // uniswapx does not naturally support ETH input, but user still has to wrap it
     // so should be considered in the quote pricing
     if (classicQuote.request.info.tokenIn === NATIVE_ADDRESS) {
-      result = result.add(WETH_WRAP_GAS);
+      const wrapAdjustment = options?.hasApprovedPermit2 ? WETH_WRAP_GAS_ALREADY_APPROVED : WETH_WRAP_GAS;
+      result = result.add(wrapAdjustment);
     }
+
     return result;
   }
 

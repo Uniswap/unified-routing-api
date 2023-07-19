@@ -24,7 +24,7 @@ describe('DutchQuote', () => {
 
   describe('Reparameterize', () => {
     it('Does not reparameterize if classic is not defined', async () => {
-      const reparameterized = DutchQuote.reparameterize(DL_QUOTE_EXACT_IN_LARGE, undefined);
+      const reparameterized = DutchQuote.reparameterize(DL_QUOTE_EXACT_IN_LARGE, undefined, undefined);
       expect(reparameterized).toMatchObject(DL_QUOTE_EXACT_IN_LARGE);
     });
 

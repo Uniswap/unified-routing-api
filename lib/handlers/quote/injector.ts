@@ -22,6 +22,7 @@ export interface ContainerInjected {
   quoters: QuoterByRoutingType;
   tokenFetcher: TokenFetcher;
   permit2Fetcher: Permit2Fetcher;
+  rpcUrlMap: Map<ChainId, string>;
 }
 
 export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void> {
@@ -50,6 +51,7 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
         [RoutingType.DUTCH_LIMIT]: new RfqQuoter(paramApiUrl, serviceUrl, paramApiKey),
         [RoutingType.CLASSIC]: new RoutingApiQuoter(routingApiUrl, routingApiKey),
       },
+      rpcUrlMap,
       tokenFetcher: new TokenFetcher(),
       permit2Fetcher: new Permit2Fetcher(rpcUrlMap),
     };

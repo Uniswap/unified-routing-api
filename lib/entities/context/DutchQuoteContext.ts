@@ -1,6 +1,8 @@
 import DEFAULT_TOKEN_LIST from '@uniswap/default-token-list';
+import { PERMIT2_ADDRESS } from '@uniswap/permit2-sdk';
 import { Protocol } from '@uniswap/router-sdk';
 import { TradeType } from '@uniswap/sdk-core';
+
 import {
   CachingTokenListProvider,
   ID_TO_CHAIN_ID,
@@ -21,6 +23,7 @@ import {
   Quote,
   QuoteRequest,
 } from '../../entities';
+import { Erc20__factory } from '../../types/ext/factories/Erc20__factory';
 import { checkDefined } from '../../util/preconditions';
 
 // if the gas is greater than this proportion of the whole trade size
@@ -38,7 +41,7 @@ export class DutchQuoteContext implements QuoteContext {
   public routeToNativeKey: string;
   public needsRouteToNative: boolean;
 
-  constructor(_log: Logger, public request: DutchRequest) {
+  constructor(_log: Logger, public request: DutchRequest, private provider: ethers.providers.BaseProvider) {
     this.log = _log.child({ context: 'DutchQuoteContext' });
     this.requestKey = this.request.key();
     this.needsRouteToNative = false;
@@ -136,7 +139,9 @@ export class DutchQuoteContext implements QuoteContext {
       return null;
     }
 
-    const reparameterized = DutchQuote.reparameterize(quote, classicQuote as ClassicQuote);
+    const reparameterized = DutchQuote.reparameterize(quote, classicQuote as ClassicQuote, {
+      hasApprovedPermit2: await this.hasApprovedPermit2(quote.request),
+    });
     // if its invalid for some reason, i.e. too much decay then return null
     if (!reparameterized.validate()) return null;
     return reparameterized;
@@ -231,5 +236,20 @@ export class DutchQuoteContext implements QuoteContext {
       tokenInEligibileTokens.includes(this.request.info.tokenIn.toLowerCase()) &&
       tokenOutEligibileTokens.includes(this.request.info.tokenOut.toLowerCase())
     );
+  }
+
+  async hasApprovedPermit2(request: DutchRequest): Promise<boolean> {
+    if (!request.info.swapper) return false;
+
+    const tokenContract = Erc20__factory.connect(request.info.tokenIn, this.provider);
+
+    const permit2Allowance = await tokenContract.allowance(request.info.swapper, PERMIT2_ADDRESS);
+
+    console.log(tokenContract);
+    console.log(JSON.stringify(tokenContract));
+    console.log(permit2Allowance);
+    console.log(JSON.stringify(permit2Allowance));
+    // TODO: Fix for exact output
+    return permit2Allowance.gte(request.info.amount);
   }
 }
