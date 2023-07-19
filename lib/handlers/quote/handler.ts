@@ -20,9 +20,10 @@ import {
   QuoteRequestBodyJSON,
   QuoteRequestInfo,
 } from '../../entities';
+import { TokenFetcher } from '../../fetchers/TokenFetcher';
 import { ErrorCode, NoQuotesAvailable, ValidationError } from '../../util/errors';
 import { log } from '../../util/log';
-import { metrics } from '../../util/metrics';
+import { emitUniswapXPairMetricIfTracking, metrics, QuoteType } from '../../util/metrics';
 import { currentTimestampInSeconds } from '../../util/time';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
@@ -102,7 +103,7 @@ export class QuoteHandler extends APIGLambdaHandler<
       throw new NoQuotesAvailable();
     }
 
-    this.emitQuoteResponseMetrics(quoteInfo, bestQuote, resolvedValidQuotes, uniswapXRequested);
+    this.emitQuoteResponseMetrics(tokenFetcher, quoteInfo, bestQuote, resolvedValidQuotes, uniswapXRequested);
 
     return {
       statusCode: 200,
@@ -150,23 +151,27 @@ export class QuoteHandler extends APIGLambdaHandler<
     metrics.putMetric(`QuoteRequestedChainId${chainId.toString()}`, 1, Unit.Count);
   }
 
-  private emitQuoteResponseMetrics(
+  private async getTokenSymbolOrAbbr(tokenFetcher: TokenFetcher, chainId: number, address: string): Promise<string> {
+    let symbol = address.slice(0, 6);
+    try {
+      symbol = (await tokenFetcher.resolveToken(chainId, symbol)).symbol ?? symbol;
+    } catch {}
+    return symbol;
+  }
+
+  private async emitQuoteResponseMetrics(
+    tokenFetcher: TokenFetcher,
     info: QuoteRequestInfo,
     bestQuote: Quote,
     _allQuotes: Quote[],
     _uniswapXRequested: boolean
   ) {
-    const { tokenInChainId: chainId, tokenIn, tokenOut } = info;
-    const tokenInAbbr = tokenIn.slice(0, 6);
-    const tokenOutAbbr = tokenOut.slice(0, 6);
+    const { tokenInChainId: chainId, tokenIn, tokenOut, type } = info;
+
+    const tokenInAbbr = await this.getTokenSymbolOrAbbr(tokenFetcher, chainId, tokenIn);
+    const tokenOutAbbr = await this.getTokenSymbolOrAbbr(tokenFetcher, chainId, tokenOut);
     const tokenPairSymbol = `${tokenInAbbr}/${tokenOutAbbr}`;
     const tokenPairSymbolChain = `${tokenInAbbr}/${tokenOutAbbr}/${chainId}`;
-
-    enum QuoteType {
-      CLASSIC = 'CLASSIC',
-      SYNTHETIC = 'SYNTHETIC',
-      RFQ = 'RFQ',
-    }
 
     let bestQuoteType: QuoteType;
     if (bestQuote.routingType == RoutingType.DUTCH_LIMIT) {
@@ -198,14 +203,21 @@ export class QuoteHandler extends APIGLambdaHandler<
 
     // UniswapX QuoteResponse metrics
     if (_uniswapXRequested) {
-      metrics.putMetric(`UniswapXRequestedQuoteResponseQuoteType-${bestQuoteType}`, 1, Unit.Count);
+      await emitUniswapXPairMetricIfTracking(
+        tokenFetcher,
+        tokenIn,
+        tokenOut,
+        type == TradeType.EXACT_INPUT ? bestQuote.amountIn : bestQuote.amountOut,
+        bestQuoteType
+      );
       metrics.putMetric(`UniswapXQuoteResponseRoutingType-${bestQuote.routingType}`, 1, Unit.Count);
-      metrics.putMetric(`UniswapXQuoteResponseQuoteType-${bestQuoteType}ChainId${chainId.toString()}`, 1, Unit.Count);
+      metrics.putMetric(`UniswapXQuoteResponseQuoteType-${bestQuoteType}`, 1, Unit.Count);
       metrics.putMetric(
         `UniswapXQuoteResponseRoutingType-${bestQuote.routingType}ChainId${chainId.toString()}`,
         1,
         Unit.Count
       );
+      metrics.putMetric(`UniswapXQuoteResponseQuoteType-${bestQuoteType}ChainId${chainId.toString()}`, 1, Unit.Count);
       metrics.putMetric(`UniswapXQuoteResponseChainId${chainId.toString()}`, 1, Unit.Count);
     }
 
