@@ -5,7 +5,8 @@ export const SUPPORTED_CHAINS = {
   [RoutingType.CLASSIC]: [
     ChainId.MAINNET,
     ChainId.OPTIMISM,
-    ChainId.OPTIMISM_GOERLI,
+    // TODO: add back optimism GOERLI once we are sure routing api supports it
+    // ChainId.OPTIMISM_GOERLI,
     ChainId.ARBITRUM_ONE,
     ChainId.ARBITRUM_GOERLI,
     ChainId.POLYGON,
