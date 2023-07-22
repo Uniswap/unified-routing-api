@@ -6,6 +6,7 @@ import _ from 'lodash';
 import { SUPPORTED_CHAINS } from '../../lib/config/chains';
 
 export const METRIC_NAMESPACE = 'Uniswap';
+export const METRIC_SERVICE_NAME = 'UnifiedRoutingAPI';
 
 export type LambdaWidget = {
   type: string;
@@ -20,8 +21,6 @@ export interface DashboardProps extends cdk.NestedStackProps {
   apiName: string;
   quoteLambdaName: string;
 }
-
-const SERVICE_NAME = 'UnifiedRoutingAPI';
 
 export class DashboardStack extends cdk.NestedStack {
   constructor(scope: Construct, name: string, props: DashboardProps) {
@@ -246,7 +245,7 @@ export class DashboardStack extends cdk.NestedStack {
             height: 6,
             properties: {
               metrics: [
-                ['Uniswap', 'QuoteResponseQuoteType-SYNTHETIC', 'Service', SERVICE_NAME],
+                ['Uniswap', 'QuoteResponseQuoteType-SYNTHETIC', 'Service', METRIC_SERVICE_NAME],
                 ['.', 'QuoteResponseQuoteType-CLASSIC', '.', '.'],
                 ['.', 'QuoteResponseQuoteType-RFQ', '.', '.'],
               ],
@@ -265,7 +264,7 @@ export class DashboardStack extends cdk.NestedStack {
             height: 6,
             properties: {
               metrics: [
-                ['Uniswap', 'QuoteResponseQuoteType-SYNTHETIC', 'Service', SERVICE_NAME],
+                ['Uniswap', 'QuoteResponseQuoteType-SYNTHETIC', 'Service', METRIC_SERVICE_NAME],
                 ['.', 'QuoteResponseQuoteType-CLASSIC', '.', '.'],
                 ['.', 'QuoteResponseQuoteType-RFQ', '.', '.'],
               ],
@@ -291,7 +290,7 @@ export class DashboardStack extends cdk.NestedStack {
             height: 6,
             properties: {
               metrics: [
-                ['Uniswap', 'UniswapXQuoteResponseQuoteType-SYNTHETIC', 'Service', SERVICE_NAME],
+                ['Uniswap', 'UniswapXQuoteResponseQuoteType-SYNTHETIC', 'Service', METRIC_SERVICE_NAME],
                 ['.', 'UniswapXQuoteResponseQuoteType-CLASSIC', '.', '.'],
                 ['.', 'UniswapXQuoteResponseQuoteType-RFQ', '.', '.'],
               ],
@@ -310,7 +309,7 @@ export class DashboardStack extends cdk.NestedStack {
             height: 6,
             properties: {
               metrics: [
-                ['Uniswap', 'UniswapXQuoteResponseQuoteType-SYNTHETIC', 'Service', SERVICE_NAME],
+                ['Uniswap', 'UniswapXQuoteResponseQuoteType-SYNTHETIC', 'Service', METRIC_SERVICE_NAME],
                 ['.', 'UniswapXQuoteResponseQuoteType-CLASSIC', '.', '.'],
                 ['.', 'UniswapXQuoteResponseQuoteType-RFQ', '.', '.'],
               ],
@@ -430,9 +429,9 @@ export class DashboardStack extends cdk.NestedStack {
               metrics: _.flatMap(
                 _.uniq([...SUPPORTED_CHAINS.CLASSIC, ...SUPPORTED_CHAINS.DUTCH_LIMIT]),
                 (chainId: ChainId) => [
-                  ['Uniswap', `QuoteRequestedChainId${chainId}`, 'Service', SERVICE_NAME],
-                  ['Uniswap', `QuoteResponseChainId${chainId}Status4XX`, 'Service', SERVICE_NAME],
-                  ['Uniswap', `QuoteResponseChainId${chainId}Status5XX`, 'Service', SERVICE_NAME],
+                  ['Uniswap', `QuoteRequestedChainId${chainId}`, 'Service', METRIC_SERVICE_NAME],
+                  ['Uniswap', `QuoteResponseChainId${chainId}Status4XX`, 'Service', METRIC_SERVICE_NAME],
+                  ['Uniswap', `QuoteResponseChainId${chainId}Status5XX`, 'Service', METRIC_SERVICE_NAME],
                 ]
               ),
               view: 'timeSeries',
@@ -471,7 +470,7 @@ export class DashboardStack extends cdk.NestedStack {
                     'Uniswap',
                     `QuoteRequestedChainId${chainId}`,
                     'Service',
-                    SERVICE_NAME,
+                    METRIC_SERVICE_NAME,
                     { id: `c${chainId}r`, visible: false },
                   ],
                   ['.', `QuoteResponseChainId${chainId}Status4XX`, '.', '.', { id: `c${chainId}r4xx`, visible: false }],
@@ -516,7 +515,7 @@ export class DashboardStack extends cdk.NestedStack {
                 [{ expression: '(m3/m1)*100', label: 'RoutingAPIRequest4xxErrorRate', id: 'e1' }],
                 [{ expression: '(m4/m5)*100', label: 'RFQAPIRequestErrorRate', id: 'e2' }],
                 [{ expression: '(m6/m1)*100', label: 'RoutingAPIRequest5xxErrorRate', id: 'e3' }],
-                ['Uniswap', 'RoutingApiQuoterRequest', 'Service', SERVICE_NAME, { id: 'm1', visible: false }],
+                ['Uniswap', 'RoutingApiQuoterRequest', 'Service', METRIC_SERVICE_NAME, { id: 'm1', visible: false }],
                 ['.', 'RoutingApiQuoterSuccess', '.', '.', { id: 'm2', visible: false }],
                 ['.', 'RoutingApiQuoter4xxErr', '.', '.', { id: 'm3', visible: false }],
                 ['.', 'RfqQuoterErrRfq', '.', '.', { id: 'm4', visible: false }],
@@ -539,7 +538,7 @@ export class DashboardStack extends cdk.NestedStack {
             height: 6,
             properties: {
               metrics: [
-                ['Uniswap', 'RoutingApiQuoterRequest', 'Service', SERVICE_NAME, { id: 'm1' }],
+                ['Uniswap', 'RoutingApiQuoterRequest', 'Service', METRIC_SERVICE_NAME, { id: 'm1' }],
                 ['.', 'RoutingApiQuoterSuccess', '.', '.', { id: 'm2' }],
                 ['.', 'RoutingApiQuoterErr', '.', '.', { id: 'm3' }],
                 ['.', 'RfqQuoterErrRfq', '.', '.', { id: 'm4' }],
@@ -561,7 +560,7 @@ export class DashboardStack extends cdk.NestedStack {
             height: 5,
             properties: {
               metrics: [
-                ['Uniswap', 'RfqQuoterLatency', 'Service', SERVICE_NAME],
+                ['Uniswap', 'RfqQuoterLatency', 'Service', METRIC_SERVICE_NAME],
                 ['.', 'RoutingApiQuoterLatency', '.', '.'],
               ],
               view: 'timeSeries',

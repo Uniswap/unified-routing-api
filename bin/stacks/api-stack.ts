@@ -19,6 +19,7 @@ import { STAGE } from '../../lib/util/stage';
 import { SERVICE_NAME } from '../constants';
 import { AnalyticsStack } from './analytics-stack';
 import { DashboardStack } from './dashboard-stack';
+import { XPairDashboardStack } from './pair-dashboard-stack';
 
 const ALL_SUPPORTED_CHAINS = _.uniq([...SUPPORTED_CHAINS.CLASSIC, ...SUPPORTED_CHAINS.DUTCH_LIMIT]);
 
@@ -217,6 +218,9 @@ export class APIStack extends cdk.Stack {
       apiName: api.restApiName,
       quoteLambdaName: quoteLambda.functionName,
     });
+
+    /* Pair tracking dashboard for X */
+    new XPairDashboardStack(this, 'XPairDashboardStack', {});
 
     /* Quote Endpoint */
     const quoteLambdaIntegration = new aws_apigateway.LambdaIntegration(quoteLambdaAlias, {});
