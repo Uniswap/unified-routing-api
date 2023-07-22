@@ -1,4 +1,4 @@
-import { TradeType } from '@uniswap/sdk-core';
+import { ChainId, TradeType } from '@uniswap/sdk-core';
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { default as Logger } from 'bunyan';
 import {
@@ -40,9 +40,9 @@ import {
 } from '../../../../../lib/handlers/quote/handler';
 import { ContainerInjected, QuoterByRoutingType } from '../../../../../lib/handlers/quote/injector';
 import { Quoter } from '../../../../../lib/providers/quoters';
+import { Erc20__factory } from '../../../../../lib/types/ext/factories/Erc20__factory';
 import { setGlobalLogger } from '../../../../../lib/util/log';
 import { PERMIT2_USED, PERMIT_DETAILS, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../../constants';
-import { Erc20__factory } from '../../../../../lib/types/ext/factories/Erc20__factory';
 
 describe('QuoteHandler', () => {
   const OLD_ENV = process.env;
@@ -95,11 +95,16 @@ describe('QuoteHandler', () => {
     ): Promise<ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>> =>
       new Promise((resolve) =>
         resolve({
-          getContainerInjected: () => {
+          getContainerInjected: (): ContainerInjected => {
+            const rpcUrlMap = new Map<ChainId, string>();
+            for (const chain of Object.values(ChainId)) {
+              rpcUrlMap.set(chain as ChainId, 'url');
+            }
             return {
               quoters: quoters,
               tokenFetcher: tokenFetcher,
               permit2Fetcher: permit2Fetcher,
+              rpcUrlMap,
             };
           },
           getRequestInjected: () => requestInjectedMock,
@@ -117,6 +122,7 @@ describe('QuoteHandler', () => {
         quote: jest.fn().mockResolvedValue(dlQuote),
       };
     };
+
     const ClassicQuoterMock = (classicQuote: ClassicQuote): Quoter => {
       return {
         quote: jest.fn().mockResolvedValue(classicQuote),
