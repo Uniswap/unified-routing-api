@@ -1,6 +1,6 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { MaxAllowanceExpiration, MaxAllowanceTransferAmount } from '@uniswap/permit2-sdk';
-import { Currency, CurrencyAmount, Token } from '@uniswap/sdk-core';
+import { Currency, CurrencyAmount, Token, WETH9 } from '@uniswap/sdk-core';
 import { PERMIT2_ADDRESS } from '@uniswap/universal-router-sdk';
 import { constants } from 'ethers';
 import { Erc20, Permit2__factory } from '../../lib/types/ext';
@@ -56,5 +56,5 @@ export const getBalanceAndApprovePermit2 = async (
     ).wait();
   }
 
-  return getBalance(alice, currency);
+  return getBalance(alice, currency.wrapped);
 };
