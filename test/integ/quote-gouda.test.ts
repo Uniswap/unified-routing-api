@@ -447,7 +447,7 @@ describe('quoteUniswapX', function () {
           }
         });
 
-        it.only(`ETH -> large cap, large trade should return valid quote`, async () => {
+        it(`ETH -> large cap, large trade should return valid quote`, async () => {
           const amount = await getAmount(1, type, 'ETH', 'USDC', '10');
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
