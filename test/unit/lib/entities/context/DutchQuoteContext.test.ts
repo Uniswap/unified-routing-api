@@ -309,7 +309,7 @@ describe('DutchQuoteContext', () => {
       expect(quote?.amountOut).toEqual(rfqQuote?.amountOut);
     });
 
-    it.only('applies less overhead for ETH in if WETH approved on Permit2', async () => {
+    it('applies less overhead for ETH in if WETH approved on Permit2', async () => {
       const request = makeDutchRequest({
         tokenIn: ETH_IN,
       });
