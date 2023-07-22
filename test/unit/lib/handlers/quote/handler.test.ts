@@ -42,6 +42,7 @@ import { ContainerInjected, QuoterByRoutingType } from '../../../../../lib/handl
 import { Quoter } from '../../../../../lib/providers/quoters';
 import { setGlobalLogger } from '../../../../../lib/util/log';
 import { PERMIT2_USED, PERMIT_DETAILS, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../../constants';
+import { Erc20__factory } from '../../../../../lib/types/ext/factories/Erc20__factory';
 
 describe('QuoteHandler', () => {
   const OLD_ENV = process.env;
@@ -52,6 +53,12 @@ describe('QuoteHandler', () => {
       ...OLD_ENV,
       SYNTHETIC_ELIGIBLE_TOKENS: `{"1":["${TOKEN_IN.toLowerCase()}", "${TOKEN_OUT.toLowerCase()}"]}`,
     }; // Make a copy
+    jest.mock('../../../../../lib/types/ext/factories/Erc20__factory');
+    Erc20__factory.connect = jest.fn().mockImplementation(() => {
+      return {
+        allowance: () => ({ gte: () => true }),
+      };
+    });
   });
 
   afterAll(() => {

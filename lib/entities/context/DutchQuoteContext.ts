@@ -13,7 +13,7 @@ import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
 import NodeCache from 'node-cache';
 import { QuoteByKey, QuoteContext } from '.';
-import { RoutingType } from '../../constants';
+import { NATIVE_ADDRESS, RoutingType } from '../../constants';
 import {
   ClassicQuote,
   ClassicQuoteDataJSON,
@@ -129,7 +129,7 @@ export class DutchQuoteContext implements QuoteContext {
       tokenList.getTokenByAddress(quote.tokenIn),
       tokenList.getTokenByAddress(quote.tokenOut),
     ]);
-    if (!tokenIn) {
+    if (!tokenIn && quote.tokenIn != NATIVE_ADDRESS) {
       this.log.info(`Token ${quote.tokenIn} not in tokenlist, skipping rfq`);
       return null;
     }
@@ -245,10 +245,6 @@ export class DutchQuoteContext implements QuoteContext {
 
     const permit2Allowance = await tokenContract.allowance(request.info.swapper, PERMIT2_ADDRESS);
 
-    console.log(tokenContract);
-    console.log(JSON.stringify(tokenContract));
-    console.log(permit2Allowance);
-    console.log(JSON.stringify(permit2Allowance));
     // TODO: Fix for exact output
     return permit2Allowance.gte(request.info.amount);
   }

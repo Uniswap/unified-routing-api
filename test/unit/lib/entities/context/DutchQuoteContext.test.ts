@@ -7,9 +7,11 @@ import { DutchQuote, DutchQuoteContext, DutchQuoteDataJSON } from '../../../../.
 import { Erc20__factory } from '../../../../../lib/types/ext/factories/Erc20__factory';
 import {
   AMOUNT,
+  AMOUNT_GAS_ADJUSTED,
   AMOUNT_UNDER_GAS_THRESHOLD,
   CHAIN_IN_ID,
   CHAIN_OUT_ID,
+  ETH_IN,
   INELIGIBLE_TOKEN,
   SWAPPER,
   TOKEN_IN,
@@ -36,11 +38,11 @@ describe('DutchQuoteContext', () => {
       ...OLD_ENV,
       SYNTHETIC_ELIGIBLE_TOKENS: `{"1":["${TOKEN_IN.toLowerCase()}", "${TOKEN_OUT.toLowerCase()}"]}`,
     }; // Make a copy
-    Erc20__factory;
+
     jest.mock('../../../../../lib/types/ext/factories/Erc20__factory');
     Erc20__factory.connect = jest.fn().mockImplementation(() => {
       return {
-        allowance: () => jest.fn().mockReturnValue({ gte: () => true }),
+        allowance: () => ({ gte: () => true }),
       };
     });
     provider = jest.fn();
@@ -306,6 +308,78 @@ describe('DutchQuoteContext', () => {
       expect(quote?.amountIn).toEqual(rfqQuote?.amountIn);
       expect(quote?.amountOut).toEqual(rfqQuote?.amountOut);
     });
+
+    it.only('applies less overhead for ETH in if WETH approved on Permit2', async () => {
+      const request = makeDutchRequest({
+        tokenIn: ETH_IN,
+      });
+
+      const filler = '0x1111111111111111111111111111111111111111';
+      const rfqQuote = createDutchQuote({ tokenIn: ETH_IN, amountOut: AMOUNT, filler }, 'EXACT_INPUT');
+      const classicQuote = createClassicQuote(
+        { quote: AMOUNT, quoteGasAdjusted: AMOUNT_GAS_ADJUSTED },
+        { tokenIn: ETH_IN, type: 'EXACT_INPUT' }
+      );
+
+      // Get quote when user has *not* apprroved Permit2
+      Erc20__factory.connect = jest.fn().mockImplementation(() => {
+        return {
+          allowance: () => ({ gte: () => false }),
+        };
+      });
+
+      let context = new DutchQuoteContext(logger, request, provider);
+      context.dependencies();
+
+      const nonApprovedQuote = await context.resolve({
+        [context.requestKey]: rfqQuote,
+        [context.classicKey]: classicQuote,
+      });
+
+      // Get quote when user has approved Permit2.
+      Erc20__factory.connect = jest.fn().mockImplementation(() => {
+        return {
+          allowance: () => ({ gte: () => false }),
+        };
+      });
+
+      context = new DutchQuoteContext(logger, request, provider);
+      context.dependencies();
+
+      const approvedQuote = await context.resolve({
+        [context.requestKey]: rfqQuote,
+        [context.classicKey]: classicQuote,
+      });
+
+      // Non approved quote, approved quote, and rfq quote should be
+      // the same except for different amount outs due to diff eth adjustments
+      expect({
+        ...nonApprovedQuote,
+        amountOutStart: expect.any(BigNumber),
+        amountOutEnd: expect.any(BigNumber),
+      }).toMatchObject({
+        ...rfqQuote,
+        amountOutStart: expect.any(BigNumber),
+        amountOutEnd: expect.any(BigNumber),
+      });
+
+      expect({
+        ...approvedQuote,
+        amountOutStart: expect.any(BigNumber),
+        amountOutEnd: expect.any(BigNumber),
+      }).toMatchObject({
+        ...rfqQuote,
+        amountOutStart: expect.any(BigNumber),
+        amountOutEnd: expect.any(BigNumber),
+      });
+
+      // Expect adjustment to amount out because of ETH in
+      expect(nonApprovedQuote!.amountOut.lt(rfqQuote.amountOut));
+      expect(approvedQuote!.amountOut.lt(rfqQuote.amountOut));
+
+      // If not approved, the adjustment should be bigger than if approved.
+      expect(nonApprovedQuote!.amountOut.lt(approvedQuote!.amountOut));
+    });
   });
 
   describe('hasOrderSizeForsynthetic', () => {
@@ -427,6 +501,29 @@ describe('DutchQuoteContext', () => {
       };
       const QUOTE_REQUEST_INELIGIBLE_TOKEN = makeDutchRequest({}, { useSyntheticQuotes: true }, baseRequest);
       const context = new DutchQuoteContext(logger, QUOTE_REQUEST_INELIGIBLE_TOKEN, provider);
+      expect(context.hasSyntheticEligibleTokens()).toEqual(false);
+    });
+
+    it('returns false if tokenOut not in SYNTHETIC_ELIGIBLE_TOKENS', async () => {
+      const baseRequest = {
+        tokenInChainId: CHAIN_IN_ID,
+        tokenOutChainId: CHAIN_OUT_ID,
+        requestId: 'requestId',
+        tokenIn: ETH_IN,
+        tokenOut: TOKEN_OUT,
+        amount: AMOUNT,
+        type: 'EXACT_INPUT',
+        swapper: SWAPPER,
+      };
+
+      Erc20__factory.connect = jest.fn().mockImplementation(() => {
+        return {
+          allowance: () => ({ gte: () => false }),
+        };
+      });
+
+      const QUOTE_REQUEST = makeDutchRequest({}, { useSyntheticQuotes: true }, baseRequest);
+      const context = new DutchQuoteContext(logger, QUOTE_REQUEST, provider);
       expect(context.hasSyntheticEligibleTokens()).toEqual(false);
     });
   });

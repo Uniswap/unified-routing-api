@@ -1,5 +1,5 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { Currency, CurrencyAmount, Fraction, WETH9 } from '@uniswap/sdk-core';
+import { Currency, CurrencyAmount, Ether, Fraction, WETH9 } from '@uniswap/sdk-core';
 import {
   DAI_MAINNET,
   ID_TO_NETWORK_NAME,
@@ -21,7 +21,7 @@ import { BigNumber } from 'ethers';
 import hre from 'hardhat';
 import _ from 'lodash';
 import qs from 'qs';
-import { RoutingType } from '../../lib/constants';
+import { NATIVE_ADDRESS, RoutingType } from '../../lib/constants';
 import { ClassicQuoteDataJSON, QuoteRequestBodyJSON, RoutingConfigJSON } from '../../lib/entities';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { ExclusiveDutchOrderReactor__factory } from '../../lib/types/ext';
@@ -439,6 +439,98 @@ describe('quoteUniswapX', function () {
             );
           } else {
             expect(tokenOutAfter.subtract(tokenOutBefore).toExact()).to.equal('1000');
+            checkQuoteToken(
+              tokenInBefore,
+              tokenInAfter,
+              CurrencyAmount.fromRawAmount(USDC_MAINNET, order.info.input.startAmount.toString())
+            );
+          }
+        });
+
+        it.only(`ETH -> large cap, large trade should return valid quote`, async () => {
+          const amount = await getAmount(1, type, 'ETH', 'USDC', '10');
+          const quoteReq: QuoteRequestBodyJSON = {
+            requestId: 'id',
+            tokenIn: NATIVE_ADDRESS,
+            tokenInChainId: 1,
+            tokenOut: UNI_MAINNET.address,
+            tokenOutChainId: 1,
+            amount: amount,
+            type,
+            slippageTolerance: SLIPPAGE,
+            configs: [
+              {
+                routingType: RoutingType.DUTCH_LIMIT,
+                swapper: alice.address,
+                useSyntheticQuotes: true,
+              },
+            ] as RoutingConfigJSON[],
+          };
+
+          const response = await axios.post<QuoteResponseJSON>(`${API}`, quoteReq);
+          const {
+            data: { quote },
+            status,
+          } = response;
+
+          const routingResponse = await axios.get<RoutingApiQuoteResponse>(
+            `${ROUTING_API}?${qs.stringify({
+              tokenInAddress: NATIVE_ADDRESS,
+              tokenOutAddress: UNI_MAINNET.address,
+              tokenInChainId: 1,
+              tokenOutChainId: 1,
+              amount: amount,
+              type: type === 'EXACT_INPUT' ? 'exactIn' : 'exactOut',
+              recipient: alice.address,
+              slippageTolerance: SLIPPAGE,
+              deadline: '360',
+              algorithm: 'alpha',
+              enableUniversalRouter: true,
+            })}`
+          );
+          expect(routingResponse.status).to.equal(200);
+
+          const order = new DutchOrder((quote as any).orderInfo, 1);
+          expect(status).to.equal(200);
+          const routingQuote = routingResponse.data.quoteGasAdjusted;
+          // account for gas and slippage
+          expect(order.info.swapper).to.equal(alice.address);
+          expect(order.info.outputs.length).to.equal(1);
+          if (type === 'EXACT_INPUT') {
+            const adjustedAmountOutClassic = BigNumber.from(routingQuote).mul(90).div(100);
+
+            expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.gte(
+              parseInt(adjustedAmountOutClassic.toString())
+            );
+            expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.lt(
+              parseInt(BigNumber.from(adjustedAmountOutClassic).mul(2).toString())
+            );
+          } else {
+            const adjustedAmountInClassic = BigNumber.from(routingQuote).mul(110).div(100);
+
+            expect(parseInt(order.info.input.startAmount.toString())).to.be.lt(
+              parseInt(adjustedAmountInClassic.toString())
+            );
+            expect(parseInt(order.info.input.startAmount.toString())).to.be.gte(
+              parseInt(BigNumber.from(adjustedAmountInClassic).div(2).toString())
+            );
+          }
+
+          const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+            order,
+            Ether.onChain(1),
+            UNI_MAINNET
+          );
+
+          if (type === 'EXACT_INPUT') {
+            expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('10');
+            checkQuoteToken(
+              tokenOutBefore,
+              tokenOutAfter,
+              CurrencyAmount.fromRawAmount(Ether.onChain(1), order.info.outputs[0].startAmount.toString())
+            );
+          } else {
+            expect(tokenOutAfter.subtract(tokenOutBefore).toExact()).to.equal('10');
             checkQuoteToken(
               tokenInBefore,
               tokenInAfter,
