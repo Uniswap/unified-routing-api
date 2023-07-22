@@ -40,7 +40,7 @@ export class TokenFetcher {
    */
   public resolveTokenAddress = async (chainId: ChainId, symbolOrAddress: string): Promise<string> => {
     // check for native symbols first
-    if (NATIVE_NAMES_BY_ID[chainId]!.includes(symbolOrAddress)) {
+    if (NATIVE_NAMES_BY_ID[chainId]!.includes(symbolOrAddress) || symbolOrAddress == NATIVE_ADDRESS) {
       return NATIVE_ADDRESS;
     }
 
