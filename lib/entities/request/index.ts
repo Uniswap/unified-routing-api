@@ -27,7 +27,7 @@ export interface QuoteRequestInfo {
   type: TradeType;
   slippageTolerance?: string;
   swapper?: string;
-  forceUniswapX?: boolean;
+  useUniswapX?: boolean;
 }
 
 export interface QuoteRequestBodyJSON extends Omit<QuoteRequestInfo, 'type' | 'amount'> {

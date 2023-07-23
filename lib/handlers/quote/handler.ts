@@ -77,7 +77,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     const { quoteInfo } = parsedRequests;
     let { quoteRequests } = parsedRequests;
 
-    if (DISABLE_DUTCH_LIMIT_REQUESTS && !requestBody.forceUniswapX) {
+    if (DISABLE_DUTCH_LIMIT_REQUESTS && !requestBody.useUniswapX) {
       log.info('Dutch Limit requests disabled, filtering out all Dutch Limit requests...');
       quoteRequests = removeDutchRequests(quoteRequests);
     }

@@ -398,7 +398,7 @@ describe('DutchQuoteContext', () => {
         amount: AMOUNT,
         type: 'EXACT_INPUT',
         swapper: SWAPPER,
-        forceUniswapX: true,
+        useUniswapX: true,
       };
       const QUOTE_REQUEST_ELIGIBLE_TOKENS = makeDutchRequest({}, { useSyntheticQuotes: true }, baseRequest);
       const context = new DutchQuoteContext(logger, QUOTE_REQUEST_ELIGIBLE_TOKENS);
@@ -415,7 +415,7 @@ describe('DutchQuoteContext', () => {
         amount: AMOUNT,
         type: 'EXACT_INPUT',
         swapper: SWAPPER,
-        forceUniswapX: true,
+        useUniswapX: true,
       };
       const QUOTE_REQUEST_INELIGIBLE_TOKEN = makeDutchRequest({}, { useSyntheticQuotes: true }, baseRequest);
       const context = new DutchQuoteContext(logger, QUOTE_REQUEST_INELIGIBLE_TOKEN);
@@ -432,7 +432,7 @@ describe('DutchQuoteContext', () => {
         amount: AMOUNT,
         type: 'EXACT_INPUT',
         swapper: SWAPPER,
-        forceUniswapX: true,
+        useUniswapX: true,
       };
       const QUOTE_REQUEST_INELIGIBLE_TOKEN = makeDutchRequest({}, { useSyntheticQuotes: true }, baseRequest);
       const context = new DutchQuoteContext(logger, QUOTE_REQUEST_INELIGIBLE_TOKEN);

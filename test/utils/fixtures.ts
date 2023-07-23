@@ -35,7 +35,7 @@ export const BASE_REQUEST_INFO_EXACT_IN = {
   amount: AMOUNT,
   type: 'EXACT_INPUT',
   swapper: SWAPPER,
-  forceUniswapX: true,
+  useUniswapX: true,
 };
 
 export const REQUEST_INFO_ETH_EXACT_IN = {
