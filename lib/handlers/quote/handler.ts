@@ -28,7 +28,7 @@ import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../bas
 import { ContainerInjected, QuoterByRoutingType } from './injector';
 import { PostQuoteRequestBodyJoi } from './schema';
 
-const DISABLE_DUTCH_LIMIT_REQUESTS = false;
+const DISABLE_DUTCH_LIMIT_REQUESTS = true;
 
 export interface SingleQuoteJSON {
   routing: string;
@@ -77,7 +77,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     const { quoteInfo } = parsedRequests;
     let { quoteRequests } = parsedRequests;
 
-    if (DISABLE_DUTCH_LIMIT_REQUESTS) {
+    if (DISABLE_DUTCH_LIMIT_REQUESTS && !requestBody.forceUniswapX) {
       log.info('Dutch Limit requests disabled, filtering out all Dutch Limit requests...');
       quoteRequests = removeDutchRequests(quoteRequests);
     }
@@ -147,7 +147,12 @@ export class QuoteHandler extends APIGLambdaHandler<
     metrics.putMetric(`QuoteRequestedChainId${chainId.toString()}`, 1, Unit.Count);
   }
 
-  private emitQuoteResponseMetrics(info: QuoteRequestInfo, bestQuote: Quote, _allQuotes: Quote[], _uniswapXRequested: boolean) {
+  private emitQuoteResponseMetrics(
+    info: QuoteRequestInfo,
+    bestQuote: Quote,
+    _allQuotes: Quote[],
+    _uniswapXRequested: boolean
+  ) {
     const { tokenInChainId: chainId, tokenIn, tokenOut } = info;
     const tokenInAbbr = tokenIn.slice(0, 6);
     const tokenOutAbbr = tokenOut.slice(0, 6);
@@ -193,7 +198,11 @@ export class QuoteHandler extends APIGLambdaHandler<
       metrics.putMetric(`UniswapXRequestedQuoteResponseQuoteType-${bestQuoteType}`, 1, Unit.Count);
       metrics.putMetric(`UniswapXQuoteResponseRoutingType-${bestQuote.routingType}`, 1, Unit.Count);
       metrics.putMetric(`UniswapXQuoteResponseQuoteType-${bestQuoteType}ChainId${chainId.toString()}`, 1, Unit.Count);
-      metrics.putMetric(`UniswapXQuoteResponseRoutingType-${bestQuote.routingType}ChainId${chainId.toString()}`, 1, Unit.Count);
+      metrics.putMetric(
+        `UniswapXQuoteResponseRoutingType-${bestQuote.routingType}ChainId${chainId.toString()}`,
+        1,
+        Unit.Count
+      );
       metrics.putMetric(`UniswapXQuoteResponseChainId${chainId.toString()}`, 1, Unit.Count);
     }
 
