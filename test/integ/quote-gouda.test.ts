@@ -134,6 +134,7 @@ describe('quoteUniswapX', function () {
     // Make a dummy call to the API to get a block number to fork from.
     const quoteReq: QuoteRequestBodyJSON = {
       requestId: 'id',
+      forceUniswapX: true,
       tokenIn: 'USDC',
       tokenInChainId: 1,
       tokenOut: 'USDT',
@@ -181,6 +182,7 @@ describe('quoteUniswapX', function () {
     it(`stable -> stable, tiny trade should be filtered out due to gas`, async () => {
       const quoteReq: QuoteRequestBodyJSON = {
         requestId: 'id',
+        forceUniswapX: true,
         tokenIn: USDC_MAINNET.address,
         tokenInChainId: 1,
         tokenOut: USDT_MAINNET.address,
@@ -208,6 +210,7 @@ describe('quoteUniswapX', function () {
     it(`stable -> stable by name, tiny trade should be filtered out due to gas`, async () => {
       const quoteReq: QuoteRequestBodyJSON = {
         requestId: 'id',
+        forceUniswapX: true,
         tokenIn: 'USDC',
         tokenInChainId: 1,
         tokenOut: 'USDT',
@@ -241,6 +244,7 @@ describe('quoteUniswapX', function () {
         it(`stable -> stable, large trade should return valid quote`, async () => {
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
+            forceUniswapX: true,
             tokenIn: USDC_MAINNET.address,
             tokenInChainId: 1,
             tokenOut: USDT_MAINNET.address,
@@ -299,6 +303,7 @@ describe('quoteUniswapX', function () {
         it(`stable -> stable by name, large trade should return value quote`, async () => {
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
+            forceUniswapX: true,
             tokenIn: 'USDC',
             tokenInChainId: 1,
             tokenOut: 'USDT',
@@ -359,6 +364,7 @@ describe('quoteUniswapX', function () {
           const amount = await getAmount(1, type, 'USDC', 'UNI', '1000');
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
+            forceUniswapX: true,
             tokenIn: USDC_MAINNET.address,
             tokenInChainId: 1,
             tokenOut: UNI_MAINNET.address,
@@ -450,6 +456,7 @@ describe('quoteUniswapX', function () {
         it(`stable -> no liq token; should return no quote`, async () => {
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
+            forceUniswapX: true,
             tokenIn: USDC_MAINNET.address,
             tokenInChainId: 1,
             tokenOut: NO_LIQ_TOKEN,
@@ -478,6 +485,7 @@ describe('quoteUniswapX', function () {
         it(`Params: invalid exclusivity override`, async () => {
           const quoteReq: Partial<QuoteRequestBodyJSON> = {
             requestId: 'id',
+            forceUniswapX: true,
             tokenIn: USDC_MAINNET.address,
             tokenInChainId: 1,
             tokenOut: USDT_MAINNET.address,
@@ -507,6 +515,7 @@ describe('quoteUniswapX', function () {
         it(`Params: invalid auction period`, async () => {
           const quoteReq: Partial<QuoteRequestBodyJSON> = {
             requestId: 'id',
+            forceUniswapX: true,
             tokenIn: USDC_MAINNET.address,
             tokenInChainId: 1,
             tokenOut: USDT_MAINNET.address,
@@ -537,6 +546,7 @@ describe('quoteUniswapX', function () {
       it(`Unknown symbol`, async () => {
         const quoteReq: QuoteRequestBodyJSON = {
           requestId: 'id',
+          forceUniswapX: true,
           tokenIn: 'ASDF',
           tokenInChainId: 1,
           tokenOut: 'USDT',
