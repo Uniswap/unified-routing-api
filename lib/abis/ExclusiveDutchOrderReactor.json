@@ -2,7 +2,7 @@
   {
     "inputs": [
       {
-        "internalType": "address",
+        "internalType": "contract IPermit2",
         "name": "_permit2",
         "type": "address"
       },
@@ -75,22 +75,6 @@
   {
     "inputs": [],
     "name": "InsufficientEth",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "actualBalance",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "expectedBalance",
-        "type": "uint256"
-      }
-    ],
-    "name": "InsufficientOutput",
     "type": "error"
   },
   {
@@ -171,7 +155,7 @@
         "type": "address"
       }
     ],
-    "name": "OwnerUpdated",
+    "name": "OwnershipTransferred",
     "type": "event"
   },
   {
@@ -194,19 +178,6 @@
     "type": "event"
   },
   {
-    "inputs": [],
-    "name": "DIRECT_FILL",
-    "outputs": [
-      {
-        "internalType": "contract IReactorCallback",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "components": [
@@ -224,16 +195,6 @@
         "internalType": "struct SignedOrder",
         "name": "order",
         "type": "tuple"
-      },
-      {
-        "internalType": "contract IReactorCallback",
-        "name": "fillContract",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes",
-        "name": "fillData",
-        "type": "bytes"
       }
     ],
     "name": "execute",
@@ -259,19 +220,69 @@
         "internalType": "struct SignedOrder[]",
         "name": "orders",
         "type": "tuple[]"
-      },
-      {
-        "internalType": "contract IReactorCallback",
-        "name": "fillContract",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes",
-        "name": "fillData",
-        "type": "bytes"
       }
     ],
     "name": "executeBatch",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes",
+            "name": "order",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bytes",
+            "name": "sig",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct SignedOrder[]",
+        "name": "orders",
+        "type": "tuple[]"
+      },
+      {
+        "internalType": "bytes",
+        "name": "callbackData",
+        "type": "bytes"
+      }
+    ],
+    "name": "executeBatchWithCallback",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes",
+            "name": "order",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bytes",
+            "name": "sig",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct SignedOrder",
+        "name": "order",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes",
+        "name": "callbackData",
+        "type": "bytes"
+      }
+    ],
+    "name": "executeWithCallback",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
@@ -307,25 +318,12 @@
     "name": "permit2",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "contract IPermit2",
         "name": "",
         "type": "address"
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "newOwner",
-        "type": "address"
-      }
-    ],
-    "name": "setOwner",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -340,5 +338,22 @@
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "receive"
   }
 ]
