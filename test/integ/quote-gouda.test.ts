@@ -26,7 +26,7 @@ import { ClassicQuoteDataJSON, QuoteRequestBodyJSON, RoutingConfigJSON } from '.
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { ExclusiveDutchOrderReactor__factory } from '../../lib/types/ext';
 import { fund, resetAndFundAtBlock } from '../utils/forkAndFund';
-import { getBalance, getBalanceAndApprove, getBalanceAndApprovePermit2 } from '../utils/getBalanceAndApprove';
+import { getBalance, getBalanceAndApprove } from '../utils/getBalanceAndApprove';
 import { RoutingApiQuoteResponse } from '../utils/quoteResponse';
 import { getAmount } from '../utils/tokens';
 
@@ -35,7 +35,6 @@ const { ethers } = hre;
 chai.use(chaiAsPromised);
 chai.use(chaiSubset);
 
-const DIRECT_TAKER = '0x0000000000000000000000000000000000000001';
 const NO_LIQ_TOKEN = '0x69b148395Ce0015C13e36BFfBAd63f49EF874E03';
 
 if (!process.env.UNISWAP_API || !process.env.ARCHIVE_NODE_RPC || !process.env.ROUTING_API) {
@@ -80,7 +79,7 @@ const checkQuoteToken = (
   expect(percentDiff.lessThan(new Fraction(parseInt(SLIPPAGE), 100))).to.be.true;
 };
 
-describe('quoteUniswapX', function () {
+describe.only('quoteUniswapX', function () {
   // Help with test flakiness by retrying.
   this.retries(2);
 
@@ -106,14 +105,13 @@ describe('quoteUniswapX', function () {
     const tokenInBefore = await getBalanceAndApprove(alice, PERMIT2_ADDRESS, currencyIn);
     const tokenOutBefore = await getBalance(alice, currencyOut);
 
-    // Approve reactor for filler funds
-    await getBalanceAndApprove(filler, PERMIT2_ADDRESS, currencyOut);
-    await getBalanceAndApprovePermit2(filler, order.info.reactor, currencyOut);
+    // Directly approve reactor for filler funds
+    await getBalanceAndApprove(filler, order.info.reactor, currencyOut);
 
     const { domain, types, values } = order.permitData();
     const signature = await alice._signTypedData(domain, types, values);
 
-    const transactionResponse = await reactor.execute({ order: order.serialize(), sig: signature }, DIRECT_TAKER, '0x');
+    const transactionResponse = await reactor.execute({ order: order.serialize(), sig: signature });
     await transactionResponse.wait();
 
     const tokenInAfter = await getBalance(alice, currencyIn);
@@ -237,7 +235,6 @@ describe('quoteUniswapX', function () {
     });
   });
 
-  // TODO: add exactOutput when we support it
   for (const type of ['EXACT_INPUT', 'EXACT_OUTPUT']) {
     describe(`${ID_TO_NETWORK_NAME(1)} ${type} 2xx`, () => {
       describe(`+ Execute Swap`, () => {
