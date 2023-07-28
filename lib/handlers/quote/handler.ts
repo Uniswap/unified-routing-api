@@ -28,7 +28,7 @@ import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../bas
 import { ContainerInjected, QuoterByRoutingType } from './injector';
 import { PostQuoteRequestBodyJoi } from './schema';
 
-const DISABLE_DUTCH_LIMIT_REQUESTS = true;
+const DISABLE_DUTCH_LIMIT_REQUESTS = false;
 
 export interface SingleQuoteJSON {
   routing: string;
