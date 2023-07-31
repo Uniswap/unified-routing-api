@@ -20,6 +20,7 @@ import {
 import {
   createClassicQuote,
   createDutchQuote,
+  createDutchQuoteWithRequest,
   DL_QUOTE_EXACT_IN_BETTER,
   makeDutchRequest,
   QUOTE_REQUEST_DL,
@@ -328,13 +329,18 @@ describe('DutchQuoteContext', () => {
     it('applies less overhead for ETH in if WETH approved on Permit2', async () => {
       const request = makeDutchRequest({
         tokenIn: ETH_IN,
+        tokenOut: TOKEN_IN,
       });
 
       const filler = '0x1111111111111111111111111111111111111111';
-      const rfqQuote = createDutchQuote({ tokenIn: ETH_IN, amountOut: AMOUNT, filler }, 'EXACT_INPUT');
+      const rfqQuote = createDutchQuoteWithRequest({ tokenIn: ETH_IN, tokenOut: TOKEN_IN, amountOut: AMOUNT, filler }, {
+        tokenIn: ETH_IN,
+        tokenOut: TOKEN_IN,
+        type: 'EXACT_INPUT'
+      });
       const classicQuote = createClassicQuote(
         { quote: AMOUNT, quoteGasAdjusted: AMOUNT_GAS_ADJUSTED },
-        { tokenIn: ETH_IN, type: 'EXACT_INPUT' }
+        { tokenIn: ETH_IN, tokenOut: TOKEN_IN, type: 'EXACT_INPUT' }
       );
 
       // Get quote when user has *not* apprroved Permit2
@@ -355,7 +361,7 @@ describe('DutchQuoteContext', () => {
       // Get quote when user has approved Permit2.
       Erc20__factory.connect = jest.fn().mockImplementation(() => {
         return {
-          allowance: () => ({ gte: () => false }),
+          allowance: () => ({ gte: () => true }),
         };
       });
 
@@ -394,7 +400,7 @@ describe('DutchQuoteContext', () => {
       expect(approvedQuote!.amountOut.lt(rfqQuote.amountOut));
 
       // If not approved, the adjustment should be bigger than if approved.
-      expect(nonApprovedQuote!.amountOut.lt(approvedQuote!.amountOut));
+      expect(nonApprovedQuote!.amountOut.lt(approvedQuote!.amountOut)).toEqual(true);
     });
   });
 
