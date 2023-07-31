@@ -288,7 +288,7 @@ describe('DutchQuoteContext', () => {
       );
     });
 
-    it('skips synthetic if very small', async () => {
+    it('returns no DL quotes if classic provided does not meet gas threshold', async () => {
       const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL, provider);
       context.dependencies();
       const filler = '0x1111111111111111111111111111111111111111';
@@ -304,9 +304,25 @@ describe('DutchQuoteContext', () => {
         [context.classicKey]: classicQuote,
         [context.routeToNativeKey]: classicQuote,
       });
-      expect(quote?.request).toMatchObject(rfqQuote.request);
-      expect(quote?.amountIn).toEqual(rfqQuote?.amountIn);
-      expect(quote?.amountOut).toEqual(rfqQuote?.amountOut);
+      expect(quote).toBeNull();
+    });
+
+    it('still returns DL rfq quote if classic is not provided', async () => {
+      const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL, provider);
+      context.dependencies();
+      const filler = '0x1111111111111111111111111111111111111111';
+      const rfqQuote = createDutchQuote({ amountOut: AMOUNT, filler }, 'EXACT_INPUT');
+      expect(rfqQuote.filler).toEqual(filler);
+      const classicQuote = createClassicQuote(
+        { quote: AMOUNT, quoteGasAdjusted: AMOUNT_UNDER_GAS_THRESHOLD },
+        { type: 'EXACT_INPUT' }
+      );
+
+      const quote = await context.resolve({
+        [context.requestKey]: rfqQuote,
+        [context.routeToNativeKey]: classicQuote,
+      });
+      expect(quote).toMatchObject(rfqQuote);
     });
 
     it('applies less overhead for ETH in if WETH approved on Permit2', async () => {
@@ -382,7 +398,7 @@ describe('DutchQuoteContext', () => {
     });
   });
 
-  describe('hasOrderSizeForsynthetic', () => {
+  describe('hasOrderSize', () => {
     describe('exactIn', () => {
       it('returns true if quote == quoteGasAdjusted', async () => {
         const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL, provider);
@@ -391,7 +407,7 @@ describe('DutchQuoteContext', () => {
           { quote: amountOut.toString(), quoteGasAdjusted: amountOut.toString() },
           { type: 'EXACT_INPUT' }
         );
-        const hasSize = context.hasOrderSizeForSynthetic(logger, classicQuote);
+        const hasSize = context.hasOrderSize(logger, classicQuote);
         expect(hasSize).toEqual(true);
       });
 
@@ -405,7 +421,7 @@ describe('DutchQuoteContext', () => {
           { type: 'EXACT_INPUT' }
         );
 
-        const hasSize = context.hasOrderSizeForSynthetic(logger, classicQuote);
+        const hasSize = context.hasOrderSize(logger, classicQuote);
         expect(hasSize).toEqual(true);
       });
 
@@ -419,7 +435,7 @@ describe('DutchQuoteContext', () => {
           { type: 'EXACT_INPUT' }
         );
 
-        const hasSize = context.hasOrderSizeForSynthetic(logger, classicQuote);
+        const hasSize = context.hasOrderSize(logger, classicQuote);
         expect(hasSize).toEqual(false);
       });
     });
@@ -435,7 +451,7 @@ describe('DutchQuoteContext', () => {
           { type: 'EXACT_OUTPUT' }
         );
 
-        const hasSize = context.hasOrderSizeForSynthetic(logger, classicQuote);
+        const hasSize = context.hasOrderSize(logger, classicQuote);
         expect(hasSize).toEqual(true);
       });
 
@@ -449,7 +465,7 @@ describe('DutchQuoteContext', () => {
           { type: 'EXACT_OUTPUT' }
         );
 
-        const hasSize = context.hasOrderSizeForSynthetic(logger, classicQuote);
+        const hasSize = context.hasOrderSize(logger, classicQuote);
         expect(hasSize).toEqual(false);
       });
     });
@@ -466,6 +482,7 @@ describe('DutchQuoteContext', () => {
         amount: AMOUNT,
         type: 'EXACT_INPUT',
         swapper: SWAPPER,
+        useUniswapX: true,
       };
       const QUOTE_REQUEST_ELIGIBLE_TOKENS = makeDutchRequest({}, { useSyntheticQuotes: true }, baseRequest);
       const context = new DutchQuoteContext(logger, QUOTE_REQUEST_ELIGIBLE_TOKENS, provider);
@@ -482,6 +499,7 @@ describe('DutchQuoteContext', () => {
         amount: AMOUNT,
         type: 'EXACT_INPUT',
         swapper: SWAPPER,
+        useUniswapX: true,
       };
       const QUOTE_REQUEST_INELIGIBLE_TOKEN = makeDutchRequest({}, { useSyntheticQuotes: true }, baseRequest);
       const context = new DutchQuoteContext(logger, QUOTE_REQUEST_INELIGIBLE_TOKEN, provider);
@@ -498,6 +516,7 @@ describe('DutchQuoteContext', () => {
         amount: AMOUNT,
         type: 'EXACT_INPUT',
         swapper: SWAPPER,
+        useUniswapX: true,
       };
       const QUOTE_REQUEST_INELIGIBLE_TOKEN = makeDutchRequest({}, { useSyntheticQuotes: true }, baseRequest);
       const context = new DutchQuoteContext(logger, QUOTE_REQUEST_INELIGIBLE_TOKEN, provider);
@@ -514,6 +533,7 @@ describe('DutchQuoteContext', () => {
         amount: AMOUNT,
         type: 'EXACT_INPUT',
         swapper: SWAPPER,
+        useUniswapX: true,
       };
 
       Erc20__factory.connect = jest.fn().mockImplementation(() => {

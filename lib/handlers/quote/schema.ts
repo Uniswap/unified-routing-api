@@ -20,6 +20,7 @@ export const PostQuoteRequestBodyJoi = Joi.object({
       'array.unique': 'Duplicate routingType in configs',
     }),
   swapper: FieldValidator.address.optional(),
+  useUniswapX: Joi.boolean().default(false).optional(),
 });
 
 export const PostQuoteResponseJoi = Joi.object({

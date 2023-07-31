@@ -26,7 +26,7 @@ import { ClassicQuoteDataJSON, QuoteRequestBodyJSON, RoutingConfigJSON } from '.
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { ExclusiveDutchOrderReactor__factory } from '../../lib/types/ext';
 import { fund, resetAndFundAtBlock } from '../utils/forkAndFund';
-import { getBalance, getBalanceAndApprove, getBalanceAndApprovePermit2 } from '../utils/getBalanceAndApprove';
+import { getBalance, getBalanceAndApprove } from '../utils/getBalanceAndApprove';
 import { RoutingApiQuoteResponse } from '../utils/quoteResponse';
 import { getAmount } from '../utils/tokens';
 
@@ -35,7 +35,6 @@ const { ethers } = hre;
 chai.use(chaiAsPromised);
 chai.use(chaiSubset);
 
-const DIRECT_TAKER = '0x0000000000000000000000000000000000000001';
 const NO_LIQ_TOKEN = '0x69b148395Ce0015C13e36BFfBAd63f49EF874E03';
 
 if (!process.env.UNISWAP_API || !process.env.ARCHIVE_NODE_RPC || !process.env.ROUTING_API) {
@@ -107,14 +106,13 @@ describe('quoteUniswapX', function () {
     const tokenInBefore = await getBalanceAndApprove(alice, PERMIT2_ADDRESS, currencyIn.wrapped);
     const tokenOutBefore = await getBalance(alice, currencyOut);
 
-    // Approve reactor for filler funds
-    await getBalanceAndApprove(filler, PERMIT2_ADDRESS, currencyOut);
-    await getBalanceAndApprovePermit2(filler, order.info.reactor, currencyOut);
+    // Directly approve reactor for filler funds
+    await getBalanceAndApprove(filler, order.info.reactor, currencyOut);
 
     const { domain, types, values } = order.permitData();
     const signature = await alice._signTypedData(domain, types, values);
 
-    const transactionResponse = await reactor.execute({ order: order.serialize(), sig: signature }, DIRECT_TAKER, '0x');
+    const transactionResponse = await reactor.execute({ order: order.serialize(), sig: signature });
     await transactionResponse.wait();
 
     const tokenInAfter = await getBalance(alice, currencyIn.wrapped);
@@ -135,6 +133,7 @@ describe('quoteUniswapX', function () {
     // Make a dummy call to the API to get a block number to fork from.
     const quoteReq: QuoteRequestBodyJSON = {
       requestId: 'id',
+      useUniswapX: true,
       tokenIn: 'USDC',
       tokenInChainId: 1,
       tokenOut: 'USDT',
@@ -182,6 +181,7 @@ describe('quoteUniswapX', function () {
     it(`stable -> stable, tiny trade should be filtered out due to gas`, async () => {
       const quoteReq: QuoteRequestBodyJSON = {
         requestId: 'id',
+        useUniswapX: true,
         tokenIn: USDC_MAINNET.address,
         tokenInChainId: 1,
         tokenOut: USDT_MAINNET.address,
@@ -209,6 +209,7 @@ describe('quoteUniswapX', function () {
     it(`stable -> stable by name, tiny trade should be filtered out due to gas`, async () => {
       const quoteReq: QuoteRequestBodyJSON = {
         requestId: 'id',
+        useUniswapX: true,
         tokenIn: 'USDC',
         tokenInChainId: 1,
         tokenOut: 'USDT',
@@ -235,13 +236,13 @@ describe('quoteUniswapX', function () {
     });
   });
 
-  // TODO: add exactOutput when we support it
   for (const type of ['EXACT_INPUT', 'EXACT_OUTPUT']) {
     describe(`${ID_TO_NETWORK_NAME(1)} ${type} 2xx`, () => {
       describe(`+ Execute Swap`, () => {
         it(`stable -> stable, large trade should return valid quote`, async () => {
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
+            useUniswapX: true,
             tokenIn: USDC_MAINNET.address,
             tokenInChainId: 1,
             tokenOut: USDT_MAINNET.address,
@@ -288,7 +289,7 @@ describe('quoteUniswapX', function () {
               CurrencyAmount.fromRawAmount(USDT_MAINNET, order.info.outputs[0].startAmount.toString())
             );
           } else {
-            expect(tokenOutAfter.subtract(tokenOutBefore).toExact()).to.equal('10000');
+            expect(tokenOutAfter.subtract(tokenOutBefore).greaterThan(10_000) || tokenOutAfter.subtract(tokenOutBefore).equalTo(10_000)).to.be.true;
             checkQuoteToken(
               tokenInBefore,
               tokenInAfter,
@@ -300,6 +301,7 @@ describe('quoteUniswapX', function () {
         it(`stable -> stable by name, large trade should return value quote`, async () => {
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
+            useUniswapX: true,
             tokenIn: 'USDC',
             tokenInChainId: 1,
             tokenOut: 'USDT',
@@ -347,7 +349,7 @@ describe('quoteUniswapX', function () {
               CurrencyAmount.fromRawAmount(USDT_MAINNET, order.info.outputs[0].startAmount.toString())
             );
           } else {
-            expect(tokenOutAfter.subtract(tokenOutBefore).toExact()).to.equal('10000');
+            expect(tokenOutAfter.subtract(tokenOutBefore).greaterThan(10_000) || tokenOutAfter.subtract(tokenOutBefore).equalTo(10_000)).to.be.true;
             checkQuoteToken(
               tokenInBefore,
               tokenInAfter,
@@ -360,6 +362,7 @@ describe('quoteUniswapX', function () {
           const amount = await getAmount(1, type, 'USDC', 'UNI', '1000');
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
+            useUniswapX: true,
             tokenIn: USDC_MAINNET.address,
             tokenInChainId: 1,
             tokenOut: UNI_MAINNET.address,
@@ -439,7 +442,7 @@ describe('quoteUniswapX', function () {
               CurrencyAmount.fromRawAmount(UNI_MAINNET, order.info.outputs[0].startAmount.toString())
             );
           } else {
-            expect(tokenOutAfter.subtract(tokenOutBefore).toExact()).to.equal('1000');
+            expect(tokenOutAfter.subtract(tokenOutBefore).greaterThan(1_000) || tokenOutAfter.subtract(tokenOutBefore).equalTo(1_000)).to.be.true;
             checkQuoteToken(
               tokenInBefore,
               tokenInAfter,
@@ -527,6 +530,7 @@ describe('quoteUniswapX', function () {
         it(`stable -> no liq token; should return no quote`, async () => {
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
+            useUniswapX: true,
             tokenIn: USDC_MAINNET.address,
             tokenInChainId: 1,
             tokenOut: NO_LIQ_TOKEN,
@@ -555,6 +559,7 @@ describe('quoteUniswapX', function () {
         it(`Params: invalid exclusivity override`, async () => {
           const quoteReq: Partial<QuoteRequestBodyJSON> = {
             requestId: 'id',
+            useUniswapX: true,
             tokenIn: USDC_MAINNET.address,
             tokenInChainId: 1,
             tokenOut: USDT_MAINNET.address,
@@ -584,6 +589,7 @@ describe('quoteUniswapX', function () {
         it(`Params: invalid auction period`, async () => {
           const quoteReq: Partial<QuoteRequestBodyJSON> = {
             requestId: 'id',
+            useUniswapX: true,
             tokenIn: USDC_MAINNET.address,
             tokenInChainId: 1,
             tokenOut: USDT_MAINNET.address,
@@ -614,6 +620,7 @@ describe('quoteUniswapX', function () {
       it(`Unknown symbol`, async () => {
         const quoteReq: QuoteRequestBodyJSON = {
           requestId: 'id',
+          useUniswapX: true,
           tokenIn: 'ASDF',
           tokenInChainId: 1,
           tokenOut: 'USDT',

@@ -13,7 +13,7 @@ export const WETH_WRAP_GAS_ALREADY_APPROVED = 27938;
 export const WETH_UNWRAP_GAS = 36000;
 
 export const DEFAULT_EXCLUSIVITY_OVERRIDE_BPS = BigNumber.from(100); // non-exclusive fillers must override price by this much
-export const UNISWAPX_BASE_GAS = 250000; // base gas overhead for filling an order through Gouda
+export const UNISWAPX_BASE_GAS = 275000; // base gas overhead for filling an order through Gouda
 
 export enum RoutingType {
   CLASSIC = 'CLASSIC',

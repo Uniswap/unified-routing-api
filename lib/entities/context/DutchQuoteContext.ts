@@ -139,9 +139,16 @@ export class DutchQuoteContext implements QuoteContext {
       return null;
     }
 
+    // order too small; rfq quote not usable
+    if (classicQuote && !this.hasOrderSize(this.log, classicQuote)) {
+      this.log.info('Order size too small, skipping rfq');
+      return null;
+    }
+
     const reparameterized = DutchQuote.reparameterize(quote, classicQuote as ClassicQuote, {
       hasApprovedPermit2: await this.hasApprovedPermit2(quote.request),
     });
+
     // if its invalid for some reason, i.e. too much decay then return null
     if (!reparameterized.validate()) return null;
     return reparameterized;
@@ -163,7 +170,7 @@ export class DutchQuoteContext implements QuoteContext {
     }
 
     // order too small; classic quote not usable
-    if (!this.hasOrderSizeForSynthetic(this.log, classicQuote)) {
+    if (!this.hasOrderSize(this.log, classicQuote)) {
       this.log.info('Order size too small, skipping synthetic');
       return null;
     }
@@ -177,7 +184,7 @@ export class DutchQuoteContext implements QuoteContext {
     return DutchQuote.fromClassicQuote(this.request, classicQuote as ClassicQuote);
   }
 
-  hasOrderSizeForSynthetic(log: Logger, classicQuote: Quote): boolean {
+  hasOrderSize(log: Logger, classicQuote: Quote): boolean {
     const classicQuoteData = classicQuote.toJSON() as ClassicQuoteDataJSON;
 
     const routingApiQuote = BigNumber.from(classicQuoteData.quote);
