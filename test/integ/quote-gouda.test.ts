@@ -1,5 +1,5 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { Currency, CurrencyAmount, Ether, Fraction, WETH9, WETH9 } from '@uniswap/sdk-core';
+import { Currency, CurrencyAmount, Ether, Fraction, WETH9 } from '@uniswap/sdk-core';
 import {
   DAI_MAINNET,
   ID_TO_NETWORK_NAME,
