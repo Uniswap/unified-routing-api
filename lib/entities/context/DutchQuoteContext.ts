@@ -246,7 +246,8 @@ export class DutchQuoteContext implements QuoteContext {
   }
 
   async hasApprovedPermit2(request: DutchRequest): Promise<boolean> {
-    if (!request.info.swapper) return false;
+    // either swapper was not set or is zero address
+    if (!request.info.swapper  || request.info.swapper == NATIVE_ADDRESS) return false;
 
     const tokenContract = Erc20__factory.connect(request.info.tokenIn, this.provider);
 
