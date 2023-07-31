@@ -250,10 +250,7 @@ export class DutchQuoteContext implements QuoteContext {
     if (!request.info.swapper  || request.info.swapper == NATIVE_ADDRESS) return false;
 
     const tokenInAddress = request.info.tokenIn == NATIVE_ADDRESS ? WRAPPED_NATIVE_CURRENCY[request.info.tokenInChainId as ChainId].address : request.info.tokenIn;
-
-    console.log("Checking permit2 allowance for tokenIn", tokenInAddress, "on swapper", request.info.swapper)
     const tokenContract = Erc20__factory.connect(tokenInAddress, this.provider);
-
     const permit2Allowance = await tokenContract.allowance(request.info.swapper, PERMIT2_ADDRESS);
 
     // TODO: Fix for exact output
