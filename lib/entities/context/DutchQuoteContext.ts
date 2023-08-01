@@ -22,6 +22,7 @@ import {
   QuoteRequest,
 } from '../../entities';
 import { checkDefined } from '../../util/preconditions';
+
 // if the gas is greater than this proportion of the whole trade size
 // then we will not route the order
 const GAS_PROPORTION_THRESHOLD_BPS = 2500;
