@@ -39,4 +39,4 @@ export interface IQuote {
   toLog(): LogJSON;
 }
 
-export type Quote = DutchQuote | ClassicQuote
+export type Quote = DutchQuote | ClassicQuote;

@@ -134,7 +134,7 @@ export class DutchQuote implements IQuote {
   public static reparameterize(
     quote: DutchQuote,
     classic?: ClassicQuote,
-    options?: ParameterizationOptions,
+    options?: ParameterizationOptions
   ): DutchQuote {
     if (!classic) return quote;
 
