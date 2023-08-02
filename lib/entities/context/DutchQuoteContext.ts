@@ -1,6 +1,8 @@
 import DEFAULT_TOKEN_LIST from '@uniswap/default-token-list';
+import { PERMIT2_ADDRESS } from '@uniswap/permit2-sdk';
 import { Protocol } from '@uniswap/router-sdk';
-import { TradeType } from '@uniswap/sdk-core';
+import { ChainId, TradeType } from '@uniswap/sdk-core';
+
 import {
   CachingTokenListProvider,
   ID_TO_CHAIN_ID,
@@ -11,7 +13,7 @@ import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
 import NodeCache from 'node-cache';
 import { QuoteByKey, QuoteContext } from '.';
-import { RoutingType } from '../../constants';
+import { NATIVE_ADDRESS, RoutingType } from '../../constants';
 import {
   ClassicQuote,
   ClassicQuoteDataJSON,
@@ -21,6 +23,7 @@ import {
   Quote,
   QuoteRequest,
 } from '../../entities';
+import { Erc20__factory } from '../../types/ext/factories/Erc20__factory';
 import { metrics } from '../../util/metrics';
 import { checkDefined } from '../../util/preconditions';
 
@@ -40,7 +43,7 @@ export class DutchQuoteContext implements QuoteContext {
   public routeToNativeKey: string;
   public needsRouteToNative: boolean;
 
-  constructor(_log: Logger, public request: DutchRequest) {
+  constructor(_log: Logger, public request: DutchRequest, private provider: ethers.providers.BaseProvider) {
     this.log = _log.child({ context: 'DutchQuoteContext' });
     this.requestKey = this.request.key();
     this.needsRouteToNative = false;
@@ -128,7 +131,7 @@ export class DutchQuoteContext implements QuoteContext {
       tokenList.getTokenByAddress(quote.tokenIn),
       tokenList.getTokenByAddress(quote.tokenOut),
     ]);
-    if (!tokenIn) {
+    if (!tokenIn && quote.tokenIn != NATIVE_ADDRESS) {
       this.log.info(`Token ${quote.tokenIn} not in tokenlist, skipping rfq`);
       return null;
     }
@@ -165,7 +168,9 @@ export class DutchQuoteContext implements QuoteContext {
       }
     }
 
-    const reparameterized = DutchQuote.reparameterize(quote, classicQuote as ClassicQuote);
+    const reparameterized = DutchQuote.reparameterize(quote, classicQuote as ClassicQuote, {
+      hasApprovedPermit2: await this.hasApprovedPermit2(quote.request),
+    });    
     // if its invalid for some reason, i.e. too much decay then return null
     if (!reparameterized.validate()) return null;
     return reparameterized;
@@ -268,5 +273,25 @@ export class DutchQuoteContext implements QuoteContext {
       tokenInEligibileTokens.includes(this.request.info.tokenIn.toLowerCase()) &&
       tokenOutEligibileTokens.includes(this.request.info.tokenOut.toLowerCase())
     );
+  }
+
+  async hasApprovedPermit2(request: DutchRequest): Promise<boolean> {
+    // either swapper was not set or is zero address
+    if (!request.info.swapper || request.info.swapper == NATIVE_ADDRESS) return false;
+
+    const tokenInAddress =
+      request.info.tokenIn == NATIVE_ADDRESS
+        ? WRAPPED_NATIVE_CURRENCY[request.info.tokenInChainId as ChainId].address
+        : request.info.tokenIn;
+    const tokenContract = Erc20__factory.connect(tokenInAddress, this.provider);
+    const permit2Allowance = await tokenContract.allowance(request.info.swapper, PERMIT2_ADDRESS);
+
+    if (request.info.type == TradeType.EXACT_OUTPUT) {
+      // If exactOutput, we don't know how much tokenIn will be needed
+      // so we just check if allowance is > max uint256 / 2
+      return permit2Allowance.gte(BigNumber.from(2).pow(255));
+    }
+    // TODO: Fix for exact output
+    return permit2Allowance.gte(request.info.amount);
   }
 }

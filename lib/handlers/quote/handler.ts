@@ -3,6 +3,7 @@ import Joi from 'joi';
 import { TradeType } from '@uniswap/sdk-core';
 import { Unit } from 'aws-embedded-metrics';
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
+import { ethers } from 'ethers';
 
 import _ from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
@@ -52,12 +53,14 @@ export class QuoteHandler extends APIGLambdaHandler<
   ): Promise<ErrorResponse | Response<QuoteResponseJSON>> {
     const {
       requestBody,
-      containerInjected: { quoters, tokenFetcher, permit2Fetcher },
+      containerInjected: { quoters, tokenFetcher, permit2Fetcher, rpcUrlMap },
     } = params;
 
     if (requestBody.tokenInChainId != requestBody.tokenOutChainId) {
       throw new ValidationError(`Cannot request quotes for tokens on different chains`);
     }
+
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrlMap.get(requestBody.tokenInChainId));
 
     const request = {
       ...requestBody,
@@ -82,7 +85,7 @@ export class QuoteHandler extends APIGLambdaHandler<
       quoteRequests = removeDutchRequests(quoteRequests);
     }
 
-    const contextHandler = new QuoteContextManager(parseQuoteContexts(quoteRequests, permit2Fetcher));
+    const contextHandler = new QuoteContextManager(parseQuoteContexts(quoteRequests, permit2Fetcher, provider));
     const requests = contextHandler.getRequests();
     log.info({ requests }, 'requests');
     const quotes = await getQuotes(quoters, requests);

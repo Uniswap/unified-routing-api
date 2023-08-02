@@ -258,6 +258,15 @@ export function createDutchQuote(overrides: Partial<DutchQuoteJSON>, type: strin
   ) as DutchQuote;
 }
 
+export function createDutchQuoteWithRequest(overrides: Partial<DutchQuoteJSON>, requestOverrides: Partial<QuoteRequestBodyJSON>): DutchQuote {
+  return buildQuoteResponse(
+    Object.assign({}, DL_QUOTE_DATA, {
+      quote: { ...DL_QUOTE_DATA.quote, type: RoutingType.DUTCH_LIMIT, ...overrides },
+    }),
+    makeDutchRequest({ ...requestOverrides })
+  ) as DutchQuote;
+}
+
 export function createClassicQuote(
   overrides: Partial<ClassicQuoteDataJSON>,
   requestOverrides: Partial<QuoteRequestBodyJSON>

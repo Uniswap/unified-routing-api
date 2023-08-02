@@ -23,7 +23,7 @@ export class RfqQuoter implements Quoter {
     }
 
     const swapper = request.config.swapper;
-    const now = Date.now()
+    const now = Date.now();
     const requests = [
       axios.post(
         `${this.rfqUrl}quote`,
@@ -74,7 +74,6 @@ export class RfqQuoter implements Quoter {
         }
       }
     });
-    
 
     return quote;
   }

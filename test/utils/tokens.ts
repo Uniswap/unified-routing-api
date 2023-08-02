@@ -12,7 +12,6 @@ import {
   DAI_POLYGON,
   DAI_POLYGON_MUMBAI,
   DAI_SEPOLIA,
-  log,
   NodeJSCache,
   USDC_ARBITRUM,
   USDC_AVAX,
@@ -39,9 +38,13 @@ export const getTokenListProvider = (id: ChainId) => {
 };
 
 export const getAmount = async (id: ChainId, type: string, symbolIn: string, symbolOut: string, amount: string) => {
+  if (type == 'EXACT_INPUT' ? symbolIn == 'ETH' : symbolOut == 'ETH') {
+    return ethers.utils.parseUnits(amount, 18).toString();
+  }
+
   const tokenListProvider = getTokenListProvider(id);
   const decimals = (await tokenListProvider.getTokenBySymbol(type == 'EXACT_INPUT' ? symbolIn : symbolOut))!.decimals;
-  log.info(decimals);
+
   return ethers.utils.parseUnits(amount, decimals).toString();
 };
 

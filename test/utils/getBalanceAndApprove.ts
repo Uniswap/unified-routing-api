@@ -56,5 +56,5 @@ export const getBalanceAndApprovePermit2 = async (
     ).wait();
   }
 
-  return getBalance(alice, currency);
+  return getBalance(alice, currency.wrapped);
 };

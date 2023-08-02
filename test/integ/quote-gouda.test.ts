@@ -1,5 +1,5 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { Currency, CurrencyAmount, Fraction, WETH9 } from '@uniswap/sdk-core';
+import { Currency, CurrencyAmount, Ether, Fraction, WETH9 } from '@uniswap/sdk-core';
 import {
   DAI_MAINNET,
   ID_TO_NETWORK_NAME,
@@ -21,7 +21,7 @@ import { BigNumber } from 'ethers';
 import hre from 'hardhat';
 import _ from 'lodash';
 import qs from 'qs';
-import { RoutingType } from '../../lib/constants';
+import { NATIVE_ADDRESS, RoutingType } from '../../lib/constants';
 import { ClassicQuoteDataJSON, QuoteRequestBodyJSON, RoutingConfigJSON } from '../../lib/entities';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { ExclusiveDutchOrderReactor__factory } from '../../lib/types/ext';
@@ -101,8 +101,9 @@ describe('quoteUniswapX', function () {
   }> => {
     const reactor = ExclusiveDutchOrderReactor__factory.connect(order.info.reactor, filler);
 
-    // Approve Permit2
-    const tokenInBefore = await getBalanceAndApprove(alice, PERMIT2_ADDRESS, currencyIn);
+    // Approve Permit2 for Alice
+    // Note we pass in currency.wrapped, since Gouda does not support native ETH in
+    const tokenInBefore = await getBalanceAndApprove(alice, PERMIT2_ADDRESS, currencyIn.wrapped);
     const tokenOutBefore = await getBalance(alice, currencyOut);
 
     // Directly approve reactor for filler funds
@@ -114,7 +115,7 @@ describe('quoteUniswapX', function () {
     const transactionResponse = await reactor.execute({ order: order.serialize(), sig: signature });
     await transactionResponse.wait();
 
-    const tokenInAfter = await getBalance(alice, currencyIn);
+    const tokenInAfter = await getBalance(alice, currencyIn.wrapped);
     const tokenOutAfter = await getBalance(alice, currencyOut);
 
     return {
@@ -446,6 +447,82 @@ describe('quoteUniswapX', function () {
               tokenInBefore,
               tokenInAfter,
               CurrencyAmount.fromRawAmount(USDC_MAINNET, order.info.input.startAmount.toString())
+            );
+          }
+        });
+
+        it(`ETH -> large cap, large trade should return valid quote`, async () => {
+          const amount = await getAmount(1, type, 'ETH', 'UNI', '1');
+          const quoteReq: QuoteRequestBodyJSON = {
+            requestId: 'id',
+            tokenIn: NATIVE_ADDRESS,
+            tokenInChainId: 1,
+            tokenOut: UNI_MAINNET.address,
+            tokenOutChainId: 1,
+            amount: amount,
+            type,
+            slippageTolerance: SLIPPAGE,
+            configs: [
+              {
+                routingType: RoutingType.DUTCH_LIMIT,
+                swapper: alice.address,
+                useSyntheticQuotes: true,
+              },
+            ] as RoutingConfigJSON[],
+          };
+
+          const response = await axios.post<QuoteResponseJSON>(`${API}`, quoteReq);
+          const {
+            data: { quote },
+            status,
+          } = response;
+
+          const routingResponse = await axios.get<RoutingApiQuoteResponse>(
+            `${ROUTING_API}?${qs.stringify({
+              tokenInAddress: 'ETH', // Routing API doesn't support 0x0 as native
+              tokenOutAddress: UNI_MAINNET.address,
+              tokenInChainId: 1,
+              tokenOutChainId: 1,
+              amount: amount,
+              type: type === 'EXACT_INPUT' ? 'exactIn' : 'exactOut',
+              recipient: alice.address,
+              slippageTolerance: SLIPPAGE,
+              deadline: '360',
+              algorithm: 'alpha',
+              enableUniversalRouter: true,
+            })}`
+          );
+          expect(routingResponse.status).to.equal(200);
+
+          const order = new DutchOrder((quote as any).orderInfo, 1);
+          expect(status).to.equal(200);
+          // account for gas and slippage
+          expect(order.info.swapper).to.equal(alice.address);
+          expect(order.info.outputs.length).to.equal(1);
+
+          const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+            order,
+            Ether.onChain(1),
+            UNI_MAINNET
+          );
+
+          if (type === 'EXACT_INPUT') {
+            // We check the *wrapped* balance, since Gouda acts on wrapped tokens, and since we don't
+            // wrap ETH in this test. We just use Alice's pre-existing WETH balance.
+            expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal('1');
+            checkQuoteToken(
+              tokenOutBefore,
+              tokenOutAfter,
+              CurrencyAmount.fromRawAmount(UNI_MAINNET, order.info.outputs[0].startAmount.toString())
+            );
+          } else {
+            expect(
+              tokenOutAfter.subtract(tokenOutBefore).greaterThan(1) || tokenOutAfter.subtract(tokenOutBefore).equalTo(1)
+            ).to.be.true;
+            checkQuoteToken(
+              tokenInBefore,
+              tokenInAfter,
+              CurrencyAmount.fromRawAmount(WETH9[1], order.info.input.startAmount.toString())
             );
           }
         });
