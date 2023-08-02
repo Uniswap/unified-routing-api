@@ -1,6 +1,6 @@
 import DEFAULT_TOKEN_LIST from '@uniswap/default-token-list';
 
-import { ChainId } from '@uniswap/sdk-core';
+import { ChainId, Currency, Ether } from '@uniswap/sdk-core';
 import {
   CachingTokenListProvider,
   ITokenListProvider,
@@ -56,5 +56,18 @@ export class TokenFetcher {
       }
       return token.address;
     }
+  };
+
+  public resolveToken = async (chainId: ChainId, address: string): Promise<Currency> => {
+    if (address == NATIVE_ADDRESS || address.toLowerCase() == 'eth') {
+      return Ether.onChain(chainId);
+    }
+
+    const tokenListProvider = this.getTokenListProvider(chainId);
+    const token = await tokenListProvider.getTokenByAddress(address);
+    if (token === undefined) {
+      throw new ValidationError(`Could not find token with address ${address}`);
+    }
+    return token;
   };
 }
