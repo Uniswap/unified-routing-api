@@ -27,6 +27,7 @@ import { checkDefined } from '../../util/preconditions';
 // then we will not route the order
 const GAS_PROPORTION_THRESHOLD_BPS = 2500;
 const BPS = 10000;
+const RFQ_QUOTE_UPPER_BOUND_MULTIPLIER = 3;
 
 // manages context around a single top level classic quote request
 export class DutchQuoteContext implements QuoteContext {
@@ -225,9 +226,9 @@ export class DutchQuoteContext implements QuoteContext {
 
   rfqQuoteTooGood(quote: DutchQuote, classicQuote: ClassicQuote): boolean {
     if (quote.request.info.type === TradeType.EXACT_INPUT) {
-      return quote.amountOut.gt(classicQuote.amountOutGasAdjusted.mul(3));
+      return quote.amountOut.gt(classicQuote.amountOutGasAdjusted.mul(RFQ_QUOTE_UPPER_BOUND_MULTIPLIER));
     } else {
-      return quote.amountIn.lt(classicQuote.amountInGasAdjusted.div(3));
+      return quote.amountIn.lt(classicQuote.amountInGasAdjusted.div(RFQ_QUOTE_UPPER_BOUND_MULTIPLIER));
     }
   }
 
