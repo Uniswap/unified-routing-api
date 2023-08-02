@@ -37,8 +37,6 @@ export class MetricPair {
         return null;
       }
 
-      log.info({ metrics, m: JSON.stringify(metrics) }, 'metrics logger class');
-
       const amountIn = CurrencyAmount.fromRawAmount(this.tokenIn, amount);
       for (const [low, high] of this.buckets) {
         const highAmount = this.parse(high, this.tokenIn);

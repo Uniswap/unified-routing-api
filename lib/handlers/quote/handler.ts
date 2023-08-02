@@ -95,7 +95,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     const resolvedQuotes = await contextHandler.resolveQuotes(quotes);
     log.info({ resolvedQuotes }, 'resolvedQuotes');
 
-    await this.emitQuoteRequestedMetrics(quoteInfo, quoteRequests);
+    await this.emitQuoteRequestedMetrics(tokenFetcher, quoteInfo, quoteRequests);
 
     const uniswapXRequested = requests.filter((request) => request.routingType === RoutingType.DUTCH_LIMIT).length > 0;
     const resolvedValidQuotes = resolvedQuotes.filter((q) => q !== null) as Quote[];
@@ -121,10 +121,10 @@ export class QuoteHandler extends APIGLambdaHandler<
     };
   }
 
-  private async emitQuoteRequestedMetrics(info: QuoteRequestInfo, requests: QuoteRequest[]): Promise<void> {
+  private async emitQuoteRequestedMetrics(tokenFetcher: TokenFetcher, info: QuoteRequestInfo, requests: QuoteRequest[]): Promise<void> {
     const { tokenInChainId: chainId, tokenIn, tokenOut } = info;
-    const tokenInAbbr = tokenIn.slice(0, 6);
-    const tokenOutAbbr = tokenOut.slice(0, 6);
+    const tokenInAbbr = await this.getTokenSymbolOrAbbr(tokenFetcher, chainId, tokenIn);
+    const tokenOutAbbr = await this.getTokenSymbolOrAbbr(tokenFetcher, chainId, tokenOut);
     const tokenPairSymbol = `${tokenInAbbr}/${tokenOutAbbr}`;
     const tokenPairSymbolChain = `${tokenInAbbr}/${tokenOutAbbr}/${chainId}`;
 
