@@ -21,6 +21,7 @@ import {
   Quote,
   QuoteRequest,
 } from '../../entities';
+import { metrics } from '../../util/metrics';
 import { checkDefined } from '../../util/preconditions';
 
 // if the gas is greater than this proportion of the whole trade size
@@ -145,18 +146,23 @@ export class DutchQuoteContext implements QuoteContext {
 
     // TODO: remove after reputation system is ready
     // drop Rfq quote if it's significantly better than classic - high chance MM will fade
-    if (classicQuote && this.rfqQuoteTooGood(quote, classicQuote)) {
-      this.log.info(
-        {
-          tradeType: TradeType[classicQuote.request.info.type],
-          rfqIn: quote.amountIn.toString(),
-          rfqOut: quote.amountOut.toString(),
-          classicIn: classicQuote.amountInGasAdjusted.toString(),
-          classicOut: classicQuote.amountOutGasAdjusted.toString(),
-        },
-        'Rfq quote at least 300% better than classic, skipping'
-      );
-      return null;
+    if (classicQuote) {
+      metrics.putMetric(`HasBothRfqAndClassicQuote`, 1);
+
+      if (this.rfqQuoteTooGood(quote, classicQuote)) {
+        this.log.info(
+          {
+            tradeType: TradeType[classicQuote.request.info.type],
+            rfqIn: quote.amountIn.toString(),
+            rfqOut: quote.amountOut.toString(),
+            classicIn: classicQuote.amountInGasAdjusted.toString(),
+            classicOut: classicQuote.amountOutGasAdjusted.toString(),
+          },
+          'Rfq quote at least 300% better than classic, skipping'
+        );
+        metrics.putMetric(`RfqQuoteDropped-PriceTooGood`, 1);
+        return null;
+      }
     }
 
     const reparameterized = DutchQuote.reparameterize(quote, classicQuote as ClassicQuote);
