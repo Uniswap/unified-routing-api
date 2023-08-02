@@ -449,6 +449,42 @@ export class APIStack extends cdk.Stack {
       evaluationPeriods: 3,
     });
 
+    // Alarm on high rate of dropping rfq quotes due to pricing being too good comparing to SOR
+    const rfqQuoteDropMetric = new aws_cloudwatch.MathExpression({
+      expression: '100*(rfqDropped/denominator)',
+      period: Duration.minutes(5),
+      usingMetrics: {
+        rfqDropped: new aws_cloudwatch.Metric({
+          namespace: 'Uniswap',
+          metricName: `RfqQuoteDropped-PriceTooGood`,
+          dimensionsMap: { Service: SERVICE_NAME },
+          unit: aws_cloudwatch.Unit.COUNT,
+          statistic: 'sum',
+        }),
+        denominator: new aws_cloudwatch.Metric({
+          namespace: 'Uniswap',
+          metricName: `HasBothRfqAndClassicQuote`,
+          dimensionsMap: { Service: SERVICE_NAME },
+          unit: aws_cloudwatch.Unit.COUNT,
+          statistic: 'sum',
+        }),
+      },
+    });
+
+    const rfqQuoteDropRateAlarmSev2 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV2-RfqQuote-DropRate', {
+      alarmName: 'UnifiedRoutingAPI-SEV2-RfqQuote-DropRate',
+      metric: rfqQuoteDropMetric,
+      threshold: 15,
+      evaluationPeriods: 3,
+    });
+
+    const rfqQuoteDropRateAlarmSev3 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV3-RfqQuote-DropRate', {
+      alarmName: 'UnifiedRoutingAPI-SEV3-RfqQuote-DropRate',
+      metric: rfqQuoteDropMetric,
+      threshold: 5,
+      evaluationPeriods: 3,
+    });
+
     // Alarm on calls from URA to the nonce service (uniswapx service)
     const nonceAPIErrorMetric = new aws_cloudwatch.MathExpression({
       expression: '100*(error/invocations)',
@@ -505,6 +541,8 @@ export class APIStack extends cdk.Stack {
       routingAPIErrorRateAlarmSev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       rfqAPIErrorRateAlarmSev2.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       rfqAPIErrorRateAlarmSev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
+      rfqQuoteDropRateAlarmSev2.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
+      rfqQuoteDropRateAlarmSev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       nonceAPIErrorRateAlarmSev2.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       nonceAPIErrorRateAlarmSev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
     }
