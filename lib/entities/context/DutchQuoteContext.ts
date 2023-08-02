@@ -253,6 +253,11 @@ export class DutchQuoteContext implements QuoteContext {
     const tokenContract = Erc20__factory.connect(tokenInAddress, this.provider);
     const permit2Allowance = await tokenContract.allowance(request.info.swapper, PERMIT2_ADDRESS);
 
+    if(request.info.type == TradeType.EXACT_OUTPUT) {
+      // If exactOutput, we don't know how much tokenIn will be needed
+      // so we just check if allowance is > max uint256 / 2
+      return permit2Allowance.gte(BigNumber.from(2).pow(255));
+    }
     // TODO: Fix for exact output
     return permit2Allowance.gte(request.info.amount);
   }
