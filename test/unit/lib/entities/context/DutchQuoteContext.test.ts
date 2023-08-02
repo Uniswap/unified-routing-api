@@ -172,6 +172,84 @@ describe('DutchQuoteContext', () => {
       );
     });
 
+    it('uses synthetic if rfq quote is at least 300% better than clasic; EXACT_IN', async () => {
+      const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL, provider);
+      const filler = '0x1111111111111111111111111111111111111111';
+      const rfqQuote = createDutchQuote({ amountOut: '400000000', filler }, 'EXACT_INPUT');
+      const classicQuote = createClassicQuote(
+        { quote: '100000000', quoteGasAdjusted: '90000000' },
+        { type: 'EXACT_INPUT' }
+      );
+      const quote = await context.resolve({
+        [QUOTE_REQUEST_DL.key()]: rfqQuote,
+        [context.classicKey]: classicQuote,
+        [context.routeToNativeKey]: classicQuote,
+      });
+
+      expect(quote?.routingType).toEqual(RoutingType.DUTCH_LIMIT);
+      // Synthetic starts at quoteGasAdjusted + 1bp
+      expect(quote?.amountOut.toString()).toEqual(
+        BigNumber.from(90000000).mul(DutchQuote.amountOutImprovementExactIn).div(10000).toString()
+      );
+    });
+
+    it('uses synthetic if rfq quote is at least 300% better than clasic; EXACT_OUT', async () => {
+      const request = makeDutchRequest({ type: 'EXACT_OUTPUT' }, { useSyntheticQuotes: true });
+      const context = new DutchQuoteContext(logger, request, provider);
+      const filler = '0x1111111111111111111111111111111111111111';
+      const rfqQuote = createDutchQuote({ amountIn: '100000000', filler }, 'EXACT_OUTPUT');
+      const classicQuote = createClassicQuote(
+        { quote: '400000000', quoteGasAdjusted: '399000000' },
+        { type: 'EXACT_OUTPUT' }
+      );
+      const quote = await context.resolve({
+        [QUOTE_REQUEST_DL.key()]: rfqQuote,
+        [context.classicKey]: classicQuote,
+        [context.routeToNativeKey]: classicQuote,
+      });
+
+      expect(quote?.routingType).toEqual(RoutingType.DUTCH_LIMIT);
+      // Synthetic starts at quoteGasAdjusted + 1bp
+      expect(quote?.amountIn.toString()).toEqual(
+        BigNumber.from(399000000).mul(DutchQuote.amountInImprovementExactOut).div(10000).toString()
+      );
+    });
+
+    it('skips UniswapX if rfq quote is at least 300% better than clasic; EXACT_IN, skipSynthetic', async () => {
+      const request = makeDutchRequest({}, { useSyntheticQuotes: false });
+      const context = new DutchQuoteContext(logger, request, provider);
+      const filler = '0x1111111111111111111111111111111111111111';
+      const rfqQuote = createDutchQuote({ amountOut: '400000000', filler }, 'EXACT_INPUT');
+      const classicQuote = createClassicQuote(
+        { quote: '100000000', quoteGasAdjusted: '90000000' },
+        { type: 'EXACT_INPUT' }
+      );
+      expect(
+        await context.resolve({
+          [QUOTE_REQUEST_DL.key()]: rfqQuote,
+          [context.classicKey]: classicQuote,
+          [context.routeToNativeKey]: classicQuote,
+        })
+      ).toEqual(null);
+    });
+
+    it('skips UniswapX if rfq quote is at least 300% better than clasic; EXACT_OUT, skipSynthetic', async () => {
+      const request = makeDutchRequest({ type: 'EXACT_OUTPUT' }, { useSyntheticQuotes: false });
+      const context = new DutchQuoteContext(logger, request, provider);
+      const filler = '0x1111111111111111111111111111111111111111';
+      const rfqQuote = createDutchQuote({ amountIn: '100000000', filler }, 'EXACT_OUTPUT');
+      const classicQuote = createClassicQuote(
+        { quote: '400000000', quoteGasAdjusted: '399000000' },
+        { type: 'EXACT_OUTPUT' }
+      );
+      expect(
+        await context.resolve({
+          [QUOTE_REQUEST_DL.key()]: rfqQuote,
+          [context.classicKey]: classicQuote,
+          [context.routeToNativeKey]: classicQuote,
+        })
+      ).toEqual(null);
+    });
     it('filters out zero amountOut quotes in favor of others', async () => {
       const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL, provider);
       const filler = '0x1111111111111111111111111111111111111111';
@@ -205,7 +283,7 @@ describe('DutchQuoteContext', () => {
       const rfqQuote = createDutchQuote({ amountOut: '1000000000000000000', filler }, 'EXACT_INPUT');
       expect(rfqQuote.filler).toEqual(filler);
       const classicQuote = createClassicQuote(
-        { quote: '10000000000', quoteGasAdjusted: '9999000000' },
+        { quote: '1000000000000000000', quoteGasAdjusted: '999900000000000000' },
         { type: 'EXACT_INPUT' }
       );
       context.dependencies();
@@ -228,7 +306,7 @@ describe('DutchQuoteContext', () => {
       const rfqQuote = createDutchQuote({ amountOut: '1000000000000000000', filler }, 'EXACT_INPUT');
       expect(rfqQuote.filler).toEqual(filler);
       const classicQuote = createClassicQuote(
-        { quote: '10000000000', quoteGasAdjusted: '9999000000' },
+        { quote: '1000000000000000000', quoteGasAdjusted: '999900000000000000' },
         { type: 'EXACT_INPUT' }
       );
       context.dependencies();

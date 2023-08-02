@@ -24,12 +24,14 @@ import {
   QuoteRequest,
 } from '../../entities';
 import { Erc20__factory } from '../../types/ext/factories/Erc20__factory';
+import { metrics } from '../../util/metrics';
 import { checkDefined } from '../../util/preconditions';
 
 // if the gas is greater than this proportion of the whole trade size
 // then we will not route the order
 const GAS_PROPORTION_THRESHOLD_BPS = 2500;
 const BPS = 10000;
+const RFQ_QUOTE_UPPER_BOUND_MULTIPLIER = 3;
 
 // manages context around a single top level classic quote request
 export class DutchQuoteContext implements QuoteContext {
@@ -145,10 +147,30 @@ export class DutchQuoteContext implements QuoteContext {
       return null;
     }
 
+    // TODO: remove after reputation system is ready
+    // drop Rfq quote if it's significantly better than classic - high chance MM will fade
+    if (classicQuote) {
+      metrics.putMetric(`HasBothRfqAndClassicQuote`, 1);
+
+      if (this.rfqQuoteTooGood(quote, classicQuote)) {
+        this.log.info(
+          {
+            tradeType: TradeType[classicQuote.request.info.type],
+            rfqIn: quote.amountIn.toString(),
+            rfqOut: quote.amountOut.toString(),
+            classicIn: classicQuote.amountInGasAdjusted.toString(),
+            classicOut: classicQuote.amountOutGasAdjusted.toString(),
+          },
+          'Rfq quote at least 300% better than classic, skipping'
+        );
+        metrics.putMetric(`RfqQuoteDropped-PriceTooGood`, 1);
+        return null;
+      }
+    }
+
     const reparameterized = DutchQuote.reparameterize(quote, classicQuote as ClassicQuote, {
       hasApprovedPermit2: await this.hasApprovedPermit2(quote.request),
-    });
-
+    });    
     // if its invalid for some reason, i.e. too much decay then return null
     if (!reparameterized.validate()) return null;
     return reparameterized;
@@ -211,6 +233,14 @@ export class DutchQuoteContext implements QuoteContext {
       return false;
     }
     return true;
+  }
+
+  rfqQuoteTooGood(quote: DutchQuote, classicQuote: ClassicQuote): boolean {
+    if (quote.request.info.type === TradeType.EXACT_INPUT) {
+      return quote.amountOut.gt(classicQuote.amountOutGasAdjusted.mul(RFQ_QUOTE_UPPER_BOUND_MULTIPLIER));
+    } else {
+      return quote.amountIn.lt(classicQuote.amountInGasAdjusted.div(RFQ_QUOTE_UPPER_BOUND_MULTIPLIER));
+    }
   }
 
   hasSyntheticEligibleTokens(): boolean {
