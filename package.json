@@ -66,7 +66,7 @@
     "@uniswap/default-token-list": "^9.2.0",
     "@uniswap/permit2-sdk": "^1.2.0",
     "@uniswap/router-sdk": "^1.4.0",
-    "@uniswap/sdk-core": "^3.2.4",
+    "@uniswap/sdk-core": "^4.0.6",
     "@uniswap/smart-order-router": "^3.13.7",
     "@uniswap/uniswapx-sdk": "1.1.0",
     "@uniswap/universal-router-sdk": "^1.5.3",

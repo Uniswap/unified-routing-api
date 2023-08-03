@@ -16,6 +16,8 @@ export const SUPPORTED_CHAINS = {
     ChainId.CELO_ALFAJORES,
     ChainId.BNB,
     ChainId.AVALANCHE,
+    ChainId.BASE_GOERLI,
+    ChainId.BASE
   ],
   [RoutingType.DUTCH_LIMIT]: [ChainId.MAINNET, ChainId.POLYGON, ChainId.GOERLI],
 };
