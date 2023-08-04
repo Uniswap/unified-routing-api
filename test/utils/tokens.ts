@@ -15,6 +15,8 @@ import {
   NodeJSCache,
   USDC_ARBITRUM,
   USDC_AVAX,
+  USDC_BASE,
+  USDC_BASE_GOERLI,
   USDC_BNB,
   USDC_GOERLI,
   USDC_MAINNET,
@@ -135,6 +137,10 @@ export const USDC_ON = (chainId: ChainId): Token => {
       return USDC_BNB;
     case ChainId.AVALANCHE:
       return USDC_AVAX;
+    case ChainId.BASE_GOERLI:
+      return USDC_BASE_GOERLI;
+    case ChainId.BASE:
+      return USDC_BASE;
     default:
       throw new Error(`Chain id: ${chainId} not supported`);
   }
