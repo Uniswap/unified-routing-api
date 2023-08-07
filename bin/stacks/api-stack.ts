@@ -12,27 +12,25 @@ import * as aws_waf from 'aws-cdk-lib/aws-wafv2';
 import { Construct } from 'constructs';
 import * as path from 'path';
 
-import { ChainId } from '@uniswap/smart-order-router';
+import { ChainId } from '@uniswap/sdk-core';
 import _ from 'lodash';
 import { SUPPORTED_CHAINS } from '../../lib/config/chains';
 import { STAGE } from '../../lib/util/stage';
 import { SERVICE_NAME } from '../constants';
 import { AnalyticsStack } from './analytics-stack';
 import { DashboardStack } from './dashboard-stack';
+import { XPairDashboardStack } from './pair-dashboard-stack';
 
 const ALL_SUPPORTED_CHAINS = _.uniq([...SUPPORTED_CHAINS.CLASSIC, ...SUPPORTED_CHAINS.DUTCH_LIMIT]);
 
 export const CHAINS_NOT_ALARMED = new Set<ChainId>([
-  ChainId.RINKEBY,
-  ChainId.ARBITRUM_RINKEBY,
   ChainId.ARBITRUM_GOERLI,
-  ChainId.ROPSTEN,
-  ChainId.KOVAN,
-  ChainId.GÖRLI,
   ChainId.CELO_ALFAJORES,
-  ChainId.OPTIMISTIC_KOVAN,
-  ChainId.GÖRLI,
+  ChainId.OPTIMISM_GOERLI,
+  ChainId.GOERLI,
   ChainId.POLYGON_MUMBAI,
+  ChainId.SEPOLIA,
+  ChainId.BASE_GOERLI,
 ]);
 
 const ALL_ALARMED_CHAINS = _.filter(ALL_SUPPORTED_CHAINS, (c) => !CHAINS_NOT_ALARMED.has(c));
@@ -45,6 +43,7 @@ export class APIStack extends cdk.Stack {
     name: string,
     props: cdk.StackProps & {
       provisionedConcurrency: number;
+      internalApiKey?: string;
       throttlingOverride?: string;
       chatbotSNSArn?: string;
       stage: STAGE;
@@ -52,7 +51,7 @@ export class APIStack extends cdk.Stack {
     }
   ) {
     super(parent, name, props);
-    const { provisionedConcurrency, stage, chatbotSNSArn } = props;
+    const { provisionedConcurrency, stage, chatbotSNSArn, internalApiKey } = props;
 
     /*
      *  API Gateway Initialization
@@ -114,6 +113,27 @@ export class APIStack extends cdk.Stack {
                 headerName: 'X-Forwarded-For',
                 fallbackBehavior: 'MATCH',
               },
+              scopeDownStatement: {
+                notStatement: {
+                  statement: {
+                    byteMatchStatement: {
+                      fieldToMatch: {
+                        singleHeader: {
+                          name: 'x-api-key',
+                        },
+                      },
+                      positionalConstraint: 'EXACTLY',
+                      searchString: internalApiKey,
+                      textTransformations: [
+                        {
+                          type: 'NONE',
+                          priority: 0,
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
             },
           },
           action: {
@@ -162,7 +182,7 @@ export class APIStack extends cdk.Stack {
         sourceMap: true,
       },
       environment: {
-        VERSION: '2',
+        VERSION: '7',
         NODE_OPTIONS: '--enable-source-maps',
         stage: props.stage,
         ...props.envVars,
@@ -199,6 +219,9 @@ export class APIStack extends cdk.Stack {
       apiName: api.restApiName,
       quoteLambdaName: quoteLambda.functionName,
     });
+
+    /* Pair tracking dashboard for X */
+    new XPairDashboardStack(this, 'XPairDashboardStack', {});
 
     /* Quote Endpoint */
     const quoteLambdaIntegration = new aws_apigateway.LambdaIntegration(quoteLambdaAlias, {});
@@ -431,7 +454,43 @@ export class APIStack extends cdk.Stack {
       evaluationPeriods: 3,
     });
 
-    // Alarm on calls from URA to the nonce service (gouda service)
+    // Alarm on high rate of dropping rfq quotes due to pricing being too good comparing to SOR
+    const rfqQuoteDropMetric = new aws_cloudwatch.MathExpression({
+      expression: '100*(rfqDropped/denominator)',
+      period: Duration.minutes(5),
+      usingMetrics: {
+        rfqDropped: new aws_cloudwatch.Metric({
+          namespace: 'Uniswap',
+          metricName: `RfqQuoteDropped-PriceTooGood`,
+          dimensionsMap: { Service: SERVICE_NAME },
+          unit: aws_cloudwatch.Unit.COUNT,
+          statistic: 'sum',
+        }),
+        denominator: new aws_cloudwatch.Metric({
+          namespace: 'Uniswap',
+          metricName: `HasBothRfqAndClassicQuote`,
+          dimensionsMap: { Service: SERVICE_NAME },
+          unit: aws_cloudwatch.Unit.COUNT,
+          statistic: 'sum',
+        }),
+      },
+    });
+
+    const rfqQuoteDropRateAlarmSev2 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV2-RfqQuote-DropRate', {
+      alarmName: 'UnifiedRoutingAPI-SEV2-RfqQuote-DropRate',
+      metric: rfqQuoteDropMetric,
+      threshold: 15,
+      evaluationPeriods: 3,
+    });
+
+    const rfqQuoteDropRateAlarmSev3 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV3-RfqQuote-DropRate', {
+      alarmName: 'UnifiedRoutingAPI-SEV3-RfqQuote-DropRate',
+      metric: rfqQuoteDropMetric,
+      threshold: 5,
+      evaluationPeriods: 3,
+    });
+
+    // Alarm on calls from URA to the nonce service (uniswapx service)
     const nonceAPIErrorMetric = new aws_cloudwatch.MathExpression({
       expression: '100*(error/invocations)',
       period: Duration.minutes(5),
@@ -475,7 +534,7 @@ export class APIStack extends cdk.Stack {
       apiAlarm4xxSev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       apiAlarmLatencySev2.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       apiAlarmLatencySev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
-      
+
       percent5XXByChainAlarm.forEach((alarm) => {
         alarm.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       });
@@ -487,6 +546,8 @@ export class APIStack extends cdk.Stack {
       routingAPIErrorRateAlarmSev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       rfqAPIErrorRateAlarmSev2.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       rfqAPIErrorRateAlarmSev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
+      rfqQuoteDropRateAlarmSev2.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
+      rfqQuoteDropRateAlarmSev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       nonceAPIErrorRateAlarmSev2.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       nonceAPIErrorRateAlarmSev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
     }

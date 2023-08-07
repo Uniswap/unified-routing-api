@@ -3,11 +3,14 @@ import Joi from 'joi';
 import { TradeType } from '@uniswap/sdk-core';
 import { Unit } from 'aws-embedded-metrics';
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
+import { ethers } from 'ethers';
 
+import _ from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
 import { RoutingType } from '../../constants';
 import {
   ClassicQuote,
+  DutchQuoteType,
   parseQuoteContexts,
   parseQuoteRequests,
   Quote,
@@ -17,14 +20,18 @@ import {
   QuoteRequestBodyJSON,
   QuoteRequestInfo,
 } from '../../entities';
+import { TokenFetcher } from '../../fetchers/TokenFetcher';
 import { ErrorCode, NoQuotesAvailable, ValidationError } from '../../util/errors';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
+import { emitUniswapXPairMetricIfTracking, QuoteType } from '../../util/metrics-pair';
 import { currentTimestampInSeconds } from '../../util/time';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
 import { ContainerInjected, QuoterByRoutingType } from './injector';
 import { PostQuoteRequestBodyJoi } from './schema';
+
+const DISABLE_DUTCH_LIMIT_REQUESTS = false;
 
 export interface SingleQuoteJSON {
   routing: string;
@@ -48,12 +55,14 @@ export class QuoteHandler extends APIGLambdaHandler<
   ): Promise<ErrorResponse | Response<QuoteResponseJSON>> {
     const {
       requestBody,
-      containerInjected: { quoters, tokenFetcher, permit2Fetcher },
+      containerInjected: { quoters, tokenFetcher, permit2Fetcher, rpcUrlMap },
     } = params;
 
     if (requestBody.tokenInChainId != requestBody.tokenOutChainId) {
       throw new ValidationError(`Cannot request quotes for tokens on different chains`);
     }
+
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrlMap.get(requestBody.tokenInChainId));
 
     const request = {
       ...requestBody,
@@ -69,8 +78,16 @@ export class QuoteHandler extends APIGLambdaHandler<
     };
 
     log.info({ requestBody: request }, 'request');
-    const { quoteRequests, quoteInfo } = parseQuoteRequests(requestWithTokenAddresses);
-    const contextHandler = new QuoteContextManager(parseQuoteContexts(quoteRequests, permit2Fetcher));
+    const parsedRequests = parseQuoteRequests(requestWithTokenAddresses);
+    const { quoteInfo } = parsedRequests;
+    let { quoteRequests } = parsedRequests;
+
+    if (DISABLE_DUTCH_LIMIT_REQUESTS && !requestBody.useUniswapX) {
+      log.info('Dutch Limit requests disabled, filtering out all Dutch Limit requests...');
+      quoteRequests = removeDutchRequests(quoteRequests);
+    }
+
+    const contextHandler = new QuoteContextManager(parseQuoteContexts(quoteRequests, permit2Fetcher, provider));
     const requests = contextHandler.getRequests();
     log.info({ requests }, 'requests');
     const quotes = await getQuotes(quoters, requests);
@@ -78,13 +95,16 @@ export class QuoteHandler extends APIGLambdaHandler<
     const resolvedQuotes = await contextHandler.resolveQuotes(quotes);
     log.info({ resolvedQuotes }, 'resolvedQuotes');
 
-    this.emitQuoteRequestedMetrics(quoteInfo, quoteRequests);
+    await this.emitQuoteRequestedMetrics(tokenFetcher, quoteInfo, quoteRequests);
 
     const uniswapXRequested = requests.filter((request) => request.routingType === RoutingType.DUTCH_LIMIT).length > 0;
-    const bestQuote = await getBestQuote(resolvedQuotes.filter((q) => q !== null) as Quote[], uniswapXRequested);
+    const resolvedValidQuotes = resolvedQuotes.filter((q) => q !== null) as Quote[];
+    const bestQuote = await getBestQuote(resolvedValidQuotes, uniswapXRequested);
     if (!bestQuote) {
       throw new NoQuotesAvailable();
     }
+
+    await this.emitQuoteResponseMetrics(tokenFetcher, quoteInfo, bestQuote, resolvedValidQuotes, uniswapXRequested);
 
     return {
       statusCode: 200,
@@ -101,15 +121,15 @@ export class QuoteHandler extends APIGLambdaHandler<
     };
   }
 
-  private emitQuoteRequestedMetrics(info: QuoteRequestInfo, requests: QuoteRequest[]) {
+  private async emitQuoteRequestedMetrics(tokenFetcher: TokenFetcher, info: QuoteRequestInfo, requests: QuoteRequest[]): Promise<void> {
     const { tokenInChainId: chainId, tokenIn, tokenOut } = info;
-    const tokenInAbbr = tokenIn.slice(0, 6);
-    const tokenOutAbbr = tokenOut.slice(0, 6);
+    const tokenInAbbr = await this.getTokenSymbolOrAbbr(tokenFetcher, chainId, tokenIn);
+    const tokenOutAbbr = await this.getTokenSymbolOrAbbr(tokenFetcher, chainId, tokenOut);
     const tokenPairSymbol = `${tokenInAbbr}/${tokenOutAbbr}`;
     const tokenPairSymbolChain = `${tokenInAbbr}/${tokenOutAbbr}/${chainId}`;
 
     // This log is used to generate the quotes by token dashboard.
-    log.info({ tokenIn, tokenOut, chainId, tokenPairSymbol, tokenPairSymbolChain }, 'tokens and chains');
+    log.info({ tokenIn, tokenOut, chainId, tokenPairSymbol, tokenPairSymbolChain }, 'tokens and chains requests');
 
     // This log is used for ingesting into redshift for analytics purposes.
     log.info({
@@ -124,12 +144,91 @@ export class QuoteHandler extends APIGLambdaHandler<
         type: TradeType[info.type],
         configs: requests.map((r) => r.routingType).join(','),
         createdAt: currentTimestampInSeconds(),
-        // only log offerer if it's a dutch limit request
-        ...(info.offerer && { offerer: info.offerer }),
+        // only log swapper if it's a dutch limit request
+        ...(info.swapper && { swapper: info.swapper }),
       },
     });
 
     metrics.putMetric(`QuoteRequestedChainId${chainId.toString()}`, 1, Unit.Count);
+  }
+
+  private async getTokenSymbolOrAbbr(tokenFetcher: TokenFetcher, chainId: number, address: string): Promise<string> {
+    let symbol = address.slice(0, 6);
+    try {
+      symbol = (await tokenFetcher.resolveToken(chainId, symbol)).symbol ?? symbol;
+    } catch {}
+    return symbol;
+  }
+
+  private async emitQuoteResponseMetrics(
+    tokenFetcher: TokenFetcher,
+    info: QuoteRequestInfo,
+    bestQuote: Quote,
+    _allQuotes: Quote[],
+    _uniswapXRequested: boolean
+  ) {
+    const { tokenInChainId: chainId, tokenIn, tokenOut, type } = info;
+
+    const tokenInAbbr = await this.getTokenSymbolOrAbbr(tokenFetcher, chainId, tokenIn);
+    const tokenOutAbbr = await this.getTokenSymbolOrAbbr(tokenFetcher, chainId, tokenOut);
+    const tokenPairSymbol = `${tokenInAbbr}/${tokenOutAbbr}`;
+    const tokenPairSymbolChain = `${tokenInAbbr}/${tokenOutAbbr}/${chainId}`;
+
+    let bestQuoteType: QuoteType;
+    if (bestQuote.routingType == RoutingType.DUTCH_LIMIT) {
+      if (bestQuote.quoteType == DutchQuoteType.RFQ) {
+        bestQuoteType = QuoteType.RFQ;
+      } else {
+        bestQuoteType = QuoteType.SYNTHETIC;
+      }
+    } else {
+      bestQuoteType = QuoteType.CLASSIC;
+    }
+
+    const tokenPairSymbolBestQuote = `${tokenInAbbr}/${tokenOutAbbr}/${bestQuoteType.toString()}`;
+    const tokenPairSymbolChainBestQuote = `${tokenInAbbr}/${tokenOutAbbr}/${chainId}/${bestQuoteType.toString()}`;
+
+    // This log is used to generate the requests/responses by token dashboard.
+    log.info(
+      {
+        tokenIn,
+        tokenOut,
+        tokenPairSymbolBestQuote,
+        tokenPairSymbolChainBestQuote,
+        routingType: bestQuote.routingType,
+        tokenPairSymbol,
+        tokenPairSymbolChain,
+      },
+      'tokens and chains response'
+    );
+
+    // UniswapX QuoteResponse metrics
+    if (_uniswapXRequested) {
+      await emitUniswapXPairMetricIfTracking(
+        tokenFetcher,
+        tokenIn,
+        tokenOut,
+        type == TradeType.EXACT_INPUT ? bestQuote.amountIn : bestQuote.amountOut,
+        bestQuoteType,
+        type
+      );
+      metrics.putMetric(`UniswapXQuoteResponseRoutingType-${bestQuote.routingType}`, 1, Unit.Count);
+      metrics.putMetric(`UniswapXQuoteResponseQuoteType-${bestQuoteType}`, 1, Unit.Count);
+      metrics.putMetric(
+        `UniswapXQuoteResponseRoutingType-${bestQuote.routingType}ChainId${chainId.toString()}`,
+        1,
+        Unit.Count
+      );
+      metrics.putMetric(`UniswapXQuoteResponseQuoteType-${bestQuoteType}ChainId${chainId.toString()}`, 1, Unit.Count);
+      metrics.putMetric(`UniswapXQuoteResponseChainId${chainId.toString()}`, 1, Unit.Count);
+    }
+
+    // Overall QuoteResponse metrics
+    metrics.putMetric(`QuoteResponseRoutingType-${bestQuote.routingType}`, 1, Unit.Count);
+    metrics.putMetric(`QuoteResponseQuoteType-${bestQuoteType}`, 1, Unit.Count);
+    metrics.putMetric(`QuoteResponseRoutingType-${bestQuote.routingType}ChainId${chainId.toString()}`, 1, Unit.Count);
+    metrics.putMetric(`QuoteResponseQuoteType-${bestQuoteType}ChainId${chainId.toString()}`, 1, Unit.Count);
+    metrics.putMetric(`QuoteResponseChainId${chainId.toString()}`, 1, Unit.Count);
   }
 
   protected afterResponseHook(event: APIGatewayProxyEvent, _context: Context, response: APIGatewayProxyResult): void {
@@ -233,4 +332,8 @@ export function quoteToResponse(quote: Quote): SingleQuoteJSON {
     routing: quote.routingType,
     quote: quote.toJSON(),
   };
+}
+
+export function removeDutchRequests(requests: QuoteRequest[]): QuoteRequest[] {
+  return requests.filter((request) => request.routingType !== RoutingType.DUTCH_LIMIT);
 }

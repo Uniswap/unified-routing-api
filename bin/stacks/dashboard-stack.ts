@@ -1,4 +1,4 @@
-import { ChainId } from '@uniswap/smart-order-router';
+import { ChainId } from '@uniswap/sdk-core';
 import * as cdk from 'aws-cdk-lib';
 import * as aws_cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import { Construct } from 'constructs';
@@ -6,6 +6,7 @@ import _ from 'lodash';
 import { SUPPORTED_CHAINS } from '../../lib/config/chains';
 
 export const METRIC_NAMESPACE = 'Uniswap';
+export const METRIC_SERVICE_NAME = 'UnifiedRoutingAPI';
 
 export type LambdaWidget = {
   type: string;
@@ -21,8 +22,6 @@ export interface DashboardProps extends cdk.NestedStackProps {
   quoteLambdaName: string;
 }
 
-const SERVICE_NAME = 'UnifiedRoutingAPI';
-
 export class DashboardStack extends cdk.NestedStack {
   constructor(scope: Construct, name: string, props: DashboardProps) {
     super(scope, name, props);
@@ -33,6 +32,8 @@ export class DashboardStack extends cdk.NestedStack {
     // No CDK resource exists for contributor insights at the moment so use raw CloudFormation.
     const REQUESTED_QUOTES_RULE_NAME = 'URARequestedQuotes';
     const REQUESTED_QUOTES_BY_CHAIN_RULE_NAME = 'URARequestedQuotesByChain';
+    const RESPONSE_QUOTE_RULE_NAME = 'URAResponseQuotes';
+    const RESPONSE_QUOTE_BY_CHAIN_RULE_NAME = 'URAResponseQuotesByChain';
     new cdk.CfnResource(this, 'URAQuoteContributorInsights', {
       type: 'AWS::CloudWatch::InsightRule',
       properties: {
@@ -47,6 +48,10 @@ export class DashboardStack extends cdk.NestedStack {
               {
                 Match: '$.tokenPairSymbol',
                 IsPresent: true,
+              },
+              {
+                Match: '$.msg',
+                StartsWith: ['tokens and chains request'],
               },
             ],
             Keys: ['$.tokenPairSymbol'],
@@ -74,6 +79,10 @@ export class DashboardStack extends cdk.NestedStack {
                 Match: '$.tokenPairSymbolChain',
                 IsPresent: true,
               },
+              {
+                Match: '$.msg',
+                StartsWith: ['tokens and chains request'],
+              },
             ],
             Keys: ['$.tokenPairSymbolChain'],
           },
@@ -81,6 +90,66 @@ export class DashboardStack extends cdk.NestedStack {
           LogGroupNames: [`/aws/lambda/${quoteLambdaName}`],
         }),
         RuleName: REQUESTED_QUOTES_BY_CHAIN_RULE_NAME,
+        RuleState: 'ENABLED',
+      },
+    });
+
+    new cdk.CfnResource(this, 'URAResponseContributorInsights', {
+      type: 'AWS::CloudWatch::InsightRule',
+      properties: {
+        RuleBody: JSON.stringify({
+          Schema: {
+            Name: 'CloudWatchLogRule',
+            Version: 1,
+          },
+          AggregateOn: 'Count',
+          Contribution: {
+            Filters: [
+              {
+                Match: '$.tokenPairSymbol',
+                IsPresent: true,
+              },
+              {
+                Match: '$.msg',
+                StartsWith: ['tokens and chains response'],
+              },
+            ],
+            Keys: ['$.tokenPairSymbolBestQuote'],
+          },
+          LogFormat: 'JSON',
+          LogGroupNames: [`/aws/lambda/${quoteLambdaName}`],
+        }),
+        RuleName: RESPONSE_QUOTE_RULE_NAME,
+        RuleState: 'ENABLED',
+      },
+    });
+
+    new cdk.CfnResource(this, 'URAResponseByChainContributorInsights', {
+      type: 'AWS::CloudWatch::InsightRule',
+      properties: {
+        RuleBody: JSON.stringify({
+          Schema: {
+            Name: 'CloudWatchLogRule',
+            Version: 1,
+          },
+          AggregateOn: 'Count',
+          Contribution: {
+            Filters: [
+              {
+                Match: '$.tokenPairSymbolChain',
+                IsPresent: true,
+              },
+              {
+                Match: '$.msg',
+                StartsWith: ['tokens and chains response'],
+              },
+            ],
+            Keys: ['$.tokenPairSymbolChainBestQuote'],
+          },
+          LogFormat: 'JSON',
+          LogGroupNames: [`/aws/lambda/${quoteLambdaName}`],
+        }),
+        RuleName: RESPONSE_QUOTE_BY_CHAIN_RULE_NAME,
         RuleState: 'ENABLED',
       },
     });
@@ -171,6 +240,96 @@ export class DashboardStack extends cdk.NestedStack {
           {
             type: 'metric',
             x: 0,
+            y: 6,
+            width: 7,
+            height: 6,
+            properties: {
+              metrics: [
+                ['Uniswap', 'QuoteResponseQuoteType-SYNTHETIC', 'Service', METRIC_SERVICE_NAME],
+                ['.', 'QuoteResponseQuoteType-CLASSIC', '.', '.'],
+                ['.', 'QuoteResponseQuoteType-RFQ', '.', '.'],
+              ],
+              view: 'pie',
+              region,
+              period: 900,
+              stat: 'Sum',
+              title: 'Quote Response Types',
+            },
+          },
+          {
+            type: 'metric',
+            x: 7,
+            y: 6,
+            width: 17,
+            height: 6,
+            properties: {
+              metrics: [
+                ['Uniswap', 'QuoteResponseQuoteType-SYNTHETIC', 'Service', METRIC_SERVICE_NAME],
+                ['.', 'QuoteResponseQuoteType-CLASSIC', '.', '.'],
+                ['.', 'QuoteResponseQuoteType-RFQ', '.', '.'],
+              ],
+              view: 'timeSeries',
+              region,
+              period: 900,
+              stat: 'Sum',
+              stacked: true,
+              setPeriodToTimeRange: true,
+              yAxis: {
+                left: {
+                  showUnits: true,
+                },
+              },
+              title: 'Quote Response Types over Time',
+            },
+          },
+          {
+            type: 'metric',
+            x: 0,
+            y: 6,
+            width: 7,
+            height: 6,
+            properties: {
+              metrics: [
+                ['Uniswap', 'UniswapXQuoteResponseQuoteType-SYNTHETIC', 'Service', METRIC_SERVICE_NAME],
+                ['.', 'UniswapXQuoteResponseQuoteType-CLASSIC', '.', '.'],
+                ['.', 'UniswapXQuoteResponseQuoteType-RFQ', '.', '.'],
+              ],
+              view: 'pie',
+              region,
+              period: 900,
+              stat: 'Sum',
+              title: 'UniswapX Requested: Quote Response Types',
+            },
+          },
+          {
+            type: 'metric',
+            x: 7,
+            y: 6,
+            width: 17,
+            height: 6,
+            properties: {
+              metrics: [
+                ['Uniswap', 'UniswapXQuoteResponseQuoteType-SYNTHETIC', 'Service', METRIC_SERVICE_NAME],
+                ['.', 'UniswapXQuoteResponseQuoteType-CLASSIC', '.', '.'],
+                ['.', 'UniswapXQuoteResponseQuoteType-RFQ', '.', '.'],
+              ],
+              view: 'timeSeries',
+              region,
+              period: 900,
+              stat: 'Sum',
+              stacked: true,
+              setPeriodToTimeRange: true,
+              yAxis: {
+                left: {
+                  showUnits: true,
+                },
+              },
+              title: 'UniswapX Requested: Quote Response Types over Time',
+            },
+          },
+          {
+            type: 'metric',
+            x: 0,
             y: 12,
             width: 12,
             height: 7,
@@ -217,6 +376,52 @@ export class DashboardStack extends cdk.NestedStack {
           {
             type: 'metric',
             x: 0,
+            y: 12,
+            width: 12,
+            height: 7,
+            properties: {
+              view: 'timeSeries',
+              stacked: false,
+              insightRule: {
+                maxContributorCount: 25,
+                orderBy: 'Sum',
+                ruleName: RESPONSE_QUOTE_RULE_NAME,
+              },
+              legend: {
+                position: 'bottom',
+              },
+              region,
+              title: 'Response Quote with Type',
+              period: 300,
+              stat: 'Sum',
+            },
+          },
+          {
+            type: 'metric',
+            x: 12,
+            y: 12,
+            width: 12,
+            height: 7,
+            properties: {
+              view: 'timeSeries',
+              stacked: false,
+              insightRule: {
+                maxContributorCount: 25,
+                orderBy: 'Sum',
+                ruleName: RESPONSE_QUOTE_BY_CHAIN_RULE_NAME,
+              },
+              legend: {
+                position: 'bottom',
+              },
+              region,
+              title: 'Response Quote with Type By Chain',
+              period: 300,
+              stat: 'Sum',
+            },
+          },
+          {
+            type: 'metric',
+            x: 0,
             y: 19,
             width: 24,
             height: 6,
@@ -224,9 +429,9 @@ export class DashboardStack extends cdk.NestedStack {
               metrics: _.flatMap(
                 _.uniq([...SUPPORTED_CHAINS.CLASSIC, ...SUPPORTED_CHAINS.DUTCH_LIMIT]),
                 (chainId: ChainId) => [
-                  ['Uniswap', `QuoteRequestedChainId${chainId}`, 'Service', SERVICE_NAME],
-                  ['Uniswap', `QuoteResponseChainId${chainId}Status4XX`, 'Service', SERVICE_NAME],
-                  ['Uniswap', `QuoteResponseChainId${chainId}Status5XX`, 'Service', SERVICE_NAME],
+                  ['Uniswap', `QuoteRequestedChainId${chainId}`, 'Service', METRIC_SERVICE_NAME],
+                  ['Uniswap', `QuoteResponseChainId${chainId}Status4XX`, 'Service', METRIC_SERVICE_NAME],
+                  ['Uniswap', `QuoteResponseChainId${chainId}Status5XX`, 'Service', METRIC_SERVICE_NAME],
                 ]
               ),
               view: 'timeSeries',
@@ -265,7 +470,7 @@ export class DashboardStack extends cdk.NestedStack {
                     'Uniswap',
                     `QuoteRequestedChainId${chainId}`,
                     'Service',
-                    SERVICE_NAME,
+                    METRIC_SERVICE_NAME,
                     { id: `c${chainId}r`, visible: false },
                   ],
                   ['.', `QuoteResponseChainId${chainId}Status4XX`, '.', '.', { id: `c${chainId}r4xx`, visible: false }],
@@ -283,7 +488,7 @@ export class DashboardStack extends cdk.NestedStack {
           {
             type: 'metric',
             x: 0,
-            y: 37,
+            y: 55,
             width: 24,
             height: 5,
             properties: {
@@ -307,13 +512,15 @@ export class DashboardStack extends cdk.NestedStack {
             height: 6,
             properties: {
               metrics: [
-                [{ expression: '(m3/m1)*100', label: 'RoutingAPIRequestErrorRate', id: 'e1' }],
+                [{ expression: '(m3/m1)*100', label: 'RoutingAPIRequest4xxErrorRate', id: 'e1' }],
                 [{ expression: '(m4/m5)*100', label: 'RFQAPIRequestErrorRate', id: 'e2' }],
-                ['Uniswap', 'RoutingApiQuoterRequest', 'Service', SERVICE_NAME, { id: 'm1', visible: false }],
+                [{ expression: '(m6/m1)*100', label: 'RoutingAPIRequest5xxErrorRate', id: 'e3' }],
+                ['Uniswap', 'RoutingApiQuoterRequest', 'Service', METRIC_SERVICE_NAME, { id: 'm1', visible: false }],
                 ['.', 'RoutingApiQuoterSuccess', '.', '.', { id: 'm2', visible: false }],
-                ['.', 'RoutingApiQuoterErr', '.', '.', { id: 'm3', visible: false }],
+                ['.', 'RoutingApiQuoter4xxErr', '.', '.', { id: 'm3', visible: false }],
                 ['.', 'RfqQuoterErrRfq', '.', '.', { id: 'm4', visible: false }],
                 ['.', 'RfqQuoterRequest', '.', '.', { id: 'm5', visible: false }],
+                ['.', 'RoutingApiQuoter5xxErr', '.', '.', { id: 'm6', visible: false }],
               ],
               view: 'timeSeries',
               stacked: false,
@@ -331,7 +538,7 @@ export class DashboardStack extends cdk.NestedStack {
             height: 6,
             properties: {
               metrics: [
-                ['Uniswap', 'RoutingApiQuoterRequest', 'Service', SERVICE_NAME, { id: 'm1' }],
+                ['Uniswap', 'RoutingApiQuoterRequest', 'Service', METRIC_SERVICE_NAME, { id: 'm1' }],
                 ['.', 'RoutingApiQuoterSuccess', '.', '.', { id: 'm2' }],
                 ['.', 'RoutingApiQuoterErr', '.', '.', { id: 'm3' }],
                 ['.', 'RfqQuoterErrRfq', '.', '.', { id: 'm4' }],
@@ -343,6 +550,25 @@ export class DashboardStack extends cdk.NestedStack {
               region,
               period: 300,
               title: 'Dependency Services Requests/Responses',
+            },
+          },
+          {
+            type: 'metric',
+            x: 0,
+            y: 50,
+            width: 24,
+            height: 5,
+            properties: {
+              metrics: [
+                ['Uniswap', 'RfqQuoterLatency', 'Service', METRIC_SERVICE_NAME],
+                ['.', 'RoutingApiQuoterLatency', '.', '.'],
+              ],
+              view: 'timeSeries',
+              stacked: false,
+              region,
+              stat: 'p99',
+              period: 300,
+              title: 'Dependency Services Latency p99',
             },
           },
         ],

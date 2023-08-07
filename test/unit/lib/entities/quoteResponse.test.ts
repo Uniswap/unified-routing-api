@@ -1,8 +1,8 @@
-import { DutchOrder, parseValidation, ValidationType } from '@uniswap/gouda-sdk';
+import { DutchOrder, parseValidation, ValidationType } from '@uniswap/uniswapx-sdk';
 import { BigNumber } from 'ethers';
 
 import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, DutchQuoteJSON, DutchRequest } from '../../../../lib/entities';
-import { AMOUNT_IN, CHAIN_IN_ID, FILLER, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
+import { AMOUNT, CHAIN_IN_ID, FILLER, PERMIT_DETAILS, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_OUT_BETTER,
@@ -14,21 +14,21 @@ const DL_QUOTE_JSON: DutchQuoteJSON = {
   requestId: '0xrequestId',
   quoteId: '0xquoteId',
   tokenIn: TOKEN_IN,
-  amountIn: AMOUNT_IN,
+  amountIn: AMOUNT,
   tokenOut: TOKEN_OUT,
-  amountOut: AMOUNT_IN,
-  offerer: OFFERER,
+  amountOut: AMOUNT,
+  swapper: SWAPPER,
   filler: FILLER,
 };
 
 const CLASSIC_QUOTE_JSON: ClassicQuoteDataJSON = {
   requestId: '0xrequestId',
   quoteId: '0xquoteId',
-  amount: AMOUNT_IN,
+  amount: AMOUNT,
   amountDecimals: '18',
   quote: '2000000',
   quoteDecimals: '18',
-  quoteGasAdjusted: AMOUNT_IN,
+  quoteGasAdjusted: AMOUNT,
   quoteGasAdjustedDecimals: '18',
   gasUseEstimate: '100',
   gasUseEstimateQuote: '100',
@@ -39,6 +39,8 @@ const CLASSIC_QUOTE_JSON: ClassicQuoteDataJSON = {
   blockNumber: '1234',
   route: [],
   routeString: 'USD-ETH',
+  tradeType: 'EXACT_INPUT',
+  slippage: 0.5,
 };
 
 describe('QuoteResponse', () => {
@@ -51,18 +53,18 @@ describe('QuoteResponse', () => {
   it('produces dutch limit order info from param-api response and config', () => {
     const quote = DutchQuote.fromResponseBody(config, DL_QUOTE_JSON);
     expect(quote.toOrder().toJSON()).toMatchObject({
-      offerer: OFFERER,
+      swapper: SWAPPER,
       input: {
         token: TOKEN_IN,
-        startAmount: AMOUNT_IN,
-        endAmount: AMOUNT_IN,
+        startAmount: AMOUNT,
+        endAmount: AMOUNT,
       },
       outputs: [
         {
           token: TOKEN_OUT,
-          startAmount: AMOUNT_IN,
-          endAmount: BigNumber.from(AMOUNT_IN).mul(995).div(1000).toString(), // default 5% slippage
-          recipient: OFFERER,
+          startAmount: AMOUNT,
+          endAmount: BigNumber.from(AMOUNT).mul(995).div(1000).toString(), // default 5% slippage
+          recipient: SWAPPER,
         },
       ],
     });
@@ -76,18 +78,18 @@ describe('QuoteResponse', () => {
   it('produces dutch limit order info from param-api response and config without filler', () => {
     const quote = DutchQuote.fromResponseBody(config, Object.assign({}, DL_QUOTE_JSON, { filler: undefined }));
     expect(quote.toOrder().toJSON()).toMatchObject({
-      offerer: OFFERER,
+      swapper: SWAPPER,
       input: {
         token: TOKEN_IN,
-        startAmount: AMOUNT_IN,
-        endAmount: AMOUNT_IN,
+        startAmount: AMOUNT,
+        endAmount: AMOUNT,
       },
       outputs: [
         {
           token: TOKEN_OUT,
-          startAmount: AMOUNT_IN,
-          endAmount: BigNumber.from(AMOUNT_IN).mul(995).div(1000).toString(), // default 0.5% slippage
-          recipient: OFFERER,
+          startAmount: AMOUNT,
+          endAmount: BigNumber.from(AMOUNT).mul(995).div(1000).toString(), // default 0.5% slippage
+          recipient: SWAPPER,
         },
       ],
     });
@@ -99,10 +101,12 @@ describe('QuoteResponse', () => {
 
   it('parses classic quote exactInput', () => {
     const quote = ClassicQuote.fromResponseBody(CLASSIC_QUOTE_EXACT_IN_BETTER.request, CLASSIC_QUOTE_JSON);
+    quote.setAllowanceData(PERMIT_DETAILS);
     expect(quote.toJSON()).toMatchObject({
       ...CLASSIC_QUOTE_JSON,
       quoteId: expect.any(String),
       requestId: expect.any(String),
+      tradeType: 'EXACT_INPUT',
     });
     expect(quote.amountIn.toString()).toEqual(CLASSIC_QUOTE_JSON.amount);
     expect(quote.amountOut.toString()).toEqual(CLASSIC_QUOTE_JSON.quote);
@@ -110,10 +114,12 @@ describe('QuoteResponse', () => {
 
   it('parses classic quote exactOutput', () => {
     const quote = ClassicQuote.fromResponseBody(CLASSIC_QUOTE_EXACT_OUT_BETTER.request, CLASSIC_QUOTE_JSON);
+    quote.setAllowanceData(PERMIT_DETAILS);
     expect(quote.toJSON()).toMatchObject({
       ...CLASSIC_QUOTE_JSON,
       quoteId: expect.any(String),
       requestId: expect.any(String),
+      tradeType: 'EXACT_OUTPUT',
     });
     expect(quote.amountIn.toString()).toEqual(CLASSIC_QUOTE_JSON.quote);
     expect(quote.amountOut.toString()).toEqual(CLASSIC_QUOTE_JSON.amount);

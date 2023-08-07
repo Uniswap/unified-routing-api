@@ -72,7 +72,7 @@
               }
             ]
           },
-          "offerer": {
+          "swapper": {
             "type": "string",
             "pattern": "^(0x)?[0-9a-fA-F]{40}$"
           },
@@ -110,7 +110,7 @@
           "amount",
           "type",
           "routingType",
-          "offerer",
+          "swapper",
           "exclusivityOverrideBps",
           "auctionPeriodSecs"
         ]

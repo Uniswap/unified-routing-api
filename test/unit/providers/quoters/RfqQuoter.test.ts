@@ -3,7 +3,7 @@ import { BigNumber, ethers } from 'ethers';
 import { DutchQuote, DutchQuoteDataJSON, DutchQuoteJSON } from '../../../../lib/entities';
 import { RfqQuoter } from '../../../../lib/providers/quoters';
 import axios from '../../../../lib/providers/quoters/helpers';
-import { AMOUNT_IN, OFFERER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
+import { AMOUNT, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
 import { QUOTE_REQUEST_DL, QUOTE_REQUEST_DL_EXACT_OUT } from '../../../utils/fixtures';
 
 const UUID = 'c67c2882-24aa-4a68-a90b-53250ef81517';
@@ -23,11 +23,11 @@ describe('RfqQuoter test', () => {
         requestId: UUID,
         quoteId: UUID,
         tokenIn: TOKEN_IN,
-        amountIn: AMOUNT_IN,
+        amountIn: AMOUNT,
         tokenOut: TOKEN_OUT,
-        amountOut: AMOUNT_IN,
-        offerer: OFFERER,
-        filler: OFFERER,
+        amountOut: AMOUNT,
+        swapper: SWAPPER,
+        filler: SWAPPER,
       });
     });
 
@@ -38,10 +38,10 @@ describe('RfqQuoter test', () => {
           requestId: UUID,
           quoteId: UUID,
           tokenIn: TOKEN_IN,
-          amountIn: AMOUNT_IN,
+          amountIn: AMOUNT,
           tokenOut: TOKEN_OUT,
-          amountOut: AMOUNT_IN,
-          offerer: OFFERER,
+          amountOut: AMOUNT,
+          swapper: SWAPPER,
         },
       });
       const quote = await quoter.quote(QUOTE_REQUEST_DL);
@@ -54,8 +54,8 @@ describe('RfqQuoter test', () => {
         chainId: 1,
         tokenIn: TOKEN_IN,
         tokenOut: TOKEN_OUT,
-        amountInStart: BigNumber.from(AMOUNT_IN),
-        amountOutStart: BigNumber.from(AMOUNT_IN),
+        amountInStart: BigNumber.from(AMOUNT),
+        amountOutStart: BigNumber.from(AMOUNT),
       });
     });
 
@@ -65,8 +65,8 @@ describe('RfqQuoter test', () => {
         chainId: 1,
         tokenIn: TOKEN_IN,
         tokenOut: TOKEN_OUT,
-        amountInStart: BigNumber.from(AMOUNT_IN),
-        amountOutStart: BigNumber.from(AMOUNT_IN),
+        amountInStart: BigNumber.from(AMOUNT),
+        amountOutStart: BigNumber.from(AMOUNT),
       });
     });
 

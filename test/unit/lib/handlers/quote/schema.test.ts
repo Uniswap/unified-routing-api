@@ -1,7 +1,7 @@
 import { PostQuoteRequestBodyJoi } from '../../../../../lib/handlers/quote';
 import { FieldValidator } from '../../../../../lib/util/validator';
 import {
-  AMOUNT_IN,
+  AMOUNT,
   CHAIN_IN_ID,
   CHAIN_OUT_ID,
   CLASSIC_CONFIG,
@@ -25,7 +25,7 @@ const BASE_REQUEST_BODY = {
   tokenOutChainId: CHAIN_OUT_ID,
   tokenIn: TOKEN_IN,
   tokenOut: TOKEN_OUT,
-  amount: AMOUNT_IN,
+  amount: AMOUNT,
   type: 'EXACT_INPUT',
   configs: [DL_CONFIG_JSON, CLASSIC_CONFIG_JSON],
 };
@@ -221,7 +221,7 @@ describe('Post quote request validation', () => {
       tokenInChainId: CHAIN_IN_ID,
       tokenOutChainId: CHAIN_OUT_ID,
       tokenOut: TOKEN_OUT,
-      amount: AMOUNT_IN,
+      amount: AMOUNT,
       type: 'EXACT_INPUT',
       configs: [DL_CONFIG_JSON, CLASSIC_CONFIG_JSON],
     });
@@ -255,5 +255,22 @@ describe('Post quote request validation', () => {
     });
     expect(error).toBeDefined();
     expect(error?.message).toEqual('Duplicate routingType in configs');
+  });
+
+  it('should reject a malformed config among multiple', () => {
+    const { error } = PostQuoteRequestBodyJoi.validate({
+      ...BASE_REQUEST_BODY,
+      configs: [
+        {
+          ...CLASSIC_CONFIG_JSON,
+        },
+        {
+          ...DL_CONFIG_JSON,
+          auctionPeriodSeconds: -1
+        },
+      ],
+    });
+    expect(error).toBeDefined();
+    expect(error?.message).toEqual('\"configs[1]\" does not match any of the allowed types');
   });
 });

@@ -7,6 +7,7 @@ import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
 
 // manages context around a single top level classic quote request
 export class ClassicQuoteContext implements QuoteContext {
+  routingType: RoutingType.CLASSIC;
   private log: Logger;
 
   constructor(_log: Logger, public request: ClassicRequest, private permit2Fetcher: Permit2Fetcher) {
@@ -24,10 +25,10 @@ export class ClassicQuoteContext implements QuoteContext {
 
     if (!quote) return null;
 
-    if (quote.request.info.offerer && quote.routingType === RoutingType.CLASSIC) {
+    if (quote.request.info.swapper && quote.routingType === RoutingType.CLASSIC) {
       const allowance = await this.permit2Fetcher.fetchAllowance(
         quote.request.info.tokenInChainId,
-        quote.request.info.offerer,
+        quote.request.info.swapper,
         quote.request.info.tokenIn,
         UNIVERSAL_ROUTER_ADDRESS(quote.request.info.tokenInChainId)
       );

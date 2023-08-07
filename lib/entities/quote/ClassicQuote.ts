@@ -4,11 +4,11 @@ import { BigNumber } from 'ethers';
 
 import { PermitDetails, PermitSingleData, PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { v4 as uuidv4 } from 'uuid';
-import { Quote, QuoteRequest } from '..';
+import { QuoteRequest } from '..';
 import { RoutingType } from '../../constants';
 import { createPermitData } from '../../util/permit2';
 import { currentTimestampInSeconds } from '../../util/time';
-import { LogJSON } from './index';
+import { IQuote, LogJSON } from './index';
 
 export type V2ReserveJSON = {
   token: TokenInRouteJSON;
@@ -67,9 +67,11 @@ export type ClassicQuoteDataJSON = {
   routeString: string;
   methodParameters?: MethodParameters;
   permitData?: PermitSingleData | PermitTransferFromData;
+  tradeType: string;
+  slippage: number;
 };
 
-export class ClassicQuote implements Quote {
+export class ClassicQuote implements IQuote {
   public routingType: RoutingType.CLASSIC = RoutingType.CLASSIC;
   public createdAt: string;
   public readonly quoteId: string = uuidv4();
@@ -89,6 +91,8 @@ export class ClassicQuote implements Quote {
       quoteId: this.quoteId,
       requestId: this.request.info.requestId,
       permitData: this.getPermitData(),
+      tradeType: this.request.info.type === TradeType.EXACT_INPUT ? 'EXACT_INPUT' : 'EXACT_OUTPUT',
+      slippage: this.slippage,
     };
   }
 
@@ -106,9 +110,9 @@ export class ClassicQuote implements Quote {
       endAmountOut: this.amountOut.toString(),
       amountInGasAdjusted: this.amountInGasAdjusted.toString(),
       amountOutGasAdjusted: this.amountOutGasAdjusted.toString(),
-      offerer: '',
+      swapper: '',
       routing: RoutingType[this.routingType],
-      slippage: this.request.info.slippageTolerance ? parseFloat(this.request.info.slippageTolerance) : -1,
+      slippage: this.slippage,
       createdAt: this.createdAt,
       gasPriceWei: this.gasPriceWei,
     };
@@ -116,7 +120,7 @@ export class ClassicQuote implements Quote {
 
   getPermitData(): PermitSingleData | undefined {
     if (
-      !this.request.info.offerer ||
+      !this.request.info.swapper ||
       (this.allowanceData &&
         BigNumber.from(this.allowanceData.amount).gte(this.amountOut) &&
         BigNumber.from(this.allowanceData.expiration).gt(Math.floor(new Date().getTime() / 1000)))
@@ -160,5 +164,9 @@ export class ClassicQuote implements Quote {
 
   public setAllowanceData(data?: PermitDetails): void {
     this.allowanceData = data;
+  }
+
+  public get slippage(): number {
+    return this.request.info.slippageTolerance ? parseFloat(this.request.info.slippageTolerance) : -1;
   }
 }

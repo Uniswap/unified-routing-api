@@ -1,5 +1,5 @@
 import { MaxSigDeadline, MaxUint160 } from '@uniswap/permit2-sdk';
-import { PERMIT2, PERMIT_DETAILS } from '../../constants';
+import { PERMIT2, PERMIT2_USED, PERMIT_DETAILS } from '../../constants';
 import { UtilityTest } from '../../types';
 import { createClassicQuote } from '../../utils/fixtures';
 
@@ -21,7 +21,7 @@ const tests: UtilityTest[] = [
   {
     testName: 'Succeeds - No Offerer',
     input: {
-      quote: createClassicQuote({}, { type: 'EXACT_INPUT', offerer: undefined }),
+      quote: createClassicQuote({}, { type: 'EXACT_INPUT', swapper: undefined }),
       permitDetails: PERMIT_DETAILS,
     },
     output: {
@@ -48,7 +48,7 @@ const tests: UtilityTest[] = [
       },
     },
     output: {
-      permit: PERMIT2,
+      permit: PERMIT2_USED,
     },
   },
   {
@@ -61,7 +61,7 @@ const tests: UtilityTest[] = [
       },
     },
     output: {
-      permit: PERMIT2,
+      permit: PERMIT2_USED,
     },
   },
 ];

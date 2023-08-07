@@ -26,7 +26,8 @@ export interface QuoteRequestInfo {
   amount: BigNumber;
   type: TradeType;
   slippageTolerance?: string;
-  offerer?: string;
+  swapper?: string;
+  useUniswapX?: boolean;
 }
 
 export interface QuoteRequestBodyJSON extends Omit<QuoteRequestInfo, 'type' | 'amount'> {
@@ -57,7 +58,7 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON): {
     amount: BigNumber.from(body.amount),
     type: parseTradeType(body.type),
     slippageTolerance: body.slippageTolerance ?? DEFAULT_SLIPPAGE_TOLERANCE,
-    offerer: body.offerer,
+    swapper: body.swapper,
   };
 
   const requests = body.configs.flatMap((config) => {

@@ -5,9 +5,6 @@ import { FieldValidator } from '../../util/validator';
 export const PostQuoteRequestBodyJoi = Joi.object({
   tokenInChainId: FieldValidator.classicChainId.required(),
   tokenOutChainId: FieldValidator.classicChainId.required(),
-
-  // TODO: consider that routing-api accepts token names if it can resolve them
-  // dutch limit flow should probably do the same
   tokenIn: Joi.string().alphanum().max(42).required(),
   tokenOut: Joi.string().alphanum().max(42).required(),
   amount: FieldValidator.amount.required(),
@@ -22,7 +19,8 @@ export const PostQuoteRequestBodyJoi = Joi.object({
     .messages({
       'array.unique': 'Duplicate routingType in configs',
     }),
-  offerer: FieldValidator.address.optional(),
+  swapper: FieldValidator.address.optional(),
+  useUniswapX: Joi.boolean().default(false).optional(),
 });
 
 export const PostQuoteResponseJoi = Joi.object({
@@ -33,6 +31,6 @@ export const PostQuoteResponseJoi = Joi.object({
   amountIn: FieldValidator.amount.required(),
   tokenOut: FieldValidator.address.required(),
   amountOut: FieldValidator.amount.required(),
-  offerer: FieldValidator.address.required(),
+  swapper: FieldValidator.address.required(),
   filler: FieldValidator.address.required(),
 });

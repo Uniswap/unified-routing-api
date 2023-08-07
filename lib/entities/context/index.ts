@@ -1,3 +1,5 @@
+import { ethers } from 'ethers';
+
 import { RoutingType } from '../../constants';
 import { ClassicRequest, DutchRequest, Quote, QuoteRequest } from '../../entities';
 
@@ -18,6 +20,7 @@ export type QuoteByKey = {
 };
 
 export interface QuoteContext {
+  routingType: RoutingType;
   // base request of the context
   request: QuoteRequest;
 
@@ -77,11 +80,15 @@ export class QuoteContextManager {
   }
 }
 
-export function parseQuoteContexts(requests: QuoteRequest[], permit2Fetcher: Permit2Fetcher): QuoteContext[] {
+export function parseQuoteContexts(
+  requests: QuoteRequest[],
+  permit2Fetcher: Permit2Fetcher,
+  provider: ethers.providers.JsonRpcProvider
+): QuoteContext[] {
   return requests.map((request) => {
     switch (request.routingType) {
       case RoutingType.DUTCH_LIMIT:
-        return new DutchQuoteContext(log, request as DutchRequest);
+        return new DutchQuoteContext(log, request as DutchRequest, provider);
       case RoutingType.CLASSIC:
         return new ClassicQuoteContext(log, request as ClassicRequest, permit2Fetcher);
       default:

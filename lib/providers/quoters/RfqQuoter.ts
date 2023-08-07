@@ -12,7 +12,7 @@ import { generateRandomNonce } from '../../util/nonce';
 import { Quoter, QuoterType } from './index';
 
 export class RfqQuoter implements Quoter {
-  static readonly type: QuoterType.GOUDA_RFQ;
+  static readonly type: QuoterType.UNISWAPX_RFQ;
 
   constructor(private rfqUrl: string, private serviceUrl: string, private paramApiKey: string) {}
 
@@ -22,7 +22,8 @@ export class RfqQuoter implements Quoter {
       return null;
     }
 
-    const offerer = request.config.offerer;
+    const swapper = request.config.swapper;
+    const now = Date.now();
     const requests = [
       axios.post(
         `${this.rfqUrl}quote`,
@@ -32,13 +33,13 @@ export class RfqQuoter implements Quoter {
           tokenIn: mapNative(request.info.tokenIn, request.info.tokenInChainId),
           tokenOut: mapNative(request.info.tokenOut, request.info.tokenInChainId),
           amount: request.info.amount.toString(),
-          offerer: offerer,
+          swapper: swapper,
           requestId: request.info.requestId,
           type: TradeType[request.info.type],
         },
         { headers: { 'x-api-key': this.paramApiKey } }
       ),
-      axios.get(`${this.serviceUrl}dutch-auction/nonce?address=${offerer}&chainId=${request.info.tokenInChainId}`), // should also work for cross-chain?
+      axios.get(`${this.serviceUrl}dutch-auction/nonce?address=${swapper}&chainId=${request.info.tokenInChainId}`), // should also work for cross-chain?
     ];
 
     let quote: Quote | null = null;
@@ -57,10 +58,12 @@ export class RfqQuoter implements Quoter {
         } else {
           if (results[1].status == 'rejected') {
             log.debug(results[1].reason, 'RfqQuoterErr: GET nonce failed');
+            metrics.putMetric(`RfqQuoterLatency`, Date.now() - now);
             metrics.putMetric(`RfqQuoterNonceErr`, 1);
             quote = DutchQuote.fromResponseBody(request, response, generateRandomNonce());
           } else {
             log.info(results[1].value.data, 'RfqQuoter: GET nonce success');
+            metrics.putMetric(`RfqQuoterLatency`, Date.now() - now);
             metrics.putMetric(`RfqQuoterSuccess`, 1);
             quote = DutchQuote.fromResponseBody(
               request,
