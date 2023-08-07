@@ -121,7 +121,11 @@ export class QuoteHandler extends APIGLambdaHandler<
     };
   }
 
-  private async emitQuoteRequestedMetrics(tokenFetcher: TokenFetcher, info: QuoteRequestInfo, requests: QuoteRequest[]): Promise<void> {
+  private async emitQuoteRequestedMetrics(
+    tokenFetcher: TokenFetcher,
+    info: QuoteRequestInfo,
+    requests: QuoteRequest[]
+  ): Promise<void> {
     const { tokenInChainId: chainId, tokenIn, tokenOut } = info;
     const tokenInAbbr = await this.getTokenSymbolOrAbbr(tokenFetcher, chainId, tokenIn);
     const tokenOutAbbr = await this.getTokenSymbolOrAbbr(tokenFetcher, chainId, tokenOut);
@@ -205,7 +209,6 @@ export class QuoteHandler extends APIGLambdaHandler<
     // UniswapX QuoteResponse metrics
     if (_uniswapXRequested) {
       await emitUniswapXPairMetricIfTracking(
-        tokenFetcher,
         tokenIn,
         tokenOut,
         type == TradeType.EXACT_INPUT ? bestQuote.amountIn : bestQuote.amountOut,
