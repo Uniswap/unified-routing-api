@@ -32,7 +32,10 @@ export class MetricPair {
       const tokenInMetricAddress = this.tokenIn.isNative ? NATIVE_ADDRESS : this.tokenIn.wrapped.address;
       const tokenOutMetricAddress = this.tokenOut.isNative ? NATIVE_ADDRESS : this.tokenOut.wrapped.address;
 
-      if (tokenInMetricAddress != tokenInAddress || tokenOutMetricAddress != tokenOutAddress) {
+      if (
+        tokenInMetricAddress.toLowerCase() != tokenInAddress.toLowerCase() ||
+        tokenOutMetricAddress.toLowerCase() != tokenOutAddress.toLowerCase()
+      ) {
         return null;
       }
 
