@@ -2,7 +2,7 @@ import { Currency, CurrencyAmount, Ether, TradeType, WETH9 } from '@uniswap/sdk-
 import { DAI_MAINNET, USDC_MAINNET as USDC, USDT_MAINNET, WBTC_MAINNET } from '@uniswap/smart-order-router';
 import { BigNumber } from 'ethers';
 import { parseUnits } from 'ethers/lib/utils';
-import { TokenFetcher } from '../fetchers/TokenFetcher';
+import { NATIVE_ADDRESS } from '../constants';
 import { log } from './log';
 import { metrics } from './metrics';
 
@@ -23,17 +23,16 @@ export class MetricPair {
   ) {}
 
   public async emitMetricIfValid(
-    tokenFetcher: TokenFetcher,
     tokenInAddress: string,
     tokenOutAddress: string,
     amount: string,
     bestQuoteType: QuoteType
   ): Promise<string | null> {
     try {
-      const tokenIn = await tokenFetcher.resolveToken(this.chainId, tokenInAddress);
-      const tokenOut = await tokenFetcher.resolveToken(this.chainId, tokenOutAddress);
+      const tokenInMetricAddress = this.tokenIn.isNative ? NATIVE_ADDRESS : this.tokenIn.wrapped.address;
+      const tokenOutMetricAddress = this.tokenOut.isNative ? NATIVE_ADDRESS : this.tokenOut.wrapped.address;
 
-      if (!tokenIn.equals(this.tokenIn) || !tokenOut.equals(this.tokenOut)) {
+      if (tokenInMetricAddress != tokenInAddress || tokenOutMetricAddress != tokenOutAddress) {
         return null;
       }
 
@@ -72,7 +71,7 @@ export class MetricPair {
   }
 
   public metricKeys(): string[][] {
-    let bucketKeys: string[][] = [];
+    const bucketKeys: string[][] = [];
     for (const [low, high] of this.buckets) {
       bucketKeys.push([
         this.metricKey(low, high, QuoteType.CLASSIC),
@@ -223,7 +222,6 @@ export const trackedPairs: MetricPair[] = [
 ];
 
 export const emitUniswapXPairMetricIfTracking = async (
-  tokenFetcher: TokenFetcher,
   tokenInAddress: string,
   tokenOutAddress: string,
   amountIn: BigNumber,
@@ -236,7 +234,6 @@ export const emitUniswapXPairMetricIfTracking = async (
 
   for (const metricPair of trackedPairs) {
     const emitted = await metricPair.emitMetricIfValid(
-      tokenFetcher,
       tokenInAddress,
       tokenOutAddress,
       amountIn.toString(),
