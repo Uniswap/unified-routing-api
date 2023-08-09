@@ -2,7 +2,7 @@ import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-ro
 import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
 
-import { RoutingType } from '../../../../../lib/constants';
+import { NATIVE_ADDRESS, RoutingType } from '../../../../../lib/constants';
 import { DutchQuote, DutchQuoteContext, DutchQuoteDataJSON } from '../../../../../lib/entities';
 import { Erc20__factory } from '../../../../../lib/types/ext/factories/Erc20__factory';
 import {
@@ -16,8 +16,10 @@ import {
   SWAPPER,
   TOKEN_IN,
   TOKEN_OUT,
+  USDC_ADDRESS,
 } from '../../../../constants';
 import {
+  BASE_REQUEST_INFO_EXACT_IN,
   createClassicQuote,
   createDutchQuote,
   createDutchQuoteWithRequest,
@@ -411,11 +413,14 @@ describe('DutchQuoteContext', () => {
       });
 
       const filler = '0x1111111111111111111111111111111111111111';
-      const rfqQuote = createDutchQuoteWithRequest({ tokenIn: ETH_IN, tokenOut: TOKEN_IN, amountOut: AMOUNT, filler }, {
-        tokenIn: ETH_IN,
-        tokenOut: TOKEN_IN,
-        type: 'EXACT_INPUT'
-      });
+      const rfqQuote = createDutchQuoteWithRequest(
+        { tokenIn: ETH_IN, tokenOut: TOKEN_IN, amountOut: AMOUNT, filler },
+        {
+          tokenIn: ETH_IN,
+          tokenOut: TOKEN_IN,
+          type: 'EXACT_INPUT',
+        }
+      );
       const classicQuote = createClassicQuote(
         { quote: AMOUNT, quoteGasAdjusted: AMOUNT_GAS_ADJUSTED },
         { tokenIn: ETH_IN, tokenOut: TOKEN_IN, type: 'EXACT_INPUT' }
@@ -629,6 +634,44 @@ describe('DutchQuoteContext', () => {
       const QUOTE_REQUEST = makeDutchRequest({}, { useSyntheticQuotes: true }, baseRequest);
       const context = new DutchQuoteContext(logger, QUOTE_REQUEST, provider);
       expect(context.hasSyntheticEligibleTokens()).toEqual(false);
+    });
+  });
+
+  describe('needsRouteToNative', () => {
+    it('needsRouteToNative is true if not native and not wrapped native tokenOut', async () => {
+      const request = makeDutchRequest(
+        {},
+        { useSyntheticQuotes: true },
+        { ...BASE_REQUEST_INFO_EXACT_IN, tokenOut: USDC_ADDRESS }
+      );
+      const context = new DutchQuoteContext(logger, request, provider);
+      context.dependencies();
+      expect(context.needsRouteToNative).toEqual(true);
+    });
+
+    it('needsRouteToNative is false if native tokenOut', async () => {
+      const request = makeDutchRequest(
+        {},
+        { useSyntheticQuotes: true },
+        { ...BASE_REQUEST_INFO_EXACT_IN, tokenOut: NATIVE_ADDRESS }
+      );
+      const context = new DutchQuoteContext(logger, request, provider);
+      context.dependencies();
+      expect(context.needsRouteToNative).toEqual(false);
+    });
+
+    it('needsRouteToNative is false if wrapped native tokenOut', async () => {
+      const request = makeDutchRequest(
+        {},
+        { useSyntheticQuotes: true },
+        {
+          ...BASE_REQUEST_INFO_EXACT_IN,
+          tokenOut: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_OUT_ID)].address,
+        }
+      );
+      const context = new DutchQuoteContext(logger, request, provider);
+      context.dependencies();
+      expect(context.needsRouteToNative).toEqual(false);
     });
   });
 });
