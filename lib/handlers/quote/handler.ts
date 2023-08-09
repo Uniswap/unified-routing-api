@@ -69,8 +69,11 @@ export class QuoteHandler extends APIGLambdaHandler<
       requestId: uuidv4(),
     };
 
+    const beforeResolveTokens = Date.now();
     const tokenInAddress = await tokenFetcher.resolveTokenAddress(request.tokenInChainId, request.tokenIn);
     const tokenOutAddress = await tokenFetcher.resolveTokenAddress(request.tokenOutChainId, request.tokenOut);
+    metrics.putMetric('Latency-ResolveTokens', Date.now() - beforeResolveTokens, Unit.Milliseconds);
+
     const requestWithTokenAddresses = {
       ...request,
       tokenIn: tokenInAddress,
@@ -90,9 +93,15 @@ export class QuoteHandler extends APIGLambdaHandler<
     const contextHandler = new QuoteContextManager(parseQuoteContexts(quoteRequests, permit2Fetcher, provider));
     const requests = contextHandler.getRequests();
     log.info({ requests }, 'requests');
+
+    const beforeGetQuotes = Date.now();
     const quotes = await getQuotes(quoters, requests);
+    metrics.putMetric('Latency-GetQuotes', Date.now() - beforeGetQuotes, Unit.Milliseconds);
+
     log.info({ rawQuotes: quotes }, 'quotes');
+    const beforeResolveQuotes = Date.now();
     const resolvedQuotes = await contextHandler.resolveQuotes(quotes);
+    metrics.putMetric('Latency-ResolveQuotes', Date.now() - beforeResolveQuotes, Unit.Milliseconds);
     log.info({ resolvedQuotes }, 'resolvedQuotes');
 
     await this.emitQuoteRequestedMetrics(tokenFetcher, quoteInfo, quoteRequests);
@@ -275,12 +284,15 @@ export class QuoteHandler extends APIGLambdaHandler<
 // fetch quotes for all quote requests using the configured quoters
 export async function getQuotes(quoterByRoutingType: QuoterByRoutingType, requests: QuoteRequest[]): Promise<Quote[]> {
   const quotes = await Promise.all(
-    requests.flatMap((request) => {
+    requests.flatMap(async (request) => {
       const quoter = quoterByRoutingType[request.routingType];
       if (!quoter) {
         return [];
       }
-      return quoter.quote(request);
+      const beforeQuote = Date.now();
+      const res = await quoter.quote(request);
+      metrics.putMetric(`Latency-Quote-${request.routingType}`, Date.now() - beforeQuote, Unit.Milliseconds);
+      return res;
     })
   );
   return quotes.filter((q): q is Quote => !!q);
