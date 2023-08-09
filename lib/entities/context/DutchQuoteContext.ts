@@ -61,8 +61,8 @@ export class DutchQuoteContext implements QuoteContext {
 
     const result = [this.request, classicRequest];
 
-    const native = WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(this.request.info.tokenOutChainId)].address;
-    if (this.request.info.tokenOut !== native) {
+    const wrappedNativeAddress = WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(this.request.info.tokenOutChainId)].address;
+    if (this.request.info.tokenOut !== wrappedNativeAddress && this.request.info.tokenOut !== NATIVE_ADDRESS) {
       this.needsRouteToNative = true;
       const routeBackToNativeRequest = new ClassicRequest(
         {
@@ -70,7 +70,7 @@ export class DutchQuoteContext implements QuoteContext {
           type: TradeType.EXACT_OUTPUT,
           tokenIn: this.request.info.tokenOut,
           amount: ethers.utils.parseEther('1'),
-          tokenOut: native,
+          tokenOut: wrappedNativeAddress,
         },
         {
           protocols: [Protocol.MIXED, Protocol.V2, Protocol.V3],
@@ -170,7 +170,7 @@ export class DutchQuoteContext implements QuoteContext {
 
     const reparameterized = DutchQuote.reparameterize(quote, classicQuote as ClassicQuote, {
       hasApprovedPermit2: await this.hasApprovedPermit2(quote.request),
-    });    
+    });
     // if its invalid for some reason, i.e. too much decay then return null
     if (!reparameterized.validate()) return null;
     return reparameterized;

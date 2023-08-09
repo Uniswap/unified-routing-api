@@ -31,7 +31,7 @@ export class RfqQuoter implements Quoter {
           tokenInChainId: request.info.tokenInChainId,
           tokenOutChainId: request.info.tokenOutChainId,
           tokenIn: mapNative(request.info.tokenIn, request.info.tokenInChainId),
-          tokenOut: mapNative(request.info.tokenOut, request.info.tokenInChainId),
+          tokenOut: request.info.tokenOut,
           amount: request.info.amount.toString(),
           swapper: swapper,
           requestId: request.info.requestId,
