@@ -58,6 +58,7 @@ export class QuoteHandler extends APIGLambdaHandler<
       containerInjected: { quoters, tokenFetcher, permit2Fetcher, rpcUrlMap },
     } = params;
 
+    const startTime = Date.now();
     if (requestBody.tokenInChainId != requestBody.tokenOutChainId) {
       throw new ValidationError(`Cannot request quotes for tokens on different chains`);
     }
@@ -126,6 +127,12 @@ export class QuoteHandler extends APIGLambdaHandler<
     }
 
     await this.emitQuoteResponseMetrics(tokenFetcher, quoteInfo, bestQuote, resolvedValidQuotes, uniswapXRequested);
+
+    metrics.putMetric(
+      `Latency-QuoteFull-ChainId${requestBody.tokenInChainId}`,
+      Date.now() - startTime,
+      Unit.Milliseconds
+    );
 
     return {
       statusCode: 200,
