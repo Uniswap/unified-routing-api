@@ -72,7 +72,11 @@ export class QuoteHandler extends APIGLambdaHandler<
     const beforeResolveTokens = Date.now();
     const tokenInAddress = await tokenFetcher.resolveTokenAddress(request.tokenInChainId, request.tokenIn);
     const tokenOutAddress = await tokenFetcher.resolveTokenAddress(request.tokenOutChainId, request.tokenOut);
-    metrics.putMetric('Latency-ResolveTokens', Date.now() - beforeResolveTokens, Unit.Milliseconds);
+    metrics.putMetric(
+      `Latency-ResolveTokens-ChainId${requestBody.tokenInChainId}`,
+      Date.now() - beforeResolveTokens,
+      Unit.Milliseconds
+    );
 
     const requestWithTokenAddresses = {
       ...request,
@@ -96,12 +100,20 @@ export class QuoteHandler extends APIGLambdaHandler<
 
     const beforeGetQuotes = Date.now();
     const quotes = await getQuotes(quoters, requests);
-    metrics.putMetric('Latency-GetQuotes', Date.now() - beforeGetQuotes, Unit.Milliseconds);
+    metrics.putMetric(
+      `Latency-GetQuotes-ChainId${requestBody.tokenInChainId}`,
+      Date.now() - beforeGetQuotes,
+      Unit.Milliseconds
+    );
 
     log.info({ rawQuotes: quotes }, 'quotes');
     const beforeResolveQuotes = Date.now();
     const resolvedQuotes = await contextHandler.resolveQuotes(quotes);
-    metrics.putMetric('Latency-ResolveQuotes', Date.now() - beforeResolveQuotes, Unit.Milliseconds);
+    metrics.putMetric(
+      `Latency-ResolveQuotes-ChainId${requestBody.tokenInChainId}`,
+      Date.now() - beforeResolveQuotes,
+      Unit.Milliseconds
+    );
     log.info({ resolvedQuotes }, 'resolvedQuotes');
 
     await this.emitQuoteRequestedMetrics(tokenFetcher, quoteInfo, quoteRequests);
@@ -291,7 +303,11 @@ export async function getQuotes(quoterByRoutingType: QuoterByRoutingType, reques
       }
       const beforeQuote = Date.now();
       const res = await quoter.quote(request);
-      metrics.putMetric(`Latency-Quote-${request.routingType}`, Date.now() - beforeQuote, Unit.Milliseconds);
+      metrics.putMetric(
+        `Latency-Quote-${request.routingType}-ChainId${request.info.tokenInChainId}`,
+        Date.now() - beforeQuote,
+        Unit.Milliseconds
+      );
       return res;
     })
   );
