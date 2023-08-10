@@ -170,7 +170,7 @@ export class DutchQuoteContext implements QuoteContext {
 
     const reparameterized = DutchQuote.reparameterize(quote, classicQuote as ClassicQuote, {
       hasApprovedPermit2: await this.hasApprovedPermit2(quote.request),
-    });    
+    });
     // if its invalid for some reason, i.e. too much decay then return null
     if (!reparameterized.validate()) return null;
     return reparameterized;
