@@ -197,12 +197,6 @@ export class DutchQuoteContext implements QuoteContext {
       return null;
     }
 
-    // tokens not eligible for synthetic; classic quote not usable
-    if (!this.hasSyntheticEligibleTokens()) {
-      this.log.info('Tokens not eligible for synthetic, skipping synthetic');
-      return null;
-    }
-
     return DutchQuote.fromClassicQuote(this.request, classicQuote as ClassicQuote);
   }
 
