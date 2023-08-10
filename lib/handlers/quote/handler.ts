@@ -287,7 +287,7 @@ export async function getQuotes(quoterByRoutingType: QuoterByRoutingType, reques
     requests.flatMap(async (request) => {
       const quoter = quoterByRoutingType[request.routingType];
       if (!quoter) {
-        return [];
+        return null;
       }
       const beforeQuote = Date.now();
       const res = await quoter.quote(request);
