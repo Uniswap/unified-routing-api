@@ -333,6 +333,7 @@ export async function getQuotes(quoterByRoutingType: QuoterByRoutingType, reques
 
   // throw QuoteError if there are no available quotes and at least one 5xx error
   if (quotes.length === 0 && errors.length > 0) {
+    log.error({ errors }, 'No available quotes and at least one 5xx error, throwing QuoteError.');
     throw new QuoterError(errors[0].reason.message);
   }
 
