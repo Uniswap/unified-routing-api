@@ -323,12 +323,12 @@ export async function getQuotes(quoterByRoutingType: QuoterByRoutingType, reques
 
   const quotes: Quote[] = (
     results.filter(
-      (result) => result.status == 'fulfilled' && result?.value !== null
+      (result) => result.status === 'fulfilled' && result?.value !== null
     ) as PromiseFulfilledResult<Quote | null>[]
   ).map((result) => result.value as Quote);
 
   const errors = results.filter(
-    (result) => result.status == 'rejected' && result?.reason.status >= 500
+    (result) => result.status === 'rejected' && parseInt(result?.reason?.response.status) >= 500
   ) as PromiseRejectedResult[];
 
   // throw QuoteError if there are no available quotes and at least one 5xx error
