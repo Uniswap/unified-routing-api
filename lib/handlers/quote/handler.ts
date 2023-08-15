@@ -21,7 +21,7 @@ import {
   QuoteRequestInfo,
 } from '../../entities';
 import { TokenFetcher } from '../../fetchers/TokenFetcher';
-import { ErrorCode, NoQuotesAvailable, ValidationError } from '../../util/errors';
+import { ErrorCode, NoQuotesAvailable, QuoterError, ValidationError } from '../../util/errors';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import { emitUniswapXPairMetricIfTracking, QuoteType } from '../../util/metrics-pair';
@@ -188,7 +188,9 @@ export class QuoteHandler extends APIGLambdaHandler<
     let symbol = address.slice(0, 6);
     try {
       symbol = (await tokenFetcher.resolveToken(chainId, symbol)).symbol ?? symbol;
-    } catch {}
+    } catch {
+      /* empty */
+    }
     return symbol;
   }
 
@@ -302,7 +304,7 @@ export class QuoteHandler extends APIGLambdaHandler<
 
 // fetch quotes for all quote requests using the configured quoters
 export async function getQuotes(quoterByRoutingType: QuoterByRoutingType, requests: QuoteRequest[]): Promise<Quote[]> {
-  const quotes = await Promise.all(
+  const results = await Promise.allSettled(
     requests.flatMap(async (request) => {
       const quoter = quoterByRoutingType[request.routingType];
       if (!quoter) {
@@ -318,7 +320,23 @@ export async function getQuotes(quoterByRoutingType: QuoterByRoutingType, reques
       return res;
     })
   );
-  return quotes.filter((q): q is Quote => !!q);
+
+  const quotes: Quote[] = (
+    results.filter(
+      (result) => result.status == 'fulfilled' && result?.value !== null
+    ) as PromiseFulfilledResult<Quote | null>[]
+  ).map((result) => result.value as Quote);
+
+  const errors = results.filter(
+    (result) => result.status == 'rejected' && result?.reason.status >= 500
+  ) as PromiseRejectedResult[];
+
+  // throw QuoteError if there are no available quotes and at least one 5xx error
+  if (quotes.length === 0 && errors.length > 0) {
+    throw new QuoterError(errors[0].reason.message);
+  }
+
+  return quotes;
 }
 
 // determine and return the "best" quote of the given list

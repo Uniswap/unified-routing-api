@@ -1,14 +1,21 @@
 import { TradeType } from '@uniswap/sdk-core';
 import { NATIVE_NAMES_BY_ID } from '@uniswap/smart-order-router';
-import querystring from 'querystring';
-import axios from './helpers';
-
 import { AxiosError } from 'axios';
+import axiosRetry from 'axios-retry';
+import querystring from 'querystring';
+
 import { NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { ClassicQuote, ClassicRequest, Quote } from '../../entities';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
+import axios from './helpers';
 import { Quoter, QuoterType } from './index';
+
+// Retry quote requests to the RoutingAPI up to 3 times if they 5xx
+axiosRetry(axios, {
+  retries: 3,
+  retryCondition: (err) => !!err.response?.status && err.response?.status >= 500,
+});
 
 export class RoutingApiQuoter implements Quoter {
   static readonly type: QuoterType.ROUTING_API;
@@ -40,6 +47,11 @@ export class RoutingApiQuoter implements Quoter {
       }
       log.error(e, 'RoutingApiQuoterErr');
       metrics.putMetric(`RoutingApiQuoterErr`, 1);
+
+      // throw on all non-4xx errors
+      if (!(e instanceof AxiosError && e.response?.status?.toString().startsWith('4'))) {
+        throw e;
+      }
       return null;
     }
   }
