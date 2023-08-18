@@ -41,11 +41,23 @@ export class RoutingApiQuoter implements Quoter {
       log.error(e, 'RoutingApiQuoterErr');
       metrics.putMetric(`RoutingApiQuoterErr`, 1);
 
-      // throw on all non-4xx errors
-      const status = (e as AxiosError)?.response?.status;
-      if (!(e instanceof AxiosError) || status === 429 || (status && status >= 500)) {
+      // We want to ensure that we throw all non-404 errors
+      // to ensure that the client will know the request is retryable.
+      // We include 429's in the retryable errors because a 429 would
+      // indicate that the Routing API was being rate-limited and a subsequent
+      // retry may succeed.
+
+      // We also want to retry the request if there is a non-"AxiosError".
+      // This may be caused by a network interruption or some other infra related issues.
+      if (!axios.isAxiosError(e)) {
         throw e;
       }
+
+      const status = e.response?.status;
+      if (status && (status === 429 || status >= 500)) {
+        throw e;
+      }
+
       return null;
     }
   }

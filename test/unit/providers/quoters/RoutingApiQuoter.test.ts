@@ -22,6 +22,14 @@ describe('RoutingApiQuoter', () => {
       expect(routingApiQuoter.quote(QUOTE_REQUEST_CLASSIC)).rejects.toThrow(axiosError);
     });
 
+    it('throws error on quote request 500', async () => {
+      const axiosError = new AxiosError('Failed fetching route', '500', {} as any, {}, {
+        status: 500,
+      } as any);
+      axiosMock.mockRejectedValue(axiosError);
+      expect(routingApiQuoter.quote(QUOTE_REQUEST_CLASSIC)).rejects.toThrow(axiosError);
+    });
+
     it('throws error on quote request 429', async () => {
       const axiosError = new AxiosError('Failed fetching route', '429', {} as any, {}, {
         status: 429,

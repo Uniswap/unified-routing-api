@@ -21,7 +21,7 @@ import {
   QuoteRequestInfo,
 } from '../../entities';
 import { TokenFetcher } from '../../fetchers/TokenFetcher';
-import { ErrorCode, NoQuotesAvailable, QuoterError, ValidationError } from '../../util/errors';
+import { ErrorCode, NoQuotesAvailable, QuoteFetchError, ValidationError } from '../../util/errors';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import { emitUniswapXPairMetricIfTracking, QuoteType } from '../../util/metrics-pair';
@@ -328,13 +328,15 @@ export async function getQuotes(quoterByRoutingType: QuoterByRoutingType, reques
   ).map((result) => result.value as Quote);
 
   const errors = results.filter(
-    (result) => result.status === 'rejected' && parseInt(result?.reason?.response.status) >= 500
+    (result) =>
+      result.status === 'rejected' &&
+      (parseInt(result?.reason?.response.status) >= 500 || parseInt(result?.reason?.response.status) === 429)
   ) as PromiseRejectedResult[];
 
-  // throw QuoteError if there are no available quotes and at least one 5xx error
+  // throw QuoteFetchError if there are no available quotes and at least one 5xx error
   if (quotes.length === 0 && errors.length > 0) {
-    log.error({ errors }, 'No available quotes and at least one 5xx error, throwing QuoteError.');
-    throw new QuoterError(errors[0].reason.message);
+    log.error({ errors }, 'No available quotes and at least one 5xx or 429 error, throwing QuoteFetchError.');
+    throw new QuoteFetchError(errors.map((error) => error.reason.message).join(', '));
   }
 
   return quotes;

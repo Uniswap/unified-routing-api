@@ -1,4 +1,3 @@
-//@ts-nocheck
 import { ChainId, TradeType } from '@uniswap/sdk-core';
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { default as Logger } from 'bunyan';
@@ -123,6 +122,12 @@ describe('QuoteHandler', () => {
     const RfqQuoterMock = (dlQuote: DutchQuote): Quoter => {
       return {
         quote: jest.fn().mockResolvedValue(dlQuote),
+      };
+    };
+
+    const RfqQuoterErrorMock = (axiosError: AxiosError): Quoter => {
+      return {
+        quote: jest.fn().mockReturnValue(Promise.reject(axiosError)),
       };
     };
 
@@ -457,21 +462,16 @@ describe('QuoteHandler', () => {
         expect(quote.encodedOrder).not.toBe(null);
       });
 
-      it('returns 5xx when quoters 5xx and there are no valid DL quotes', async () => {
-        const message = 'Request failed with status code 500';
+      it('returns 500 when quoters 429 and there are no valid DL quotes', async () => {
+        const message = 'Request failed with status code 429';
         const axiosResponse = {
-          status: 500,
+          status: 429,
           message,
-        };
-        const axiosError = new AxiosError(message, '500', {} as any, {}, axiosResponse);
-        const MockQuoter5xx = (): Quoter => {
-          return {
-            quote: jest.fn().mockReturnValue(Promise.reject(axiosError)),
-          };
-        };
+        } as any;
+        const axiosError = new AxiosError(message, '429', {} as any, {}, axiosResponse);
         const quoters = {
-          [RoutingType.DUTCH_LIMIT]: MockQuoter5xx(),
-          [RoutingType.CLASSIC]: MockQuoter5xx(),
+          [RoutingType.DUTCH_LIMIT]: RfqQuoterErrorMock(axiosError),
+          [RoutingType.CLASSIC]: RfqQuoterErrorMock(axiosError),
         };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
@@ -483,7 +483,55 @@ describe('QuoteHandler', () => {
         expect(res.statusCode).toBe(500);
         const errorResponseJson = JSON.parse(res.body);
         expect(errorResponseJson.errorCode).toBe(ErrorCode.QuoteError);
-        expect(errorResponseJson.detail).toBe(message);
+        expect(errorResponseJson.detail).toBe(message + ', ' + message);
+      });
+
+      it('returns 500 when quoters 500 and there are no valid DL quotes', async () => {
+        const message = 'Request failed with status code 500';
+        const axiosResponse = {
+          status: 500,
+          message,
+        } as any;
+        const axiosError = new AxiosError(message, '500', {} as any, {}, axiosResponse);
+        const quoters = {
+          [RoutingType.DUTCH_LIMIT]: RfqQuoterErrorMock(axiosError),
+          [RoutingType.CLASSIC]: RfqQuoterErrorMock(axiosError),
+        };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+
+        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(
+          getEvent(DL_REQUEST_BODY),
+          {} as unknown as Context
+        );
+        expect(res.statusCode).toBe(500);
+        const errorResponseJson = JSON.parse(res.body);
+        expect(errorResponseJson.errorCode).toBe(ErrorCode.QuoteError);
+        expect(errorResponseJson.detail).toBe(message + ', ' + message);
+      });
+
+      it('returns 500 when quoters 5xx and there are no valid DL quotes', async () => {
+        const message = 'Request failed with status code 502';
+        const axiosResponse = {
+          status: 502,
+          message,
+        } as any;
+        const axiosError = new AxiosError(message, '502', {} as any, {}, axiosResponse);
+        const quoters = {
+          [RoutingType.DUTCH_LIMIT]: RfqQuoterErrorMock(axiosError),
+          [RoutingType.CLASSIC]: RfqQuoterErrorMock(axiosError),
+        };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+
+        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(
+          getEvent(DL_REQUEST_BODY),
+          {} as unknown as Context
+        );
+        expect(res.statusCode).toBe(500);
+        const errorResponseJson = JSON.parse(res.body);
+        expect(errorResponseJson.errorCode).toBe(ErrorCode.QuoteError);
+        expect(errorResponseJson.detail).toBe(message + ', ' + message);
       });
 
       describe('Synthetic quote eligible token filtering', () => {
