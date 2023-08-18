@@ -49,3 +49,22 @@ export class NoQuotesAvailable extends CustomError {
     };
   }
 }
+
+export class QuoteFetchError extends CustomError {
+  constructor(message: string) {
+    super(message);
+    // Set the prototype explicitly.
+    Object.setPrototypeOf(this, QuoteFetchError.prototype);
+  }
+
+  toJSON(id?: string): APIGatewayProxyResult {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        errorCode: ErrorCode.QuoteError,
+        detail: this.message,
+        id,
+      }),
+    };
+  }
+}

@@ -1,13 +1,13 @@
 import { TradeType } from '@uniswap/sdk-core';
 import { NATIVE_NAMES_BY_ID } from '@uniswap/smart-order-router';
-import querystring from 'querystring';
-import axios from './helpers';
-
 import { AxiosError } from 'axios';
+import querystring from 'querystring';
+
 import { NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { ClassicQuote, ClassicRequest, Quote } from '../../entities';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
+import axios from './helpers';
 import { Quoter, QuoterType } from './index';
 
 export class RoutingApiQuoter implements Quoter {
@@ -40,6 +40,24 @@ export class RoutingApiQuoter implements Quoter {
       }
       log.error(e, 'RoutingApiQuoterErr');
       metrics.putMetric(`RoutingApiQuoterErr`, 1);
+
+      // We want to ensure that we throw all non-404 errors
+      // to ensure that the client will know the request is retryable.
+      // We include 429's in the retryable errors because a 429 would
+      // indicate that the Routing API was being rate-limited and a subsequent
+      // retry may succeed.
+
+      // We also want to retry the request if there is a non-"AxiosError".
+      // This may be caused by a network interruption or some other infra related issues.
+      if (!axios.isAxiosError(e)) {
+        throw e;
+      }
+
+      const status = e.response?.status;
+      if (status && (status === 429 || status >= 500)) {
+        throw e;
+      }
+
       return null;
     }
   }

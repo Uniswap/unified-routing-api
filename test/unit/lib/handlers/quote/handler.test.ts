@@ -25,6 +25,7 @@ import { PermitDetails } from '@uniswap/permit2-sdk';
 import { DutchOrderInfoJSON } from '@uniswap/uniswapx-sdk';
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { MetricsLogger } from 'aws-embedded-metrics';
+import { AxiosError } from 'axios';
 import { RoutingType } from '../../../../../lib/constants';
 import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, Quote } from '../../../../../lib/entities';
 import { QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index';
@@ -41,6 +42,7 @@ import {
 import { ContainerInjected, QuoterByRoutingType } from '../../../../../lib/handlers/quote/injector';
 import { Quoter } from '../../../../../lib/providers/quoters';
 import { Erc20__factory } from '../../../../../lib/types/ext/factories/Erc20__factory';
+import { ErrorCode } from '../../../../../lib/util/errors';
 import { setGlobalLogger } from '../../../../../lib/util/log';
 import { PERMIT2_USED, PERMIT_DETAILS, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../../constants';
 
@@ -120,6 +122,12 @@ describe('QuoteHandler', () => {
     const RfqQuoterMock = (dlQuote: DutchQuote): Quoter => {
       return {
         quote: jest.fn().mockResolvedValue(dlQuote),
+      };
+    };
+
+    const RfqQuoterErrorMock = (axiosError: AxiosError): Quoter => {
+      return {
+        quote: jest.fn().mockReturnValue(Promise.reject(axiosError)),
       };
     };
 
@@ -452,6 +460,78 @@ describe('QuoteHandler', () => {
         const responseBody = JSON.parse(response.body);
         const quote = responseBody.quote;
         expect(quote.encodedOrder).not.toBe(null);
+      });
+
+      it('returns 500 when quoters 429 and there are no valid DL quotes', async () => {
+        const message = 'Request failed with status code 429';
+        const axiosResponse = {
+          status: 429,
+          message,
+        } as any;
+        const axiosError = new AxiosError(message, '429', {} as any, {}, axiosResponse);
+        const quoters = {
+          [RoutingType.DUTCH_LIMIT]: RfqQuoterErrorMock(axiosError),
+          [RoutingType.CLASSIC]: RfqQuoterErrorMock(axiosError),
+        };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+
+        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(
+          getEvent(DL_REQUEST_BODY),
+          {} as unknown as Context
+        );
+        expect(res.statusCode).toBe(500);
+        const errorResponseJson = JSON.parse(res.body);
+        expect(errorResponseJson.errorCode).toBe(ErrorCode.QuoteError);
+        expect(errorResponseJson.detail).toBe(message + ', ' + message);
+      });
+
+      it('returns 500 when quoters 500 and there are no valid DL quotes', async () => {
+        const message = 'Request failed with status code 500';
+        const axiosResponse = {
+          status: 500,
+          message,
+        } as any;
+        const axiosError = new AxiosError(message, '500', {} as any, {}, axiosResponse);
+        const quoters = {
+          [RoutingType.DUTCH_LIMIT]: RfqQuoterErrorMock(axiosError),
+          [RoutingType.CLASSIC]: RfqQuoterErrorMock(axiosError),
+        };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+
+        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(
+          getEvent(DL_REQUEST_BODY),
+          {} as unknown as Context
+        );
+        expect(res.statusCode).toBe(500);
+        const errorResponseJson = JSON.parse(res.body);
+        expect(errorResponseJson.errorCode).toBe(ErrorCode.QuoteError);
+        expect(errorResponseJson.detail).toBe(message + ', ' + message);
+      });
+
+      it('returns 500 when quoters 5xx and there are no valid DL quotes', async () => {
+        const message = 'Request failed with status code 502';
+        const axiosResponse = {
+          status: 502,
+          message,
+        } as any;
+        const axiosError = new AxiosError(message, '502', {} as any, {}, axiosResponse);
+        const quoters = {
+          [RoutingType.DUTCH_LIMIT]: RfqQuoterErrorMock(axiosError),
+          [RoutingType.CLASSIC]: RfqQuoterErrorMock(axiosError),
+        };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+
+        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher).handler(
+          getEvent(DL_REQUEST_BODY),
+          {} as unknown as Context
+        );
+        expect(res.statusCode).toBe(500);
+        const errorResponseJson = JSON.parse(res.body);
+        expect(errorResponseJson.errorCode).toBe(ErrorCode.QuoteError);
+        expect(errorResponseJson.detail).toBe(message + ', ' + message);
       });
 
       describe('Synthetic quote eligible token filtering', () => {
