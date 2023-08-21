@@ -298,6 +298,26 @@ export class APIStack extends cdk.Stack {
       evaluationPeriods: 3,
     });
 
+    const apiAlarmLatencyP99Sev2 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV2-LatencyP99', {
+      alarmName: 'UnifiedRoutingAPI-SEV2-LatencyP99',
+      metric: api.metricLatency({
+        period: Duration.minutes(5),
+        statistic: 'p99',
+      }),
+      threshold: 10000,
+      evaluationPeriods: 3,
+    });
+
+    const apiAlarmLatencyP99Sev3 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV3-LatencyP99', {
+      alarmName: 'UnifiedRoutingAPI-SEV3-LatencyP99',
+      metric: api.metricLatency({
+        period: Duration.minutes(5),
+        statistic: 'p99',
+      }),
+      threshold: 7000,
+      evaluationPeriods: 3,
+    });
+
     // Alarms for 200 rate being too low for each chain
     const percent5XXByChainAlarm: cdk.aws_cloudwatch.Alarm[] = _.flatMap(ALL_ALARMED_CHAINS, (chainId) => {
       const alarmNameSev3 = `UnifiedRoutingAPI-SEV3-5XXAlarm-ChainId-${chainId.toString()}`;
@@ -534,6 +554,8 @@ export class APIStack extends cdk.Stack {
       apiAlarm4xxSev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       apiAlarmLatencySev2.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       apiAlarmLatencySev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
+      apiAlarmLatencyP99Sev2.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
+      apiAlarmLatencyP99Sev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
 
       percent5XXByChainAlarm.forEach((alarm) => {
         alarm.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
