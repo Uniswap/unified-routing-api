@@ -96,6 +96,12 @@ export class RoutingApiQuoter implements Quoter {
         ...(config.permitSigDeadline !== undefined && { permitSigDeadline: config.permitSigDeadline }),
         ...(config.enableUniversalRouter !== undefined && { enableUniversalRouter: config.enableUniversalRouter }),
         ...(config.recipient !== undefined && { recipient: config.recipient }),
+        // unicorn secret is only used for debug routing config
+        // routing-api will only send the debug routing config that overrides the default routing config
+        // (a.k.a. alpha router config within smart-order-router) if unified-routing-api
+        // sends the correct unicorn secret
+        ...(config.debugRoutingConfig !== undefined && { debugRoutingConfig: config.debugRoutingConfig }),
+        ...(config.unicornSecret !== undefined && { unicornSecret: config.unicornSecret }),
       })
     );
   }
