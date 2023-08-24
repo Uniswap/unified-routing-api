@@ -176,7 +176,7 @@ export class APIStack extends cdk.Stack {
       runtime: aws_lambda.Runtime.NODEJS_16_X,
       entry: path.join(__dirname, '../../lib/handlers/index.ts'),
       handler: 'quoteHandler',
-      memorySize: 1024,
+      memorySize: 512,
       bundling: {
         minify: true,
         sourceMap: true,
