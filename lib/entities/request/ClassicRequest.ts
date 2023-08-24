@@ -23,6 +23,7 @@ export interface ClassicConfig {
   forceMixedRoutes?: boolean;
   debugRoutingConfig?: string;
   unicornSecret?: string;
+  quoteSpeed?: string;
 }
 
 export interface ClassicConfigJSON extends Omit<ClassicConfig, 'protocols' | 'permitAmount'> {
