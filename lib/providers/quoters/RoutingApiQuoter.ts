@@ -102,6 +102,10 @@ export class RoutingApiQuoter implements Quoter {
         // sends the correct unicorn secret
         ...(config.debugRoutingConfig !== undefined && { debugRoutingConfig: config.debugRoutingConfig }),
         ...(config.unicornSecret !== undefined && { unicornSecret: config.unicornSecret }),
+        // quote speed can be sent in standalone query string param
+        // expect web/mobile to send it for the 1st fast quote,
+        // otherwise default not to send it
+        ...(config.quoteSpeed !== undefined && { quoteSpeed: config.quoteSpeed }),
       })
     );
   }
