@@ -126,7 +126,7 @@ describe('DutchQuoteContext', () => {
     it('returns null if tokenIn is not in tokenlist', async () => {
       const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL, provider);
       const rfqQuote = createDutchQuote(
-        { tokenIn: '0x0000000000000000000000000000000000000000', amountOut: '1' },
+        { tokenIn: '0x1111111111111111111111111111111111111111', amountOut: '2' },
         'EXACT_INPUT'
       );
       const quote = await context.resolve({
@@ -138,13 +138,39 @@ describe('DutchQuoteContext', () => {
     it('returns null if tokenOut is not in tokenlist', async () => {
       const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL, provider);
       const rfqQuote = createDutchQuote(
-        { tokenOut: '0x0000000000000000000000000000000000000000', amountOut: '1' },
+        { tokenOut: '0x1111111111111111111111111111111111111111', amountOut: '2' },
         'EXACT_INPUT'
       );
       const quote = await context.resolve({
         [QUOTE_REQUEST_DL.key()]: rfqQuote,
       });
       expect(quote).toBeNull();
+    });
+
+    it('returns rfq quote if tokenIn is NATIVE_ADDRESS', async () => {
+      const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL, provider);
+      const rfqQuote = createDutchQuote({ tokenIn: NATIVE_ADDRESS, amountOut: '2' }, 'EXACT_INPUT');
+      const quote = await context.resolve({
+        [QUOTE_REQUEST_DL.key()]: rfqQuote,
+      });
+      expect(quote?.routingType).toEqual(RoutingType.DUTCH_LIMIT);
+      expect((quote?.toJSON() as DutchQuoteDataJSON).orderInfo.exclusiveFiller).toEqual(
+        '0x0000000000000000000000000000000000000000'
+      );
+      expect(quote?.amountOut.toString()).toEqual('2');
+    });
+
+    it('returns rfq quote if tokenOut is NATIVE_ADDRESS', async () => {
+      const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL, provider);
+      const rfqQuote = createDutchQuote({ tokenOut: NATIVE_ADDRESS, amountOut: '2' }, 'EXACT_INPUT');
+      const quote = await context.resolve({
+        [QUOTE_REQUEST_DL.key()]: rfqQuote,
+      });
+      expect(quote?.routingType).toEqual(RoutingType.DUTCH_LIMIT);
+      expect((quote?.toJSON() as DutchQuoteDataJSON).orderInfo.exclusiveFiller).toEqual(
+        '0x0000000000000000000000000000000000000000'
+      );
+      expect(quote?.amountOut.toString()).toEqual('2');
     });
 
     it('uses synthetic if better', async () => {
