@@ -136,7 +136,7 @@ export class DutchQuoteContext implements QuoteContext {
       return null;
     }
 
-    if (!tokenOut) {
+    if (!tokenOut && quote.tokenOut != NATIVE_ADDRESS) {
       this.log.info(`Token ${quote.tokenOut} not in tokenlist, skipping rfq`);
       return null;
     }
