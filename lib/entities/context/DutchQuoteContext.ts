@@ -131,12 +131,12 @@ export class DutchQuoteContext implements QuoteContext {
       tokenList.getTokenByAddress(quote.tokenIn),
       tokenList.getTokenByAddress(quote.tokenOut),
     ]);
-    if (!tokenIn && quote.tokenIn != NATIVE_ADDRESS) {
+    if (!tokenIn && quote.tokenIn !== NATIVE_ADDRESS) {
       this.log.info(`Token ${quote.tokenIn} not in tokenlist, skipping rfq`);
       return null;
     }
 
-    if (!tokenOut) {
+    if (!tokenOut && quote.tokenOut !== NATIVE_ADDRESS) {
       this.log.info(`Token ${quote.tokenOut} not in tokenlist, skipping rfq`);
       return null;
     }
