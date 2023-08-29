@@ -289,7 +289,10 @@ describe('quoteUniswapX', function () {
               CurrencyAmount.fromRawAmount(USDT_MAINNET, order.info.outputs[0].startAmount.toString())
             );
           } else {
-            expect(tokenOutAfter.subtract(tokenOutBefore).greaterThan(10_000) || tokenOutAfter.subtract(tokenOutBefore).equalTo(10_000)).to.be.true;
+            expect(
+              tokenOutAfter.subtract(tokenOutBefore).greaterThan(10_000) ||
+                tokenOutAfter.subtract(tokenOutBefore).equalTo(10_000)
+            ).to.be.true;
             checkQuoteToken(
               tokenInBefore,
               tokenInAfter,
@@ -349,7 +352,10 @@ describe('quoteUniswapX', function () {
               CurrencyAmount.fromRawAmount(USDT_MAINNET, order.info.outputs[0].startAmount.toString())
             );
           } else {
-            expect(tokenOutAfter.subtract(tokenOutBefore).greaterThan(10_000) || tokenOutAfter.subtract(tokenOutBefore).equalTo(10_000)).to.be.true;
+            expect(
+              tokenOutAfter.subtract(tokenOutBefore).greaterThan(10_000) ||
+                tokenOutAfter.subtract(tokenOutBefore).equalTo(10_000)
+            ).to.be.true;
             checkQuoteToken(
               tokenInBefore,
               tokenInAfter,
@@ -442,7 +448,10 @@ describe('quoteUniswapX', function () {
               CurrencyAmount.fromRawAmount(UNI_MAINNET, order.info.outputs[0].startAmount.toString())
             );
           } else {
-            expect(tokenOutAfter.subtract(tokenOutBefore).greaterThan(1_000) || tokenOutAfter.subtract(tokenOutBefore).equalTo(1_000)).to.be.true;
+            expect(
+              tokenOutAfter.subtract(tokenOutBefore).greaterThan(1_000) ||
+                tokenOutAfter.subtract(tokenOutBefore).equalTo(1_000)
+            ).to.be.true;
             checkQuoteToken(
               tokenInBefore,
               tokenInAfter,

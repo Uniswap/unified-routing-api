@@ -4,6 +4,7 @@ import { RoutingType } from '../../constants';
 import { ClassicRequest, DutchRequest, Quote, QuoteRequest } from '../../entities';
 
 import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
+import { SyntheticStatusProvider } from '../../providers';
 import { log } from '../../util/log';
 import { ClassicQuoteContext } from './ClassicQuoteContext';
 import { DutchQuoteContext } from './DutchQuoteContext';
@@ -80,17 +81,19 @@ export class QuoteContextManager {
   }
 }
 
-export function parseQuoteContexts(
-  requests: QuoteRequest[],
-  permit2Fetcher: Permit2Fetcher,
-  provider: ethers.providers.JsonRpcProvider
-): QuoteContext[] {
+export type QuoteContextProviders = {
+  permit2Fetcher: Permit2Fetcher;
+  rpcProvider: ethers.providers.JsonRpcProvider;
+  syntheticStatusProvider: SyntheticStatusProvider;
+};
+
+export function parseQuoteContexts(requests: QuoteRequest[], providers: QuoteContextProviders): QuoteContext[] {
   return requests.map((request) => {
     switch (request.routingType) {
       case RoutingType.DUTCH_LIMIT:
-        return new DutchQuoteContext(log, request as DutchRequest, provider);
+        return new DutchQuoteContext(log, request as DutchRequest, providers);
       case RoutingType.CLASSIC:
-        return new ClassicQuoteContext(log, request as ClassicRequest, permit2Fetcher);
+        return new ClassicQuoteContext(log, request as ClassicRequest, providers);
       default:
         throw new Error(`Unsupported routing type: ${request.routingType}`);
     }

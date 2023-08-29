@@ -266,11 +266,11 @@ describe('Post quote request validation', () => {
         },
         {
           ...DL_CONFIG_JSON,
-          auctionPeriodSeconds: -1
+          auctionPeriodSeconds: -1,
         },
       ],
     });
     expect(error).toBeDefined();
-    expect(error?.message).toEqual('\"configs[1]\" does not match any of the allowed types');
+    expect(error?.message).toEqual('"configs[1]" does not match any of the allowed types');
   });
 });
