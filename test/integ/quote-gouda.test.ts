@@ -12,7 +12,7 @@ import {
 import { DutchOrder } from '@uniswap/uniswapx-sdk';
 import { PERMIT2_ADDRESS } from '@uniswap/universal-router-sdk';
 import { fail } from 'assert';
-import axiosStatic, { AxiosResponse } from 'axios';
+import axiosStatic, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import axiosRetry from 'axios-retry';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
@@ -41,6 +41,10 @@ if (!process.env.UNISWAP_API || !process.env.ARCHIVE_NODE_RPC || !process.env.RO
   throw new Error('Must set [UNISWAP_API, ARCHIVE_NODE_RPC, ROUTING_API] env variables for integ tests. See README');
 }
 
+if (!process.env.URA_INTERNAL_API_KEY) {
+  console.log('URA_INTERNAL_API_KEY env variable is not set. This is recommended for integ tests.');
+}
+
 const API = `${process.env.UNISWAP_API!}quote`;
 const ROUTING_API = `${process.env.ROUTING_API!}/quote`;
 
@@ -48,6 +52,11 @@ const SLIPPAGE = '5';
 
 const axios = axiosStatic.create();
 axios.defaults.timeout = 20000;
+const axiosConfig: AxiosRequestConfig<any> = {
+  headers: {
+    ...(process.env.URA_INTERNAL_API_KEY && { 'x-api-key': process.env.URA_INTERNAL_API_KEY }),
+  },
+};
 
 axiosRetry(axios, {
   retries: 10,
@@ -62,6 +71,13 @@ const callAndExpectFail = async (quoteReq: Partial<QuoteRequestBodyJSON>, resp: 
   } catch (err: any) {
     expect(_.pick(err.response, ['status', 'data'])).to.containSubset(resp);
   }
+};
+
+const call = async (
+  quoteReq: Partial<QuoteRequestBodyJSON>,
+  config = axiosConfig
+): Promise<AxiosResponse<QuoteResponseJSON>> => {
+  return await axios.post<QuoteResponseJSON>(`${API}`, quoteReq, config);
 };
 
 const checkQuoteToken = (
@@ -149,7 +165,7 @@ describe('quoteUniswapX', function () {
 
     const {
       data: { quote },
-    } = await axios.post<QuoteResponseJSON>(`${API}`, quoteReq);
+    } = await call(quoteReq);
     const { blockNumber } = quote as ClassicQuoteDataJSON;
 
     block = parseInt(blockNumber) - 10;
@@ -259,7 +275,7 @@ describe('quoteUniswapX', function () {
             ] as RoutingConfigJSON[],
           };
 
-          const response: AxiosResponse<QuoteResponseJSON> = await axios.post<QuoteResponseJSON>(`${API}`, quoteReq);
+          const response: AxiosResponse<QuoteResponseJSON> = await call(quoteReq);
           const {
             data: { quote },
             status,
@@ -289,7 +305,10 @@ describe('quoteUniswapX', function () {
               CurrencyAmount.fromRawAmount(USDT_MAINNET, order.info.outputs[0].startAmount.toString())
             );
           } else {
-            expect(tokenOutAfter.subtract(tokenOutBefore).greaterThan(10_000) || tokenOutAfter.subtract(tokenOutBefore).equalTo(10_000)).to.be.true;
+            expect(
+              tokenOutAfter.subtract(tokenOutBefore).greaterThan(10_000) ||
+                tokenOutAfter.subtract(tokenOutBefore).equalTo(10_000)
+            ).to.be.true;
             checkQuoteToken(
               tokenInBefore,
               tokenInAfter,
@@ -318,7 +337,7 @@ describe('quoteUniswapX', function () {
             ] as RoutingConfigJSON[],
           };
 
-          const response: AxiosResponse<QuoteResponseJSON> = await axios.post<QuoteResponseJSON>(`${API}`, quoteReq);
+          const response: AxiosResponse<QuoteResponseJSON> = await call(quoteReq);
 
           const {
             data: { quote },
@@ -349,7 +368,10 @@ describe('quoteUniswapX', function () {
               CurrencyAmount.fromRawAmount(USDT_MAINNET, order.info.outputs[0].startAmount.toString())
             );
           } else {
-            expect(tokenOutAfter.subtract(tokenOutBefore).greaterThan(10_000) || tokenOutAfter.subtract(tokenOutBefore).equalTo(10_000)).to.be.true;
+            expect(
+              tokenOutAfter.subtract(tokenOutBefore).greaterThan(10_000) ||
+                tokenOutAfter.subtract(tokenOutBefore).equalTo(10_000)
+            ).to.be.true;
             checkQuoteToken(
               tokenInBefore,
               tokenInAfter,
@@ -379,7 +401,7 @@ describe('quoteUniswapX', function () {
             ] as RoutingConfigJSON[],
           };
 
-          const response = await axios.post<QuoteResponseJSON>(`${API}`, quoteReq);
+          const response = await call(quoteReq);
           const {
             data: { quote },
             status,
@@ -442,7 +464,10 @@ describe('quoteUniswapX', function () {
               CurrencyAmount.fromRawAmount(UNI_MAINNET, order.info.outputs[0].startAmount.toString())
             );
           } else {
-            expect(tokenOutAfter.subtract(tokenOutBefore).greaterThan(1_000) || tokenOutAfter.subtract(tokenOutBefore).equalTo(1_000)).to.be.true;
+            expect(
+              tokenOutAfter.subtract(tokenOutBefore).greaterThan(1_000) ||
+                tokenOutAfter.subtract(tokenOutBefore).equalTo(1_000)
+            ).to.be.true;
             checkQuoteToken(
               tokenInBefore,
               tokenInAfter,
@@ -472,7 +497,7 @@ describe('quoteUniswapX', function () {
             ] as RoutingConfigJSON[],
           };
 
-          const response = await axios.post<QuoteResponseJSON>(`${API}`, quoteReq);
+          const response = await call(quoteReq);
           const {
             data: { quote },
             status,

@@ -72,6 +72,8 @@ export class FieldValidator {
 
   public static readonly positiveNumber = Joi.number().greater(0);
 
+  public static readonly quoteSpeed = Joi.string().valid('fast', 'standard');
+
   public static readonly classicConfig = Joi.object({
     routingType: FieldValidator.routingType.required(),
     protocols: FieldValidator.protocols.required(),
@@ -90,6 +92,7 @@ export class FieldValidator {
     forceMixedRoutes: FieldValidator.forceMixedRoutes.optional(),
     slippageTolerance: FieldValidator.slippageTolerance.optional(),
     algorithm: FieldValidator.algorithm.optional(),
+    quoteSpeed: FieldValidator.quoteSpeed.optional(),
   });
 
   public static readonly dutchLimitConfig = Joi.object({

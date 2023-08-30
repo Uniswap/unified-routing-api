@@ -21,6 +21,9 @@ export interface ClassicConfig {
   minSplits?: number;
   forceCrossProtocol?: boolean;
   forceMixedRoutes?: boolean;
+  debugRoutingConfig?: string;
+  unicornSecret?: string;
+  quoteSpeed?: string;
 }
 
 export interface ClassicConfigJSON extends Omit<ClassicConfig, 'protocols' | 'permitAmount'> {

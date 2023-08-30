@@ -168,6 +168,7 @@ export class APIStack extends cdk.Stack {
       assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
       managedPolicies: [
         aws_iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
+        aws_iam.ManagedPolicy.fromAwsManagedPolicyName('CloudWatchLambdaInsightsExecutionRolePolicy'),
         aws_iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonDynamoDBFullAccess'),
       ],
     });
@@ -295,6 +296,26 @@ export class APIStack extends cdk.Stack {
         statistic: 'p90',
       }),
       threshold: 5500,
+      evaluationPeriods: 3,
+    });
+
+    const apiAlarmLatencyP99Sev2 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV2-LatencyP99', {
+      alarmName: 'UnifiedRoutingAPI-SEV2-LatencyP99',
+      metric: api.metricLatency({
+        period: Duration.minutes(5),
+        statistic: 'p99',
+      }),
+      threshold: 10000,
+      evaluationPeriods: 3,
+    });
+
+    const apiAlarmLatencyP99Sev3 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV3-LatencyP99', {
+      alarmName: 'UnifiedRoutingAPI-SEV3-LatencyP99',
+      metric: api.metricLatency({
+        period: Duration.minutes(5),
+        statistic: 'p99',
+      }),
+      threshold: 7000,
       evaluationPeriods: 3,
     });
 
@@ -534,6 +555,8 @@ export class APIStack extends cdk.Stack {
       apiAlarm4xxSev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       apiAlarmLatencySev2.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       apiAlarmLatencySev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
+      apiAlarmLatencyP99Sev2.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
+      apiAlarmLatencyP99Sev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
 
       percent5XXByChainAlarm.forEach((alarm) => {
         alarm.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
