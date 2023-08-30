@@ -231,6 +231,10 @@ export class APIPipeline extends Stack {
             value: `${stage}/routing-api/url`,
             type: BuildEnvironmentVariableType.SECRETS_MANAGER,
           },
+          URA_INTERNAL_API_KEY: {
+            value: 'ura-internal-api-key',
+            type: BuildEnvironmentVariableType.SECRETS_MANAGER,
+          },
         },
       },
       commands: [
@@ -239,6 +243,7 @@ export class APIPipeline extends Stack {
         'echo "UNISWAP_API=${UNISWAP_API}" >> .env',
         'echo "ROUTING_API_URL=${ROUTING_API}" >> .env',
         'echo "ARCHIVE_NODE_RPC=${ARCHIVE_NODE_RPC}" >> .env',
+        'echo "URA_INTERNAL_API_KEY=${URA_INTERNAL_API_KEY}" >> .env',
         'yarn install --frozen-lockfile --network-concurrency 1',
         'yarn build',
         'yarn test:integ',
@@ -263,7 +268,7 @@ const app = new cdk.App();
 
 const envVars: { [key: string]: string } = {};
 envVars['PARAMETERIZATION_API_URL'] = process.env['PARAMETERIZATION_API_URL'] || '';
-envVars['PARAMETERIZATION_API_KEY'] = process.env['PARAMETERIZATION_API_KEY'] || ''
+envVars['PARAMETERIZATION_API_KEY'] = process.env['PARAMETERIZATION_API_KEY'] || '';
 envVars['ROUTING_API_URL'] = process.env['ROUTING_API_URL'] || '';
 envVars['SERVICE_URL'] = process.env['SERVICE_URL'] || '';
 envVars['REQUEST_DESTINATION_ARN'] = process.env['REQUEST_DESTINATION_ARN'] || '';
