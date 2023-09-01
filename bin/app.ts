@@ -129,6 +129,11 @@ export class APIPipeline extends Stack {
         'arn:aws:secretsmanager:us-east-2:644039819003:secret:gouda-parameterization-api-internal-api-key-uw4sIa',
     });
 
+    const syntheticSwitchApiKeySecret = sm.Secret.fromSecretAttributes(this, 'synthetic-switch-api-key', {
+      secretCompleteArn:
+        'arn:aws:secretsmanager:us-east-2:644039819003:secret:gouda-parameterization-api-internal-api-key-uw4sIa',
+    });
+
     const syntheticEligibleTokens = sm.Secret.fromSecretAttributes(
       this,
       'all/unified-routing-api/synthetic-eligible-tokens-2',

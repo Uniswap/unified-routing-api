@@ -1,4 +1,5 @@
 import querystring from 'querystring';
+import { TradeType } from '@uniswap/sdk-core';
 import { QuoteRequestInfo } from '../entities';
 import axios from './quoters/helpers';
 
@@ -17,13 +18,16 @@ export class UPASyntheticStatusProvider implements SyntheticStatusProvider {
   constructor(private upaUrl: string, private paramApiKey: string) {}
 
   async getStatus(quoteRequest: QuoteRequestInfo): Promise<SyntheticStatus> {
-    const { tokenIn, tokenOut, amount } = quoteRequest;
+    const { tokenIn, tokenInChainId, tokenOut, tokenOutChainId, amount, type } = quoteRequest;
     const result = await axios.get(
-      `${this.upaUrl}synthetic-quote/enabled?` +
+      `${this.upaUrl}synthetic-switch/enabled?` +
         querystring.stringify({
           tokenIn,
+          tokenInChainId,
           tokenOut,
+          tokenOutChainId,
           amount: amount.toString(),
+          type: TradeType[type],
         }),
       { headers: { 'x-api-key': this.paramApiKey } }
     );

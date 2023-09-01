@@ -1,9 +1,13 @@
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import Logger from 'bunyan';
-import { QuoteByKey, QuoteContext, QuoteContextProviders } from '.';
+import { QuoteByKey, QuoteContext } from '.';
 import { RoutingType } from '../../constants';
 import { ClassicQuote, ClassicRequest, Quote, QuoteRequest } from '../../entities';
 import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
+
+export type ClassicQuoteContextProviders = {
+  permit2Fetcher: Permit2Fetcher;
+};
 
 // manages context around a single top level classic quote request
 export class ClassicQuoteContext implements QuoteContext {
@@ -11,7 +15,7 @@ export class ClassicQuoteContext implements QuoteContext {
   private log: Logger;
   private permit2Fetcher: Permit2Fetcher;
 
-  constructor(_log: Logger, public request: ClassicRequest, providers: QuoteContextProviders) {
+  constructor(_log: Logger, public request: ClassicRequest, providers: ClassicQuoteContextProviders) {
     this.log = _log.child({ context: 'ClassicQuoteContext' });
     this.permit2Fetcher = providers.permit2Fetcher;
   }

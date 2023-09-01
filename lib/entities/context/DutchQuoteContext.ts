@@ -12,7 +12,7 @@ import {
 import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
 import NodeCache from 'node-cache';
-import { QuoteByKey, QuoteContext, QuoteContextProviders } from '.';
+import { QuoteByKey, QuoteContext } from '.';
 import { NATIVE_ADDRESS, RoutingType } from '../../constants';
 import {
   ClassicQuote,
@@ -34,6 +34,11 @@ const GAS_PROPORTION_THRESHOLD_BPS = 1500;
 const BPS = 10000;
 const RFQ_QUOTE_UPPER_BOUND_MULTIPLIER = 3;
 
+export type DutchQuoteContextProviders = {
+  rpcProvider: ethers.providers.JsonRpcProvider;
+  syntheticStatusProvider: SyntheticStatusProvider;
+};
+
 // manages context around a single top level classic quote request
 export class DutchQuoteContext implements QuoteContext {
   routingType: RoutingType.DUTCH_LIMIT;
@@ -46,7 +51,7 @@ export class DutchQuoteContext implements QuoteContext {
   public routeToNativeKey: string;
   public needsRouteToNative: boolean;
 
-  constructor(_log: Logger, public request: DutchRequest, providers: QuoteContextProviders) {
+  constructor(_log: Logger, public request: DutchRequest, providers: DutchQuoteContextProviders) {
     this.log = _log.child({ context: 'DutchQuoteContext' });
     this.rpcProvider = providers.rpcProvider;
     this.syntheticStatusProvider = providers.syntheticStatusProvider;
@@ -107,7 +112,7 @@ export class DutchQuoteContext implements QuoteContext {
     if (!quote && !syntheticQuote) {
       this.log.warn('No quote or synthetic quote available');
       return null;
-    } else if (!syntheticQuote || !this.request.config.useSyntheticQuotes) {
+    } else if (!syntheticQuote) {
       return quote;
     } else if (!quote) {
       return syntheticQuote;
@@ -186,12 +191,6 @@ export class DutchQuoteContext implements QuoteContext {
   // transform a classic quote into a synthetic dutch quote
   // if it makes sense to do so
   async getSyntheticQuote(classicQuote?: Quote, routeBackToNative?: Quote): Promise<DutchQuote | null> {
-    const syntheticStatus = await this.syntheticStatusProvider.getStatus(this.request.info);
-    if (!syntheticStatus.useSynthetic) {
-      this.log.info('Synthetic not enabled, skipping synthetic');
-      return null;
-    }
-
     // no classic quote to build synthetic from
     if (!classicQuote) {
       this.log.info('No classic quote, skipping synthetic');
@@ -207,6 +206,13 @@ export class DutchQuoteContext implements QuoteContext {
     // order too small; classic quote not usable
     if (!this.hasOrderSize(this.log, classicQuote)) {
       this.log.info('Order size too small, skipping synthetic');
+      return null;
+    }
+
+    const syntheticStatus = await this.syntheticStatusProvider.getStatus(this.request.info);
+    // if the useSyntheticQuotes override is not set, and the request is not eligible for synthetic, return null
+    if (!this.request.config.useSyntheticQuotes && !syntheticStatus.useSynthetic) {
+      this.log.info('Synthetic not enabled, skipping synthetic');
       return null;
     }
 

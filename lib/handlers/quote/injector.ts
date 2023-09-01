@@ -8,7 +8,13 @@ import { RoutingType } from '../../constants';
 import { QuoteRequestBodyJSON } from '../../entities';
 import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
 import { TokenFetcher } from '../../fetchers/TokenFetcher';
-import { Quoter, RfqQuoter, RoutingApiQuoter, SyntheticStatusProvider } from '../../providers';
+import {
+  Quoter,
+  RfqQuoter,
+  RoutingApiQuoter,
+  SyntheticStatusProvider,
+  UPASyntheticStatusProvider,
+} from '../../providers';
 import { setGlobalLogger } from '../../util/log';
 import { setGlobalMetrics } from '../../util/metrics';
 import { checkDefined } from '../../util/preconditions';
@@ -55,7 +61,7 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
       rpcUrlMap,
       tokenFetcher: new TokenFetcher(),
       permit2Fetcher: new Permit2Fetcher(rpcUrlMap),
-      syntheticStatusProvider: new SyntheticStatusProvider(paramApiUrl, paramApiKey),
+      syntheticStatusProvider: new UPASyntheticStatusProvider(paramApiUrl, paramApiKey),
     };
   }
 
