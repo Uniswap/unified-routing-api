@@ -228,13 +228,16 @@ export class DashboardStack extends cdk.NestedStack {
             x: 0,
             type: 'metric',
             properties: {
-              metrics: [['AWS/ApiGateway', 'Latency', 'ApiName', apiName]],
+              metrics: [
+                ['AWS/ApiGateway', 'Latency', 'ApiName', apiName, { stat: 'p90', label: 'p90' }],
+                ['AWS/ApiGateway', 'Latency', 'ApiName', apiName, { stat: 'p99', label: 'p99' }],
+                ['AWS/ApiGateway', 'Latency', 'ApiName', apiName, { stat: 'p50', label: 'p50' }],
+              ],
               view: 'timeSeries',
               stacked: false,
               region,
               period: 300,
-              stat: 'p90',
-              title: 'Latency p90 | 5min',
+              title: 'Latency | 5min',
             },
           },
           {
