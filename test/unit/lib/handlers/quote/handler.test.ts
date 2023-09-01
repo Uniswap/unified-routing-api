@@ -94,7 +94,7 @@ describe('QuoteHandler', () => {
       quoters: QuoterByRoutingType,
       tokenFetcher: TokenFetcher,
       permit2Fetcher: Permit2Fetcher,
-      syntheticStatusProvider: SyntheticStatusProvider,
+      syntheticStatusProvider: SyntheticStatusProvider
     ): Promise<ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>> =>
       new Promise((resolve) =>
         resolve({
@@ -119,7 +119,7 @@ describe('QuoteHandler', () => {
       quoters: QuoterByRoutingType,
       tokenFetcher: TokenFetcher,
       permit2Fetcher: Permit2Fetcher,
-      syntheticStatusProvider: SyntheticStatusProvider,
+      syntheticStatusProvider: SyntheticStatusProvider
     ) => new QuoteHandler('quote', injectorPromiseMock(quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider));
 
     const RfqQuoterMock = (dlQuote: DutchQuote): Quoter => {
@@ -659,10 +659,12 @@ describe('QuoteHandler', () => {
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
-        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider).parseAndValidateRequest(
-          event,
-          logger as unknown as Logger
-        );
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).parseAndValidateRequest(event, logger as unknown as Logger);
         expect(res.state).toBe('valid');
       });
 
@@ -678,10 +680,12 @@ describe('QuoteHandler', () => {
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
-        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider).parseAndValidateRequest(
-          event,
-          logger as unknown as Logger
-        );
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).parseAndValidateRequest(event, logger as unknown as Logger);
         expect(res.state).toBe('invalid');
       });
 
@@ -694,10 +698,12 @@ describe('QuoteHandler', () => {
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
-        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider).parseAndValidateRequest(
-          event,
-          logger as unknown as Logger
-        );
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).parseAndValidateRequest(event, logger as unknown as Logger);
         expect(res.state).toBe('valid');
       });
     });

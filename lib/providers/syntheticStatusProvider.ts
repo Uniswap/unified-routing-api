@@ -1,5 +1,5 @@
-import querystring from 'querystring';
 import { TradeType } from '@uniswap/sdk-core';
+import querystring from 'querystring';
 import { QuoteRequestInfo } from '../entities';
 import axios from './quoters/helpers';
 

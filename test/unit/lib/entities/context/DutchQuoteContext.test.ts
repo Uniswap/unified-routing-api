@@ -4,6 +4,7 @@ import { BigNumber, ethers } from 'ethers';
 
 import { NATIVE_ADDRESS, RoutingType } from '../../../../../lib/constants';
 import { DutchQuote, DutchQuoteContext, DutchQuoteDataJSON } from '../../../../../lib/entities';
+import { SyntheticStatusProvider } from '../../../../../lib/providers';
 import { Erc20__factory } from '../../../../../lib/types/ext/factories/Erc20__factory';
 import {
   AMOUNT,
@@ -18,7 +19,6 @@ import {
   TOKEN_OUT,
   USDC_ADDRESS,
 } from '../../../../constants';
-import { SyntheticStatusProvider } from '../../../../../lib/providers';
 import {
   BASE_REQUEST_INFO_EXACT_IN,
   createClassicQuote,
@@ -263,9 +263,7 @@ describe('DutchQuoteContext', () => {
         [context.routeToNativeKey]: classicQuote,
       });
       expect(quote?.routingType).toEqual(RoutingType.DUTCH_LIMIT);
-      expect((quote?.toJSON() as DutchQuoteDataJSON).orderInfo.exclusiveFiller).toEqual(
-        filler
-      );
+      expect((quote?.toJSON() as DutchQuoteDataJSON).orderInfo.exclusiveFiller).toEqual(filler);
     });
 
     it('uses synthetic if rfq quote is at least 300% better than clasic; EXACT_IN', async () => {
