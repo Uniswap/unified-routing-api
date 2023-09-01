@@ -8,7 +8,13 @@ import { RoutingType } from '../../constants';
 import { QuoteRequestBodyJSON } from '../../entities';
 import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
 import { TokenFetcher } from '../../fetchers/TokenFetcher';
-import { Quoter, RfqQuoter, RoutingApiQuoter } from '../../providers/quoters';
+import {
+  Quoter,
+  RfqQuoter,
+  RoutingApiQuoter,
+  SyntheticStatusProvider,
+  UPASyntheticStatusProvider,
+} from '../../providers';
 import { setGlobalLogger } from '../../util/log';
 import { setGlobalMetrics } from '../../util/metrics';
 import { checkDefined } from '../../util/preconditions';
@@ -22,6 +28,7 @@ export interface ContainerInjected {
   quoters: QuoterByRoutingType;
   tokenFetcher: TokenFetcher;
   permit2Fetcher: Permit2Fetcher;
+  syntheticStatusProvider: SyntheticStatusProvider;
   rpcUrlMap: Map<ChainId, string>;
 }
 
@@ -38,6 +45,7 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
     const routingApiUrl = checkDefined(process.env.ROUTING_API_URL, 'ROUTING_API_URL is not defined');
     const routingApiKey = checkDefined(process.env.ROUTING_API_KEY, 'ROUTING_API_KEY is not defined');
     const paramApiKey = checkDefined(process.env.PARAMETERIZATION_API_KEY, 'PARAMETERIZATION_API_KEY is not defined');
+    const synthSwitchApiKey = checkDefined(process.env.SYNTH_SWITCH_API_KEY, 'SYNTH_SWITCH_API_KEY is not defined');
     const serviceUrl = checkDefined(process.env.SERVICE_URL, 'SERVICE_URL is not defined');
 
     const rpcUrlMap = new Map<ChainId, string>();
@@ -54,6 +62,7 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
       rpcUrlMap,
       tokenFetcher: new TokenFetcher(),
       permit2Fetcher: new Permit2Fetcher(rpcUrlMap),
+      syntheticStatusProvider: new UPASyntheticStatusProvider(paramApiUrl, synthSwitchApiKey),
     };
   }
 

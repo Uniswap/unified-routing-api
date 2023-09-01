@@ -5,13 +5,19 @@ import { RoutingType } from '../../constants';
 import { ClassicQuote, ClassicRequest, Quote, QuoteRequest } from '../../entities';
 import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
 
+export type ClassicQuoteContextProviders = {
+  permit2Fetcher: Permit2Fetcher;
+};
+
 // manages context around a single top level classic quote request
 export class ClassicQuoteContext implements QuoteContext {
   routingType: RoutingType.CLASSIC;
   private log: Logger;
+  private permit2Fetcher: Permit2Fetcher;
 
-  constructor(_log: Logger, public request: ClassicRequest, private permit2Fetcher: Permit2Fetcher) {
+  constructor(_log: Logger, public request: ClassicRequest, providers: ClassicQuoteContextProviders) {
     this.log = _log.child({ context: 'ClassicQuoteContext' });
+    this.permit2Fetcher = providers.permit2Fetcher;
   }
 
   // classic quotes have no explicit dependencies and can be resolved by themselves

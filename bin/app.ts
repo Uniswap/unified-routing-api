@@ -129,6 +129,11 @@ export class APIPipeline extends Stack {
         'arn:aws:secretsmanager:us-east-2:644039819003:secret:gouda-parameterization-api-internal-api-key-uw4sIa',
     });
 
+    const syntheticSwitchApiKeySecret = sm.Secret.fromSecretAttributes(this, 'synthetic-switch-api-key', {
+      secretCompleteArn:
+        'arn:aws:secretsmanager:us-east-2:644039819003:secret:UniswapX/ParamApi/ApiKeys-hYyUt1',
+    });
+
     const syntheticEligibleTokens = sm.Secret.fromSecretAttributes(
       this,
       'all/unified-routing-api/synthetic-eligible-tokens-2',
@@ -151,6 +156,7 @@ export class APIPipeline extends Stack {
         ROUTING_API_KEY: routingApiKeySecret.secretValue.toString(),
         PARAMETERIZATION_API_KEY: parameterizationApiKeySecret.secretValue.toString(),
         PARAMETERIZATION_API_URL: urlSecrets.secretValueFromJson('PARAMETERIZATION_API_BETA').toString(),
+        SYNTH_SWITCH_API_KEY: syntheticSwitchApiKeySecret.secretValue.toString(),
         ROUTING_API_URL: urlSecrets.secretValueFromJson('ROUTING_API_BETA').toString(),
         SERVICE_URL: urlSecrets.secretValueFromJson('GOUDA_SERVICE_BETA').toString(),
         REQUEST_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_REQUEST_DESTINATION_BETA').toString(),
@@ -176,6 +182,7 @@ export class APIPipeline extends Stack {
         ROUTING_API_KEY: routingApiKeySecret.secretValue.toString(),
         PARAMETERIZATION_API_KEY: parameterizationApiKeySecret.secretValue.toString(),
         PARAMETERIZATION_API_URL: urlSecrets.secretValueFromJson('PARAMETERIZATION_API_PROD').toString(),
+        SYNTH_SWITCH_API_KEY: syntheticSwitchApiKeySecret.secretValue.toString(),
         ROUTING_API_URL: urlSecrets.secretValueFromJson('ROUTING_API_PROD').toString(),
         SERVICE_URL: urlSecrets.secretValueFromJson('GOUDA_SERVICE_PROD').toString(),
         REQUEST_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_REQUEST_DESTINATION_PROD').toString(),
@@ -269,6 +276,7 @@ const app = new cdk.App();
 const envVars: { [key: string]: string } = {};
 envVars['PARAMETERIZATION_API_URL'] = process.env['PARAMETERIZATION_API_URL'] || '';
 envVars['PARAMETERIZATION_API_KEY'] = process.env['PARAMETERIZATION_API_KEY'] || '';
+envVars['SYNTH_SWITCH_API_KEY'] = process.env['SYNTH_SWITCH_API_KEY'] || '';
 envVars['ROUTING_API_URL'] = process.env['ROUTING_API_URL'] || '';
 envVars['SERVICE_URL'] = process.env['SERVICE_URL'] || '';
 envVars['REQUEST_DESTINATION_ARN'] = process.env['REQUEST_DESTINATION_ARN'] || '';

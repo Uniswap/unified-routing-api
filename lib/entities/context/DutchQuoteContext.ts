@@ -23,6 +23,7 @@ import {
   Quote,
   QuoteRequest,
 } from '../../entities';
+import { SyntheticStatusProvider } from '../../providers';
 import { Erc20__factory } from '../../types/ext/factories/Erc20__factory';
 import { metrics } from '../../util/metrics';
 import { checkDefined } from '../../util/preconditions';
@@ -33,18 +34,27 @@ const GAS_PROPORTION_THRESHOLD_BPS = 1500;
 const BPS = 10000;
 const RFQ_QUOTE_UPPER_BOUND_MULTIPLIER = 3;
 
+export type DutchQuoteContextProviders = {
+  rpcProvider: ethers.providers.JsonRpcProvider;
+  syntheticStatusProvider: SyntheticStatusProvider;
+};
+
 // manages context around a single top level classic quote request
 export class DutchQuoteContext implements QuoteContext {
   routingType: RoutingType.DUTCH_LIMIT;
   private log: Logger;
+  private rpcProvider: ethers.providers.JsonRpcProvider;
+  private syntheticStatusProvider: SyntheticStatusProvider;
 
   public requestKey: string;
   public classicKey: string;
   public routeToNativeKey: string;
   public needsRouteToNative: boolean;
 
-  constructor(_log: Logger, public request: DutchRequest, private provider: ethers.providers.BaseProvider) {
+  constructor(_log: Logger, public request: DutchRequest, providers: DutchQuoteContextProviders) {
     this.log = _log.child({ context: 'DutchQuoteContext' });
+    this.rpcProvider = providers.rpcProvider;
+    this.syntheticStatusProvider = providers.syntheticStatusProvider;
     this.requestKey = this.request.key();
     this.needsRouteToNative = false;
   }
@@ -93,14 +103,16 @@ export class DutchQuoteContext implements QuoteContext {
     const routeBackToNative = dependencies[this.routeToNativeKey] as ClassicQuote;
     const rfqQuote = dependencies[this.requestKey] as DutchQuote;
 
-    const quote = await this.getRfqQuote(rfqQuote, classicQuote);
-    const syntheticQuote = this.getSyntheticQuote(classicQuote, routeBackToNative);
+    const [quote, syntheticQuote] = await Promise.all([
+      this.getRfqQuote(rfqQuote, classicQuote),
+      this.getSyntheticQuote(classicQuote, routeBackToNative),
+    ]);
 
     // handle cases where we only either have RFQ or synthetic
     if (!quote && !syntheticQuote) {
       this.log.warn('No quote or synthetic quote available');
       return null;
-    } else if (!syntheticQuote || !this.request.config.useSyntheticQuotes) {
+    } else if (!syntheticQuote) {
       return quote;
     } else if (!quote) {
       return syntheticQuote;
@@ -178,7 +190,7 @@ export class DutchQuoteContext implements QuoteContext {
 
   // transform a classic quote into a synthetic dutch quote
   // if it makes sense to do so
-  getSyntheticQuote(classicQuote?: Quote, routeBackToNative?: Quote): DutchQuote | null {
+  async getSyntheticQuote(classicQuote?: Quote, routeBackToNative?: Quote): Promise<DutchQuote | null> {
     // no classic quote to build synthetic from
     if (!classicQuote) {
       this.log.info('No classic quote, skipping synthetic');
@@ -194,6 +206,13 @@ export class DutchQuoteContext implements QuoteContext {
     // order too small; classic quote not usable
     if (!this.hasOrderSize(this.log, classicQuote)) {
       this.log.info('Order size too small, skipping synthetic');
+      return null;
+    }
+
+    const syntheticStatus = await this.syntheticStatusProvider.getStatus(this.request.info);
+    // if the useSyntheticQuotes override is not set, and the request is not eligible for synthetic, return null
+    if (!this.request.config.useSyntheticQuotes && !syntheticStatus.useSynthetic) {
+      this.log.info('Synthetic not enabled, skipping synthetic');
       return null;
     }
 
@@ -277,7 +296,7 @@ export class DutchQuoteContext implements QuoteContext {
       request.info.tokenIn == NATIVE_ADDRESS
         ? WRAPPED_NATIVE_CURRENCY[request.info.tokenInChainId as ChainId].address
         : request.info.tokenIn;
-    const tokenContract = Erc20__factory.connect(tokenInAddress, this.provider);
+    const tokenContract = Erc20__factory.connect(tokenInAddress, this.rpcProvider);
     const permit2Allowance = await tokenContract.allowance(request.info.swapper, PERMIT2_ADDRESS);
 
     if (request.info.type == TradeType.EXACT_OUTPUT) {

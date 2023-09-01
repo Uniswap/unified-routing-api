@@ -1,5 +1,6 @@
 import Logger from 'bunyan';
 
+import { RoutingType } from '../../../../../lib/constants';
 import { Quote, QuoteByKey, QuoteContext, QuoteContextManager, QuoteRequest } from '../../../../../lib/entities';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
@@ -10,7 +11,6 @@ import {
   QUOTE_REQUEST_DL_EXACT_OUT,
   QUOTE_REQUEST_DL_NATIVE_IN,
 } from '../../../../utils/fixtures';
-import { RoutingType } from '../../../../../lib/constants';
 
 class MockQuoteContext implements QuoteContext {
   routingType: RoutingType.CLASSIC;

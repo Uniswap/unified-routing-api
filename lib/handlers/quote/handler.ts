@@ -55,7 +55,7 @@ export class QuoteHandler extends APIGLambdaHandler<
   ): Promise<ErrorResponse | Response<QuoteResponseJSON>> {
     const {
       requestBody,
-      containerInjected: { quoters, tokenFetcher, permit2Fetcher, rpcUrlMap },
+      containerInjected: { quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider, rpcUrlMap },
     } = params;
 
     const startTime = Date.now();
@@ -95,7 +95,13 @@ export class QuoteHandler extends APIGLambdaHandler<
       quoteRequests = removeDutchRequests(quoteRequests);
     }
 
-    const contextHandler = new QuoteContextManager(parseQuoteContexts(quoteRequests, permit2Fetcher, provider));
+    const contextHandler = new QuoteContextManager(
+      parseQuoteContexts(quoteRequests, {
+        rpcProvider: provider,
+        permit2Fetcher,
+        syntheticStatusProvider,
+      })
+    );
     const requests = contextHandler.getRequests();
     log.info({ requests }, 'requests');
 

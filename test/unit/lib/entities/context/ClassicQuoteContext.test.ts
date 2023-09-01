@@ -32,7 +32,7 @@ describe('ClassicQuoteContext', () => {
   describe('dependencies', () => {
     it('returns only request dependency', () => {
       const permit2Fetcher = permit2FetcherMock(PERMIT_DETAILS);
-      const context = new ClassicQuoteContext(logger, QUOTE_REQUEST_CLASSIC, permit2Fetcher);
+      const context = new ClassicQuoteContext(logger, QUOTE_REQUEST_CLASSIC, { permit2Fetcher });
       expect(context.dependencies()).toEqual([QUOTE_REQUEST_CLASSIC]);
     });
   });
@@ -40,13 +40,13 @@ describe('ClassicQuoteContext', () => {
   describe('resolve', () => {
     it('returns null if no quotes given', async () => {
       const permit2Fetcher = permit2FetcherMock(PERMIT_DETAILS);
-      const context = new ClassicQuoteContext(logger, QUOTE_REQUEST_CLASSIC, permit2Fetcher);
+      const context = new ClassicQuoteContext(logger, QUOTE_REQUEST_CLASSIC, { permit2Fetcher });
       expect(await context.resolve({})).toEqual(null);
     });
 
     it('still returns quote if too many dependencies given', async () => {
       const permit2Fetcher = permit2FetcherMock(PERMIT_DETAILS);
-      const context = new ClassicQuoteContext(logger, QUOTE_REQUEST_CLASSIC, permit2Fetcher);
+      const context = new ClassicQuoteContext(logger, QUOTE_REQUEST_CLASSIC, { permit2Fetcher });
       expect(
         await context.resolve({
           [QUOTE_REQUEST_CLASSIC.key()]: CLASSIC_QUOTE_EXACT_IN_BETTER,
@@ -57,7 +57,7 @@ describe('ClassicQuoteContext', () => {
 
     it('returns quote', async () => {
       const permit2Fetcher = permit2FetcherMock(PERMIT_DETAILS);
-      const context = new ClassicQuoteContext(logger, QUOTE_REQUEST_CLASSIC, permit2Fetcher);
+      const context = new ClassicQuoteContext(logger, QUOTE_REQUEST_CLASSIC, { permit2Fetcher });
       expect(
         await context.resolve({
           [QUOTE_REQUEST_CLASSIC.key()]: CLASSIC_QUOTE_EXACT_IN_BETTER,
