@@ -122,7 +122,7 @@ export class ClassicQuote implements IQuote {
     if (
       !this.request.info.swapper ||
       (this.allowanceData &&
-        BigNumber.from(this.allowanceData.amount).gte(this.amountOut) &&
+        BigNumber.from(this.allowanceData.amount).gte(this.amountIn) &&
         BigNumber.from(this.allowanceData.expiration).gt(Math.floor(new Date().getTime() / 1000)))
     )
       return undefined;
