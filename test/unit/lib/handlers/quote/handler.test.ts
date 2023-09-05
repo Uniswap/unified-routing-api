@@ -53,7 +53,6 @@ describe('QuoteHandler', () => {
     jest.resetModules(); // Most important - it clears the cache
     process.env = {
       ...OLD_ENV,
-      SYNTHETIC_ELIGIBLE_TOKENS: `{"1":["${TOKEN_IN.toLowerCase()}", "${TOKEN_OUT.toLowerCase()}"]}`,
     }; // Make a copy
     jest.mock('../../../../../lib/types/ext/factories/Erc20__factory');
     Erc20__factory.connect = jest.fn().mockImplementation(() => {

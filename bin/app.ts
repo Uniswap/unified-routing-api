@@ -134,15 +134,6 @@ export class APIPipeline extends Stack {
         'arn:aws:secretsmanager:us-east-2:644039819003:secret:UniswapX/ParamApi/ApiKeys-hYyUt1',
     });
 
-    const syntheticEligibleTokens = sm.Secret.fromSecretAttributes(
-      this,
-      'all/unified-routing-api/synthetic-eligible-tokens-2',
-      {
-        secretCompleteArn:
-          'arn:aws:secretsmanager:us-east-2:644039819003:secret:all/unified-routing-api/synthetic-eligible-tokens-2-8VEJUV',
-      }
-    );
-
     // Beta us-east-2
     const betaUsEast2Stage = new APIStage(this, 'beta-us-east-2', {
       env: { account: '665191769009', region: 'us-east-2' },
@@ -161,7 +152,6 @@ export class APIPipeline extends Stack {
         SERVICE_URL: urlSecrets.secretValueFromJson('GOUDA_SERVICE_BETA').toString(),
         REQUEST_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_REQUEST_DESTINATION_BETA').toString(),
         RESPONSE_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_RESPONSE_DESTINATION_BETA').toString(),
-        SYNTHETIC_ELIGIBLE_TOKENS: syntheticEligibleTokens.secretValue.toString(),
       },
     });
 
@@ -187,7 +177,6 @@ export class APIPipeline extends Stack {
         SERVICE_URL: urlSecrets.secretValueFromJson('GOUDA_SERVICE_PROD').toString(),
         REQUEST_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_REQUEST_DESTINATION_PROD').toString(),
         RESPONSE_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_RESPONSE_DESTINATION_PROD').toString(),
-        SYNTHETIC_ELIGIBLE_TOKENS: syntheticEligibleTokens.secretValue.toString(),
       },
     });
 
@@ -283,7 +272,6 @@ envVars['REQUEST_DESTINATION_ARN'] = process.env['REQUEST_DESTINATION_ARN'] || '
 envVars['RESPONSE_DESTINATION_ARN'] = process.env['RESPONSE_DESTINATION_ARN'] || '';
 envVars['ROUTING_API_KEY'] = process.env['ROUTING_API_KEY'] || 'test-api-key';
 envVars['PARAMETERIZATION_API_KEY'] = process.env['PARAMETERIZATION_API_KEY'] || 'test-api-key';
-envVars['SYNTHETIC_ELIGIBLE_TOKENS'] = process.env['SYNTHETIC_ELIGIBLE_TOKENS'] || '{}';
 
 const jsonRpcProviders = {} as { [chainKey: string]: string };
 SUPPORTED_CHAINS[RoutingType.CLASSIC].forEach((chainId: ChainId) => {

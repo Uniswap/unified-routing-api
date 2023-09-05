@@ -13,7 +13,6 @@ import {
   CHAIN_OUT_ID,
   ETH_IN,
   TOKEN_IN,
-  TOKEN_OUT,
   USDC_ADDRESS,
 } from '../../../../constants';
 import {
@@ -46,7 +45,6 @@ describe('DutchQuoteContext', () => {
     jest.resetModules(); // Most important - it clears the cache
     process.env = {
       ...OLD_ENV,
-      SYNTHETIC_ELIGIBLE_TOKENS: `{"1":["${TOKEN_IN.toLowerCase()}", "${TOKEN_OUT.toLowerCase()}"]}`,
     }; // Make a copy
 
     jest.mock('../../../../../lib/types/ext/factories/Erc20__factory');
