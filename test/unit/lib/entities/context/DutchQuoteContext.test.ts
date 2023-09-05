@@ -10,11 +10,8 @@ import {
   AMOUNT,
   AMOUNT_GAS_ADJUSTED,
   AMOUNT_UNDER_GAS_THRESHOLD,
-  CHAIN_IN_ID,
   CHAIN_OUT_ID,
   ETH_IN,
-  INELIGIBLE_TOKEN,
-  SWAPPER,
   TOKEN_IN,
   TOKEN_OUT,
   USDC_ADDRESS,
@@ -675,59 +672,6 @@ describe('DutchQuoteContext', () => {
         const hasSize = context.hasOrderSize(logger, classicQuote);
         expect(hasSize).toEqual(false);
       });
-    });
-  });
-
-  describe('hasSyntheticEligibleTokens', () => {
-    it('returns true if tokenOut and tokenIn are in SYNTHETIC_ELIGIBLE_TOKENS', async () => {
-      const baseRequest = {
-        tokenInChainId: CHAIN_IN_ID,
-        tokenOutChainId: CHAIN_OUT_ID,
-        requestId: 'requestId',
-        tokenIn: TOKEN_IN,
-        tokenOut: TOKEN_OUT,
-        amount: AMOUNT,
-        type: 'EXACT_INPUT',
-        swapper: SWAPPER,
-        useUniswapX: true,
-      };
-      const QUOTE_REQUEST_ELIGIBLE_TOKENS = makeDutchRequest({}, { useSyntheticQuotes: true }, baseRequest);
-      const context = new DutchQuoteContext(logger, QUOTE_REQUEST_ELIGIBLE_TOKENS, makeProviders(false));
-      expect(context.hasSyntheticEligibleTokens()).toEqual(true);
-    });
-
-    it('returns false if tokenIn not in SYNTHETIC_ELIGIBLE_TOKENS', async () => {
-      const baseRequest = {
-        tokenInChainId: CHAIN_IN_ID,
-        tokenOutChainId: CHAIN_OUT_ID,
-        requestId: 'requestId',
-        tokenIn: INELIGIBLE_TOKEN,
-        tokenOut: TOKEN_OUT,
-        amount: AMOUNT,
-        type: 'EXACT_INPUT',
-        swapper: SWAPPER,
-        useUniswapX: true,
-      };
-      const QUOTE_REQUEST_INELIGIBLE_TOKEN = makeDutchRequest({}, { useSyntheticQuotes: true }, baseRequest);
-      const context = new DutchQuoteContext(logger, QUOTE_REQUEST_INELIGIBLE_TOKEN, makeProviders(false));
-      expect(context.hasSyntheticEligibleTokens()).toEqual(false);
-    });
-
-    it('returns false if tokenOut not in SYNTHETIC_ELIGIBLE_TOKENS', async () => {
-      const baseRequest = {
-        tokenInChainId: CHAIN_IN_ID,
-        tokenOutChainId: CHAIN_OUT_ID,
-        requestId: 'requestId',
-        tokenIn: TOKEN_IN,
-        tokenOut: INELIGIBLE_TOKEN,
-        amount: AMOUNT,
-        type: 'EXACT_INPUT',
-        swapper: SWAPPER,
-        useUniswapX: true,
-      };
-      const QUOTE_REQUEST_INELIGIBLE_TOKEN = makeDutchRequest({}, { useSyntheticQuotes: true }, baseRequest);
-      const context = new DutchQuoteContext(logger, QUOTE_REQUEST_INELIGIBLE_TOKEN, makeProviders(false));
-      expect(context.hasSyntheticEligibleTokens()).toEqual(false);
     });
   });
 

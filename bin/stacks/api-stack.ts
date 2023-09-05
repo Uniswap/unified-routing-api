@@ -207,6 +207,11 @@ export class APIStack extends cdk.Stack {
       });
 
       quoteTarget.node.addDependency(quoteLambdaAlias);
+
+      quoteTarget.scaleToTrackMetric('QuoteProvConcTracking', {
+        targetValue: 0.8,
+        predefinedMetric: aws_asg.PredefinedMetric.LAMBDA_PROVISIONED_CONCURRENCY_UTILIZATION,
+      })
     }
 
     /* Analytics */

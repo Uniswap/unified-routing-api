@@ -26,7 +26,6 @@ import {
 import { SyntheticStatusProvider } from '../../providers';
 import { Erc20__factory } from '../../types/ext/factories/Erc20__factory';
 import { metrics } from '../../util/metrics';
-import { checkDefined } from '../../util/preconditions';
 
 // if the gas is greater than this proportion of the whole trade size
 // then we will not route the order
@@ -254,38 +253,6 @@ export class DutchQuoteContext implements QuoteContext {
     } else {
       return quote.amountIn.lt(classicQuote.amountInGasAdjusted.div(RFQ_QUOTE_UPPER_BOUND_MULTIPLIER));
     }
-  }
-
-  hasSyntheticEligibleTokens(): boolean {
-    let tokenInEligibileTokens: string[];
-    let tokenOutEligibileTokens: string[];
-
-    try {
-      const syntheticEligibleTokens = checkDefined(
-        process.env.SYNTHETIC_ELIGIBLE_TOKENS,
-        'SYNTHETIC_ELIGIBLE_TOKENS is not defined'
-      );
-
-      const syntheticEligibleTokensMap = JSON.parse(syntheticEligibleTokens);
-
-      const tokenInChainId = this.request.info.tokenInChainId.toString();
-      const tokenOutChainId = this.request.info.tokenOutChainId.toString();
-
-      // if we can't find the chainId in the map, then we assume there's no eligible tokens
-      tokenInEligibileTokens = (syntheticEligibleTokensMap[tokenInChainId] ?? []).map((token: string) =>
-        token.toLowerCase()
-      );
-      tokenOutEligibileTokens = (syntheticEligibleTokensMap[tokenOutChainId] ?? []).map((token: string) =>
-        token.toLowerCase()
-      );
-    } catch (e) {
-      throw new Error(`Error parsing SYNTHETIC_ELIGIBLE_TOKENS: ${e instanceof Error ? e.message : e}`);
-    }
-
-    return (
-      tokenInEligibileTokens.includes(this.request.info.tokenIn.toLowerCase()) &&
-      tokenOutEligibileTokens.includes(this.request.info.tokenOut.toLowerCase())
-    );
   }
 
   async hasApprovedPermit2(request: DutchRequest): Promise<boolean> {
