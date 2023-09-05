@@ -61,8 +61,8 @@ export enum DutchQuoteType {
 export class DutchQuote implements IQuote {
   public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
   // Add 1bps price improvmement to favor Dutch
-  public static amountOutImprovementExactIn = BigNumber.from(10001);
-  public static amountInImprovementExactOut = BigNumber.from(9999);
+  public static amountOutImprovementExactIn = BigNumber.from(10010);
+  public static amountInImprovementExactOut = BigNumber.from(9990);
 
   // build a dutch quote from an RFQ response
   public static fromResponseBody(request: DutchRequest, body: DutchQuoteJSON, nonce?: string): DutchQuote {
