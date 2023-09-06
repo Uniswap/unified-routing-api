@@ -35,8 +35,9 @@ export class UPASyntheticStatusProvider implements SyntheticStatusProvider {
         { headers: { 'x-api-key': this.paramApiKey } }
       );
 
+      log.info(`Synthetic status for ${tokenIn} -> ${tokenOut}: ${result}`);
       return {
-        useSynthetic: result.data.useSynthetic,
+        useSynthetic: result.data.enabled,
       };
     } catch (e) {
       log.error('Error fetching synthetic status from UPA', e);
