@@ -174,7 +174,7 @@ export class APIStack extends cdk.Stack {
     });
     const quoteLambda = new aws_lambda_nodejs.NodejsFunction(this, 'Quote', {
       role: lambdaRole,
-      runtime: aws_lambda.Runtime.NODEJS_16_X,
+      runtime: aws_lambda.Runtime.NODEJS_18_X,
       entry: path.join(__dirname, '../../lib/handlers/index.ts'),
       handler: 'quoteHandler',
       memorySize: 1024,
@@ -189,7 +189,7 @@ export class APIStack extends cdk.Stack {
         ...props.envVars,
       },
       timeout: cdk.Duration.seconds(30),
-      logRetention: aws_logs.RetentionDays.ONE_MONTH
+      logRetention: aws_logs.RetentionDays.ONE_MONTH,
     });
 
     const quoteLambdaAlias = new aws_lambda.Alias(this, `GetOrdersLiveAlias`, {
@@ -212,7 +212,7 @@ export class APIStack extends cdk.Stack {
       quoteTarget.scaleToTrackMetric('QuoteProvConcTracking', {
         targetValue: 0.8,
         predefinedMetric: aws_asg.PredefinedMetric.LAMBDA_PROVISIONED_CONCURRENCY_UTILIZATION,
-      })
+      });
     }
 
     /* Analytics */
