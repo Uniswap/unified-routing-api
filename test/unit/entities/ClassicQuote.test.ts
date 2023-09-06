@@ -41,7 +41,7 @@ const tests: UtilityTest[] = [
   {
     testName: 'Succeeds - Permit Not Enough',
     input: {
-      quote: createClassicQuote({ amount: '15', quote: '5'}, { type: 'EXACT_INPUT' }),
+      quote: createClassicQuote({ amount: '15', quote: '5' }, { type: 'EXACT_INPUT' }),
       permitDetails: {
         ...PERMIT_DETAILS,
         amount: '10',

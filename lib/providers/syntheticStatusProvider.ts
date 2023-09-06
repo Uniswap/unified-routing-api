@@ -5,7 +5,7 @@ import { log } from '../util/log';
 import axios from './quoters/helpers';
 
 export type SyntheticStatus = {
-  useSynthetic: boolean;
+  syntheticEnabled: boolean;
 };
 
 export interface SyntheticStatusProvider {
@@ -35,13 +35,14 @@ export class UPASyntheticStatusProvider implements SyntheticStatusProvider {
         { headers: { 'x-api-key': this.paramApiKey } }
       );
 
+      log.info(`Synthetic status for ${tokenIn} -> ${tokenOut}: ${result.data}`);
       return {
-        useSynthetic: result.data.useSynthetic,
+        syntheticEnabled: result.data.enabled,
       };
     } catch (e) {
       log.error('Error fetching synthetic status from UPA', e);
       return {
-        useSynthetic: false,
+        syntheticEnabled: false,
       };
     }
   }
