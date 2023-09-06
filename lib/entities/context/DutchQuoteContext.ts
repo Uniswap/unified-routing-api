@@ -210,7 +210,7 @@ export class DutchQuoteContext implements QuoteContext {
 
     const syntheticStatus = await this.syntheticStatusProvider.getStatus(this.request.info);
     // if the useSyntheticQuotes override is not set, and the request is not eligible for synthetic, return null
-    if (!this.request.config.useSyntheticQuotes && !syntheticStatus.useSynthetic) {
+    if (!this.request.config.useSyntheticQuotes && !syntheticStatus.syntheticEnabled) {
       this.log.info('Synthetic not enabled, skipping synthetic');
       return null;
     }

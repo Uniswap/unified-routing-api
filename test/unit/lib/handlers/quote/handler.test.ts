@@ -167,12 +167,12 @@ describe('QuoteHandler', () => {
       return fetcher as unknown as Permit2Fetcher;
     };
 
-    const SyntheticStatusProviderMock = (useSynthetic: boolean): SyntheticStatusProvider => {
+    const SyntheticStatusProviderMock = (syntheticEnabled: boolean): SyntheticStatusProvider => {
       const provider = {
         getStatus: jest.fn(),
       };
 
-      provider.getStatus.mockResolvedValueOnce({ useSynthetic });
+      provider.getStatus.mockResolvedValueOnce({ syntheticEnabled });
       return provider as unknown as SyntheticStatusProvider;
     };
     const getEvent = (request: QuoteRequestBodyJSON): APIGatewayProxyEvent =>

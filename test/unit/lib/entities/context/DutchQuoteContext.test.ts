@@ -32,12 +32,12 @@ describe('DutchQuoteContext', () => {
 
   const OLD_ENV = process.env;
 
-  const SyntheticStatusProviderMock = (useSynthetic: boolean): SyntheticStatusProvider => {
+  const SyntheticStatusProviderMock = (syntheticEnabled: boolean): SyntheticStatusProvider => {
     const provider = {
       getStatus: jest.fn(),
     };
 
-    provider.getStatus.mockResolvedValue({ useSynthetic });
+    provider.getStatus.mockResolvedValue({ syntheticEnabled });
     return provider as unknown as SyntheticStatusProvider;
   };
 
@@ -60,10 +60,10 @@ describe('DutchQuoteContext', () => {
     process.env = OLD_ENV; // Restore old environment
   });
 
-  function makeProviders(useSynthetic: boolean) {
+  function makeProviders(syntheticEnabled: boolean) {
     return {
       rpcProvider: provider,
-      syntheticStatusProvider: SyntheticStatusProviderMock(useSynthetic),
+      syntheticStatusProvider: SyntheticStatusProviderMock(syntheticEnabled),
     };
   }
 
