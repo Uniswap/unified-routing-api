@@ -4,11 +4,13 @@ import { BigNumber, ethers } from 'ethers';
 
 import { PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { v4 as uuidv4 } from 'uuid';
-import { IQuote, QuoteJSON } from '.';
+import { IQuote } from '.';
 import { DutchRequest } from '..';
 import {
   BPS,
+  DEFAULT_START_TIME_BUFFER_SECS,
   NATIVE_ADDRESS,
+  OPEN_QUOTE_START_TIME_BUFFER_SECS,
   RoutingType,
   UNISWAPX_BASE_GAS,
   WETH_UNWRAP_GAS,
@@ -26,6 +28,7 @@ export type DutchQuoteDataJSON = {
   quoteId: string;
   requestId: string;
   encodedOrder: string;
+  startTimeBufferSecs: number;
   auctionPeriodSecs: number;
   deadlineBufferSecs: number;
   slippageTolerance: string;
@@ -198,14 +201,15 @@ export class DutchQuote implements IQuote {
     this.createdAt = createdAt || currentTimestampInSeconds();
   }
 
-  public toJSON(): QuoteJSON {
+  public toJSON(): DutchQuoteDataJSON {
     return {
       orderInfo: this.toOrder().toJSON(),
       encodedOrder: this.toOrder().serialize(),
       quoteId: this.quoteId,
       requestId: this.requestId,
-      auctionPeriodSecs: this.request.config.auctionPeriodSecs,
-      deadlineBufferSecs: this.request.config.deadlineBufferSecs,
+      startTimeBufferSecs: this.startTimeBufferSecs,
+      auctionPeriodSecs: this.auctionPeriodSecs,
+      deadlineBufferSecs: this.deadlineBufferSecs,
       slippageTolerance: this.request.info.slippageTolerance,
       permitData: this.getPermitData(),
     };
@@ -218,8 +222,8 @@ export class DutchQuote implements IQuote {
 
     const builder = orderBuilder
       .decayStartTime(decayStartTime)
-      .decayEndTime(decayStartTime + this.request.config.auctionPeriodSecs)
-      .deadline(decayStartTime + this.request.config.auctionPeriodSecs + this.request.config.deadlineBufferSecs)
+      .decayEndTime(decayStartTime + this.auctionPeriodSecs)
+      .deadline(decayStartTime + this.auctionPeriodSecs + this.deadlineBufferSecs)
       .swapper(ethers.utils.getAddress(this.request.config.swapper))
       .nonce(BigNumber.from(nonce))
       .input({
@@ -234,7 +238,7 @@ export class DutchQuote implements IQuote {
         recipient: this.request.config.swapper,
       });
 
-    if (this.filler && this.filler !== NATIVE_ADDRESS) {
+    if (this.isExclusiveQuote() && this.filler) {
       builder.exclusiveFiller(this.filler, BigNumber.from(this.request.config.exclusivityOverrideBps));
     }
 
@@ -275,10 +279,63 @@ export class DutchQuote implements IQuote {
     return this.amountInStart;
   }
 
+  // The number of seconds from now that order decay should begin
+  public get startTimeBufferSecs(): number {
+    if (this.request.config.startTimeBufferSecs !== undefined) {
+      return this.request.config.startTimeBufferSecs;
+    }
+
+    if (this.isOpenQuote()) {
+      return OPEN_QUOTE_START_TIME_BUFFER_SECS;
+    }
+
+    return DEFAULT_START_TIME_BUFFER_SECS;
+  }
+
+  // The number of seconds from startTime that decay should end
+  public get auctionPeriodSecs(): number {
+    if (this.request.config.auctionPeriodSecs !== undefined) {
+      return this.request.config.auctionPeriodSecs;
+    }
+
+    switch (this.chainId) {
+      case 1:
+        return 60;
+      case 137:
+        return 60;
+      default:
+        return 60;
+    }
+  }
+
+  // The number of seconds from endTime that the order should expire
+  public get deadlineBufferSecs(): number {
+    if (this.request.config.deadlineBufferSecs !== undefined) {
+      return this.request.config.deadlineBufferSecs;
+    }
+
+    switch (this.chainId) {
+      case 1:
+        return 12;
+      case 137:
+        return 5;
+      default:
+        return 5;
+    }
+  }
+
   validate(): boolean {
     if (this.amountOutStart.lt(this.amountOutEnd)) return false;
     if (this.amountInStart.gt(this.amountInEnd)) return false;
     return true;
+  }
+
+  isExclusiveQuote(): boolean {
+    return !!this.filler && this.filler !== NATIVE_ADDRESS;
+  }
+
+  isOpenQuote(): boolean {
+    return !this.isExclusiveQuote();
   }
 
   // static helpers

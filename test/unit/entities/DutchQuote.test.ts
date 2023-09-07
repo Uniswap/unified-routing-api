@@ -3,6 +3,7 @@ import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
 import * as _ from 'lodash';
 
+import { DEFAULT_START_TIME_BUFFER_SECS, OPEN_QUOTE_START_TIME_BUFFER_SECS } from '../../../lib/constants';
 import { ClassicQuote, DutchQuote } from '../../../lib/entities';
 import { AMOUNT_LARGE, DL_PERMIT_RFQ, DUTCH_LIMIT_ORDER_JSON } from '../../constants';
 import {
@@ -12,6 +13,7 @@ import {
   CLASSIC_QUOTE_EXACT_OUT_LARGE,
   createClassicQuote,
   createDutchQuote,
+  createDutchQuoteWithRequest,
   DL_QUOTE_EXACT_IN_LARGE,
   DL_QUOTE_EXACT_OUT_LARGE,
   DL_QUOTE_NATIVE_EXACT_IN_LARGE,
@@ -153,6 +155,79 @@ describe('DutchQuote', () => {
       expect(reparameterized.amountOutStart.lte(DL_QUOTE_NATIVE_EXACT_IN_LARGE.amountOutStart)).toBeTruthy();
       expect(reparameterized.amountInEnd).toEqual(amountInEnd);
       expect(reparameterized.amountOutEnd).toEqual(amountOutEnd);
+    });
+  });
+
+  describe('decay parameters', () => {
+    it('uses default parameters - RFQ', () => {
+      const quote = createDutchQuoteWithRequest(
+        { filler: '0x1111111111111111111111111111111111111111' },
+        {},
+        {
+          swapper: '0x9999999999999999999999999999999999999999',
+          startTimeBufferSecs: undefined,
+          auctionPeriodSecs: undefined,
+          deadlineBufferSecs: undefined,
+        }
+      );
+      const result = quote.toJSON();
+      expect(result.startTimeBufferSecs).toEqual(DEFAULT_START_TIME_BUFFER_SECS);
+      expect(result.auctionPeriodSecs).toEqual(60);
+      expect(result.deadlineBufferSecs).toEqual(12);
+    });
+
+    it('uses default parameters - Open', () => {
+      const quote = createDutchQuoteWithRequest(
+        { filler: '0x0000000000000000000000000000000000000000' },
+        {},
+        {
+          swapper: '0x9999999999999999999999999999999999999999',
+          startTimeBufferSecs: undefined,
+          auctionPeriodSecs: undefined,
+          deadlineBufferSecs: undefined,
+        }
+      );
+      const result = quote.toJSON();
+      expect(result.startTimeBufferSecs).toEqual(OPEN_QUOTE_START_TIME_BUFFER_SECS);
+      expect(result.auctionPeriodSecs).toEqual(60);
+      expect(result.deadlineBufferSecs).toEqual(12);
+    });
+
+    it('uses default parameters - polygon', () => {
+      const quote = createDutchQuoteWithRequest(
+        { filler: '0x0000000000000000000000000000000000000000', chainId: 137 },
+        {
+          tokenInChainId: 137,
+          tokenOutChainId: 137,
+        },
+        {
+          swapper: '0x9999999999999999999999999999999999999999',
+          startTimeBufferSecs: undefined,
+          auctionPeriodSecs: undefined,
+          deadlineBufferSecs: undefined,
+        }
+      );
+      const result = quote.toJSON();
+      expect(result.startTimeBufferSecs).toEqual(OPEN_QUOTE_START_TIME_BUFFER_SECS);
+      expect(result.auctionPeriodSecs).toEqual(60);
+      expect(result.deadlineBufferSecs).toEqual(5);
+    });
+
+    it('overrides parameters in request', () => {
+      const quote = createDutchQuoteWithRequest(
+        { filler: '0x1111111111111111111111111111111111111111' },
+        {},
+        {
+          swapper: '0x9999999999999999999999999999999999999999',
+          startTimeBufferSecs: 111,
+          auctionPeriodSecs: 222,
+          deadlineBufferSecs: 333,
+        }
+      );
+      const result = quote.toJSON();
+      expect(result.startTimeBufferSecs).toEqual(111);
+      expect(result.auctionPeriodSecs).toEqual(222);
+      expect(result.deadlineBufferSecs).toEqual(333);
     });
   });
 

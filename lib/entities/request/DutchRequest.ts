@@ -12,8 +12,9 @@ export * from './DutchRequest';
 export interface DutchConfig {
   swapper: string;
   exclusivityOverrideBps: number;
-  auctionPeriodSecs: number;
-  deadlineBufferSecs: number;
+  startTimeBufferSecs?: number;
+  auctionPeriodSecs?: number;
+  deadlineBufferSecs?: number;
   useSyntheticQuotes: boolean;
 }
 
@@ -25,6 +26,7 @@ export interface DutchConfigJSON {
   routingType: RoutingType.DUTCH_LIMIT;
   swapper?: string;
   exclusivityOverrideBps?: number;
+  startTimeBufferSecs?: number;
   auctionPeriodSecs?: number;
   deadlineBufferSecs?: number;
   useSyntheticQuotes?: boolean;
@@ -43,37 +45,15 @@ export class DutchRequest implements QuoteRequest {
       {
         swapper: body.swapper ?? NATIVE_ADDRESS,
         exclusivityOverrideBps: body.exclusivityOverrideBps ?? DEFAULT_EXCLUSIVITY_OVERRIDE_BPS.toNumber(),
-        auctionPeriodSecs: body.auctionPeriodSecs ?? DutchRequest.defaultAuctionPeriodSecs(info.tokenInChainId),
-        deadlineBufferSecs: body.deadlineBufferSecs ?? DutchRequest.defaultDeadlineBufferSecs(info.tokenInChainId),
+        startTimeBufferSecs: body.startTimeBufferSecs,
+        auctionPeriodSecs: body.auctionPeriodSecs,
+        deadlineBufferSecs: body.deadlineBufferSecs,
         useSyntheticQuotes: body.useSyntheticQuotes ?? false,
       }
     );
   }
 
   constructor(public readonly info: DutchQuoteRequestInfo, public readonly config: DutchConfig) {}
-
-  // TODO: parameterize this based on other factors
-  public static defaultAuctionPeriodSecs(chainId: number): number {
-    switch (chainId) {
-      case 1:
-        return 60;
-      case 137:
-        return 60;
-      default:
-        return 60;
-    }
-  }
-
-  public static defaultDeadlineBufferSecs(chainId: number): number {
-    switch (chainId) {
-      case 1:
-        return 12;
-      case 137:
-        return 5;
-      default:
-        return 5;
-    }
-  }
 
   public toJSON(): DutchConfigJSON {
     return Object.assign({}, this.config, {

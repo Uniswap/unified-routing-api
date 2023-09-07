@@ -241,6 +241,7 @@ describe('QuoteHandler', () => {
               routingType: RoutingType.DUTCH_LIMIT,
               swapper: '0x0000000000000000000000000000000000000000',
               exclusivityOverrideBps: 12,
+              startTimeBufferSecs: 30,
               auctionPeriodSecs: 60,
               deadlineBufferSecs: 12,
             },
