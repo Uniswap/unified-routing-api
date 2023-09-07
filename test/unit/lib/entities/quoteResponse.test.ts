@@ -21,6 +21,18 @@ const DL_QUOTE_JSON: DutchQuoteJSON = {
   filler: FILLER,
 };
 
+const DL_QUOTE_JSON_RFQ: DutchQuoteJSON = {
+  chainId: CHAIN_IN_ID,
+  requestId: '0xrequestId',
+  quoteId: '0xquoteId',
+  tokenIn: TOKEN_IN,
+  amountIn: AMOUNT,
+  tokenOut: TOKEN_OUT,
+  amountOut: AMOUNT,
+  swapper: SWAPPER,
+  filler: '0x1111111111111111111111111111111111111111',
+};
+
 const CLASSIC_QUOTE_JSON: ClassicQuoteDataJSON = {
   requestId: '0xrequestId',
   quoteId: '0xquoteId',
@@ -51,7 +63,7 @@ describe('QuoteResponse', () => {
   });
 
   it('produces dutch limit order info from param-api response and config', () => {
-    const quote = DutchQuote.fromResponseBody(config, DL_QUOTE_JSON);
+    const quote = DutchQuote.fromResponseBody(config, DL_QUOTE_JSON_RFQ);
     expect(quote.toOrder().toJSON()).toMatchObject({
       swapper: SWAPPER,
       input: {
@@ -69,7 +81,7 @@ describe('QuoteResponse', () => {
       ],
     });
     const order = DutchOrder.fromJSON(quote.toOrder().toJSON(), quote.chainId);
-    expect(order.info.exclusiveFiller).toEqual(FILLER);
+    expect(order.info.exclusiveFiller).toEqual('0x1111111111111111111111111111111111111111');
     expect(order.info.exclusivityOverrideBps.toString()).toEqual('12');
 
     expect(BigNumber.from(quote.toOrder().toJSON().nonce).gt(0)).toBeTruthy();

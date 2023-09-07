@@ -125,7 +125,7 @@ export class DutchQuote implements IQuote {
       endAmounts.amountOut,
       request.config.swapper,
       DutchQuoteType.SYNTHETIC,
-      '', // synthetic quote has no filler
+      NATIVE_ADDRESS, // synthetic quote has no filler
       generateRandomNonce() // synthetic quote has no nonce
     );
   }
@@ -234,7 +234,7 @@ export class DutchQuote implements IQuote {
         recipient: this.request.config.swapper,
       });
 
-    if (this.filler) {
+    if (this.filler && this.filler !== NATIVE_ADDRESS) {
       builder.exclusiveFiller(this.filler, BigNumber.from(this.request.config.exclusivityOverrideBps));
     }
 

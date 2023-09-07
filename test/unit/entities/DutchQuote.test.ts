@@ -4,7 +4,7 @@ import { BigNumber, ethers } from 'ethers';
 import * as _ from 'lodash';
 
 import { ClassicQuote, DutchQuote } from '../../../lib/entities';
-import { AMOUNT_LARGE, DL_PERMIT, DUTCH_LIMIT_ORDER_JSON } from '../../constants';
+import { AMOUNT_LARGE, DL_PERMIT_RFQ, DUTCH_LIMIT_ORDER_JSON } from '../../constants';
 import {
   CLASSIC_QUOTE_EXACT_IN_LARGE,
   CLASSIC_QUOTE_EXACT_IN_LARGE_GAS,
@@ -161,11 +161,14 @@ describe('DutchQuote', () => {
       jest.useFakeTimers({
         now: 0,
       });
-      const quote = createDutchQuote({ amountOut: AMOUNT_LARGE }, 'EXACT_INPUT') as any;
+      const quote = createDutchQuote(
+        { amountOut: AMOUNT_LARGE, filler: '0x1111111111111111111111111111111111111111' },
+        'EXACT_INPUT'
+      ) as any;
       quote.nonce = 1;
       const dlQuote = quote as DutchQuote;
       const result = dlQuote.getPermitData();
-      const expected = DL_PERMIT;
+      const expected = DL_PERMIT_RFQ;
       expect(_.isEqual(JSON.stringify(result), JSON.stringify(expected))).toBe(true);
       jest.clearAllTimers();
     });
@@ -173,7 +176,10 @@ describe('DutchQuote', () => {
 
   describe('toJSON', () => {
     it('Succeeds - Basic', () => {
-      const quote = createDutchQuote({ amountOut: '10000' }, 'EXACT_INPUT') as any;
+      const quote = createDutchQuote(
+        { amountOut: '10000', filler: '0x1111111111111111111111111111111111111111' },
+        'EXACT_INPUT'
+      ) as any;
       quote.nonce = 1;
       const result = quote.toJSON();
       expect(result).toMatchObject(DUTCH_LIMIT_ORDER_JSON);
