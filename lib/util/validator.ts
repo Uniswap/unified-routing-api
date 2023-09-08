@@ -93,6 +93,7 @@ export class FieldValidator {
     slippageTolerance: FieldValidator.slippageTolerance.optional(),
     algorithm: FieldValidator.algorithm.optional(),
     quoteSpeed: FieldValidator.quoteSpeed.optional(),
+    enableFeeOnTransferFeeFetching: Joi.boolean().optional(),
   });
 
   public static readonly dutchLimitConfig = Joi.object({

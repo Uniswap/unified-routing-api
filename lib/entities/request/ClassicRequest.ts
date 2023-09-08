@@ -24,6 +24,7 @@ export interface ClassicConfig {
   debugRoutingConfig?: string;
   unicornSecret?: string;
   quoteSpeed?: string;
+  enableFeeOnTransferFeeFetching?: boolean;
 }
 
 export interface ClassicConfigJSON extends Omit<ClassicConfig, 'protocols' | 'permitAmount'> {
