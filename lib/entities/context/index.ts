@@ -102,7 +102,7 @@ export function parseQuoteContexts(requests: QuoteRequest[], providers: QuoteCon
   });
 }
 
-function mergeRequests(base: QuoteRequest, layer: QuoteRequest): QuoteRequest {
+export function mergeRequests(base: QuoteRequest, layer: QuoteRequest): QuoteRequest {
   if (base.routingType === RoutingType.CLASSIC && layer.routingType === RoutingType.CLASSIC) {
     const layerConfig: ClassicConfig = layer.config as ClassicConfig;
     const baseConfig: ClassicConfig = base.config as ClassicConfig;
