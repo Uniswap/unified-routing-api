@@ -1,7 +1,14 @@
 import Logger from 'bunyan';
 
 import { RoutingType } from '../../../../../lib/constants';
-import { Quote, QuoteByKey, QuoteContext, QuoteContextManager, QuoteRequest } from '../../../../../lib/entities';
+import {
+  ClassicConfig,
+  Quote,
+  QuoteByKey,
+  QuoteContext,
+  QuoteContextManager,
+  QuoteRequest,
+} from '../../../../../lib/entities';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_OUT_WORSE,
@@ -112,6 +119,31 @@ describe('QuoteContextManager', () => {
       expect(requests.length).toEqual(3);
       expect(requests[0]).toMatchObject(QUOTE_REQUEST_DL);
       expect(requests[1]).toMatchObject(QUOTE_REQUEST_CLASSIC);
+      expect(requests[2]).toMatchObject(QUOTE_REQUEST_DL_EXACT_OUT);
+    });
+
+    it.only('merges simulateFromAddress on classic requests', () => {
+      const context1 = new MockQuoteContext(QUOTE_REQUEST_DL);
+      context1.setDependencies([QUOTE_REQUEST_DL_EXACT_OUT, QUOTE_REQUEST_CLASSIC]);
+      const context2 = new MockQuoteContext(QUOTE_REQUEST_CLASSIC);
+      const simulateFromAddress = '0x1111111111111111111111111111111111111111';
+      context2.setDependencies([
+        Object.assign({}, QUOTE_REQUEST_CLASSIC, {
+          config: {
+            routingType: RoutingType.CLASSIC,
+            protocols: ['v3'],
+            simulateFromAddress,
+          },
+          key: QUOTE_REQUEST_CLASSIC.key,
+        }),
+      ]);
+      const handler = new QuoteContextManager([context1, context2]);
+      const requests = handler.getRequests();
+      expect(requests.length).toEqual(3);
+      expect(requests[0]).toMatchObject(QUOTE_REQUEST_DL);
+      // injects simulateFromAddress into the classic request
+      expect(requests[1]).toMatchObject(QUOTE_REQUEST_CLASSIC);
+      expect((requests[1].config as ClassicConfig).simulateFromAddress).toEqual(simulateFromAddress);
       expect(requests[2]).toMatchObject(QUOTE_REQUEST_DL_EXACT_OUT);
     });
 
