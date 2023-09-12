@@ -64,6 +64,7 @@ export class DutchQuoteContext implements QuoteContext {
   dependencies(): QuoteRequest[] {
     const classicRequest = new ClassicRequest(this.request.info, {
       protocols: [Protocol.MIXED, Protocol.V2, Protocol.V3],
+      simulateFromAddress: this.request.config.swapper,
     });
     this.classicKey = classicRequest.key();
     this.log.info({ classicRequest: classicRequest.info }, 'Adding synthetic classic request');
