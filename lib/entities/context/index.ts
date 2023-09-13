@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 
 import { RoutingType } from '../../constants';
-import { ClassicRequest, DutchRequest, Quote, QuoteRequest } from '../../entities';
+import { ClassicConfig, ClassicRequest, DutchRequest, Quote, QuoteRequest } from '../../entities';
 
 import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
 import { SyntheticStatusProvider } from '../../providers';
@@ -54,6 +54,8 @@ export class QuoteContextManager {
         const requestKey = request.key();
         if (!requestMap[requestKey]) {
           requestMap[requestKey] = request;
+        } else {
+          requestMap[requestKey] = mergeRequests(requestMap[requestKey], request);
         }
       }
     }
@@ -98,4 +100,20 @@ export function parseQuoteContexts(requests: QuoteRequest[], providers: QuoteCon
         throw new Error(`Unsupported routing type: ${request.routingType}`);
     }
   });
+}
+
+export function mergeRequests(base: QuoteRequest, layer: QuoteRequest): QuoteRequest {
+  if (base.routingType === RoutingType.CLASSIC && layer.routingType === RoutingType.CLASSIC) {
+    const layerConfig: ClassicConfig = layer.config as ClassicConfig;
+    const baseConfig: ClassicConfig = base.config as ClassicConfig;
+    const config = Object.assign({}, baseConfig, {
+      // if base does not specify simulation address but layer does, then we add it
+      simulateFromAddress: baseConfig.simulateFromAddress ?? layerConfig.simulateFromAddress,
+      // otherwise defer to base
+    });
+    return ClassicRequest.fromRequest(base.info, config);
+  } else {
+    // no special merging logic for dutch, just defer to base
+    return base;
+  }
 }

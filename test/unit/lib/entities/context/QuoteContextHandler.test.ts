@@ -1,7 +1,15 @@
 import Logger from 'bunyan';
 
 import { RoutingType } from '../../../../../lib/constants';
-import { Quote, QuoteByKey, QuoteContext, QuoteContextManager, QuoteRequest } from '../../../../../lib/entities';
+import {
+  ClassicConfig,
+  mergeRequests,
+  Quote,
+  QuoteByKey,
+  QuoteContext,
+  QuoteContextManager,
+  QuoteRequest,
+} from '../../../../../lib/entities';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_OUT_WORSE,
@@ -10,6 +18,7 @@ import {
   QUOTE_REQUEST_DL,
   QUOTE_REQUEST_DL_EXACT_OUT,
   QUOTE_REQUEST_DL_NATIVE_IN,
+  QUOTE_REQUEST_DL_NATIVE_OUT,
 } from '../../../../utils/fixtures';
 
 class MockQuoteContext implements QuoteContext {
@@ -112,6 +121,31 @@ describe('QuoteContextManager', () => {
       expect(requests.length).toEqual(3);
       expect(requests[0]).toMatchObject(QUOTE_REQUEST_DL);
       expect(requests[1]).toMatchObject(QUOTE_REQUEST_CLASSIC);
+      expect(requests[2]).toMatchObject(QUOTE_REQUEST_DL_EXACT_OUT);
+    });
+
+    it('merges simulateFromAddress on classic requests', () => {
+      const context1 = new MockQuoteContext(QUOTE_REQUEST_DL);
+      context1.setDependencies([QUOTE_REQUEST_DL_EXACT_OUT, QUOTE_REQUEST_CLASSIC]);
+      const context2 = new MockQuoteContext(QUOTE_REQUEST_CLASSIC);
+      const simulateFromAddress = '0x1111111111111111111111111111111111111111';
+      context2.setDependencies([
+        Object.assign({}, QUOTE_REQUEST_CLASSIC, {
+          config: {
+            routingType: RoutingType.CLASSIC,
+            protocols: ['v3'],
+            simulateFromAddress,
+          },
+          key: QUOTE_REQUEST_CLASSIC.key,
+        }),
+      ]);
+      const handler = new QuoteContextManager([context1, context2]);
+      const requests = handler.getRequests();
+      expect(requests.length).toEqual(3);
+      expect(requests[0]).toMatchObject(QUOTE_REQUEST_DL);
+      // injects simulateFromAddress into the classic request
+      expect(requests[1]).toMatchObject(QUOTE_REQUEST_CLASSIC);
+      expect((requests[1].config as ClassicConfig).simulateFromAddress).toEqual(simulateFromAddress);
       expect(requests[2]).toMatchObject(QUOTE_REQUEST_DL_EXACT_OUT);
     });
 
@@ -231,6 +265,62 @@ describe('QuoteContextManager', () => {
         [DL_QUOTE_EXACT_IN_BETTER.request.key()]: DL_QUOTE_EXACT_IN_BETTER,
         [CLASSIC_QUOTE_EXACT_OUT_WORSE.request.key()]: CLASSIC_QUOTE_EXACT_OUT_WORSE,
       });
+    });
+  });
+
+  describe('mergeRequests', () => {
+    it('just returns the base for dutch', () => {
+      expect(mergeRequests(QUOTE_REQUEST_DL, QUOTE_REQUEST_DL_NATIVE_OUT)).toMatchObject(QUOTE_REQUEST_DL);
+      expect(mergeRequests(QUOTE_REQUEST_DL, QUOTE_REQUEST_CLASSIC)).toMatchObject(QUOTE_REQUEST_DL);
+      expect(mergeRequests(QUOTE_REQUEST_DL, QUOTE_REQUEST_DL_EXACT_OUT)).toMatchObject(QUOTE_REQUEST_DL);
+      expect(mergeRequests(QUOTE_REQUEST_DL_EXACT_OUT, QUOTE_REQUEST_DL_NATIVE_OUT)).toMatchObject(
+        QUOTE_REQUEST_DL_EXACT_OUT
+      );
+    });
+
+    it('keeps base for classic', () => {
+      expect(mergeRequests(QUOTE_REQUEST_CLASSIC, QUOTE_REQUEST_DL)).toMatchObject(QUOTE_REQUEST_CLASSIC);
+    });
+
+    it('keeps simulateFromAddress if defined in base', () => {
+      const baseSimulateAddress = '0x1111111111111111111111111111111111111111';
+      const layerSimulateAddress = '0x2222222222222222222222222222222222222222';
+      const base = Object.assign({}, QUOTE_REQUEST_CLASSIC, {
+        config: {
+          routingType: RoutingType.CLASSIC,
+          protocols: ['v3'],
+          simulateFromAddress: baseSimulateAddress,
+        },
+      });
+
+      const layer = Object.assign({}, QUOTE_REQUEST_CLASSIC, {
+        config: {
+          routingType: RoutingType.CLASSIC,
+          protocols: ['v3'],
+          simulateFromAddress: layerSimulateAddress,
+        },
+      });
+
+      const merged = mergeRequests(base, layer);
+      expect(merged).toMatchObject(base);
+      expect((merged.config as ClassicConfig).simulateFromAddress).toEqual(baseSimulateAddress);
+      expect(merged.key()).toEqual(QUOTE_REQUEST_CLASSIC.key());
+    });
+
+    it('sets simulateFromAddress if defined in layer', () => {
+      const layerSimulateAddress = '0x2222222222222222222222222222222222222222';
+      const layer = Object.assign({}, QUOTE_REQUEST_CLASSIC, {
+        config: {
+          routingType: RoutingType.CLASSIC,
+          protocols: ['v3'],
+          simulateFromAddress: layerSimulateAddress,
+        },
+      });
+
+      const merged = mergeRequests(QUOTE_REQUEST_CLASSIC, layer);
+      expect(merged).toMatchObject(QUOTE_REQUEST_CLASSIC);
+      expect((merged.config as ClassicConfig).simulateFromAddress).toEqual(layerSimulateAddress);
+      expect(merged.key()).toEqual(QUOTE_REQUEST_CLASSIC.key());
     });
   });
 });
