@@ -304,6 +304,7 @@ describe('QuoteContextManager', () => {
       const merged = mergeRequests(base, layer);
       expect(merged).toMatchObject(base);
       expect((merged.config as ClassicConfig).simulateFromAddress).toEqual(baseSimulateAddress);
+      expect(merged.key()).toEqual(QUOTE_REQUEST_CLASSIC.key());
     });
 
     it('sets simulateFromAddress if defined in layer', () => {
@@ -319,6 +320,7 @@ describe('QuoteContextManager', () => {
       const merged = mergeRequests(QUOTE_REQUEST_CLASSIC, layer);
       expect(merged).toMatchObject(QUOTE_REQUEST_CLASSIC);
       expect((merged.config as ClassicConfig).simulateFromAddress).toEqual(layerSimulateAddress);
+      expect(merged.key()).toEqual(QUOTE_REQUEST_CLASSIC.key());
     });
   });
 });

@@ -111,7 +111,7 @@ export function mergeRequests(base: QuoteRequest, layer: QuoteRequest): QuoteReq
       simulateFromAddress: baseConfig.simulateFromAddress ?? layerConfig.simulateFromAddress,
       // otherwise defer to base
     });
-    return Object.assign({}, base, { config });
+    return ClassicRequest.fromRequest(base.info, config);
   } else {
     // no special merging logic for dutch, just defer to base
     return base;

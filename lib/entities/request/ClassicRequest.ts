@@ -36,6 +36,10 @@ export interface ClassicConfigJSON extends Omit<ClassicConfig, 'protocols' | 'pe
 export class ClassicRequest implements QuoteRequest {
   public routingType: RoutingType.CLASSIC = RoutingType.CLASSIC;
 
+  public static fromRequest(info: QuoteRequestInfo, config: ClassicConfig): ClassicRequest {
+    return new ClassicRequest(info, config);
+  }
+
   public static fromRequestBody(info: QuoteRequestInfo, body: ClassicConfigJSON): ClassicRequest {
     return new ClassicRequest(
       info,
