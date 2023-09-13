@@ -307,6 +307,56 @@ describe('QuoteContextManager', () => {
       expect(merged.key()).toEqual(QUOTE_REQUEST_CLASSIC.key());
     });
 
+    it('keeps deadline if defined in base', () => {
+      const baseDeadline = 1000;
+      const layerDeadline = 2000;
+      const base = Object.assign({}, QUOTE_REQUEST_CLASSIC, {
+        config: {
+          routingType: RoutingType.CLASSIC,
+          protocols: ['v3'],
+          deadline: baseDeadline,
+        },
+      });
+
+      const layer = Object.assign({}, QUOTE_REQUEST_CLASSIC, {
+        config: {
+          routingType: RoutingType.CLASSIC,
+          protocols: ['v3'],
+          deadline: layerDeadline,
+        },
+      });
+
+      const merged = mergeRequests(base, layer);
+      expect(merged).toMatchObject(base);
+      expect((merged.config as ClassicConfig).deadline).toEqual(baseDeadline);
+      expect(merged.key()).toEqual(QUOTE_REQUEST_CLASSIC.key());
+    });
+
+    it('keeps recipient if defined in base', () => {
+      const baseRecipient = '0x1111111111111111111111111111111111111111';
+      const layerRecipient = '0x2222222222222222222222222222222222222222';
+      const base = Object.assign({}, QUOTE_REQUEST_CLASSIC, {
+        config: {
+          routingType: RoutingType.CLASSIC,
+          protocols: ['v3'],
+          recipient: baseRecipient,
+        },
+      });
+
+      const layer = Object.assign({}, QUOTE_REQUEST_CLASSIC, {
+        config: {
+          routingType: RoutingType.CLASSIC,
+          protocols: ['v3'],
+          recipient: layerRecipient,
+        },
+      });
+
+      const merged = mergeRequests(base, layer);
+      expect(merged).toMatchObject(base);
+      expect((merged.config as ClassicConfig).recipient).toEqual(baseRecipient);
+      expect(merged.key()).toEqual(QUOTE_REQUEST_CLASSIC.key());
+    });
+
     it('sets simulateFromAddress if defined in layer', () => {
       const layerSimulateAddress = '0x2222222222222222222222222222222222222222';
       const layer = Object.assign({}, QUOTE_REQUEST_CLASSIC, {
@@ -320,6 +370,38 @@ describe('QuoteContextManager', () => {
       const merged = mergeRequests(QUOTE_REQUEST_CLASSIC, layer);
       expect(merged).toMatchObject(QUOTE_REQUEST_CLASSIC);
       expect((merged.config as ClassicConfig).simulateFromAddress).toEqual(layerSimulateAddress);
+      expect(merged.key()).toEqual(QUOTE_REQUEST_CLASSIC.key());
+    });
+
+    it('sets deadline if defined in layer', () => {
+      const layerDeadline = 10000;
+      const layer = Object.assign({}, QUOTE_REQUEST_CLASSIC, {
+        config: {
+          routingType: RoutingType.CLASSIC,
+          protocols: ['v3'],
+          deadline: layerDeadline,
+        },
+      });
+
+      const merged = mergeRequests(QUOTE_REQUEST_CLASSIC, layer);
+      expect(merged).toMatchObject(QUOTE_REQUEST_CLASSIC);
+      expect((merged.config as ClassicConfig).deadline).toEqual(layerDeadline);
+      expect(merged.key()).toEqual(QUOTE_REQUEST_CLASSIC.key());
+    });
+
+    it('sets recipient if defined in layer', () => {
+      const layerRecipient = '0x2222222222222222222222222222222222222222';
+      const layer = Object.assign({}, QUOTE_REQUEST_CLASSIC, {
+        config: {
+          routingType: RoutingType.CLASSIC,
+          protocols: ['v3'],
+          recipient: layerRecipient,
+        },
+      });
+
+      const merged = mergeRequests(QUOTE_REQUEST_CLASSIC, layer);
+      expect(merged).toMatchObject(QUOTE_REQUEST_CLASSIC);
+      expect((merged.config as ClassicConfig).recipient).toEqual(layerRecipient);
       expect(merged.key()).toEqual(QUOTE_REQUEST_CLASSIC.key());
     });
   });

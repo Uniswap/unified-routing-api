@@ -107,8 +107,10 @@ export function mergeRequests(base: QuoteRequest, layer: QuoteRequest): QuoteReq
     const layerConfig: ClassicConfig = layer.config as ClassicConfig;
     const baseConfig: ClassicConfig = base.config as ClassicConfig;
     const config = Object.assign({}, baseConfig, {
-      // if base does not specify simulation address but layer does, then we add it
+      // if base does not specify simulation params but layer does, then we add them
       simulateFromAddress: baseConfig.simulateFromAddress ?? layerConfig.simulateFromAddress,
+      deadline: baseConfig.deadline ?? layerConfig.deadline,
+      recipient: baseConfig.recipient ?? layerConfig.recipient,
       // otherwise defer to base
     });
     return ClassicRequest.fromRequest(base.info, config);
