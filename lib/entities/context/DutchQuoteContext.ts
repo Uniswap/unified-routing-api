@@ -13,7 +13,7 @@ import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
 import NodeCache from 'node-cache';
 import { QuoteByKey, QuoteContext } from '.';
-import { NATIVE_ADDRESS, RoutingType } from '../../constants';
+import { DEFAULT_ROUTING_API_DEADLINE, NATIVE_ADDRESS, RoutingType } from '../../constants';
 import {
   ClassicQuote,
   ClassicQuoteDataJSON,
@@ -65,6 +65,8 @@ export class DutchQuoteContext implements QuoteContext {
     const classicRequest = new ClassicRequest(this.request.info, {
       protocols: [Protocol.MIXED, Protocol.V2, Protocol.V3],
       simulateFromAddress: this.request.config.swapper,
+      deadline: DEFAULT_ROUTING_API_DEADLINE,
+      recipient: this.request.config.swapper,
     });
     this.classicKey = classicRequest.key();
     this.log.info({ classicRequest: classicRequest.info }, 'Adding synthetic classic request');
