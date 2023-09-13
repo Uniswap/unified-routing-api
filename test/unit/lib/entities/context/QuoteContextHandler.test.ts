@@ -124,7 +124,7 @@ describe('QuoteContextManager', () => {
       expect(requests[2]).toMatchObject(QUOTE_REQUEST_DL_EXACT_OUT);
     });
 
-    it.only('merges simulateFromAddress on classic requests', () => {
+    it('merges simulateFromAddress on classic requests', () => {
       const context1 = new MockQuoteContext(QUOTE_REQUEST_DL);
       context1.setDependencies([QUOTE_REQUEST_DL_EXACT_OUT, QUOTE_REQUEST_CLASSIC]);
       const context2 = new MockQuoteContext(QUOTE_REQUEST_CLASSIC);
