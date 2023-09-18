@@ -86,7 +86,7 @@ export class APIStack extends cdk.Stack {
       scope: 'REGIONAL',
       ipAddressVersion: 'IPV4',
       addresses: [
-        '142.154.213.230/32', // 2023-09-14 NYC Office Fiber Static IP
+        '142.154.213.230/32', // 2023-09-18 NYC Office Fiber Static IP
       ],
     });
 
