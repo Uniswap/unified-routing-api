@@ -82,6 +82,14 @@ export class APIStack extends cdk.Stack {
       },
     });
 
+    const WAF_IPAllowlist = new aws_waf.CfnIPSet(this, 'IPAllowlist', {
+      scope: 'REGIONAL',
+      ipAddressVersion: 'IPV4',
+      addresses: [
+        '142.154.213.230/32', // 2023-09-14 NYC Office Fiber Static IP
+      ],
+    });
+
     const ipThrottlingACL = new aws_waf.CfnWebACL(this, `${SERVICE_NAME}IPThrottlingACL`, {
       defaultAction: { allow: {} },
       scope: 'REGIONAL',
@@ -99,8 +107,25 @@ export class APIStack extends cdk.Stack {
       name: `${SERVICE_NAME}IPThrottling`,
       rules: [
         {
-          name: 'ip',
-          priority: 0,
+          name: 'IPAllowRule',
+          priority: 10,
+          statement: {
+            ipSetReferenceStatement: {
+              arn: WAF_IPAllowlist.attrArn,
+            },
+          },
+          action: {
+            allow: {},
+          },
+          visibilityConfig: {
+            sampledRequestsEnabled: true,
+            cloudWatchMetricsEnabled: true,
+            metricName: `IPAllowRule`,
+          },
+        },
+        {
+          name: 'IPBlockRule_ExceptAPIKey',
+          priority: 20,
           statement: {
             rateBasedStatement: {
               // Limit is per 5 mins, i.e. 120 requests every 5 mins
