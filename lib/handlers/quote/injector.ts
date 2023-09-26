@@ -7,6 +7,7 @@ import { SUPPORTED_CHAINS } from '../../config/chains';
 import { RoutingType } from '../../constants';
 import { QuoteRequestBodyJSON } from '../../entities';
 import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
+import { PortionFetcher } from '../../fetchers/PortionFetcher';
 import { TokenFetcher } from '../../fetchers/TokenFetcher';
 import {
   Quoter,
@@ -47,6 +48,7 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
     const paramApiKey = checkDefined(process.env.PARAMETERIZATION_API_KEY, 'PARAMETERIZATION_API_KEY is not defined');
     const synthSwitchApiKey = checkDefined(process.env.SYNTH_SWITCH_API_KEY, 'SYNTH_SWITCH_API_KEY is not defined');
     const serviceUrl = checkDefined(process.env.SERVICE_URL, 'SERVICE_URL is not defined');
+    const portionApiUrl = checkDefined(process.env.PORTION_API_URL, 'PORTION_API_URL is not defined');
 
     const rpcUrlMap = new Map<ChainId, string>();
     SUPPORTED_CHAINS[RoutingType.CLASSIC].forEach((chainId) => {
@@ -57,7 +59,7 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
     return {
       quoters: {
         [RoutingType.DUTCH_LIMIT]: new RfqQuoter(paramApiUrl, serviceUrl, paramApiKey),
-        [RoutingType.CLASSIC]: new RoutingApiQuoter(routingApiUrl, routingApiKey),
+        [RoutingType.CLASSIC]: new RoutingApiQuoter(routingApiUrl, routingApiKey, new PortionFetcher(portionApiUrl)),
       },
       rpcUrlMap,
       tokenFetcher: new TokenFetcher(),
