@@ -25,7 +25,7 @@ import { ErrorCode, NoQuotesAvailable, QuoteFetchError, ValidationError } from '
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import { emitUniswapXPairMetricIfTracking, QuoteType } from '../../util/metrics-pair';
-import { currentTimestampInSeconds } from '../../util/time';
+import { timestampInMstoSeconds } from '../../util/time';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
 import { ContainerInjected, QuoterByRoutingType } from './injector';
@@ -123,7 +123,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     );
     log.info({ resolvedQuotes }, 'resolvedQuotes');
 
-    await this.emitQuoteRequestedMetrics(tokenFetcher, quoteInfo, quoteRequests);
+    await this.emitQuoteRequestedMetrics(tokenFetcher, quoteInfo, quoteRequests, startTime);
 
     const uniswapXRequested = requests.filter((request) => request.routingType === RoutingType.DUTCH_LIMIT).length > 0;
     const resolvedValidQuotes = resolvedQuotes.filter((q) => q !== null) as Quote[];
@@ -158,7 +158,8 @@ export class QuoteHandler extends APIGLambdaHandler<
   private async emitQuoteRequestedMetrics(
     tokenFetcher: TokenFetcher,
     info: QuoteRequestInfo,
-    requests: QuoteRequest[]
+    requests: QuoteRequest[],
+    startTime: number
   ): Promise<void> {
     const { tokenInChainId: chainId, tokenIn, tokenOut } = info;
     const tokenInAbbr = await this.getTokenSymbolOrAbbr(tokenFetcher, chainId, tokenIn);
@@ -181,7 +182,7 @@ export class QuoteHandler extends APIGLambdaHandler<
         amount: info.amount.toString(),
         type: TradeType[info.type],
         configs: requests.map((r) => r.routingType).join(','),
-        createdAt: currentTimestampInSeconds(),
+        createdAt: timestampInMstoSeconds(startTime),
         // only log swapper if it's a dutch limit request
         ...(info.swapper && { swapper: info.swapper }),
       },
