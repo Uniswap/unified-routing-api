@@ -3,6 +3,7 @@ import { default as bunyan, default as Logger } from 'bunyan';
 
 import { ChainId } from '@uniswap/sdk-core';
 import { MetricsLogger } from 'aws-embedded-metrics';
+import NodeCache from 'node-cache';
 import { SUPPORTED_CHAINS } from '../../config/chains';
 import { RoutingType } from '../../constants';
 import { QuoteRequestBodyJSON } from '../../entities';
@@ -10,6 +11,7 @@ import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
 import { PortionFetcher } from '../../fetchers/PortionFetcher';
 import { TokenFetcher } from '../../fetchers/TokenFetcher';
 import {
+  DefaultPortionProvider,
   Quoter,
   RfqQuoter,
   RoutingApiQuoter,
@@ -56,13 +58,20 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
       rpcUrlMap.set(chainId, rpcUrl);
     });
 
+    // single cache acting as both positive cache and negative cache,
+    // for load reduction against portion service
+    const portionCache = new NodeCache({ stdTTL: 600 });
+    const tokenFetcher = new TokenFetcher();
+    const portionFetcher = new PortionFetcher(portionApiUrl, portionCache);
+    const portionProvider = new DefaultPortionProvider(portionFetcher, tokenFetcher);
+
     return {
       quoters: {
         [RoutingType.DUTCH_LIMIT]: new RfqQuoter(paramApiUrl, serviceUrl, paramApiKey),
-        [RoutingType.CLASSIC]: new RoutingApiQuoter(routingApiUrl, routingApiKey, new PortionFetcher(portionApiUrl)),
+        [RoutingType.CLASSIC]: new RoutingApiQuoter(routingApiUrl, routingApiKey, portionProvider),
       },
       rpcUrlMap,
-      tokenFetcher: new TokenFetcher(),
+      tokenFetcher: tokenFetcher,
       permit2Fetcher: new Permit2Fetcher(rpcUrlMap),
       syntheticStatusProvider: new UPASyntheticStatusProvider(paramApiUrl, synthSwitchApiKey),
     };

@@ -1,4 +1,6 @@
 import { Unit } from 'aws-embedded-metrics';
+import * as http from 'http';
+import * as https from 'https';
 import NodeCache from 'node-cache';
 import axios from '../providers/quoters/helpers';
 import { log } from '../util/log';
@@ -16,45 +18,45 @@ export interface Portion {
 }
 
 export interface GetPortionResponse {
-  readonly hasPortion: true;
-  readonly portion: Portion;
+  readonly hasPortion: boolean;
+  readonly portion?: Portion;
 }
 
-export interface GetNoPortionResponse {
-  readonly hasPortion: false;
-}
-
-export type AllPortionResponse = GetPortionResponse | GetNoPortionResponse
-
-export const GET_NO_PORTION_RESPONSE: GetNoPortionResponse = { hasPortion: false }
+export const GET_NO_PORTION_RESPONSE: GetPortionResponse = { hasPortion: false };
+export const DEFAULT_POSITIVE_CACHE_ENTRY_TTL = 600; // 10 minutes
+export const DEFAULT_NEGATIVE_CACHE_ENTRY_TTL = 600; // 10 minute
 
 export class PortionFetcher {
   private PORTION_CACHE_KEY = (
     tokenInChainId: number,
-    tokenOutChainId: number,
     tokenInAddress: string,
+    tokenOutChainId: number,
     tokenOutAddress: string
-  ) => `PortionFetcher-${tokenInChainId}-${tokenOutChainId}-${tokenInAddress}-${tokenOutAddress}`;
-  // single cache acting as both positive cache and negative cache,
-  // for load reduction against portion service
-  private portionCache = new NodeCache({ stdTTL: 600 });
+  ) =>
+    `PortionFetcher-${tokenInChainId}-${tokenInAddress.toLowerCase()}-${tokenOutChainId}-${tokenOutAddress.toLowerCase()}`;
 
   private getPortionFullPath = `${this.portionApiUrl}/portion`;
   private portionServiceInstance = axios.create({
-    baseURL: this.getPortionFullPath,
-    // TODO: use short timeouts
-    // timeout: 100, // short response timeout
-    // signal: AbortSignal.timeout(100), // short connection timeout
+    baseURL: this.portionApiUrl,
+    // keep connections alive,
+    // maxSockets default is Infinity, so Infinity is read as 50 sockets
+    httpAgent: new http.Agent({ keepAlive: true }),
+    httpsAgent: new https.Agent({ keepAlive: true }),
   });
 
-  constructor(private portionApiUrl: string) {}
+  constructor(
+    private portionApiUrl: string,
+    private portionCache: NodeCache,
+    private positiveCacheEntryTtl = DEFAULT_POSITIVE_CACHE_ENTRY_TTL,
+    private negativeCacheEntryTtl = DEFAULT_NEGATIVE_CACHE_ENTRY_TTL
+  ) {}
 
   async getPortion(
     tokenInChainId: number,
-    tokenOutChainId: number,
     tokenInAddress: string,
+    tokenOutChainId: number,
     tokenOutAddress: string
-  ): Promise<AllPortionResponse> {
+  ): Promise<GetPortionResponse> {
     metrics.putMetric(`PortionFetcherRequest`, 1);
 
     // we check PORTION_FLAG for every request, so that the update to the lambda env var gets reflected
@@ -64,8 +66,8 @@ export class PortionFetcher {
       return GET_NO_PORTION_RESPONSE;
     }
 
-    const portionFromCache = this.portionCache.get<AllPortionResponse>(
-      this.PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
+    const portionFromCache = this.portionCache.get<GetPortionResponse>(
+      this.PORTION_CACHE_KEY(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress)
     );
 
     if (portionFromCache) {
@@ -75,11 +77,11 @@ export class PortionFetcher {
 
     try {
       const beforeGetPortion = Date.now();
-      const portionResponse = await this.portionServiceInstance.get<AllPortionResponse>(this.getPortionFullPath, {
+      const portionResponse = await this.portionServiceInstance.get<GetPortionResponse>(this.getPortionFullPath, {
         params: {
           tokenInChainId: tokenInChainId,
-          tokenOutChainId: tokenOutChainId,
           tokenInAddress: tokenInAddress,
+          tokenOutChainId: tokenOutChainId,
           tokenOutAddress: tokenOutAddress,
         },
       });
@@ -88,9 +90,10 @@ export class PortionFetcher {
       metrics.putMetric(`PortionFetcherSuccess`, 1);
       metrics.putMetric(`PortionFetcherCacheMiss`, 1);
 
-      this.portionCache.set<AllPortionResponse>(
-        this.PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress),
-        portionResponse.data
+      this.portionCache.set<GetPortionResponse>(
+        this.PORTION_CACHE_KEY(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress),
+        portionResponse.data,
+        portionResponse.data.hasPortion ? this.positiveCacheEntryTtl : this.negativeCacheEntryTtl
       );
 
       return portionResponse.data;
@@ -98,6 +101,12 @@ export class PortionFetcher {
       log.error({ e }, 'PortionFetcherErr');
       metrics.putMetric(`PortionFetcherErr`, 1);
       metrics.putMetric(`PortionFetcherCacheMiss`, 1);
+
+      this.portionCache.set<GetPortionResponse>(
+        this.PORTION_CACHE_KEY(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress),
+        GET_NO_PORTION_RESPONSE,
+        this.negativeCacheEntryTtl
+      );
 
       return GET_NO_PORTION_RESPONSE;
     }

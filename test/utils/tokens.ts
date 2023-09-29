@@ -71,6 +71,54 @@ export const UNI_GORLI = new Token(
   'Uni token'
 );
 
+export const BUSD_MAINNET = new Token(
+  ChainId.MAINNET,
+  '0x4fabb145d64652a948d72533023f6e7a623c7c53',
+  18,
+  'BUSD',
+  'BUSD Token'
+);
+
+export const agEUR_MAINNET = new Token(
+  ChainId.MAINNET,
+  '0x1a7e4e63778B4f12a199C062f3eFdD288afCBce8',
+  18,
+  'agEUR',
+  'agEUR'
+);
+
+export const GUSD_MAINNET = new Token(
+  ChainId.MAINNET,
+  '0x056Fd409E1d7A124BD7017459dFEa2F387b6d5Cd',
+  2,
+  'GUSD',
+  'Gemini dollar'
+);
+
+export const LUSD_MAINNET = new Token(
+  ChainId.MAINNET,
+  '0x5f98805A4E8be255a32880FDeC7F6728C6568bA0',
+  18,
+  'LUSD',
+  'LUSD Stablecoin'
+);
+
+export const EUROC_MAINNET = new Token(
+  ChainId.MAINNET,
+  '0x1aBaEA1f7C830bD89Acc67eC4af516284b1bC33c',
+  6,
+  'EUROC',
+  'EUROC',
+);
+
+export const XSGD_MAINNET = new Token(
+  ChainId.MAINNET,
+  '0x70e8dE73cE538DA2bEEd35d14187F6959a8ecA96',
+  6,
+  'XSGD',
+  'XSGD',
+);
+
 export const DAI_ON = (chainId: ChainId): Token => {
   switch (chainId) {
     case ChainId.MAINNET:

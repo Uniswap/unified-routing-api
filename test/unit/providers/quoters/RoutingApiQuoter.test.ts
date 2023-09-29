@@ -1,12 +1,18 @@
 import { AxiosError } from 'axios';
 import { PortionFetcher } from '../../../../lib/fetchers/PortionFetcher';
 import { RoutingApiQuoter } from '../../../../lib/providers/quoters';
+import { DefaultPortionProvider } from '../../../../lib/providers';
 import axios from '../../../../lib/providers/quoters/helpers';
 import { QUOTE_REQUEST_CLASSIC } from '../../../utils/fixtures';
+import { TokenFetcher } from '../../../../lib/fetchers/TokenFetcher';
+import NodeCache from 'node-cache';
 
 describe('RoutingApiQuoter', () => {
-  const portionFetcher = new PortionFetcher('https://portion.uniswap.org/');
-  const routingApiQuoter = new RoutingApiQuoter('https://api.uniswap.org/', 'test-key', portionFetcher);
+  const portionCache = new NodeCache({ stdTTL: 600 });
+  const portionFetcher = new PortionFetcher('https://portion.uniswap.org/', portionCache);
+  const tokenFetcher = new TokenFetcher();
+  const portionProvider = new DefaultPortionProvider(portionFetcher, tokenFetcher);
+  const routingApiQuoter = new RoutingApiQuoter('https://api.uniswap.org/', 'test-key', portionProvider);
   const axiosMock = jest.spyOn(axios, 'get');
 
   describe('quote', () => {

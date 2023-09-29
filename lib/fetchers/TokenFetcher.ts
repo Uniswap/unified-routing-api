@@ -70,4 +70,10 @@ export class TokenFetcher {
     }
     return token;
   };
+
+  public resolveTokenBySymbolOrAddress = async (chainId: ChainId, symbolOrAddress: string): Promise<Currency> => {
+    // both calls are in-memory, no perf hit
+    const resolvedAddress = await this.resolveTokenAddress(chainId, symbolOrAddress);
+    return await this.resolveToken(chainId, resolvedAddress);
+  };
 }

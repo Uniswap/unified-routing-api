@@ -69,6 +69,12 @@ export type ClassicQuoteDataJSON = {
   permitData?: PermitSingleData | PermitTransferFromData;
   tradeType: string;
   slippage: number;
+  portionBips?: number;
+  portionRecipient?: string;
+  portionAmount?: string;
+  portionAmountDecimals?: string;
+  quoteGasAndPortionAdjusted?: string;
+  quoteGasAndPortionAdjustedDecimals?: string;
 };
 
 export class ClassicQuote implements IQuote {
