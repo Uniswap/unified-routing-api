@@ -1,6 +1,4 @@
 import {
-  DEFAULT_NEGATIVE_CACHE_ENTRY_TTL,
-  DEFAULT_POSITIVE_CACHE_ENTRY_TTL,
   GET_NO_PORTION_RESPONSE,
   GetPortionResponse,
   PortionFetcher
@@ -8,12 +6,13 @@ import {
 import axios from '../../../../lib/providers/quoters/helpers';
 import { AxiosInstance } from 'axios';
 import NodeCache from 'node-cache';
+import { DEFAULT_NEGATIVE_CACHE_ENTRY_TTL, DEFAULT_POSITIVE_CACHE_ENTRY_TTL } from '../../../../lib/constants';
 
 describe('PortionFetcher Unit Tests', () => {
-  process.env.PORTION_FLAG = 'true';
+  process.env.ENABLE_PORTION = 'true';
   const tokenInChainId = 1;
-  const tokenOutChainId = 1;
   const tokenInAddress = '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984';
+  const tokenOutChainId = 1;
   const tokenOutAddress = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
   const PORTION_CACHE_KEY = (
     tokenInChainId: number,

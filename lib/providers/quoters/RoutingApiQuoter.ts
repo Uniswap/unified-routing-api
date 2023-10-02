@@ -1,10 +1,13 @@
-import { TradeType } from '@uniswap/sdk-core';
+import { Currency, TradeType } from '@uniswap/sdk-core';
 import { NATIVE_NAMES_BY_ID } from '@uniswap/smart-order-router';
 import { AxiosError, AxiosResponse } from 'axios';
 import querystring from 'querystring';
 
-import { NATIVE_ADDRESS, RoutingType } from '../../constants';
+import { ENABLE_PORTION, NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { ClassicQuote, ClassicQuoteDataJSON, ClassicRequest, Quote } from '../../entities';
+import { Portion } from '../../fetchers/PortionFetcher';
+import { TokenFetcher } from '../../fetchers/TokenFetcher';
+import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import { PortionProvider } from '../portion/PortionProvider';
 import axios from './helpers';
@@ -13,7 +16,12 @@ import { Quoter, QuoterType } from './index';
 export class RoutingApiQuoter implements Quoter {
   static readonly type: QuoterType.ROUTING_API;
 
-  constructor(private routingApiUrl: string, private routingApiKey: string, private portionProvider: PortionProvider) {}
+  constructor(
+    private routingApiUrl: string,
+    private routingApiKey: string,
+    private portionProvider: PortionProvider,
+    private tokenFetcher: TokenFetcher
+  ) {}
 
   async quote(request: ClassicRequest): Promise<Quote | null> {
     if (request.routingType !== RoutingType.CLASSIC) {
@@ -22,7 +30,26 @@ export class RoutingApiQuoter implements Quoter {
 
     metrics.putMetric(`RoutingApiQuoterRequest`, 1);
     try {
-      const req = await this.buildRequest(request);
+      let [resolvedTokenIn, resolveTokenOut]: [Currency | undefined, Currency | undefined] = [undefined, undefined];
+
+      try {
+        // we will need to call token fetcher to resolve the tokenIn and tokenOut
+        // there's no guarantee that the tokenIn and tokenOut are in the token address
+        // also the tokenIn and tokenOut can be native token
+        // portion service only accepts wrapped token address
+        [resolvedTokenIn, resolveTokenOut] = await Promise.all([
+          this.tokenFetcher.resolveTokenBySymbolOrAddress(request.info.tokenInChainId, request.info.tokenIn),
+          this.tokenFetcher.resolveTokenBySymbolOrAddress(request.info.tokenOutChainId, request.info.tokenOut),
+        ]);
+      } catch (e) {
+        // possible to throw validation error, we have to catch here because we have to proceed
+        log.error({ e }, 'Failed to resolve tokenIn & tokenOut');
+        metrics.putMetric(`PortionProvider.resolveTokenErr`, 1);
+      }
+
+      const portion = (await this.portionProvider.getPortion(request.info, resolvedTokenIn, resolveTokenOut)).portion;
+
+      const req = this.buildRequest(request, portion, resolveTokenOut);
       const now = Date.now();
       const response = await axios.get<ClassicQuoteDataJSON>(req, { headers: { 'x-api-key': this.routingApiKey } });
 
@@ -32,28 +59,32 @@ export class RoutingApiQuoter implements Quoter {
       // tokenOutAmount only important for exact out, which is requested amount
       const tokenOutAmount =
         request.info.type === TradeType.EXACT_OUTPUT ? request.info.amount.toString() : response.data.quote;
-      const portionAdjustedQuote = await this.portionProvider.getPortionAdjustedQuote(
+      const portionAmount = this.portionProvider.getPortionAmount(tokenOutAmount, portion, resolveTokenOut);
+      const portionAdjustedQuote = this.portionProvider.getPortionAdjustedQuote(
         request.info,
         response.data.quote,
         response.data.quoteGasAdjusted,
-        tokenOutAmount
+        portionAmount,
+        resolvedTokenIn,
+        resolveTokenOut
       );
-      const quoteGasAndPortionAdjusted =
-        portionAdjustedQuote.quoteGasAndPortionAdjusted?.quotient.toString() ?? response.data.quoteGasAdjusted;
+      const quoteGasAndPortionAdjusted = portionAdjustedQuote?.quotient.toString() ?? response.data.quoteGasAdjusted;
       const quoteGasAndPortionAdjustedDecimals =
-        portionAdjustedQuote.quoteGasAndPortionAdjusted?.toExact() ?? response.data.quoteGasAdjustedDecimals;
+        portionAdjustedQuote?.toExact() ?? response.data.quoteGasAdjustedDecimals;
 
       const portionAdjustedResponse: AxiosResponse<ClassicQuoteDataJSON> = {
         ...response,
-        data: {
-          ...response.data,
-          portionBips: portionAdjustedQuote.portionResponse?.portion?.bips, // important for exact in, clients are expected to use this for exact in swaps
-          portionRecipient: portionAdjustedQuote.portionResponse?.portion?.receiver, // important, clients are expected to use this for exact in and exact out swaps
-          portionAmount: portionAdjustedQuote.portionAmount?.quotient.toString(), // important for exact out, clients are expected to use this for exact out swaps
-          portionAmountDecimals: portionAdjustedQuote.portionAmount?.toExact(), // important for exact out, clients are expected to use this for exact out swaps
-          quoteGasAndPortionAdjusted: quoteGasAndPortionAdjusted, // not important, clients disregard this
-          quoteGasAndPortionAdjustedDecimals: quoteGasAndPortionAdjustedDecimals, // not important, clients disregard this
-        },
+        data: ENABLE_PORTION
+          ? {
+              ...response.data,
+              portionBips: portion?.bips, // important for exact in, clients are expected to use this for exact in swaps
+              portionRecipient: portion?.receiver, // important, clients are expected to use this for exact in and exact out swaps
+              portionAmount: portionAmount?.quotient.toString(), // important for exact out, clients are expected to use this for exact out swaps
+              portionAmountDecimals: portionAmount?.toExact(), // important for exact out, clients are expected to use this for exact out swaps
+              quoteGasAndPortionAdjusted: quoteGasAndPortionAdjusted, // not important, clients disregard this
+              quoteGasAndPortionAdjustedDecimals: quoteGasAndPortionAdjustedDecimals, // not important, clients disregard this
+            }
+          : response.data,
       };
 
       metrics.putMetric(`RoutingApiQuoterSuccess`, 1);
@@ -92,25 +123,10 @@ export class RoutingApiQuoter implements Quoter {
     }
   }
 
-  async buildRequest(request: ClassicRequest): Promise<string> {
-    const amount = request.info.amount.toString();
+  buildRequest(request: ClassicRequest, portion?: Portion, resolvedTokenOut?: Currency): string {
     const tradeType = request.info.type === TradeType.EXACT_INPUT ? 'exactIn' : 'exactOut';
-
-    // exact out needs to calculate the portion amount at this point,
-    // hence more complicated logic
-    const fullPortionPayloadForExactOut =
-      request.info.type === TradeType.EXACT_OUTPUT
-        ? await this.portionProvider.getPortionForTokenOut(request.info, amount)
-        : undefined;
-    const portionAdjustedRequestAmount =
-      fullPortionPayloadForExactOut?.portionAdjustedTokenOutAmount?.quotient.toString() ?? amount;
-
-    // exact in only needs to fetch the portionBips from portion service,
-    // exact in does not need to compute portion amount at any lifecycle of this request
-    const getPortionForExactIn = request.info.type === TradeType.EXACT_INPUT ?
-      await this.portionProvider.getPortion(request.info) : undefined;
-
     const config = request.config;
+    const amount = request.info.amount.toString();
 
     return (
       this.routingApiUrl +
@@ -120,7 +136,7 @@ export class RoutingApiQuoter implements Quoter {
         tokenInChainId: request.info.tokenInChainId,
         tokenOutAddress: mapNative(request.info.tokenOut, request.info.tokenInChainId),
         tokenOutChainId: request.info.tokenOutChainId,
-        amount: portionAdjustedRequestAmount,
+        amount: amount,
         type: tradeType,
         ...(config.protocols &&
           config.protocols.length && { protocols: config.protocols.map((p) => p.toLowerCase()).join(',') }),
@@ -156,14 +172,20 @@ export class RoutingApiQuoter implements Quoter {
         ...(config.enableFeeOnTransferFeeFetching !== undefined && {
           enableFeeOnTransferFeeFetching: config.enableFeeOnTransferFeeFetching,
         }),
-        ...(request.info.type === TradeType.EXACT_OUTPUT && fullPortionPayloadForExactOut?.portionResponse?.hasPortion && {
-          portionAmount: fullPortionPayloadForExactOut.portionAmount?.quotient.toString() ?? undefined,
-          portionRecipient: fullPortionPayloadForExactOut.portionResponse.portion?.receiver,
-        }),
-        ...(request.info.type === TradeType.EXACT_INPUT && getPortionForExactIn?.hasPortion && {
-          portionBips: getPortionForExactIn.portion?.bips,
-          portionRecipient: getPortionForExactIn.portion?.receiver,
-        }),
+        ...(request.info.type === TradeType.EXACT_OUTPUT &&
+          portion &&
+          ENABLE_PORTION && {
+            portionAmount: this.portionProvider
+              .getPortionAmount(amount, portion, resolvedTokenOut)
+              ?.quotient.toString(),
+            portionRecipient: portion.receiver,
+          }),
+        ...(request.info.type === TradeType.EXACT_INPUT &&
+          portion &&
+          ENABLE_PORTION && {
+            portionBips: portion.bips,
+            portionRecipient: portion.receiver,
+          }),
       })
     );
   }

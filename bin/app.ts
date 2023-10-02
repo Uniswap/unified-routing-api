@@ -134,7 +134,7 @@ export class APIPipeline extends Stack {
     });
 
     const portionFlagSecret = sm.Secret.fromSecretAttributes(this, 'portion-flag', {
-      secretCompleteArn: 'arn:aws:secretsmanager:us-east-2:644039819003:secret:portion-flag-hYyUt1',
+      secretCompleteArn: 'arn:aws:secretsmanager:us-east-2:644039819003:secret:portion-flag-yR0VGr',
     });
 
     // Beta us-east-2
@@ -154,7 +154,7 @@ export class APIPipeline extends Stack {
         ROUTING_API_URL: urlSecrets.secretValueFromJson('ROUTING_API_BETA').toString(),
         SERVICE_URL: urlSecrets.secretValueFromJson('GOUDA_SERVICE_BETA').toString(),
         PORTION_API_URL: urlSecrets.secretValueFromJson('PORTION_API_BETA').toString(),
-        PORTION_FLAG: portionFlagSecret.secretValueFromJson('PORTION_FLAG').toString(),
+        ENABLE_PORTION: portionFlagSecret.secretValueFromJson('ENABLE_PORTION').toString(),
         REQUEST_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_REQUEST_DESTINATION_BETA').toString(),
         RESPONSE_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_RESPONSE_DESTINATION_BETA').toString(),
       },
@@ -277,7 +277,7 @@ envVars['SYNTH_SWITCH_API_KEY'] = process.env['SYNTH_SWITCH_API_KEY'] || '';
 envVars['ROUTING_API_URL'] = process.env['ROUTING_API_URL'] || '';
 envVars['SERVICE_URL'] = process.env['SERVICE_URL'] || '';
 envVars['PORTION_API_URL'] = process.env['PORTION_API_URL'] || '';
-envVars['PORTION_FLAG'] = process.env['PORTION_FLAG'] || '';
+envVars['ENABLE_PORTION'] = process.env['ENABLE_PORTION'] || '';
 envVars['REQUEST_DESTINATION_ARN'] = process.env['REQUEST_DESTINATION_ARN'] || '';
 envVars['RESPONSE_DESTINATION_ARN'] = process.env['RESPONSE_DESTINATION_ARN'] || '';
 envVars['ROUTING_API_KEY'] = process.env['ROUTING_API_KEY'] || 'test-api-key';

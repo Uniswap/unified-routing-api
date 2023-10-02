@@ -2,6 +2,7 @@ import { Unit } from 'aws-embedded-metrics';
 import * as http from 'http';
 import * as https from 'https';
 import NodeCache from 'node-cache';
+import { DEFAULT_NEGATIVE_CACHE_ENTRY_TTL, DEFAULT_POSITIVE_CACHE_ENTRY_TTL, ENABLE_PORTION } from '../constants';
 import axios from '../providers/quoters/helpers';
 import { log } from '../util/log';
 import { metrics } from '../util/metrics';
@@ -22,9 +23,7 @@ export interface GetPortionResponse {
   readonly portion?: Portion;
 }
 
-export const GET_NO_PORTION_RESPONSE: GetPortionResponse = { hasPortion: false };
-export const DEFAULT_POSITIVE_CACHE_ENTRY_TTL = 600; // 10 minutes
-export const DEFAULT_NEGATIVE_CACHE_ENTRY_TTL = 600; // 10 minute
+export const GET_NO_PORTION_RESPONSE: GetPortionResponse = { hasPortion: false, portion: undefined };
 
 export class PortionFetcher {
   private PORTION_CACHE_KEY = (
@@ -59,9 +58,9 @@ export class PortionFetcher {
   ): Promise<GetPortionResponse> {
     metrics.putMetric(`PortionFetcherRequest`, 1);
 
-    // we check PORTION_FLAG for every request, so that the update to the lambda env var gets reflected
+    // we check ENABLE_PORTION for every request, so that the update to the lambda env var gets reflected
     // in real time
-    if (process.env.PORTION_FLAG !== 'true') {
+    if (!ENABLE_PORTION) {
       metrics.putMetric(`PortionFetcherFlagDisabled`, 1);
       return GET_NO_PORTION_RESPONSE;
     }
@@ -93,7 +92,7 @@ export class PortionFetcher {
       this.portionCache.set<GetPortionResponse>(
         this.PORTION_CACHE_KEY(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress),
         portionResponse.data,
-        portionResponse.data.hasPortion ? this.positiveCacheEntryTtl : this.negativeCacheEntryTtl
+        portionResponse.data.portion ? this.positiveCacheEntryTtl : this.negativeCacheEntryTtl
       );
 
       return portionResponse.data;

@@ -11,8 +11,8 @@ describe('RoutingApiQuoter', () => {
   const portionCache = new NodeCache({ stdTTL: 600 });
   const portionFetcher = new PortionFetcher('https://portion.uniswap.org/', portionCache);
   const tokenFetcher = new TokenFetcher();
-  const portionProvider = new DefaultPortionProvider(portionFetcher, tokenFetcher);
-  const routingApiQuoter = new RoutingApiQuoter('https://api.uniswap.org/', 'test-key', portionProvider);
+  const portionProvider = new DefaultPortionProvider(portionFetcher);
+  const routingApiQuoter = new RoutingApiQuoter('https://api.uniswap.org/', 'test-key', portionProvider, tokenFetcher);
   const axiosMock = jest.spyOn(axios, 'get');
 
   describe('quote', () => {

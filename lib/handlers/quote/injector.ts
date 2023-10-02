@@ -63,12 +63,12 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
     const portionCache = new NodeCache({ stdTTL: 600 });
     const tokenFetcher = new TokenFetcher();
     const portionFetcher = new PortionFetcher(portionApiUrl, portionCache);
-    const portionProvider = new DefaultPortionProvider(portionFetcher, tokenFetcher);
+    const portionProvider = new DefaultPortionProvider(portionFetcher);
 
     return {
       quoters: {
         [RoutingType.DUTCH_LIMIT]: new RfqQuoter(paramApiUrl, serviceUrl, paramApiKey),
-        [RoutingType.CLASSIC]: new RoutingApiQuoter(routingApiUrl, routingApiKey, portionProvider),
+        [RoutingType.CLASSIC]: new RoutingApiQuoter(routingApiUrl, routingApiKey, portionProvider, tokenFetcher),
       },
       rpcUrlMap,
       tokenFetcher: tokenFetcher,

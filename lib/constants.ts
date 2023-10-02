@@ -22,3 +22,8 @@ export enum RoutingType {
   CLASSIC = 'CLASSIC',
   DUTCH_LIMIT = 'DUTCH_LIMIT',
 }
+
+export const DEFAULT_POSITIVE_CACHE_ENTRY_TTL = 600; // 10 minutes
+export const DEFAULT_NEGATIVE_CACHE_ENTRY_TTL = 600; // 10 minute
+
+export const ENABLE_PORTION = process.env.ENABLE_PORTION === 'true';
