@@ -78,7 +78,7 @@ export class RoutingApiQuoter implements Quoter {
           ? {
               ...response.data,
               portionBips: portion?.bips, // important for exact in, clients are expected to use this for exact in swaps
-              portionRecipient: portion?.receiver, // important, clients are expected to use this for exact in and exact out swaps
+              portionRecipient: portion?.recipient, // important, clients are expected to use this for exact in and exact out swaps
               portionAmount: portionAmount?.quotient.toString(), // important for exact out, clients are expected to use this for exact out swaps
               portionAmountDecimals: portionAmount?.toExact(), // important for exact out, clients are expected to use this for exact out swaps
               quoteGasAndPortionAdjusted: quoteGasAndPortionAdjusted, // not important, clients disregard this
@@ -178,13 +178,13 @@ export class RoutingApiQuoter implements Quoter {
             portionAmount: this.portionProvider
               .getPortionAmount(amount, portion, resolvedTokenOut)
               ?.quotient.toString(),
-            portionRecipient: portion.receiver,
+            portionRecipient: portion.recipient,
           }),
         ...(request.info.type === TradeType.EXACT_INPUT &&
           portion &&
           ENABLE_PORTION(process.env.ENABLE_PORTION) && {
             portionBips: portion.bips,
-            portionRecipient: portion.receiver,
+            portionRecipient: portion.recipient,
           }),
       })
     );

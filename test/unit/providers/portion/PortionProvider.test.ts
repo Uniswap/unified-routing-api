@@ -33,7 +33,7 @@ describe('PortionProvider test', () => {
         hasPortion: true,
         portion: {
           bips: 5,
-          receiver: "0x0000000",
+          recipient: "0x0000000",
           type: "flat",
         }
       }
@@ -154,7 +154,7 @@ describe('PortionProvider test', () => {
         hasPortion: true,
         portion: {
           bips: 5,
-          receiver: "0x0000000",
+          recipient: "0x0000000",
           type: "flat",
         }
       }

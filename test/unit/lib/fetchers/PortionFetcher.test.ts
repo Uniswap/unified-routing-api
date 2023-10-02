@@ -26,7 +26,7 @@ describe('PortionFetcher Unit Tests', () => {
       hasPortion: true,
       portion: {
         bips: 5,
-        receiver: "0x0000000",
+        recipient: "0x0000000",
         type: "flat",
       }
     }
@@ -47,17 +47,13 @@ describe('PortionFetcher Unit Tests', () => {
     expect(portionData.portion).toBeDefined;
 
     if (portionData.hasPortion && portionData.portion) {
-      expect(portionData.portion.bips).toEqual(portionResponse.portion.bips);
-      expect(portionData.portion.receiver).toEqual(portionResponse.portion.receiver);
-      expect(portionData.portion.type).toEqual(portionResponse.portion.type);
+      expect(portionData.portion).toStrictEqual(portionResponse.portion);
 
       const cachedPortionData = portionCache.get<GetPortionResponse>(PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress));
       expect(cachedPortionData).toBeDefined;
       expect(cachedPortionData?.portion).toBeDefined;
       expect(cachedPortionData?.hasPortion).toEqual(true);
-      expect(cachedPortionData?.portion?.bips).toEqual(portionResponse.portion.bips);
-      expect(cachedPortionData?.portion?.receiver).toEqual(portionResponse.portion.receiver);
-      expect(cachedPortionData?.portion?.type).toEqual(portionResponse.portion.type);
+      expect(cachedPortionData?.portion).toStrictEqual(portionResponse.portion);
 
       const ttlUpperBoundBuffer = 1 // in seconds
       const ttl = portionCache.getTtl(PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress));

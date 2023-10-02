@@ -14,7 +14,7 @@ export enum PortionType {
 
 export interface Portion {
   readonly bips: number;
-  readonly receiver: string;
+  readonly recipient: string;
   readonly type: PortionType;
 }
 
