@@ -60,7 +60,7 @@ export class PortionFetcher {
 
     // we check ENABLE_PORTION for every request, so that the update to the lambda env var gets reflected
     // in real time
-    if (!ENABLE_PORTION) {
+    if (!ENABLE_PORTION(process.env.ENABLE_PORTION)) {
       metrics.putMetric(`PortionFetcherFlagDisabled`, 1);
       return GET_NO_PORTION_RESPONSE;
     }

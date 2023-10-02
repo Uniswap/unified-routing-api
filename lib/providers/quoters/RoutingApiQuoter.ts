@@ -74,7 +74,7 @@ export class RoutingApiQuoter implements Quoter {
 
       const portionAdjustedResponse: AxiosResponse<ClassicQuoteDataJSON> = {
         ...response,
-        data: ENABLE_PORTION
+        data: ENABLE_PORTION(process.env.ENABLE_PORTION)
           ? {
               ...response.data,
               portionBips: portion?.bips, // important for exact in, clients are expected to use this for exact in swaps
@@ -174,7 +174,7 @@ export class RoutingApiQuoter implements Quoter {
         }),
         ...(request.info.type === TradeType.EXACT_OUTPUT &&
           portion &&
-          ENABLE_PORTION && {
+          ENABLE_PORTION(process.env.ENABLE_PORTION) && {
             portionAmount: this.portionProvider
               .getPortionAmount(amount, portion, resolvedTokenOut)
               ?.quotient.toString(),
@@ -182,7 +182,7 @@ export class RoutingApiQuoter implements Quoter {
           }),
         ...(request.info.type === TradeType.EXACT_INPUT &&
           portion &&
-          ENABLE_PORTION && {
+          ENABLE_PORTION(process.env.ENABLE_PORTION) && {
             portionBips: portion.bips,
             portionRecipient: portion.receiver,
           }),

@@ -22,12 +22,13 @@ import { log } from '../../../../lib/util/log';
 import { metrics } from '../../../../lib/util/metrics';
 
 describe('PortionProvider test', () => {
-  process.env.ENABLE_PORTION = 'true';
   const expectedQuote = '1605.56'
   const expectedGas = '2.35'
+  process.env.ENABLE_PORTION = 'true';
 
   describe('getPortion test', () => {
     describe('exact in quote test', () => {
+
       const portionResponse = {
         hasPortion: true,
         portion: {
