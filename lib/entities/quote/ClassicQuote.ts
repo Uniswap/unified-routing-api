@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { QuoteRequest } from '..';
 import { RoutingType } from '../../constants';
 import { createPermitData } from '../../util/permit2';
-import { currentTimestampInSeconds } from '../../util/time';
+import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
 import { IQuote, LogJSON } from './index';
 
 export type V2ReserveJSON = {
@@ -74,6 +74,7 @@ export type ClassicQuoteDataJSON = {
 export class ClassicQuote implements IQuote {
   public routingType: RoutingType.CLASSIC = RoutingType.CLASSIC;
   public createdAt: string;
+  public createdAtMs: string;
   public readonly quoteId: string = uuidv4();
   private allowanceData?: PermitDetails;
 
@@ -82,7 +83,8 @@ export class ClassicQuote implements IQuote {
   }
 
   constructor(public request: QuoteRequest, private quoteData: ClassicQuoteDataJSON) {
-    this.createdAt = currentTimestampInSeconds();
+    this.createdAtMs = currentTimestampInMs();
+    this.createdAt = timestampInMstoSeconds(parseInt(this.createdAtMs));
   }
 
   public toJSON(): ClassicQuoteDataJSON {
@@ -114,6 +116,7 @@ export class ClassicQuote implements IQuote {
       routing: RoutingType[this.routingType],
       slippage: this.slippage,
       createdAt: this.createdAt,
+      createdAtMs: this.createdAtMs,
       gasPriceWei: this.gasPriceWei,
     };
   }

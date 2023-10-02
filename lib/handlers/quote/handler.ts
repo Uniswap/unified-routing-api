@@ -183,6 +183,7 @@ export class QuoteHandler extends APIGLambdaHandler<
         type: TradeType[info.type],
         configs: requests.map((r) => r.routingType).join(','),
         createdAt: timestampInMstoSeconds(startTime),
+        createdAtMs: startTime.toString(),
         // only log swapper if it's a dutch limit request
         ...(info.swapper && { swapper: info.swapper }),
       },
