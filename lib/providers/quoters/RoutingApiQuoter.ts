@@ -47,7 +47,13 @@ export class RoutingApiQuoter implements Quoter {
         metrics.putMetric(`PortionProvider.resolveTokenErr`, 1);
       }
 
-      const portion = (await this.portionProvider.getPortion(request.info, resolvedTokenIn, resolveTokenOut)).portion;
+      const portion = (
+        await this.portionProvider.getPortion(
+          request.info,
+          resolvedTokenIn?.wrapped.address,
+          resolveTokenOut?.wrapped.address
+        )
+      ).portion;
 
       const req = this.buildRequest(request, portion, resolveTokenOut);
       const now = Date.now();

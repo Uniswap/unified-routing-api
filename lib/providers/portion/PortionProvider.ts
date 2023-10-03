@@ -9,13 +9,13 @@ export interface PortionProvider {
    * Get portion based on the resolved token in and out addresses
    *
    * @param sharedInfo shared quote request info across classic and dutch
-   * @param resolvedTokenIn resolved token in
-   * @param resolvedTokenOut resolved token out
+   * @param wrappedTokenInAddress token in wrapped address
+   * @param wrappedTokenOutAddress token out wrapped address
    */
   getPortion(
     sharedInfo: QuoteRequestInfo,
-    resolvedTokenIn?: Currency,
-    resolvedTokenOut?: Currency
+    wrappedTokenInAddress?: string,
+    wrappedTokenOutAddress?: string
   ): Promise<GetPortionResponse>;
 
   /**
@@ -55,19 +55,19 @@ export class DefaultPortionProvider implements PortionProvider {
 
   async getPortion(
     sharedInfo: QuoteRequestInfo,
-    resolvedTokenIn?: Currency,
-    resolvedTokenOut?: Currency
+    wrappedTokenInAddress?: string,
+    wrappedTokenOutAddress?: string
   ): Promise<GetPortionResponse> {
-    if (!resolvedTokenIn || !resolvedTokenOut) {
+    if (!wrappedTokenInAddress || !wrappedTokenOutAddress) {
       return GET_NO_PORTION_RESPONSE;
     }
 
     // portion service has no concept of native currency, need to pass in wrapped
     return await this.portionFetcher.getPortion(
       sharedInfo.tokenInChainId,
-      resolvedTokenIn.wrapped.address,
+      wrappedTokenInAddress,
       sharedInfo.tokenOutChainId,
-      resolvedTokenOut.wrapped.address
+      wrappedTokenOutAddress
     );
   }
 

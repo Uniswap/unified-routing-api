@@ -121,6 +121,10 @@ export class ClassicQuote implements IQuote {
       slippage: this.slippage,
       createdAt: this.createdAt,
       gasPriceWei: this.gasPriceWei,
+      portionBips: this.quoteData.portionBips,
+      portionRecipient: this.quoteData.portionRecipient,
+      portionAmount: this.quoteData.portionAmount,
+      portionAmountDecimals: this.quoteData.portionAmountDecimals,
     };
   }
 

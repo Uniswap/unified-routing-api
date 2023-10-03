@@ -1,12 +1,13 @@
 import {
   GET_NO_PORTION_RESPONSE,
   GetPortionResponse,
-  PortionFetcher
+  PortionFetcher, PortionType
 } from '../../../../lib/fetchers/PortionFetcher';
 import axios from '../../../../lib/providers/quoters/helpers';
 import { AxiosInstance } from 'axios';
 import NodeCache from 'node-cache';
 import { DEFAULT_NEGATIVE_CACHE_ENTRY_TTL, DEFAULT_POSITIVE_CACHE_ENTRY_TTL } from '../../../../lib/constants';
+import { PORTION_BIPS, PORTION_RECIPIENT } from '../../../constants';
 
 describe('PortionFetcher Unit Tests', () => {
   process.env.ENABLE_PORTION = 'true';
@@ -22,12 +23,12 @@ describe('PortionFetcher Unit Tests', () => {
   ) => `PortionFetcher-${tokenInChainId}-${tokenInAddress.toLowerCase()}-${tokenOutChainId}-${tokenOutAddress.toLowerCase()}`;
 
   it('Portion Service returns portion data', async () => {
-    const portionResponse = {
+    const portionResponse: GetPortionResponse = {
       hasPortion: true,
       portion: {
-        bips: 5,
-        recipient: "0x0000000",
-        type: "flat",
+        bips: PORTION_BIPS,
+        recipient: PORTION_RECIPIENT,
+        type: PortionType.Flat,
       }
     }
 

@@ -1,7 +1,7 @@
 import axios from '../../../../lib/providers/quoters/helpers';
 import { AxiosInstance } from 'axios';
 import NodeCache from 'node-cache';
-import { PortionFetcher } from '../../../../lib/fetchers/PortionFetcher';
+import { GetPortionResponse, PortionFetcher, PortionType } from '../../../../lib/fetchers/PortionFetcher';
 import { TokenFetcher } from '../../../../lib/fetchers/TokenFetcher';
 import { DefaultPortionProvider } from '../../../../lib/providers';
 import { QuoteRequestInfo } from '../../../../lib/entities';
@@ -20,6 +20,7 @@ import { BigNumber } from 'ethers';
 import { BaseCurrency } from '@uniswap/sdk-core/dist/entities/baseCurrency';
 import { log } from '../../../../lib/util/log';
 import { metrics } from '../../../../lib/util/metrics';
+import { PORTION_BIPS, PORTION_RECIPIENT } from '../../../constants';
 
 describe('PortionProvider test', () => {
   const expectedQuote = '1605.56'
@@ -29,12 +30,12 @@ describe('PortionProvider test', () => {
   describe('getPortion test', () => {
     describe('exact in quote test', () => {
 
-      const portionResponse = {
+      const portionResponse: GetPortionResponse = {
         hasPortion: true,
         portion: {
-          bips: 5,
-          recipient: "0x0000000",
-          type: "flat",
+          bips: PORTION_BIPS,
+          recipient: PORTION_RECIPIENT,
+          type: PortionType.Flat,
         }
       }
 
@@ -125,7 +126,7 @@ describe('PortionProvider test', () => {
         const quoteAmount = parseAmount(expectedQuote, token2);
         const quoteGasAdjustedAmount = quoteAmount.subtract(parseAmount(expectedGas, token2));
 
-        const getPortionResponse = await portionProvider.getPortion(sharedInfo, resolvedTokenIn, resolveTokenOut);
+        const getPortionResponse = await portionProvider.getPortion(sharedInfo, resolvedTokenIn?.wrapped.address, resolveTokenOut?.wrapped.address);
         expect(getPortionResponse?.hasPortion).toBe(portionResponse.hasPortion);
         expect(getPortionResponse?.portion).toBeDefined();
         expect(getPortionResponse?.portion).toStrictEqual(portionResponse.portion);
@@ -134,7 +135,7 @@ describe('PortionProvider test', () => {
         const portionAdjustedQuote = portionProvider.getPortionAdjustedQuote(sharedInfo, quoteAmount.quotient.toString(), quoteGasAdjustedAmount.quotient.toString(), portionAmount, resolvedTokenIn, resolveTokenOut);
 
         // 1605.56 * 10^8 * 5 / 10000 = 80278000
-        const expectedPortionAmount = quoteAmount.multiply(new Fraction(portionResponse.portion.bips, 10000))
+        const expectedPortionAmount = quoteAmount.multiply(new Fraction(portionResponse.portion?.bips ?? 0, 10000))
 
         // important assertions
         expect(portionAmount?.quotient.toString()).toBe(expectedPortionAmount.quotient.toString());
@@ -244,7 +245,7 @@ describe('PortionProvider test', () => {
         }
 
         const userTypedTokenOutAmount = parseAmount(expectedQuote, token2);
-        const getPortionResponse = await portionProvider.getPortion(sharedInfo, resolvedTokenIn, resolveTokenOut);
+        const getPortionResponse = await portionProvider.getPortion(sharedInfo, resolvedTokenIn?.wrapped.address, resolveTokenOut?.wrapped.address);
         expect(getPortionResponse?.hasPortion).toBe(portionResponse.hasPortion);
         expect(getPortionResponse?.portion).toBeDefined;
         expect(getPortionResponse?.portion).toStrictEqual(portionResponse.portion);
