@@ -32,6 +32,8 @@ export type LogJSON = {
   portionRecipient?: string;
   portionAmount?: string;
   portionAmountDecimals?: string;
+  quoteGasAndPortionAdjusted?: string;
+  quoteGasAndPortionAdjustedDecimals?: string;
 };
 
 export interface IQuote {

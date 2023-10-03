@@ -125,6 +125,8 @@ export class ClassicQuote implements IQuote {
       portionRecipient: this.quoteData.portionRecipient,
       portionAmount: this.quoteData.portionAmount,
       portionAmountDecimals: this.quoteData.portionAmountDecimals,
+      quoteGasAndPortionAdjusted: this.quoteData.quoteGasAndPortionAdjusted,
+      quoteGasAndPortionAdjustedDecimals: this.quoteData.quoteGasAndPortionAdjustedDecimals,
     };
   }
 
