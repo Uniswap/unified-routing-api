@@ -108,10 +108,10 @@ export class RoutingApiQuoter implements Quoter {
         } else {
           metrics.putMetric(`RoutingApiQuote5xxErr`, 1);
         }
-        log.error(e, 'RoutingApiQuoterErr');
       } else {
         metrics.putMetric(`RoutingApiQuote5xxErr`, 1);
       }
+      log.error(e, 'RoutingApiQuoterErr');
       metrics.putMetric(`RoutingApiQuoterErr`, 1);
 
       // We want to ensure that we throw all non-404 errors
