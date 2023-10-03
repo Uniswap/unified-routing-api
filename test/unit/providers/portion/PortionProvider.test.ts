@@ -3,7 +3,7 @@ import { AxiosInstance } from 'axios';
 import NodeCache from 'node-cache';
 import { GetPortionResponse, PortionFetcher, PortionType } from '../../../../lib/fetchers/PortionFetcher';
 import { TokenFetcher } from '../../../../lib/fetchers/TokenFetcher';
-import { DefaultPortionProvider } from '../../../../lib/providers';
+import { PortionProvider } from '../../../../lib/providers';
 import { QuoteRequestInfo } from '../../../../lib/entities';
 import { v4 as uuid } from 'uuid';
 import { ChainId, Currency, Ether, Fraction, Token, TradeType, WETH9 } from '@uniswap/sdk-core';
@@ -49,7 +49,7 @@ describe('PortionProvider test', () => {
 
       const portionCache = new NodeCache({ stdTTL: 600 });
       const portionFetcher = new PortionFetcher('https://portion.uniswap.org/', portionCache);
-      const portionProvider = new DefaultPortionProvider(portionFetcher);
+      const portionProvider = new PortionProvider(portionFetcher);
 
       const allPairs: Array<Array<BaseCurrency>> = [
         [Ether.onChain(ChainId.MAINNET), USDC_ON(ChainId.MAINNET)],
@@ -170,7 +170,7 @@ describe('PortionProvider test', () => {
 
       const portionCache = new NodeCache({ stdTTL: 600 });
       const portionFetcher = new PortionFetcher('https://portion.uniswap.org/', portionCache);
-      const portionProvider = new DefaultPortionProvider(portionFetcher);
+      const portionProvider = new PortionProvider(portionFetcher);
 
       const allPairs: Array<Array<BaseCurrency>> = [
         [Ether.onChain(ChainId.MAINNET), USDC_ON(ChainId.MAINNET)],

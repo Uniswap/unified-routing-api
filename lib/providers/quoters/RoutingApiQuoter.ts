@@ -9,7 +9,7 @@ import { Portion } from '../../fetchers/PortionFetcher';
 import { TokenFetcher } from '../../fetchers/TokenFetcher';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
-import { PortionProvider } from '../portion/PortionProvider';
+import { IPortionProvider } from '../portion/PortionProvider';
 import axios from './helpers';
 import { Quoter, QuoterType } from './index';
 
@@ -19,7 +19,7 @@ export class RoutingApiQuoter implements Quoter {
   constructor(
     private routingApiUrl: string,
     private routingApiKey: string,
-    private portionProvider: PortionProvider,
+    private portionProvider: IPortionProvider,
     private tokenFetcher: TokenFetcher
   ) {}
 
@@ -42,7 +42,11 @@ export class RoutingApiQuoter implements Quoter {
           this.tokenFetcher.resolveTokenBySymbolOrAddress(request.info.tokenOutChainId, request.info.tokenOut),
         ]);
       } catch (e) {
-        // possible to throw validation error, we have to catch here because we have to proceed
+        // token fetcher can throw ValidationError,
+        // we must swallow the error and continue, meanwhile logging them,
+        // not being able to resolve the tokens here means we don't have portion amount
+        // throughout the lifecycle of this quote request processing,
+        // and we simply don't account for portion and let quote request processing continue
         log.error({ e }, 'Failed to resolve tokenIn & tokenOut');
         metrics.putMetric(`PortionProvider.resolveTokenErr`, 1);
       }

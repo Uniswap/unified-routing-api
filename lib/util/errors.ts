@@ -4,30 +4,10 @@ export enum ErrorCode {
   ValidationError = 'VALIDATION_ERROR',
   InternalError = 'INTERNAL_ERROR',
   QuoteError = 'QUOTE_ERROR',
-  UnknownTradeTypeERROR = 'UNKNOWN_TRADE_TYPE_ERROR',
 }
 
 export abstract class CustomError extends Error {
   abstract toJSON(id?: string): APIGatewayProxyResult;
-}
-
-export class UnknownTradeTypeError extends CustomError {
-  constructor(message: string) {
-    super(message);
-    // Set the prototype explicitly.
-    Object.setPrototypeOf(this, UnknownTradeTypeError.prototype);
-  }
-
-  toJSON(id?: string): APIGatewayProxyResult {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({
-        errorCode: ErrorCode.UnknownTradeTypeERROR,
-        detail: this.message,
-        id,
-      }),
-    };
-  }
 }
 
 export class ValidationError extends CustomError {
