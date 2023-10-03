@@ -9,7 +9,7 @@ import { Portion } from '../../fetchers/PortionFetcher';
 import { TokenFetcher } from '../../fetchers/TokenFetcher';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
-import { IPortionProvider } from '../portion/PortionProvider';
+import { IPortionProvider } from '../portion';
 import axios from './helpers';
 import { Quoter, QuoterType } from './index';
 
@@ -42,13 +42,14 @@ export class RoutingApiQuoter implements Quoter {
           this.tokenFetcher.resolveTokenBySymbolOrAddress(request.info.tokenOutChainId, request.info.tokenOut),
         ]);
       } catch (e) {
+        // TODO: ROUTE-96 add dashboarding and monitoring for URA <-> resolve token for portion
         // token fetcher can throw ValidationError,
         // we must swallow the error and continue, meanwhile logging them,
         // not being able to resolve the tokens here means we don't have portion amount
         // throughout the lifecycle of this quote request processing,
         // and we simply don't account for portion and let quote request processing continue
         log.error({ e }, 'Failed to resolve tokenIn & tokenOut');
-        metrics.putMetric(`PortionProvider.resolveTokenErr`, 1);
+        metrics.putMetric(`PortionProviderResolveTokenError`, 1);
       }
 
       const portion = (
@@ -107,6 +108,7 @@ export class RoutingApiQuoter implements Quoter {
         } else {
           metrics.putMetric(`RoutingApiQuote5xxErr`, 1);
         }
+        log.error(e, 'RoutingApiQuoterErr');
       } else {
         metrics.putMetric(`RoutingApiQuote5xxErr`, 1);
       }

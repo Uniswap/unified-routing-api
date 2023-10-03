@@ -1,12 +1,13 @@
-import {
-  GET_NO_PORTION_RESPONSE,
-  GetPortionResponse,
-  PortionFetcher, PortionType
-} from '../../../../lib/fetchers/PortionFetcher';
-import axios from '../../../../lib/providers/quoters/helpers';
 import { AxiosInstance } from 'axios';
 import NodeCache from 'node-cache';
 import { DEFAULT_NEGATIVE_CACHE_ENTRY_TTL, DEFAULT_POSITIVE_CACHE_ENTRY_TTL } from '../../../../lib/constants';
+import {
+  GetPortionResponse,
+  GET_NO_PORTION_RESPONSE,
+  PortionFetcher,
+  PortionType,
+} from '../../../../lib/fetchers/PortionFetcher';
+import axios from '../../../../lib/providers/quoters/helpers';
 import { PORTION_BIPS, PORTION_RECIPIENT } from '../../../constants';
 
 describe('PortionFetcher Unit Tests', () => {
@@ -20,7 +21,8 @@ describe('PortionFetcher Unit Tests', () => {
     tokenOutChainId: number,
     tokenInAddress: string,
     tokenOutAddress: string
-  ) => `PortionFetcher-${tokenInChainId}-${tokenInAddress.toLowerCase()}-${tokenOutChainId}-${tokenOutAddress.toLowerCase()}`;
+  ) =>
+    `PortionFetcher-${tokenInChainId}-${tokenInAddress.toLowerCase()}-${tokenOutChainId}-${tokenOutAddress.toLowerCase()}`;
 
   it('Portion Service returns portion data', async () => {
     const portionResponse: GetPortionResponse = {
@@ -29,8 +31,8 @@ describe('PortionFetcher Unit Tests', () => {
         bips: PORTION_BIPS,
         recipient: PORTION_RECIPIENT,
         type: PortionType.Flat,
-      }
-    }
+      },
+    };
 
     const createSpy = jest.spyOn(axios, 'create');
     // @ts-ignore
@@ -43,23 +45,36 @@ describe('PortionFetcher Unit Tests', () => {
 
     const portionCache = new NodeCache({ stdTTL: 600 });
     const portionFetcher = new PortionFetcher('https://portion.uniswap.org/', portionCache);
-    const portionData = await portionFetcher.getPortion(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress);
+    const portionData = await portionFetcher.getPortion(
+      tokenInChainId,
+      tokenInAddress,
+      tokenOutChainId,
+      tokenOutAddress
+    );
     expect(portionData.hasPortion).toEqual(true);
     expect(portionData.portion).toBeDefined;
 
     if (portionData.hasPortion && portionData.portion) {
       expect(portionData.portion).toStrictEqual(portionResponse.portion);
 
-      const cachedPortionData = portionCache.get<GetPortionResponse>(PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress));
+      const cachedPortionData = portionCache.get<GetPortionResponse>(
+        PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
+      );
       expect(cachedPortionData).toBeDefined;
       expect(cachedPortionData?.portion).toBeDefined;
       expect(cachedPortionData?.hasPortion).toEqual(true);
       expect(cachedPortionData?.portion).toStrictEqual(portionResponse.portion);
 
-      const ttlUpperBoundBuffer = 1 // in seconds
-      const ttl = portionCache.getTtl(PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress));
-      expect(Math.floor((ttl ?? 0) / 1000)).toBeGreaterThanOrEqual(currentEpochTimeInSeconds + DEFAULT_POSITIVE_CACHE_ENTRY_TTL);
-      expect(Math.floor((ttl ?? 0) / 1000)).toBeLessThanOrEqual(currentEpochTimeInSeconds + DEFAULT_POSITIVE_CACHE_ENTRY_TTL + ttlUpperBoundBuffer);
+      const ttlUpperBoundBuffer = 1; // in seconds
+      const ttl = portionCache.getTtl(
+        PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
+      );
+      expect(Math.floor((ttl ?? 0) / 1000)).toBeGreaterThanOrEqual(
+        currentEpochTimeInSeconds + DEFAULT_POSITIVE_CACHE_ENTRY_TTL
+      );
+      expect(Math.floor((ttl ?? 0) / 1000)).toBeLessThanOrEqual(
+        currentEpochTimeInSeconds + DEFAULT_POSITIVE_CACHE_ENTRY_TTL + ttlUpperBoundBuffer
+      );
     }
   });
 
@@ -75,17 +90,30 @@ describe('PortionFetcher Unit Tests', () => {
 
     const portionCache = new NodeCache({ stdTTL: 600 });
     const portionFetcher = new PortionFetcher('https://portion.uniswap.org/', portionCache);
-    const portionData = await portionFetcher.getPortion(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress);
+    const portionData = await portionFetcher.getPortion(
+      tokenInChainId,
+      tokenInAddress,
+      tokenOutChainId,
+      tokenOutAddress
+    );
     expect(portionData.hasPortion).toEqual(GET_NO_PORTION_RESPONSE.hasPortion);
 
-    const cachedPortionData = portionCache.get<GetPortionResponse>(PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress));
+    const cachedPortionData = portionCache.get<GetPortionResponse>(
+      PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
+    );
     expect(cachedPortionData).toBeDefined;
     expect(cachedPortionData?.hasPortion).toEqual(GET_NO_PORTION_RESPONSE.hasPortion);
 
-    const ttlUpperBoundBuffer = 1 // in seconds
-    const ttl = portionCache.getTtl(PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress));
-    expect(Math.floor((ttl ?? 0) / 1000)).toBeGreaterThanOrEqual(currentEpochTimeInSeconds + DEFAULT_NEGATIVE_CACHE_ENTRY_TTL);
-    expect(Math.floor((ttl ?? 0) / 1000)).toBeLessThanOrEqual(currentEpochTimeInSeconds + DEFAULT_NEGATIVE_CACHE_ENTRY_TTL + ttlUpperBoundBuffer);
+    const ttlUpperBoundBuffer = 1; // in seconds
+    const ttl = portionCache.getTtl(
+      PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
+    );
+    expect(Math.floor((ttl ?? 0) / 1000)).toBeGreaterThanOrEqual(
+      currentEpochTimeInSeconds + DEFAULT_NEGATIVE_CACHE_ENTRY_TTL
+    );
+    expect(Math.floor((ttl ?? 0) / 1000)).toBeLessThanOrEqual(
+      currentEpochTimeInSeconds + DEFAULT_NEGATIVE_CACHE_ENTRY_TTL + ttlUpperBoundBuffer
+    );
   });
 
   it('Portion Service encounters runtime error', async () => {
@@ -100,16 +128,29 @@ describe('PortionFetcher Unit Tests', () => {
 
     const portionCache = new NodeCache({ stdTTL: 600 });
     const portionFetcher = new PortionFetcher('https://portion.uniswap.org/', portionCache);
-    const portionData = await portionFetcher.getPortion(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress);
+    const portionData = await portionFetcher.getPortion(
+      tokenInChainId,
+      tokenInAddress,
+      tokenOutChainId,
+      tokenOutAddress
+    );
     expect(portionData.hasPortion).toEqual(GET_NO_PORTION_RESPONSE.hasPortion);
 
-    const cachedPortionData = portionCache.get<GetPortionResponse>(PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress));
+    const cachedPortionData = portionCache.get<GetPortionResponse>(
+      PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
+    );
     expect(cachedPortionData).toBeDefined;
     expect(cachedPortionData?.hasPortion).toEqual(GET_NO_PORTION_RESPONSE.hasPortion);
 
-    const ttlUpperBoundBuffer = 1 // in seconds
-    const ttl = portionCache.getTtl(PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress));
-    expect(Math.floor((ttl ?? 0) / 1000)).toBeGreaterThanOrEqual(currentEpochTimeInSeconds + DEFAULT_NEGATIVE_CACHE_ENTRY_TTL);
-    expect(Math.floor((ttl ?? 0) / 1000)).toBeLessThanOrEqual(currentEpochTimeInSeconds + DEFAULT_NEGATIVE_CACHE_ENTRY_TTL + ttlUpperBoundBuffer);
+    const ttlUpperBoundBuffer = 1; // in seconds
+    const ttl = portionCache.getTtl(
+      PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
+    );
+    expect(Math.floor((ttl ?? 0) / 1000)).toBeGreaterThanOrEqual(
+      currentEpochTimeInSeconds + DEFAULT_NEGATIVE_CACHE_ENTRY_TTL
+    );
+    expect(Math.floor((ttl ?? 0) / 1000)).toBeLessThanOrEqual(
+      currentEpochTimeInSeconds + DEFAULT_NEGATIVE_CACHE_ENTRY_TTL + ttlUpperBoundBuffer
+    );
   });
 });

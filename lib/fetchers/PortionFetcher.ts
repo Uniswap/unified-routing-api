@@ -85,6 +85,7 @@ export class PortionFetcher {
         },
       });
 
+      // TODO: ROUTE-96 - add dashboard for URA <-> portion integration monitoring
       metrics.putMetric(`Latency-GetPortion`, Date.now() - beforeGetPortion, Unit.Milliseconds);
       metrics.putMetric(`PortionFetcherSuccess`, 1);
       metrics.putMetric(`PortionFetcherCacheMiss`, 1);
@@ -97,6 +98,7 @@ export class PortionFetcher {
 
       return portionResponse.data;
     } catch (e) {
+      // TODO: ROUTE-96 - add alerting for URA <-> portion integration monitoring
       log.error({ e }, 'PortionFetcherErr');
       metrics.putMetric(`PortionFetcherErr`, 1);
       metrics.putMetric(`PortionFetcherCacheMiss`, 1);

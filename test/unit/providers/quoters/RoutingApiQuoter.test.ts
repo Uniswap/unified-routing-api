@@ -1,17 +1,28 @@
 import { AxiosError } from 'axios';
-import { PortionFetcher } from '../../../../lib/fetchers/PortionFetcher';
-import { RoutingApiQuoter } from '../../../../lib/providers/quoters';
-import { PortionProvider } from '../../../../lib/providers';
-import axios from '../../../../lib/providers/quoters/helpers';
-import { QUOTE_REQUEST_CLASSIC } from '../../../utils/fixtures';
-import { TokenFetcher } from '../../../../lib/fetchers/TokenFetcher';
 import NodeCache from 'node-cache';
+import { ClassicQuote } from '../../../../lib/entities';
+import { GetPortionResponse, PortionFetcher, PortionType } from '../../../../lib/fetchers/PortionFetcher';
+import { TokenFetcher } from '../../../../lib/fetchers/TokenFetcher';
+import { PortionProvider } from '../../../../lib/providers';
+import { RoutingApiQuoter } from '../../../../lib/providers/quoters';
+import axios from '../../../../lib/providers/quoters/helpers';
+import { PORTION_BIPS, PORTION_RECIPIENT } from '../../../constants';
+import { CLASSIC_QUOTE_DATA, QUOTE_REQUEST_CLASSIC } from '../../../utils/fixtures';
 
 describe('RoutingApiQuoter', () => {
+  const portionResponse: GetPortionResponse = {
+    hasPortion: true,
+    portion: {
+      bips: PORTION_BIPS,
+      recipient: PORTION_RECIPIENT,
+      type: PortionType.Flat,
+    },
+  };
   const portionCache = new NodeCache({ stdTTL: 600 });
   const portionFetcher = new PortionFetcher('https://portion.uniswap.org/', portionCache);
-  const tokenFetcher = new TokenFetcher();
   const portionProvider = new PortionProvider(portionFetcher);
+  jest.spyOn(portionFetcher, 'getPortion').mockResolvedValue(portionResponse);
+  const tokenFetcher = new TokenFetcher();
   const routingApiQuoter = new RoutingApiQuoter('https://api.uniswap.org/', 'test-key', portionProvider, tokenFetcher);
   const axiosMock = jest.spyOn(axios, 'get');
 
@@ -52,6 +63,19 @@ describe('RoutingApiQuoter', () => {
       } as any);
       axiosMock.mockRejectedValue(axiosError);
       await expect(routingApiQuoter.quote(QUOTE_REQUEST_CLASSIC)).resolves.toBeNull();
+    });
+
+    it('quote with portion', async () => {
+      process.env.ENABLE_PORTION = 'true';
+      axiosMock.mockResolvedValue({ data: CLASSIC_QUOTE_DATA.quote });
+      const response = await routingApiQuoter.quote(QUOTE_REQUEST_CLASSIC);
+      expect(response).toBeDefined();
+      expect(response).toBeInstanceOf(ClassicQuote);
+
+      const classicQuote = response as ClassicQuote;
+
+      expect(classicQuote.toJSON().portionBips).toEqual(PORTION_BIPS);
+      expect(classicQuote.toJSON().portionAmount).toEqual(PORTION_BIPS);
     });
   });
 

@@ -1,43 +1,43 @@
-import axios from '../../../../lib/providers/quoters/helpers';
+import { ChainId, Currency, Ether, Fraction, Token, TradeType, WETH9 } from '@uniswap/sdk-core';
+import { BaseCurrency } from '@uniswap/sdk-core/dist/entities/baseCurrency';
+import { parseAmount, WBTC_MAINNET } from '@uniswap/smart-order-router';
 import { AxiosInstance } from 'axios';
+import { BigNumber } from 'ethers';
 import NodeCache from 'node-cache';
+import { v4 as uuid } from 'uuid';
+import { QuoteRequestInfo } from '../../../../lib/entities';
 import { GetPortionResponse, PortionFetcher, PortionType } from '../../../../lib/fetchers/PortionFetcher';
 import { TokenFetcher } from '../../../../lib/fetchers/TokenFetcher';
 import { PortionProvider } from '../../../../lib/providers';
-import { QuoteRequestInfo } from '../../../../lib/entities';
-import { v4 as uuid } from 'uuid';
-import { ChainId, Currency, Ether, Fraction, Token, TradeType, WETH9 } from '@uniswap/sdk-core';
-import {
-  BUSD_MAINNET,
-  DAI_ON, EUROC_MAINNET,
-  GUSD_MAINNET,
-  LUSD_MAINNET,
-  USDC_ON,
-  USDT_ON
-} from '../../../utils/tokens';
-import { parseAmount, WBTC_MAINNET } from '@uniswap/smart-order-router';
-import { BigNumber } from 'ethers';
-import { BaseCurrency } from '@uniswap/sdk-core/dist/entities/baseCurrency';
+import axios from '../../../../lib/providers/quoters/helpers';
 import { log } from '../../../../lib/util/log';
 import { metrics } from '../../../../lib/util/metrics';
 import { PORTION_BIPS, PORTION_RECIPIENT } from '../../../constants';
+import {
+  BUSD_MAINNET,
+  DAI_ON,
+  EUROC_MAINNET,
+  GUSD_MAINNET,
+  LUSD_MAINNET,
+  USDC_ON,
+  USDT_ON,
+} from '../../../utils/tokens';
 
 describe('PortionProvider test', () => {
-  const expectedQuote = '1605.56'
-  const expectedGas = '2.35'
+  const expectedQuote = '1605.56';
+  const expectedGas = '2.35';
   process.env.ENABLE_PORTION = 'true';
 
   describe('getPortion test', () => {
     describe('exact in quote test', () => {
-
       const portionResponse: GetPortionResponse = {
         hasPortion: true,
         portion: {
           bips: PORTION_BIPS,
           recipient: PORTION_RECIPIENT,
           type: PortionType.Flat,
-        }
-      }
+        },
+      };
 
       const createSpy = jest.spyOn(axios, 'create');
       // @ts-ignore
@@ -58,18 +58,18 @@ describe('PortionProvider test', () => {
         [BUSD_MAINNET, EUROC_MAINNET],
         [GUSD_MAINNET, LUSD_MAINNET],
         // [agEUR_MAINNET, XSGD_MAINNET], TODO: add agEUR_MAINNET and XSGD_MAINNET into default token list
-      ]
+      ];
 
       allPairs.forEach((pair) => {
-        const token1: Currency | Token = pair[0].isNative ? pair[0] as Currency : pair[0].wrapped
-        const token2: Currency | Token = pair[1].isNative ? pair[1] as Currency : pair[1].wrapped
-        const tokenSymbol1 = token1.symbol!
-        const tokenSymbol2 = token2.symbol!
-        const tokenAddress1 = token1.wrapped.address
-        const tokenAddress2 = token2.wrapped.address
+        const token1: Currency | Token = pair[0].isNative ? (pair[0] as Currency) : pair[0].wrapped;
+        const token2: Currency | Token = pair[1].isNative ? (pair[1] as Currency) : pair[1].wrapped;
+        const tokenSymbol1 = token1.symbol!;
+        const tokenSymbol2 = token2.symbol!;
+        const tokenAddress1 = token1.wrapped.address;
+        const tokenAddress2 = token2.wrapped.address;
 
         it(`token address ${tokenAddress1} to token address ${tokenAddress2} within the list, should have portion`, async () => {
-          const requestedAmount = BigNumber.from(parseAmount('1.01', token1).quotient.toString())
+          const requestedAmount = BigNumber.from(parseAmount('1.01', token1).quotient.toString());
           const sharedInfo: QuoteRequestInfo = {
             requestId: uuid(),
             tokenInChainId: ChainId.MAINNET,
@@ -78,15 +78,15 @@ describe('PortionProvider test', () => {
             tokenOut: tokenAddress2,
             amount: requestedAmount,
             type: TradeType.EXACT_INPUT,
-            slippageTolerance: "0.5",
+            slippageTolerance: '0.5',
             swapper: uuid(),
             useUniswapX: false,
-          }
-          await exactInGetPortionAndAssert(sharedInfo, token2)
+          };
+          await exactInGetPortionAndAssert(sharedInfo, token2);
         });
 
         it(`token symbol ${tokenSymbol1} to token symbol ${tokenSymbol2} within the list, should have portion`, async () => {
-          const requestedAmount = BigNumber.from(parseAmount('1.01', token1).quotient.toString())
+          const requestedAmount = BigNumber.from(parseAmount('1.01', token1).quotient.toString());
           const sharedInfo: QuoteRequestInfo = {
             requestId: uuid(),
             tokenInChainId: ChainId.MAINNET,
@@ -95,14 +95,14 @@ describe('PortionProvider test', () => {
             tokenOut: tokenSymbol2,
             amount: requestedAmount,
             type: TradeType.EXACT_INPUT,
-            slippageTolerance: "0.5",
+            slippageTolerance: '0.5',
             swapper: uuid(),
             useUniswapX: false,
-          }
+          };
 
-          await exactInGetPortionAndAssert(sharedInfo, token2)
+          await exactInGetPortionAndAssert(sharedInfo, token2);
         });
-      })
+      });
 
       async function exactInGetPortionAndAssert(sharedInfo: QuoteRequestInfo, token2: Currency | Token) {
         let [resolvedTokenIn, resolveTokenOut]: [Currency | undefined, Currency | undefined] = [undefined, undefined];
@@ -126,16 +126,31 @@ describe('PortionProvider test', () => {
         const quoteAmount = parseAmount(expectedQuote, token2);
         const quoteGasAdjustedAmount = quoteAmount.subtract(parseAmount(expectedGas, token2));
 
-        const getPortionResponse = await portionProvider.getPortion(sharedInfo, resolvedTokenIn?.wrapped.address, resolveTokenOut?.wrapped.address);
+        const getPortionResponse = await portionProvider.getPortion(
+          sharedInfo,
+          resolvedTokenIn?.wrapped.address,
+          resolveTokenOut?.wrapped.address
+        );
         expect(getPortionResponse?.hasPortion).toBe(portionResponse.hasPortion);
         expect(getPortionResponse?.portion).toBeDefined();
         expect(getPortionResponse?.portion).toStrictEqual(portionResponse.portion);
 
-        const portionAmount = portionProvider.getPortionAmount(quoteAmount.quotient.toString(), getPortionResponse.portion, resolveTokenOut);
-        const portionAdjustedQuote = portionProvider.getPortionAdjustedQuote(sharedInfo, quoteAmount.quotient.toString(), quoteGasAdjustedAmount.quotient.toString(), portionAmount, resolvedTokenIn, resolveTokenOut);
+        const portionAmount = portionProvider.getPortionAmount(
+          quoteAmount.quotient.toString(),
+          getPortionResponse.portion,
+          resolveTokenOut
+        );
+        const portionAdjustedQuote = portionProvider.getPortionAdjustedQuote(
+          sharedInfo,
+          quoteAmount.quotient.toString(),
+          quoteGasAdjustedAmount.quotient.toString(),
+          portionAmount,
+          resolvedTokenIn,
+          resolveTokenOut
+        );
 
         // 1605.56 * 10^8 * 5 / 10000 = 80278000
-        const expectedPortionAmount = quoteAmount.multiply(new Fraction(portionResponse.portion?.bips ?? 0, 10000))
+        const expectedPortionAmount = quoteAmount.multiply(new Fraction(portionResponse.portion?.bips ?? 0, 10000));
 
         // important assertions
         expect(portionAmount?.quotient.toString()).toBe(expectedPortionAmount.quotient.toString());
@@ -154,11 +169,11 @@ describe('PortionProvider test', () => {
       const portionResponse = {
         hasPortion: true,
         portion: {
-          bips: 5,
-          recipient: "0x0000000",
-          type: "flat",
-        }
-      }
+          bips: PORTION_BIPS,
+          recipient: PORTION_RECIPIENT,
+          type: 'flat',
+        },
+      };
 
       const createSpy = jest.spyOn(axios, 'create');
       // @ts-ignore
@@ -179,18 +194,18 @@ describe('PortionProvider test', () => {
         [BUSD_MAINNET, EUROC_MAINNET],
         [GUSD_MAINNET, LUSD_MAINNET],
         // [agEUR_MAINNET, XSGD], TODO: add agEUR_MAINNET and XSGD into default token list
-      ]
+      ];
 
       allPairs.forEach((pair) => {
-        const token1: Currency | Token = pair[0].isNative ? pair[0] as Currency : pair[0].wrapped
-        const token2: Currency | Token = pair[1].isNative ? pair[1] as Currency : pair[1].wrapped
-        const tokenSymbol1 = token1.symbol!
-        const tokenSymbol2 = token2.symbol!
-        const tokenAddress1 = token1.wrapped.address
-        const tokenAddress2 = token2.wrapped.address
+        const token1: Currency | Token = pair[0].isNative ? (pair[0] as Currency) : pair[0].wrapped;
+        const token2: Currency | Token = pair[1].isNative ? (pair[1] as Currency) : pair[1].wrapped;
+        const tokenSymbol1 = token1.symbol!;
+        const tokenSymbol2 = token2.symbol!;
+        const tokenAddress1 = token1.wrapped.address;
+        const tokenAddress2 = token2.wrapped.address;
 
         it(`token address ${tokenAddress1} to token address ${tokenAddress2} within the list, should have portion`, async () => {
-          const requestedAmount = BigNumber.from(parseAmount('1.01', token1).quotient.toString())
+          const requestedAmount = BigNumber.from(parseAmount('1.01', token1).quotient.toString());
           const sharedInfo: QuoteRequestInfo = {
             requestId: uuid(),
             tokenInChainId: ChainId.MAINNET,
@@ -199,15 +214,15 @@ describe('PortionProvider test', () => {
             tokenOut: tokenAddress2,
             amount: requestedAmount,
             type: TradeType.EXACT_OUTPUT,
-            slippageTolerance: "0.5",
+            slippageTolerance: '0.5',
             swapper: uuid(),
             useUniswapX: false,
-          }
-          await exactOutGetPortionAndAssert(sharedInfo, token2)
+          };
+          await exactOutGetPortionAndAssert(sharedInfo, token2);
         });
 
         it(`token symbol ${tokenSymbol1} to token symbol ${tokenSymbol2} within the list, should have portion`, async () => {
-          const requestedAmount = BigNumber.from(parseAmount('1.01', token1).quotient.toString())
+          const requestedAmount = BigNumber.from(parseAmount('1.01', token1).quotient.toString());
           const sharedInfo: QuoteRequestInfo = {
             requestId: uuid(),
             tokenInChainId: ChainId.MAINNET,
@@ -216,14 +231,14 @@ describe('PortionProvider test', () => {
             tokenOut: tokenSymbol2,
             amount: requestedAmount,
             type: TradeType.EXACT_OUTPUT,
-            slippageTolerance: "0.5",
+            slippageTolerance: '0.5',
             swapper: uuid(),
             useUniswapX: false,
-          }
+          };
 
-          await exactOutGetPortionAndAssert(sharedInfo, token2)
+          await exactOutGetPortionAndAssert(sharedInfo, token2);
         });
-      })
+      });
 
       async function exactOutGetPortionAndAssert(sharedInfo: QuoteRequestInfo, token2: Currency | Token) {
         let [resolvedTokenIn, resolveTokenOut]: [Currency | undefined, Currency | undefined] = [undefined, undefined];
@@ -245,18 +260,31 @@ describe('PortionProvider test', () => {
         }
 
         const userTypedTokenOutAmount = parseAmount(expectedQuote, token2);
-        const getPortionResponse = await portionProvider.getPortion(sharedInfo, resolvedTokenIn?.wrapped.address, resolveTokenOut?.wrapped.address);
+        const getPortionResponse = await portionProvider.getPortion(
+          sharedInfo,
+          resolvedTokenIn?.wrapped.address,
+          resolveTokenOut?.wrapped.address
+        );
         expect(getPortionResponse?.hasPortion).toBe(portionResponse.hasPortion);
         expect(getPortionResponse?.portion).toBeDefined;
         expect(getPortionResponse?.portion).toStrictEqual(portionResponse.portion);
 
         const quote = userTypedTokenOutAmount.quotient.toString();
         const portionAmount = portionProvider.getPortionAmount(quote, getPortionResponse.portion, resolveTokenOut);
-        const quoteGasAdjusted = portionAmount?.add(userTypedTokenOutAmount).quotient.toString() ?? quote
-        const portionAdjustedQuote = portionProvider.getPortionAdjustedQuote(sharedInfo, quote, quoteGasAdjusted, portionAmount, resolvedTokenIn, resolveTokenOut);
+        const quoteGasAdjusted = portionAmount?.add(userTypedTokenOutAmount).quotient.toString() ?? quote;
+        const portionAdjustedQuote = portionProvider.getPortionAdjustedQuote(
+          sharedInfo,
+          quote,
+          quoteGasAdjusted,
+          portionAmount,
+          resolvedTokenIn,
+          resolveTokenOut
+        );
 
         // 1605.56 * 10^8 * 5 / 10000 = 80278000
-        const expectedPortionAmount = userTypedTokenOutAmount.multiply(new Fraction(portionResponse.portion.bips, 10000))
+        const expectedPortionAmount = userTypedTokenOutAmount.multiply(
+          new Fraction(portionResponse.portion.bips, 10000)
+        );
 
         // important assertions
         expect(portionAmount?.quotient.toString()).toBe(expectedPortionAmount.quotient.toString());
@@ -264,7 +292,9 @@ describe('PortionProvider test', () => {
         // 1605.56 * 10^8 + 80278000 = 160636278000
         // not important assertions
         const expectedPortionAdjustedTokenOutAmount = userTypedTokenOutAmount.add(expectedPortionAmount);
-        expect(portionAdjustedQuote?.quotient.toString()).toBe(expectedPortionAdjustedTokenOutAmount.quotient.toString());
+        expect(portionAdjustedQuote?.quotient.toString()).toBe(
+          expectedPortionAdjustedTokenOutAmount.quotient.toString()
+        );
       }
     });
   });

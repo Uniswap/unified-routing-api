@@ -108,16 +108,10 @@ export const EUROC_MAINNET = new Token(
   '0x1aBaEA1f7C830bD89Acc67eC4af516284b1bC33c',
   6,
   'EUROC',
-  'EUROC',
+  'EUROC'
 );
 
-export const XSGD_MAINNET = new Token(
-  ChainId.MAINNET,
-  '0x70e8dE73cE538DA2bEEd35d14187F6959a8ecA96',
-  6,
-  'XSGD',
-  'XSGD',
-);
+export const XSGD_MAINNET = new Token(ChainId.MAINNET, '0x70e8dE73cE538DA2bEEd35d14187F6959a8ecA96', 6, 'XSGD', 'XSGD');
 
 export const DAI_ON = (chainId: ChainId): Token => {
   switch (chainId) {
