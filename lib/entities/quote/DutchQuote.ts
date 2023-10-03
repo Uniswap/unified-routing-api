@@ -1,5 +1,5 @@
 import { TradeType } from '@uniswap/sdk-core';
-import { DutchOrder, DutchOrderBuilder, DutchOrderInfoJSON } from '@uniswap/uniswapx-sdk';
+import { DutchOrder, DutchOrderBuilder, DutchOrderInfoJSON, DutchOutput } from '@uniswap/uniswapx-sdk';
 import { BigNumber, ethers } from 'ethers';
 
 import { PermitTransferFromData } from '@uniswap/permit2-sdk';
@@ -9,6 +9,7 @@ import { DutchRequest } from '..';
 import {
   BPS,
   DEFAULT_START_TIME_BUFFER_SECS,
+  ENABLE_PORTION,
   NATIVE_ADDRESS,
   OPEN_QUOTE_START_TIME_BUFFER_SECS,
   RoutingType,
@@ -73,7 +74,13 @@ export class DutchQuote implements IQuote {
   public static amountInImprovementExactOut = BigNumber.from(9999);
 
   // build a dutch quote from an RFQ response
-  public static fromResponseBody(request: DutchRequest, body: DutchQuoteJSON, nonce?: string): DutchQuote {
+  public static fromResponseBody(
+    request: DutchRequest,
+    body: DutchQuoteJSON,
+    nonce?: string,
+    portionBips?: number,
+    portionRecipient?: string
+  ): DutchQuote {
     const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchQuote.applySlippage(
       { amountIn: BigNumber.from(body.amountIn), amountOut: BigNumber.from(body.amountOut) },
       request
@@ -93,7 +100,9 @@ export class DutchQuote implements IQuote {
       body.swapper,
       DutchQuoteType.RFQ,
       body.filler,
-      nonce
+      nonce,
+      portionBips,
+      portionRecipient
     );
   }
 
@@ -134,7 +143,9 @@ export class DutchQuote implements IQuote {
       request.config.swapper,
       DutchQuoteType.SYNTHETIC,
       NATIVE_ADDRESS, // synthetic quote has no filler
-      generateRandomNonce() // synthetic quote has no nonce
+      generateRandomNonce(), // synthetic quote has no nonce
+      quote.getPortionBips(),
+      quote.getPortionRecipient()
     );
   }
 
@@ -182,11 +193,16 @@ export class DutchQuote implements IQuote {
       quote.swapper,
       quote.quoteType,
       quote.filler,
-      quote.nonce
+      quote.nonce,
+      // Prefers the portion from the RFQ quoter if exists
+      // Next the potion from the classic quoter if exists
+      // Otherwise no portion
+      quote.portionBips ?? classic.getPortionBips(),
+      quote.portionRecipient ?? classic.getPortionRecipient()
     );
   }
 
-  constructor(
+  private constructor(
     public readonly createdAtMs: string,
     public readonly request: DutchRequest,
     public readonly chainId: number,
@@ -201,7 +217,9 @@ export class DutchQuote implements IQuote {
     public readonly swapper: string,
     public readonly quoteType: DutchQuoteType,
     public readonly filler?: string,
-    public readonly nonce?: string
+    public readonly nonce?: string,
+    public readonly portionBips?: number,
+    public readonly portionRecipient?: string
   ) {
     this.createdAtMs = createdAtMs || currentTimestampInMs();
     this.createdAt = timestampInMstoSeconds(parseInt(this.createdAtMs));
@@ -245,6 +263,15 @@ export class DutchQuote implements IQuote {
         recipient: this.request.config.swapper,
       });
 
+    if (this.shouldAppendPortion()) {
+      builder.output(<DutchOutput>{
+        token: this.tokenOut,
+        startAmount: this.portionAmountOutStart,
+        endAmount: this.portionAmountOutEnd,
+        recipient: this.portionRecipient,
+      });
+    }
+
     if (this.isExclusiveQuote() && this.filler) {
       builder.exclusiveFiller(this.filler, BigNumber.from(this.request.config.exclusivityOverrideBps));
     }
@@ -272,6 +299,10 @@ export class DutchQuote implements IQuote {
       slippage: parseFloat(this.request.info.slippageTolerance),
       createdAt: this.createdAt,
       createdAtMs: this.createdAtMs,
+      portionBips: this.portionBips,
+      portionRecipient: this.portionRecipient,
+      portionAmountOutStart: this.portionAmountOutStart.toString(),
+      portionAmountOutEnd: this.portionAmountOutEnd.toString(),
     };
   }
 
@@ -332,6 +363,14 @@ export class DutchQuote implements IQuote {
     }
   }
 
+  public get portionAmountOutStart(): BigNumber {
+    return this.amountOutStart.mul(this.portionBips ?? 0).div(BPS);
+  }
+
+  public get portionAmountOutEnd(): BigNumber {
+    return this.amountOutEnd.mul(this.portionBips ?? 0).div(BPS);
+  }
+
   validate(): boolean {
     if (this.amountOutStart.lt(this.amountOutEnd)) return false;
     if (this.amountInStart.gt(this.amountInEnd)) return false;
@@ -344,6 +383,10 @@ export class DutchQuote implements IQuote {
 
   isOpenQuote(): boolean {
     return !this.isExclusiveQuote();
+  }
+
+  shouldAppendPortion(): boolean {
+    return !!this.portionBips && !!this.portionRecipient && ENABLE_PORTION(process.env.ENABLE_PORTION);
   }
 
   // static helpers

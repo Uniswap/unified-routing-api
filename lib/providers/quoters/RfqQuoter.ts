@@ -9,12 +9,18 @@ import { PostQuoteResponseJoi } from '../../handlers/quote';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import { generateRandomNonce } from '../../util/nonce';
+import { PortionProvider } from '../portion/PortionProvider';
 import { Quoter, QuoterType } from './index';
 
 export class RfqQuoter implements Quoter {
   static readonly type: QuoterType.UNISWAPX_RFQ;
 
-  constructor(private rfqUrl: string, private serviceUrl: string, private paramApiKey: string) {}
+  constructor(
+    private rfqUrl: string,
+    private serviceUrl: string,
+    private paramApiKey: string,
+    private portionProvider: PortionProvider
+  ) {}
 
   async quote(request: DutchRequest): Promise<Quote | null> {
     if (request.routingType !== RoutingType.DUTCH_LIMIT) {
@@ -44,7 +50,7 @@ export class RfqQuoter implements Quoter {
 
     let quote: Quote | null = null;
     metrics.putMetric(`RfqQuoterRequest`, 1);
-    await Promise.allSettled(requests).then((results) => {
+    await Promise.allSettled(requests).then(async (results) => {
       if (results[0].status == 'rejected') {
         log.error(results[0].reason, 'RfqQuoterErr');
         metrics.putMetric(`RfqQuoterRfqErr`, 1);
@@ -56,11 +62,23 @@ export class RfqQuoter implements Quoter {
           log.error({ validationError: validated.error }, 'RfqQuoterErr: POST quote response invalid');
           metrics.putMetric(`RfqQuoterValidationErr`, 1);
         } else {
+          const getPortionResponse = await this.portionProvider.getPortion(
+            request.info,
+            mapNative(request.info.tokenIn, request.info.tokenInChainId),
+            mapNative(request.info.tokenOut, request.info.tokenOutChainId)
+          );
+
           if (results[1].status == 'rejected') {
             log.debug(results[1].reason, 'RfqQuoterErr: GET nonce failed');
             metrics.putMetric(`RfqQuoterLatency`, Date.now() - now);
             metrics.putMetric(`RfqQuoterNonceErr`, 1);
-            quote = DutchQuote.fromResponseBody(request, response, generateRandomNonce());
+            quote = DutchQuote.fromResponseBody(
+              request,
+              response,
+              generateRandomNonce(),
+              getPortionResponse.portion?.bips,
+              getPortionResponse.portion?.recipient
+            );
           } else {
             log.info(results[1].value.data, 'RfqQuoter: GET nonce success');
             metrics.putMetric(`RfqQuoterLatency`, Date.now() - now);
@@ -68,7 +86,9 @@ export class RfqQuoter implements Quoter {
             quote = DutchQuote.fromResponseBody(
               request,
               response,
-              BigNumber.from(results[1].value.data.nonce).add(1).toString()
+              BigNumber.from(results[1].value.data.nonce).add(1).toString(),
+              getPortionResponse.portion?.bips,
+              getPortionResponse.portion?.recipient
             );
           }
         }

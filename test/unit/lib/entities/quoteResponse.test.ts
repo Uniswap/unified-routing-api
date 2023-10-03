@@ -2,7 +2,16 @@ import { DutchOrder, parseValidation, ValidationType } from '@uniswap/uniswapx-s
 import { BigNumber } from 'ethers';
 
 import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, DutchQuoteJSON, DutchRequest } from '../../../../lib/entities';
-import { AMOUNT, CHAIN_IN_ID, FILLER, PERMIT_DETAILS, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
+import {
+  AMOUNT,
+  CHAIN_IN_ID,
+  FILLER,
+  PERMIT_DETAILS,
+  PORTION_BIPS, PORTION_RECIPIENT,
+  SWAPPER,
+  TOKEN_IN,
+  TOKEN_OUT
+} from '../../../constants';
 import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_OUT_BETTER,
@@ -53,6 +62,8 @@ const CLASSIC_QUOTE_JSON: ClassicQuoteDataJSON = {
   routeString: 'USD-ETH',
   tradeType: 'EXACT_INPUT',
   slippage: 0.5,
+  portionBips: PORTION_BIPS,
+  portionRecipient: PORTION_RECIPIENT,
 };
 
 describe('QuoteResponse', () => {
@@ -122,6 +133,8 @@ describe('QuoteResponse', () => {
     });
     expect(quote.amountIn.toString()).toEqual(CLASSIC_QUOTE_JSON.amount);
     expect(quote.amountOut.toString()).toEqual(CLASSIC_QUOTE_JSON.quote);
+    expect(quote.getPortionBips()).toEqual(CLASSIC_QUOTE_JSON.portionBips);
+    expect(quote.getPortionRecipient()).toEqual(CLASSIC_QUOTE_JSON.portionRecipient);
   });
 
   it('parses classic quote exactOutput', () => {
@@ -135,5 +148,7 @@ describe('QuoteResponse', () => {
     });
     expect(quote.amountIn.toString()).toEqual(CLASSIC_QUOTE_JSON.quote);
     expect(quote.amountOut.toString()).toEqual(CLASSIC_QUOTE_JSON.amount);
+    expect(quote.getPortionBips()).toEqual(CLASSIC_QUOTE_JSON.portionBips);
+    expect(quote.getPortionRecipient()).toEqual(CLASSIC_QUOTE_JSON.portionRecipient);
   });
 });

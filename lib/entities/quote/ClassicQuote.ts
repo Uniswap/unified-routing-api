@@ -88,7 +88,7 @@ export class ClassicQuote implements IQuote {
     return new ClassicQuote(request, body);
   }
 
-  constructor(public request: QuoteRequest, private quoteData: ClassicQuoteDataJSON) {
+  private constructor(public request: QuoteRequest, private quoteData: ClassicQuoteDataJSON) {
     this.createdAtMs = currentTimestampInMs();
     this.createdAt = timestampInMstoSeconds(parseInt(this.createdAtMs));
   }
@@ -183,5 +183,13 @@ export class ClassicQuote implements IQuote {
 
   public get slippage(): number {
     return this.request.info.slippageTolerance ? parseFloat(this.request.info.slippageTolerance) : -1;
+  }
+
+  public getPortionBips(): number | undefined {
+    return this.quoteData.portionBips;
+  }
+
+  public getPortionRecipient(): string | undefined {
+    return this.quoteData.portionRecipient;
   }
 }

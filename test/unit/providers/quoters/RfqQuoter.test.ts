@@ -1,10 +1,12 @@
 import { BigNumber, ethers } from 'ethers';
 
 import { DutchQuote, DutchQuoteDataJSON, DutchQuoteJSON } from '../../../../lib/entities';
-import { RfqQuoter } from '../../../../lib/providers/quoters';
+import { DefaultPortionProvider, RfqQuoter } from '../../../../lib/providers';
 import axios from '../../../../lib/providers/quoters/helpers';
-import { AMOUNT, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
+import { AMOUNT, PORTION_BIPS, PORTION_RECIPIENT, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
 import { QUOTE_REQUEST_DL, QUOTE_REQUEST_DL_EXACT_OUT } from '../../../utils/fixtures';
+import { GetPortionResponse, PortionFetcher, PortionType } from '../../../../lib/fetchers/PortionFetcher';
+import NodeCache from 'node-cache';
 
 const UUID = 'c67c2882-24aa-4a68-a90b-53250ef81517';
 
@@ -13,7 +15,20 @@ describe('RfqQuoter test', () => {
     return jest.spyOn(axios, 'get').mockResolvedValue({ data: { nonce: nonce } });
   };
   const postSpy = (responseData: DutchQuoteJSON) => jest.spyOn(axios, 'post').mockResolvedValue({ data: responseData });
-  const quoter = new RfqQuoter('https://api.uniswap.org/', 'https://api.uniswap.org/', 'test-api-key');
+
+  const portionResponse: GetPortionResponse = {
+    hasPortion: true,
+    portion: {
+      bips: PORTION_BIPS,
+      recipient: PORTION_RECIPIENT,
+      type: PortionType.Flat,
+    }
+  }
+  const portionCache = new NodeCache({ stdTTL: 600 });
+  const portionFetcher = new PortionFetcher('https://portion.uniswap.org/', portionCache);
+  const portionProvider = new DefaultPortionProvider(portionFetcher);
+  jest.spyOn(portionFetcher, 'getPortion').mockResolvedValue(portionResponse);
+  const quoter = new RfqQuoter('https://api.uniswap.org/', 'https://api.uniswap.org/', 'test-api-key', portionProvider);
 
   describe('quote test', () => {
     beforeEach(() => {
@@ -29,6 +44,7 @@ describe('RfqQuoter test', () => {
         swapper: SWAPPER,
         filler: SWAPPER,
       });
+      process.env.ENABLE_PORTION = undefined;
     });
 
     it('returns null if quote response is invalid', async () => {
@@ -97,6 +113,36 @@ describe('RfqQuoter test', () => {
       expect(spy).toBeCalledWith(
         'https://api.uniswap.org/dutch-auction/nonce?address=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&chainId=1'
       );
+    });
+
+    it('returns EXACT_INPUT quote with portion', async () => {
+      const quote = await quoter.quote(QUOTE_REQUEST_DL);
+      expect(quote).toMatchObject({
+        chainId: 1,
+        tokenIn: TOKEN_IN,
+        tokenOut: TOKEN_OUT,
+        amountInStart: BigNumber.from(AMOUNT),
+        amountOutStart: BigNumber.from(AMOUNT),
+      });
+      expect(quote).toBeInstanceOf(DutchQuote);
+      expect((quote as DutchQuote).portionBips).toEqual(portionResponse.portion?.bips);
+      expect((quote as DutchQuote).portionRecipient).toEqual(portionResponse.portion?.recipient);
+    });
+
+    it('returns EXACT_OUTPUT quote with portion', async () => {
+      process.env.ENABLE_PORTION = 'true';
+
+      const quote = await quoter.quote(QUOTE_REQUEST_DL_EXACT_OUT);
+      expect(quote).toMatchObject({
+        chainId: 1,
+        tokenIn: TOKEN_IN,
+        tokenOut: TOKEN_OUT,
+        amountInStart: BigNumber.from(AMOUNT),
+        amountOutStart: BigNumber.from(AMOUNT),
+      });
+      expect(quote).toBeInstanceOf(DutchQuote);
+      expect((quote as DutchQuote).portionBips).toEqual(portionResponse.portion?.bips);
+      expect((quote as DutchQuote).portionRecipient).toEqual(portionResponse.portion?.recipient);
     });
   });
 });
