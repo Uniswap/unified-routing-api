@@ -75,7 +75,7 @@ describe('RoutingApiQuoter', () => {
       const classicQuote = response as ClassicQuote;
 
       expect(classicQuote.toJSON().portionBips).toEqual(PORTION_BIPS);
-      expect(classicQuote.toJSON().portionAmount).toEqual(PORTION_BIPS);
+      expect(classicQuote.toJSON().portionRecipient).toEqual(PORTION_RECIPIENT);
     });
   });
 
