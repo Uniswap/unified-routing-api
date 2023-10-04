@@ -291,4 +291,5 @@ export const DUTCH_LIMIT_ORDER_JSON = {
   startTimeBufferSecs: 30,
   auctionPeriodSecs: 60,
   slippageTolerance: '0.5',
+  orderHash: '0x8859113385dac928f6e064e6d49539fd94cab32687e1a37592ef6f3192948513'
 };

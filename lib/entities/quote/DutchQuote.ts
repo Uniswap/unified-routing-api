@@ -28,6 +28,7 @@ export type DutchQuoteDataJSON = {
   quoteId: string;
   requestId: string;
   encodedOrder: string;
+  orderHash: string;
   startTimeBufferSecs: number;
   auctionPeriodSecs: number;
   deadlineBufferSecs: number;
@@ -207,6 +208,7 @@ export class DutchQuote implements IQuote {
       encodedOrder: this.toOrder().serialize(),
       quoteId: this.quoteId,
       requestId: this.requestId,
+      orderHash: this.toOrder().hash(),
       startTimeBufferSecs: this.startTimeBufferSecs,
       auctionPeriodSecs: this.auctionPeriodSecs,
       deadlineBufferSecs: this.deadlineBufferSecs,
