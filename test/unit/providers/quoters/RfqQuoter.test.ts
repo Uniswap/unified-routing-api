@@ -1,12 +1,12 @@
 import { BigNumber, ethers } from 'ethers';
 
+import NodeCache from 'node-cache';
 import { DutchQuote, DutchQuoteDataJSON, DutchQuoteJSON } from '../../../../lib/entities';
-import { DefaultPortionProvider, RfqQuoter } from '../../../../lib/providers';
+import { GetPortionResponse, PortionFetcher, PortionType } from '../../../../lib/fetchers/PortionFetcher';
+import { PortionProvider, RfqQuoter } from '../../../../lib/providers';
 import axios from '../../../../lib/providers/quoters/helpers';
 import { AMOUNT, PORTION_BIPS, PORTION_RECIPIENT, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
 import { QUOTE_REQUEST_DL, QUOTE_REQUEST_DL_EXACT_OUT } from '../../../utils/fixtures';
-import { GetPortionResponse, PortionFetcher, PortionType } from '../../../../lib/fetchers/PortionFetcher';
-import NodeCache from 'node-cache';
 
 const UUID = 'c67c2882-24aa-4a68-a90b-53250ef81517';
 
@@ -22,11 +22,11 @@ describe('RfqQuoter test', () => {
       bips: PORTION_BIPS,
       recipient: PORTION_RECIPIENT,
       type: PortionType.Flat,
-    }
-  }
+    },
+  };
   const portionCache = new NodeCache({ stdTTL: 600 });
   const portionFetcher = new PortionFetcher('https://portion.uniswap.org/', portionCache);
-  const portionProvider = new DefaultPortionProvider(portionFetcher);
+  const portionProvider = new PortionProvider(portionFetcher);
   jest.spyOn(portionFetcher, 'getPortion').mockResolvedValue(portionResponse);
   const quoter = new RfqQuoter('https://api.uniswap.org/', 'https://api.uniswap.org/', 'test-api-key', portionProvider);
 

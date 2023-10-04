@@ -75,17 +75,31 @@ export function buildQuoteResponse(
     quote: ReceivedQuoteData;
   },
   request: QuoteRequest,
+  nonce?: string,
   portionBips?: number,
   portionRecipient?: string
 ): Quote {
-  return parseQuote(request, body.routing, body.quote, portionBips, portionRecipient);
+  return parseQuote(request, body.routing, body.quote, nonce, portionBips, portionRecipient);
 }
 
-function parseQuote(request: QuoteRequest, routing: RoutingType, quote: ReceivedQuoteData, portionBips?: number, portionRecipient?: string): Quote {
+function parseQuote(
+  request: QuoteRequest,
+  routing: RoutingType,
+  quote: ReceivedQuoteData,
+  nonce?: string,
+  portionBips?: number,
+  portionRecipient?: string
+): Quote {
   switch (routing) {
     case RoutingType.DUTCH_LIMIT:
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      return DutchQuote.fromResponseBody(request as DutchRequest, quote as DutchQuoteJSON, undefined, portionBips, portionRecipient);
+      return DutchQuote.fromResponseBody(
+        request as DutchRequest,
+        quote as DutchQuoteJSON,
+        nonce,
+        portionBips,
+        portionRecipient
+      );
     case RoutingType.CLASSIC:
       // TODO: figure out how to determine tradetype from output JSON
       // also: is this parsing quote responses even needed outside of testing?

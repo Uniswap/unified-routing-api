@@ -48,6 +48,12 @@ export class RfqQuoter implements Quoter {
       axios.get(`${this.serviceUrl}dutch-auction/nonce?address=${swapper}&chainId=${request.info.tokenInChainId}`), // should also work for cross-chain?
     ];
 
+    const getPortionResponse = await this.portionProvider.getPortion(
+      request.info,
+      mapNative(request.info.tokenIn, request.info.tokenInChainId),
+      mapNative(request.info.tokenOut, request.info.tokenOutChainId)
+    );
+
     let quote: Quote | null = null;
     metrics.putMetric(`RfqQuoterRequest`, 1);
     await Promise.allSettled(requests).then(async (results) => {
@@ -62,12 +68,6 @@ export class RfqQuoter implements Quoter {
           log.error({ validationError: validated.error }, 'RfqQuoterErr: POST quote response invalid');
           metrics.putMetric(`RfqQuoterValidationErr`, 1);
         } else {
-          const getPortionResponse = await this.portionProvider.getPortion(
-            request.info,
-            mapNative(request.info.tokenIn, request.info.tokenInChainId),
-            mapNative(request.info.tokenOut, request.info.tokenOutChainId)
-          );
-
           if (results[1].status == 'rejected') {
             log.debug(results[1].reason, 'RfqQuoterErr: GET nonce failed');
             metrics.putMetric(`RfqQuoterLatency`, Date.now() - now);

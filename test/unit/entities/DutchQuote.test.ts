@@ -8,26 +8,29 @@ import { ClassicQuote, DutchQuote } from '../../../lib/entities';
 import { AMOUNT_LARGE, DL_PERMIT_RFQ, DUTCH_LIMIT_ORDER_JSON, PORTION_BIPS, PORTION_RECIPIENT } from '../../constants';
 import {
   CLASSIC_QUOTE_EXACT_IN_LARGE,
-  CLASSIC_QUOTE_EXACT_IN_LARGE_GAS, CLASSIC_QUOTE_EXACT_IN_LARGE_PORTION,
+  CLASSIC_QUOTE_EXACT_IN_LARGE_GAS,
   CLASSIC_QUOTE_EXACT_IN_NATIVE,
-  CLASSIC_QUOTE_EXACT_OUT_LARGE, CLASSIC_QUOTE_EXACT_OUT_LARGE_PORTION,
+  CLASSIC_QUOTE_EXACT_OUT_LARGE,
   createClassicQuote,
   createDutchQuote,
   createDutchQuoteWithRequest,
   DL_QUOTE_EXACT_IN_LARGE,
   DL_QUOTE_EXACT_OUT_LARGE,
-  DL_QUOTE_NATIVE_EXACT_IN_LARGE
+  DL_QUOTE_NATIVE_EXACT_IN_LARGE,
 } from '../../utils/fixtures';
 
 describe('DutchQuote', () => {
   // silent logger in tests
   const logger = Logger.createLogger({ name: 'test' });
   logger.level(Logger.FATAL);
+  process.env.ENABLE_PORTION = 'true';
 
   describe('Reparameterize', () => {
     it('Does not reparameterize if classic is not defined', async () => {
       const reparameterized = DutchQuote.reparameterize(DL_QUOTE_EXACT_IN_LARGE, undefined, undefined);
       expect(reparameterized).toMatchObject(DL_QUOTE_EXACT_IN_LARGE);
+      expect(reparameterized.portionBips).toEqual(PORTION_BIPS);
+      expect(reparameterized.portionRecipient).toEqual(PORTION_RECIPIENT);
     });
 
     it('slippage is in percent terms', async () => {
@@ -91,7 +94,7 @@ describe('DutchQuote', () => {
     });
 
     it('reparameterizes with classic quote for end', async () => {
-      const reparameterized = DutchQuote.reparameterize(DL_QUOTE_EXACT_IN_LARGE, CLASSIC_QUOTE_EXACT_IN_LARGE_PORTION);
+      const reparameterized = DutchQuote.reparameterize(DL_QUOTE_EXACT_IN_LARGE, CLASSIC_QUOTE_EXACT_IN_LARGE);
       expect(reparameterized.request).toMatchObject(DL_QUOTE_EXACT_IN_LARGE.request);
       expect(reparameterized.amountInStart).toEqual(DL_QUOTE_EXACT_IN_LARGE.amountInStart);
       expect(reparameterized.amountOutStart).toEqual(DL_QUOTE_EXACT_IN_LARGE.amountOutStart);
@@ -110,16 +113,15 @@ describe('DutchQuote', () => {
 
       expect(reparameterized.amountInEnd).toEqual(amountInEnd);
       expect(reparameterized.amountOutEnd).toEqual(amountOutEnd);
+      expect(reparameterized.portionBips).toEqual(PORTION_BIPS);
+      expect(reparameterized.portionRecipient).toEqual(PORTION_RECIPIENT);
+      expect(reparameterized.portionAmountOutStart).toEqual(reparameterized.amountOutStart.mul(PORTION_BIPS).div(BPS));
       expect(reparameterized.portionAmountOutEnd).toEqual(amountOutEnd.mul(PORTION_BIPS).div(BPS));
     });
 
     it('reparameterizes with classic quote for end exactOutput', async () => {
-      const reparameterized = DutchQuote.reparameterize(DL_QUOTE_EXACT_OUT_LARGE, CLASSIC_QUOTE_EXACT_OUT_LARGE_PORTION);
+      const reparameterized = DutchQuote.reparameterize(DL_QUOTE_EXACT_OUT_LARGE, CLASSIC_QUOTE_EXACT_OUT_LARGE);
       expect(reparameterized.request).toMatchObject(DL_QUOTE_EXACT_OUT_LARGE.request);
-      expect(reparameterized.amountInStart).toEqual(DL_QUOTE_EXACT_OUT_LARGE.amountInStart);
-      expect(reparameterized.amountOutStart).toEqual(DL_QUOTE_EXACT_OUT_LARGE.amountOutStart);
-      expect(reparameterized.portionAmountOutStart).toEqual(DL_QUOTE_EXACT_OUT_LARGE.amountOutStart.mul(PORTION_BIPS).div(BPS));
-      expect(reparameterized.portionAmountOutEnd).toEqual(DL_QUOTE_EXACT_OUT_LARGE.amountOutEnd.mul(PORTION_BIPS).div(BPS));
 
       const { amountIn: amountInClassic, amountOut: amountOutClassic } = DutchQuote.applyGasAdjustment(
         {
@@ -135,6 +137,16 @@ describe('DutchQuote', () => {
 
       expect(reparameterized.amountInEnd).toEqual(amountInEnd);
       expect(reparameterized.amountOutEnd).toEqual(amountOutEnd);
+      expect(reparameterized.amountInStart).toEqual(DL_QUOTE_EXACT_OUT_LARGE.amountInStart);
+      expect(reparameterized.amountOutStart).toEqual(DL_QUOTE_EXACT_OUT_LARGE.amountOutStart);
+      expect(reparameterized.portionBips).toEqual(PORTION_BIPS);
+      expect(reparameterized.portionRecipient).toEqual(PORTION_RECIPIENT);
+      expect(reparameterized.portionAmountOutStart).toEqual(
+        DL_QUOTE_EXACT_OUT_LARGE.amountOutStart.mul(PORTION_BIPS).div(BPS)
+      );
+      expect(reparameterized.portionAmountOutEnd).toEqual(
+        DL_QUOTE_EXACT_OUT_LARGE.amountOutEnd.mul(PORTION_BIPS).div(BPS)
+      );
     });
 
     it('reparameterizes with wrap factored into startAmount', async () => {
@@ -156,9 +168,11 @@ describe('DutchQuote', () => {
 
       expect(reparameterized.amountInStart).toEqual(DL_QUOTE_NATIVE_EXACT_IN_LARGE.amountInStart);
       expect(reparameterized.amountOutStart.lte(DL_QUOTE_NATIVE_EXACT_IN_LARGE.amountOutStart)).toBeTruthy();
-      expect(reparameterized.portionAmountOutStart.lte(DL_QUOTE_NATIVE_EXACT_IN_LARGE.amountOutStart.mul(PORTION_BIPS).div(BPS))).toBeTruthy();
       expect(reparameterized.amountInEnd).toEqual(amountInEnd);
       expect(reparameterized.amountOutEnd).toEqual(amountOutEnd);
+      expect(reparameterized.portionBips).toEqual(PORTION_BIPS);
+      expect(reparameterized.portionRecipient).toEqual(PORTION_RECIPIENT);
+      expect(reparameterized.portionAmountOutStart).toEqual(reparameterized.amountOutStart.mul(PORTION_BIPS).div(BPS));
       expect(reparameterized.portionAmountOutEnd).toEqual(amountOutEnd.mul(PORTION_BIPS).div(BPS));
     });
   });
@@ -256,11 +270,13 @@ describe('DutchQuote', () => {
 
   describe('toJSON', () => {
     it('Succeeds - Basic', () => {
-      const quote = createDutchQuote(
+      const quote: DutchQuote = createDutchQuote(
         { amountOut: '10000', filler: '0x1111111111111111111111111111111111111111' },
-        'EXACT_INPUT'
+        'EXACT_INPUT',
+        '1',
+        PORTION_BIPS,
+        PORTION_RECIPIENT
       ) as any;
-      quote.nonce = 1;
       const result = quote.toJSON();
       expect(result).toMatchObject(DUTCH_LIMIT_ORDER_JSON);
     });
@@ -274,6 +290,10 @@ describe('DutchQuote', () => {
       const firstNonce = result.toOrder().info.nonce;
       const secondNonce = result.toOrder().info.nonce;
       expect(firstNonce).toEqual(secondNonce);
+      expect(result.portionBips).toEqual(PORTION_BIPS);
+      expect(result.portionRecipient).toEqual(PORTION_RECIPIENT);
+      expect(result.portionAmountOutStart).toEqual(result.amountOutStart.mul(PORTION_BIPS).div(BPS));
+      expect(result.portionAmountOutEnd).toEqual(result.amountOutEnd.mul(PORTION_BIPS).div(BPS));
     });
 
     it('applies gas adjustment to endAmount', () => {
@@ -296,22 +316,10 @@ describe('DutchQuote', () => {
       expect(result.amountInEnd).toEqual(result.amountInStart);
       // should have extra adjustment for gas to amountOut
       expect(result.amountOutEnd.lte(slippageAdjustedAmountOut)).toBeTruthy();
-    });
-
-    it('Succeeds - Gets portion from classic', () => {
-      process.env.ENABLE_PORTION = 'true';
-
-      const classicQuote = createClassicQuote({ portionBips: PORTION_BIPS, portionRecipient: PORTION_RECIPIENT}, {});
-      const dutchQuote = createDutchQuote({}, 'EXACT_INPUT');
-      const result = DutchQuote.fromClassicQuote(dutchQuote.request, classicQuote);
-      const outputs = result.toOrder().toJSON().outputs;
-      expect(outputs.length).toEqual(2);
-
-      const firstOrder = outputs[0];
-      const secondOrder = outputs[1];
-      expect(secondOrder.recipient).toEqual(PORTION_RECIPIENT);
-      expect(secondOrder.startAmount).toEqual(BigNumber.from(firstOrder.startAmount).mul(PORTION_BIPS).div(BPS).toString());
-      expect(secondOrder.endAmount).toEqual(BigNumber.from(firstOrder.endAmount).mul(PORTION_BIPS).div(BPS).toString());
+      expect(result.portionBips).toEqual(PORTION_BIPS);
+      expect(result.portionRecipient).toEqual(PORTION_RECIPIENT);
+      expect(result.portionAmountOutStart).toEqual(result.amountOutStart.mul(PORTION_BIPS).div(BPS));
+      expect(result.portionAmountOutEnd).toEqual(result.amountOutEnd.mul(PORTION_BIPS).div(BPS));
     });
   });
 
