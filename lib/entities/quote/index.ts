@@ -25,6 +25,7 @@ export type LogJSON = {
   swapper: string;
   routing: string;
   createdAt: string;
+  createdAtMs: string;
   slippage: number;
   filler?: string;
   gasPriceWei?: string;

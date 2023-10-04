@@ -19,7 +19,7 @@ import {
 } from '../../constants';
 import { log } from '../../util/log';
 import { generateRandomNonce } from '../../util/nonce';
-import { currentTimestampInSeconds } from '../../util/time';
+import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
 import { ClassicQuote } from './ClassicQuote';
 import { LogJSON } from './index';
 
@@ -62,6 +62,7 @@ export enum DutchQuoteType {
 }
 
 export class DutchQuote implements IQuote {
+  public readonly createdAt: string;
   public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
   // Add 1bps price improvmement to favor Dutch
   public static amountOutImprovementExactIn = BigNumber.from(10001);
@@ -74,7 +75,7 @@ export class DutchQuote implements IQuote {
       request
     );
     return new DutchQuote(
-      currentTimestampInSeconds(),
+      currentTimestampInMs(),
       request,
       body.chainId,
       body.requestId,
@@ -115,7 +116,7 @@ export class DutchQuote implements IQuote {
     });
 
     return new DutchQuote(
-      quote.createdAt,
+      quote.createdAtMs,
       request,
       request.info.tokenInChainId,
       request.info.requestId,
@@ -163,7 +164,7 @@ export class DutchQuote implements IQuote {
     });
 
     return new DutchQuote(
-      quote.createdAt,
+      quote.createdAtMs,
       quote.request,
       quote.chainId,
       quote.requestId,
@@ -182,7 +183,7 @@ export class DutchQuote implements IQuote {
   }
 
   constructor(
-    public readonly createdAt: string,
+    public readonly createdAtMs: string,
     public readonly request: DutchRequest,
     public readonly chainId: number,
     public readonly requestId: string,
@@ -198,7 +199,8 @@ export class DutchQuote implements IQuote {
     public readonly filler?: string,
     public readonly nonce?: string
   ) {
-    this.createdAt = createdAt || currentTimestampInSeconds();
+    this.createdAtMs = createdAtMs || currentTimestampInMs();
+    this.createdAt = timestampInMstoSeconds(parseInt(this.createdAtMs));
   }
 
   public toJSON(): DutchQuoteDataJSON {
@@ -264,6 +266,7 @@ export class DutchQuote implements IQuote {
       routing: RoutingType[this.routingType],
       slippage: parseFloat(this.request.info.slippageTolerance),
       createdAt: this.createdAt,
+      createdAtMs: this.createdAtMs,
     };
   }
 

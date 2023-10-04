@@ -624,6 +624,7 @@ describe('QuoteHandler', () => {
               swapper: SWAPPER,
               configs: 'DUTCH_LIMIT,CLASSIC',
               createdAt: expect.any(String),
+              createdAtMs: expect.any(String),
             }),
           })
         );
@@ -643,6 +644,7 @@ describe('QuoteHandler', () => {
               filler: DL_QUOTE_EXACT_IN_BETTER.filler,
               routing: DL_QUOTE_EXACT_IN_BETTER.routingType,
               createdAt: expect.any(String),
+              createdAtMs: expect.any(String),
             }),
           })
         );
