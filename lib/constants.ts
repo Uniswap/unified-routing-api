@@ -31,9 +31,9 @@ export const BACKEND_CONTROLLED_ENABLE_PORTION = (portionFlag?: string) => {
 };
 
 export const FRONTEND_PASSTHROUGH_ENABLE_PORTION = (sendPortionFlag?: boolean) => {
-  return sendPortionFlag;
-}
+  return sendPortionFlag === true;
+};
 
 export const FRONTEND_LOGICAL_AND_BACKEND_ENABLE_PORTION_FLAG = (sendPortionFlag?: boolean, portionFlag?: string) => {
-    return FRONTEND_PASSTHROUGH_ENABLE_PORTION(sendPortionFlag) && BACKEND_CONTROLLED_ENABLE_PORTION(portionFlag);
-}
+  return FRONTEND_PASSTHROUGH_ENABLE_PORTION(sendPortionFlag) && BACKEND_CONTROLLED_ENABLE_PORTION(portionFlag);
+};

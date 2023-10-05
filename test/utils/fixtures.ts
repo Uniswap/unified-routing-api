@@ -260,13 +260,14 @@ export function createDutchQuote(
   type: string,
   nonce?: string,
   portionBips?: number,
-  portionRecipient?: string
+  portionRecipient?: string,
+  sendPortionEnabled?: boolean
 ): DutchQuote {
   return buildQuoteResponse(
     Object.assign({}, DL_QUOTE_DATA, {
       quote: { ...DL_QUOTE_DATA.quote, type: RoutingType.DUTCH_LIMIT, ...overrides },
     }),
-    makeDutchRequest({ type }),
+    makeDutchRequest({ type, sendPortionEnabled }),
     nonce,
     portionBips,
     portionRecipient
@@ -320,13 +321,19 @@ export const DL_QUOTE_NATIVE_EXACT_IN_BETTER = createDutchQuote(
 export const DL_QUOTE_NATIVE_EXACT_IN_LARGE = createDutchQuote(
   { amountOut: AMOUNT_BETTER, tokenIn: NATIVE_ADDRESS },
   'EXACT_INPUT',
+  '1'
+);
+export const DL_QUOTE_NATIVE_EXACT_IN_LARGE_WITH_PORTION = createDutchQuote(
+  { amountOut: AMOUNT_BETTER, tokenIn: NATIVE_ADDRESS },
+  'EXACT_INPUT',
   '1',
   PORTION_BIPS,
   PORTION_RECIPIENT
 );
 export const DL_QUOTE_EXACT_IN_WORSE_PREFERENCE = createDutchQuote({ amountOut: AMOUNT_LARGE }, 'EXACT_INPUT');
 export const DL_QUOTE_EXACT_IN_WORSE = createDutchQuote({ amountOut: AMOUNT }, 'EXACT_INPUT');
-export const DL_QUOTE_EXACT_IN_LARGE = createDutchQuote(
+export const DL_QUOTE_EXACT_IN_LARGE = createDutchQuote({ amountOut: AMOUNT_LARGE }, 'EXACT_INPUT', '1');
+export const DL_QUOTE_EXACT_IN_LARGE_WITH_PORTION = createDutchQuote(
   { amountOut: AMOUNT_LARGE },
   'EXACT_INPUT',
   '1',
@@ -348,7 +355,8 @@ export const CLASSIC_QUOTE_EXACT_IN_WORSE = createClassicQuote(
   { quote: AMOUNT, quoteGasAdjusted: AMOUNT },
   { type: 'EXACT_INPUT' }
 );
-export const CLASSIC_QUOTE_EXACT_IN_LARGE = createClassicQuote(
+export const CLASSIC_QUOTE_EXACT_IN_LARGE = createClassicQuote({}, { type: 'EXACT_INPUT' });
+export const CLASSIC_QUOTE_EXACT_IN_LARGE_WITH_PORTION = createClassicQuote(
   {
     quote: AMOUNT_LARGE,
     quoteGasAdjusted: AMOUNT_LARGE_GAS_ADJUSTED,

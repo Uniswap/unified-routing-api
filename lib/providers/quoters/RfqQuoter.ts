@@ -50,13 +50,13 @@ export class RfqQuoter implements Quoter {
 
     const getPortionResponse = await this.portionProvider.getPortion(
       request.info,
-      mapNative(request.info.tokenIn, request.info.tokenInChainId),
-      mapNative(request.info.tokenOut, request.info.tokenOutChainId)
+      request.info.tokenIn,
+      request.info.tokenOut
     );
 
     let quote: Quote | null = null;
     metrics.putMetric(`RfqQuoterRequest`, 1);
-    await Promise.allSettled(requests).then(async (results) => {
+    await Promise.allSettled(requests).then((results) => {
       if (results[0].status == 'rejected') {
         log.error(results[0].reason, 'RfqQuoterErr');
         metrics.putMetric(`RfqQuoterRfqErr`, 1);

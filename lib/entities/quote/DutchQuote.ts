@@ -9,7 +9,7 @@ import { DutchRequest } from '..';
 import {
   BPS,
   DEFAULT_START_TIME_BUFFER_SECS,
-  ENABLE_PORTION,
+  FRONTEND_LOGICAL_AND_BACKEND_ENABLE_PORTION_FLAG,
   NATIVE_ADDRESS,
   OPEN_QUOTE_START_TIME_BUFFER_SECS,
   RoutingType,
@@ -386,7 +386,11 @@ export class DutchQuote implements IQuote {
   }
 
   shouldAppendPortion(): boolean {
-    return !!this.portionBips && !!this.portionRecipient && ENABLE_PORTION(process.env.ENABLE_PORTION);
+    return (
+      !!this.portionBips &&
+      !!this.portionRecipient &&
+      FRONTEND_LOGICAL_AND_BACKEND_ENABLE_PORTION_FLAG(this.request.info.sendPortionEnabled, process.env.ENABLE_PORTION)
+    );
   }
 
   // static helpers
