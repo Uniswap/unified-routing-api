@@ -18,7 +18,8 @@ import {
   CLASSIC_QUOTE_EXACT_IN_LARGE,
   CLASSIC_QUOTE_EXACT_IN_LARGE_GAS,
   CLASSIC_QUOTE_EXACT_IN_LARGE_WITH_PORTION,
-  CLASSIC_QUOTE_EXACT_IN_NATIVE, CLASSIC_QUOTE_EXACT_IN_NATIVE_WITH_PORTION,
+  CLASSIC_QUOTE_EXACT_IN_NATIVE,
+  CLASSIC_QUOTE_EXACT_IN_NATIVE_WITH_PORTION,
   CLASSIC_QUOTE_EXACT_OUT_LARGE,
   createClassicQuote,
   createDutchQuote,
@@ -27,7 +28,7 @@ import {
   DL_QUOTE_EXACT_IN_LARGE_WITH_PORTION,
   DL_QUOTE_EXACT_OUT_LARGE,
   DL_QUOTE_NATIVE_EXACT_IN_LARGE,
-  DL_QUOTE_NATIVE_EXACT_IN_LARGE_WITH_PORTION
+  DL_QUOTE_NATIVE_EXACT_IN_LARGE_WITH_PORTION,
 } from '../../utils/fixtures';
 
 describe('DutchQuote', () => {
@@ -188,7 +189,9 @@ describe('DutchQuote', () => {
     it.each([true, false])(
       'reparameterizes with wrap factored into startAmount with portion flag %p',
       async (enablePortion) => {
-        const classicQuote = (enablePortion ? CLASSIC_QUOTE_EXACT_IN_NATIVE_WITH_PORTION : CLASSIC_QUOTE_EXACT_IN_NATIVE) as ClassicQuote;
+        const classicQuote = (
+          enablePortion ? CLASSIC_QUOTE_EXACT_IN_NATIVE_WITH_PORTION : CLASSIC_QUOTE_EXACT_IN_NATIVE
+        ) as ClassicQuote;
         const dutchQuote = enablePortion ? DL_QUOTE_NATIVE_EXACT_IN_LARGE_WITH_PORTION : DL_QUOTE_NATIVE_EXACT_IN_LARGE;
         const reparameterized = DutchQuote.reparameterize(dutchQuote, classicQuote);
         expect(reparameterized.request).toMatchObject(dutchQuote.request);
