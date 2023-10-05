@@ -18,7 +18,7 @@ import {
   CLASSIC_QUOTE_EXACT_IN_LARGE,
   CLASSIC_QUOTE_EXACT_IN_LARGE_GAS,
   CLASSIC_QUOTE_EXACT_IN_LARGE_WITH_PORTION,
-  CLASSIC_QUOTE_EXACT_IN_NATIVE,
+  CLASSIC_QUOTE_EXACT_IN_NATIVE, CLASSIC_QUOTE_EXACT_IN_NATIVE_WITH_PORTION,
   CLASSIC_QUOTE_EXACT_OUT_LARGE,
   createClassicQuote,
   createDutchQuote,
@@ -27,7 +27,7 @@ import {
   DL_QUOTE_EXACT_IN_LARGE_WITH_PORTION,
   DL_QUOTE_EXACT_OUT_LARGE,
   DL_QUOTE_NATIVE_EXACT_IN_LARGE,
-  DL_QUOTE_NATIVE_EXACT_IN_LARGE_WITH_PORTION,
+  DL_QUOTE_NATIVE_EXACT_IN_LARGE_WITH_PORTION
 } from '../../utils/fixtures';
 
 describe('DutchQuote', () => {
@@ -188,7 +188,7 @@ describe('DutchQuote', () => {
     it.each([true, false])(
       'reparameterizes with wrap factored into startAmount with portion flag %p',
       async (enablePortion) => {
-        const classicQuote = CLASSIC_QUOTE_EXACT_IN_NATIVE as ClassicQuote;
+        const classicQuote = (enablePortion ? CLASSIC_QUOTE_EXACT_IN_NATIVE_WITH_PORTION : CLASSIC_QUOTE_EXACT_IN_NATIVE) as ClassicQuote;
         const dutchQuote = enablePortion ? DL_QUOTE_NATIVE_EXACT_IN_LARGE_WITH_PORTION : DL_QUOTE_NATIVE_EXACT_IN_LARGE;
         const reparameterized = DutchQuote.reparameterize(dutchQuote, classicQuote);
         expect(reparameterized.request).toMatchObject(dutchQuote.request);
@@ -329,22 +329,33 @@ describe('DutchQuote', () => {
   });
 
   describe('fromClassicQuote', () => {
-    it('Succeeds - Generates nonce on initialization', () => {
-      const classicQuote = createClassicQuote({}, {});
+    it.each([true, false])('Succeeds - Generates nonce on initialization with portion flag %p', (enablePortion) => {
+      const classicQuote = createClassicQuote(
+        (enablePortion && { portionBips: PORTION_BIPS, portionRecipient: PORTION_RECIPIENT }) || {},
+        {}
+      );
       const dutchQuote = createDutchQuote({}, 'EXACT_INPUT');
       const result = DutchQuote.fromClassicQuote(dutchQuote.request, classicQuote);
       const firstNonce = result.toOrder().info.nonce;
       const secondNonce = result.toOrder().info.nonce;
       expect(firstNonce).toEqual(secondNonce);
-      expect(result.portionBips).toEqual(PORTION_BIPS);
-      expect(result.portionRecipient).toEqual(PORTION_RECIPIENT);
-      expect(result.portionAmountOutStart).toEqual(result.amountOutStart.mul(PORTION_BIPS).div(BPS));
-      expect(result.portionAmountOutEnd).toEqual(result.amountOutEnd.mul(PORTION_BIPS).div(BPS));
+
+      if (enablePortion) {
+        expect(result.portionBips).toEqual(PORTION_BIPS);
+        expect(result.portionRecipient).toEqual(PORTION_RECIPIENT);
+        expect(result.portionAmountOutStart).toEqual(result.amountOutStart.mul(PORTION_BIPS).div(BPS));
+        expect(result.portionAmountOutEnd).toEqual(result.amountOutEnd.mul(PORTION_BIPS).div(BPS));
+      }
     });
 
-    it('applies gas adjustment to endAmount', () => {
+    it.each([true, false])('applies gas adjustment to endAmount with portion flag %p', (enablePortion) => {
       const amount = '10000000000000000';
-      const classicQuote = createClassicQuote({ amount }, {});
+      const classicQuote = createClassicQuote(
+        (enablePortion && { amount: amount, portionBips: PORTION_BIPS, portionRecipient: PORTION_RECIPIENT }) || {
+          amount,
+        },
+        {}
+      );
       const dutchQuote = createDutchQuote({ amountIn: amount }, 'EXACT_INPUT');
       const result = DutchQuote.fromClassicQuote(dutchQuote.request, classicQuote);
       const firstNonce = result.toOrder().info.nonce;
@@ -362,10 +373,13 @@ describe('DutchQuote', () => {
       expect(result.amountInEnd).toEqual(result.amountInStart);
       // should have extra adjustment for gas to amountOut
       expect(result.amountOutEnd.lte(slippageAdjustedAmountOut)).toBeTruthy();
-      expect(result.portionBips).toEqual(PORTION_BIPS);
-      expect(result.portionRecipient).toEqual(PORTION_RECIPIENT);
-      expect(result.portionAmountOutStart).toEqual(result.amountOutStart.mul(PORTION_BIPS).div(BPS));
-      expect(result.portionAmountOutEnd).toEqual(result.amountOutEnd.mul(PORTION_BIPS).div(BPS));
+
+      if (enablePortion) {
+        expect(result.portionBips).toEqual(PORTION_BIPS);
+        expect(result.portionRecipient).toEqual(PORTION_RECIPIENT);
+        expect(result.portionAmountOutStart).toEqual(result.amountOutStart.mul(PORTION_BIPS).div(BPS));
+        expect(result.portionAmountOutEnd).toEqual(result.amountOutEnd.mul(PORTION_BIPS).div(BPS));
+      }
     });
   });
 

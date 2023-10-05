@@ -250,8 +250,6 @@ export const CLASSIC_QUOTE_DATA = {
     permitNonce: '1',
     tradeType: 'exactIn',
     slippage: 0.5,
-    portionBips: PORTION_BIPS,
-    portionRecipient: PORTION_RECIPIENT,
   },
 };
 
@@ -384,6 +382,20 @@ export const CLASSIC_QUOTE_EXACT_IN_NATIVE = buildQuoteResponse(
       quoteGasAdjusted: '9000000000000000000000',
       gasUseEstimate: '100000',
       gasUseEstimateQuote: '10000000000000000',
+    },
+  }),
+  makeClassicRequest({ type: 'EXACT_INPUT', tokenIn: NATIVE_ADDRESS, tokenOut: TOKEN_IN })
+);
+export const CLASSIC_QUOTE_EXACT_IN_NATIVE_WITH_PORTION = buildQuoteResponse(
+  Object.assign({}, CLASSIC_QUOTE_DATA, {
+    quote: {
+      ...CLASSIC_QUOTE_DATA.quote,
+      quote: '10000000000000000000000',
+      quoteGasAdjusted: '9000000000000000000000',
+      gasUseEstimate: '100000',
+      gasUseEstimateQuote: '10000000000000000',
+      portionBips: PORTION_BIPS,
+      portionRecipient: PORTION_RECIPIENT,
     },
   }),
   makeClassicRequest({ type: 'EXACT_INPUT', tokenIn: NATIVE_ADDRESS, tokenOut: TOKEN_IN })
