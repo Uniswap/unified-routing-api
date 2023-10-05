@@ -26,6 +26,14 @@ export enum RoutingType {
 export const DEFAULT_POSITIVE_CACHE_ENTRY_TTL = 600; // 10 minutes
 export const DEFAULT_NEGATIVE_CACHE_ENTRY_TTL = 600; // 10 minute
 
-export const ENABLE_PORTION = (portionFlag?: string) => {
+export const BACKEND_CONTROLLED_ENABLE_PORTION = (portionFlag?: string) => {
   return portionFlag === 'true';
 };
+
+export const FRONTEND_PASSTHROUGH_ENABLE_PORTION = (sendPortionFlag?: boolean) => {
+  return sendPortionFlag;
+}
+
+export const FRONTEND_LOGICAL_AND_BACKEND_ENABLE_PORTION_FLAG = (sendPortionFlag?: boolean, portionFlag?: string) => {
+    return FRONTEND_PASSTHROUGH_ENABLE_PORTION(sendPortionFlag) && BACKEND_CONTROLLED_ENABLE_PORTION(portionFlag);
+}

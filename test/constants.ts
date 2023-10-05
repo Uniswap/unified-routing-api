@@ -21,7 +21,7 @@ export const USDC_ADDRESS_POLYGON = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174'
 export const INELIGIBLE_TOKEN = '0x72e4f9f808c49a2a61de9c5896298920dc4eeea9';
 
 export const PORTION_BIPS = 12;
-export const PORTION_RECIPIENT = '0x111111';
+export const PORTION_RECIPIENT = '0xd8da6bf26964af9d7eed9e03e53415d37aa96045';
 
 export const DL_CONFIG = {
   routingType: RoutingType.DUTCH_LIMIT,
