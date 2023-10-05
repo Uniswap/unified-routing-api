@@ -194,11 +194,8 @@ export class DutchQuote implements IQuote {
       quote.quoteType,
       quote.filler,
       quote.nonce,
-      // Prefers the portion from the RFQ quoter if exists
-      // Next the potion from the classic quoter if exists
-      // Otherwise no portion
-      quote.portionBips ?? classic.getPortionBips(),
-      quote.portionRecipient ?? classic.getPortionRecipient()
+      classic.getPortionBips(),
+      classic.getPortionRecipient()
     );
   }
 
