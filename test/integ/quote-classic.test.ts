@@ -1866,8 +1866,6 @@ describe('quote', function () {
 
           expect(parseFloat(quoteDecimals)).to.be.lessThan(110);
         });
-
-        // TODO: Add
       });
 
       describe(`${ID_TO_NETWORK_NAME(1)} ${algorithm} ${type} 4xx`, () => {
