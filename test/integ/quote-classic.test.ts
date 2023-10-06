@@ -35,6 +35,7 @@ import { ClassicQuoteDataJSON } from '../../lib/entities/quote';
 import { QuoteRequestBodyJSON } from '../../lib/entities/request';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { Permit2__factory } from '../../lib/types/ext';
+import { GREENLIST_CARVEOUT_PAIRS, GREENLIST_TOKEN_PAIRS } from '../constants';
 import { resetAndFundAtBlock } from '../utils/forkAndFund';
 import { getBalance, getBalanceAndApprove } from '../utils/getBalanceAndApprove';
 import { DAI_ON, getAmount, getAmountFromToken, UNI_MAINNET, USDC_ON, WNATIVE_ON } from '../utils/tokens';
@@ -805,6 +806,67 @@ describe('quote', function () {
               expect(tokenOutAfter.subtract(tokenOutBefore).toExact()).to.equal('100');
               checkQuoteToken(tokenInBefore, tokenInAfter, CurrencyAmount.fromRawAmount(USDC_MAINNET, quoteJSON.quote));
             }
+          });
+
+          const sendPortionEnabledValues = [true, undefined];
+          GREENLIST_TOKEN_PAIRS.forEach(([tokenIn, tokenOut]) => {
+            sendPortionEnabledValues.forEach((sendPortionEnabled) => {
+              it(`${tokenIn.symbol} -> ${tokenOut.symbol} sendPortionEnabled = ${sendPortionEnabled}`, async () => {
+                // Arrange:
+                // - token amount from swapper
+                // - greenlist token pairs
+                // - parametrize on sendPortionEnabled
+                getAmount(1, type, tokenIn.symbol!, tokenOut.symbol!, '100');
+
+                // Act:
+                // - call classic quote
+
+                // Assert:
+                // - check if the response is 200
+                // - check if the response contains the methodParameters
+                // - check if the response contains portion-related payloads if sendPortionEnabled = true
+                // - check if the response contains only portionBips and portionAmount if sendPortionEnabled not send, explicitly check for portionRecipient = undefined
+
+                // Act:
+                // use the methodParameters to execute the swap
+
+                // Assert:
+                // - check if the swap is successful
+                // - check if the token balances are correct
+                //   - token balances assertion will stay the same for exact in and exact out
+                //   - need to explicitly check if the portion recipient balances increases for exact in and exact out (new setup)
+                //   - explicitly check that the portion recipient balances increase is the portion Bips against token out balance changes
+              });
+            });
+          });
+
+          GREENLIST_CARVEOUT_PAIRS.forEach(([tokenIn, tokenOut]) => {
+            sendPortionEnabledValues.forEach((sendPortionEnabled) => {
+              it(`stable-to-stable ${tokenIn.symbol} -> ${tokenOut.symbol} carveout sendPortionEnabled = ${sendPortionEnabled}`, async () => {
+                // Arrange:
+                // - token amount from swapper
+                // - greenlist token pairs
+                // - parametrize on sendPortionEnabled
+                getAmount(1, type, tokenIn.symbol!, tokenOut.symbol!, '100');
+
+                // Act:
+                // - call classic quote
+
+                // Assert:
+                // - check if the response is 200
+                // - check if the response contains the methodParameters
+                // - check if the response contains only portionBips and portionAmount all equal to zero if sendPortionEnabled not send, explicitly check for portionRecipient = undefined
+
+                // Act:
+                // use the methodParameters to execute the swap
+
+                // Assert:
+                // - check if the swap is successful
+                // - check if the token balances are correct
+                //   - token balances assertion will stay the same for exact in and exact out
+                //   - need to explicitly check if the portion recipient balances has no change
+              });
+            });
           });
 
           if (algorithm == 'alpha') {
@@ -1628,6 +1690,71 @@ describe('quote', function () {
                 expect(tokenOutAfter.subtract(tokenOutBefore).toExact()).to.equal('100');
                 checkQuoteToken(tokenInBefore, tokenInAfter, CurrencyAmount.fromRawAmount(USDC_MAINNET, quote.quote));
               }
+            });
+
+            const sendPortionEnabledValues = [true, undefined];
+            GREENLIST_TOKEN_PAIRS.forEach(([tokenIn, tokenOut]) => {
+              sendPortionEnabledValues.forEach((sendPortionEnabled) => {
+                it(`${tokenIn.symbol} -> ${tokenOut.symbol} sendPortionEnabled = ${sendPortionEnabled}`, async () => {
+                  // Arrange:
+                  // - token amount from swapper
+                  // - greenlist token pairs
+                  // - parametrize on sendPortionEnabled
+                  // - send deadline, recipient and simulateFromAddress to invoke tenderly simulation
+                  getAmount(1, type, tokenIn.symbol!, tokenOut.symbol!, '100');
+
+                  // Act:
+                  // - call classic quote
+
+                  // Assert:
+                  // - check if the response is 200
+                  // - check if the response contains the methodParameters
+                  // - check if the response contains portion-related payloads if sendPortionEnabled = true
+                  // - check if the response contains only portionBips and portionAmount if sendPortionEnabled not send, explicitly check for portionRecipient = undefined
+                  // - check if the response contains the simulationError
+
+                  // Act:
+                  // use the methodParameters to execute the swap
+
+                  // Assert:
+                  // - check if the swap is successful
+                  // - check if the token balances are correct
+                  //   - token balances assertion will stay the same for exact in and exact out
+                  //   - need to explicitly check if the portion recipient balances increases for exact in and exact out (new setup)
+                  //   - explicitly check that the portion recipient balances increase is the portion Bips against token out balance changes
+                });
+              });
+            });
+
+            GREENLIST_CARVEOUT_PAIRS.forEach(([tokenIn, tokenOut]) => {
+              sendPortionEnabledValues.forEach((sendPortionEnabled) => {
+                it(`stable-to-stable ${tokenIn.symbol} -> ${tokenOut.symbol} carveout sendPortionEnabled = ${sendPortionEnabled}`, async () => {
+                  // Arrange:
+                  // - token amount from swapper
+                  // - greenlist token pairs
+                  // - parametrize on sendPortionEnabled
+                  getAmount(1, type, tokenIn.symbol!, tokenOut.symbol!, '100');
+
+                  // Act:
+                  // - call classic quote
+
+                  // Assert:
+                  // - check if the response is 200
+                  // - check if the response contains the methodParameters
+                  // - check if the response contains portion-related payloads if sendPortionEnabled = true
+                  // - check if the response contains only portionBips = 0 and portionAmount = 0 if sendPortionEnabled not send, explicitly check for portionRecipient = undefined
+                  // - check if the response contains the simulationError
+
+                  // Act:
+                  // use the methodParameters to execute the swap
+
+                  // Assert:
+                  // - check if the swap is successful
+                  // - check if the token balances are correct
+                  //   - token balances assertion will stay the same for exact in and exact out
+                  //   - explicitly check that the portion recipient balances has no change
+                });
+              });
             });
           });
         }
