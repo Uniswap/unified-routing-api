@@ -1,6 +1,9 @@
+import { ChainId, Currency, Ether, WETH9 } from '@uniswap/sdk-core';
+import { DAI_MAINNET, USDC_MAINNET, WBTC_MAINNET } from '@uniswap/smart-order-router';
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { getAddress } from 'ethers/lib/utils';
 import { RoutingType } from '../lib/constants';
+import { agEUR_MAINNET, EUROC_MAINNET, GUSD_MAINNET, LUSD_MAINNET, UNI_MAINNET, XSGD_MAINNET } from './utils/tokens';
 
 export const CHAIN_IN_ID = 1;
 export const CHAIN_OUT_ID = 1;
@@ -294,5 +297,22 @@ export const DUTCH_LIMIT_ORDER_JSON = {
   startTimeBufferSecs: 45,
   auctionPeriodSecs: 60,
   slippageTolerance: '0.5',
-  orderHash: '0x8859113385dac928f6e064e6d49539fd94cab32687e1a37592ef6f3192948513'
+  orderHash: '0x8859113385dac928f6e064e6d49539fd94cab32687e1a37592ef6f3192948513',
 };
+
+export const GREENLIST_TOKENS: Array<Currency> = [
+  Ether.onChain(ChainId.MAINNET),
+  USDC_MAINNET,
+  DAI_MAINNET,
+  WETH9[ChainId.MAINNET],
+  UNI_MAINNET,
+  WBTC_MAINNET,
+  agEUR_MAINNET,
+  GUSD_MAINNET,
+  LUSD_MAINNET,
+  EUROC_MAINNET,
+  XSGD_MAINNET,
+];
+
+export const GREENLIST_USD_STABLES: Array<Currency> = [USDC_MAINNET, DAI_MAINNET, GUSD_MAINNET, LUSD_MAINNET];
+export const GREENLIST_EUR_STABLES: Array<Currency> = [EUROC_MAINNET, agEUR_MAINNET];
