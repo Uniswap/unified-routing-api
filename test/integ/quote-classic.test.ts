@@ -37,7 +37,18 @@ import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { Permit2__factory } from '../../lib/types/ext';
 import { resetAndFundAtBlock } from '../utils/forkAndFund';
 import { getBalance, getBalanceAndApprove } from '../utils/getBalanceAndApprove';
-import { DAI_ON, getAmount, getAmountFromToken, UNI_MAINNET, USDC_ON, WNATIVE_ON } from '../utils/tokens';
+import {
+  agEUR_MAINNET,
+  DAI_ON, EUROC_MAINNET,
+  getAmount,
+  getAmountFromToken,
+  GUSD_MAINNET, LUSD_MAINNET,
+  UNI_MAINNET,
+  USDC_ON,
+  WNATIVE_ON, XSGD_MAINNET
+} from '../utils/tokens';
+import { BaseCurrency } from '@uniswap/sdk-core/dist/entities/baseCurrency';
+import { it } from '@jest/globals';
 
 const { ethers } = hre;
 
@@ -225,6 +236,13 @@ describe('quote', function () {
   for (const algorithm of ['alpha']) {
     for (const type of ['EXACT_INPUT', 'EXACT_OUTPUT']) {
       describe(`${ID_TO_NETWORK_NAME(1)} ${algorithm} ${type} 2xx`, () => {
+        const greenlistTokens: Array<BaseCurrency> = [Ether.onChain(ChainId.MAINNET), USDC_MAINNET, DAI_MAINNET, WETH9[ChainId.MAINNET], UNI_MAINNET, WBTC_MAINNET, agEUR_MAINNET, GUSD_MAINNET, LUSD_MAINNET, EUROC_MAINNET, XSGD_MAINNET];
+        const greenlistTokensPairs: [BaseCurrency, BaseCurrency][] = new Array<[BaseCurrency, BaseCurrency]>();
+        for (let i = 0; i < greenlistTokens.length; i += 2) {
+          const [tokenIn, tokenOut] = greenlistTokens.slice(i, i + 2);
+          greenlistTokensPairs.push([tokenIn, tokenOut]);
+        }
+
         describe(`+ Execute Swap`, () => {
           it(`erc20 -> erc20`, async () => {
             const quoteReq: QuoteRequestBodyJSON = {
@@ -805,6 +823,32 @@ describe('quote', function () {
               expect(tokenOutAfter.subtract(tokenOutBefore).toExact()).to.equal('100');
               checkQuoteToken(tokenInBefore, tokenInAfter, CurrencyAmount.fromRawAmount(USDC_MAINNET, quoteJSON.quote));
             }
+          });
+
+          it.each(greenlistTokensPairs)(`$tokenIn.symbol -> $tokenOut.symbol`, async (tokenIn, tokenOut) => {
+            // Arrange:
+            // - token amount from swapper
+            // - greenlist token pairs
+            // - only sendEnablePortion = true flag in the request
+            getAmount(1, type, tokenIn.symbol!, tokenOut.symbol!, '100');
+
+            // Act:
+            // - call classic quote
+
+            // Assert:
+            // - check if the response is 200
+            // - check if the response contains the methodParameters
+            // - check if the response contains portion-related payloads
+
+            // Act:
+            // use the methodParameters to execute the swap
+
+            // Assert:
+            // - check if the swap is successful
+            // - check if the token balances are correct
+            //   - token balances assertion will stay the same for exact in and exact out
+            //   - need to explicitly check if the portion recipient balances increases for exact in and exact out (new setup)
+            //   - explicitly check that the portion recipient balances increase is the portion Bips against token out balance changes
           });
 
           if (algorithm == 'alpha') {
@@ -1629,6 +1673,34 @@ describe('quote', function () {
                 checkQuoteToken(tokenInBefore, tokenInAfter, CurrencyAmount.fromRawAmount(USDC_MAINNET, quote.quote));
               }
             });
+
+            it.each(greenlistTokensPairs)(`$tokenIn.symbol -> $tokenOut.symbol`, async (tokenIn, tokenOut) => {
+              // Arrange:
+              // - token amount from swapper
+              // - greenlist token pairs
+              // - only sendEnablePortion = true flag in the request
+              // - send deadline, recipient and simulateFromAddress to invoke tenderly simulation
+              getAmount(1, type, tokenIn.symbol!, tokenOut.symbol!, '100');
+
+              // Act:
+              // - call classic quote
+
+              // Assert:
+              // - check if the response is 200
+              // - check if the response contains the methodParameters
+              // - check if the response contains portion-related payloads
+              // - check if the response contains the simulationError
+
+              // Act:
+              // use the methodParameters to execute the swap
+
+              // Assert:
+              // - check if the swap is successful
+              // - check if the token balances are correct
+              //   - token balances assertion will stay the same for exact in and exact out
+              //   - need to explicitly check if the portion recipient balances increases for exact in and exact out (new setup)
+              //   - explicitly check that the portion recipient balances increase is the portion Bips against token out balance changes
+            });
           });
         }
         it(`erc20 -> erc20 no recipient/deadline/slippage`, async () => {
@@ -1794,6 +1866,8 @@ describe('quote', function () {
 
           expect(parseFloat(quoteDecimals)).to.be.lessThan(110);
         });
+
+        // TODO: Add
       });
 
       describe(`${ID_TO_NETWORK_NAME(1)} ${algorithm} ${type} 4xx`, () => {
@@ -2239,6 +2313,7 @@ describe('quote', function () {
   };
 
   // TODO: Find valid pools/tokens on optimistic kovan and polygon mumbai. We skip those tests for now.
+  // TODO: Would love to test portion on other supported production chains, but don't know how much effort to make that happen
   for (const chain of _.filter(
     SUPPORTED_CHAINS[RoutingType.CLASSIC],
     (c) =>
