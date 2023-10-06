@@ -1,7 +1,6 @@
 import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
 import { NATIVE_ADDRESS, RoutingType } from '../../lib/constants';
 
-import { Currency } from '@uniswap/sdk-core';
 import {
   ClassicQuoteDataJSON,
   ClassicRequest,
@@ -21,8 +20,6 @@ import {
   CHAIN_IN_ID,
   CHAIN_OUT_ID,
   FILLER,
-  GREENLIST_STABLES,
-  GREENLIST_TOKENS,
   SWAPPER,
   TOKEN_IN,
   TOKEN_OUT,
