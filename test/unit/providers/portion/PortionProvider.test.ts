@@ -12,7 +12,7 @@ import { PortionProvider } from '../../../../lib/providers';
 import axios from '../../../../lib/providers/quoters/helpers';
 import { log } from '../../../../lib/util/log';
 import { metrics } from '../../../../lib/util/metrics';
-import { PORTION_BIPS, PORTION_RECIPIENT } from '../../../constants';
+import { GREENLIST_TOKEN_PAIRS, PORTION_BIPS, PORTION_RECIPIENT } from '../../../constants';
 import {
   BUSD_MAINNET,
   DAI_ON,
@@ -51,16 +51,7 @@ describe('PortionProvider test', () => {
       const portionFetcher = new PortionFetcher('https://portion.uniswap.org/', portionCache);
       const portionProvider = new PortionProvider(portionFetcher);
 
-      const allPairs: Array<Array<BaseCurrency>> = [
-        [Ether.onChain(ChainId.MAINNET), USDC_ON(ChainId.MAINNET)],
-        [WETH9[ChainId.MAINNET], USDT_ON(ChainId.MAINNET)],
-        [DAI_ON(ChainId.MAINNET), WBTC_MAINNET],
-        [BUSD_MAINNET, EUROC_MAINNET],
-        [GUSD_MAINNET, LUSD_MAINNET],
-        // [agEUR_MAINNET, XSGD_MAINNET], TODO: add agEUR_MAINNET and XSGD_MAINNET into default token list
-      ];
-
-      allPairs.forEach((pair) => {
+      GREENLIST_TOKEN_PAIRS.forEach((pair) => {
         const token1: Currency | Token = pair[0].isNative ? (pair[0] as Currency) : pair[0].wrapped;
         const token2: Currency | Token = pair[1].isNative ? (pair[1] as Currency) : pair[1].wrapped;
         const tokenSymbol1 = token1.symbol!;
