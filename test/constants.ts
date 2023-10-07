@@ -3,9 +3,9 @@ import { DAI_MAINNET, USDC_MAINNET, WBTC_MAINNET } from '@uniswap/smart-order-ro
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { BigNumber } from 'ethers';
 import { getAddress } from 'ethers/lib/utils';
-import { DAI_ON, USDC_ON, USDT_ON } from './utils/tokens';
 import { BPS, RoutingType } from '../lib/constants';
 import { Portion, PortionType } from '../lib/fetchers/PortionFetcher';
+import { DAI_ON, USDC_ON, USDT_ON } from './utils/tokens';
 
 export const CHAIN_IN_ID = 1;
 export const CHAIN_OUT_ID = 1;
