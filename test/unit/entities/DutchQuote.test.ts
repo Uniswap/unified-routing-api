@@ -11,6 +11,7 @@ import {
   DL_PERMIT_RFQ,
   DUTCH_LIMIT_ORDER_JSON,
   DUTCH_LIMIT_ORDER_JSON_WITH_PORTION,
+  FLAT_PORTION,
   PORTION_BIPS,
   PORTION_RECIPIENT,
 } from '../../constants';
@@ -322,8 +323,7 @@ describe('DutchQuote', () => {
         { amountOut: '10000', filler: '0x1111111111111111111111111111111111111111' },
         'EXACT_INPUT',
         '1',
-        enablePortion ? PORTION_BIPS : undefined,
-        enablePortion ? PORTION_RECIPIENT : undefined,
+        enablePortion ? FLAT_PORTION : undefined,
         enablePortion
       ) as any;
       const result = quote.toJSON();

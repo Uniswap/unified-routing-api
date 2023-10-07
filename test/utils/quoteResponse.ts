@@ -9,6 +9,7 @@ import {
   Quote,
   QuoteRequest,
 } from '../../lib/entities';
+import { Portion } from '../../lib/fetchers/PortionFetcher';
 
 type ReceivedQuoteData = DutchQuoteJSON | ClassicQuoteDataJSON;
 
@@ -70,16 +71,12 @@ export type RoutingApiQuoteResponse = {
 };
 
 export function buildQuoteResponse(
-  body: {
-    routing: RoutingType;
-    quote: ReceivedQuoteData;
-  },
+  body: { routing: RoutingType; quote: ReceivedQuoteData },
   request: QuoteRequest,
   nonce?: string,
-  portionBips?: number,
-  portionRecipient?: string
+  portion?: Portion
 ): Quote {
-  return parseQuote(request, body.routing, body.quote, nonce, portionBips, portionRecipient);
+  return parseQuote(request, body.routing, body.quote, nonce, portion);
 }
 
 function parseQuote(
@@ -87,19 +84,11 @@ function parseQuote(
   routing: RoutingType,
   quote: ReceivedQuoteData,
   nonce?: string,
-  portionBips?: number,
-  portionRecipient?: string
+  portion?: Portion
 ): Quote {
   switch (routing) {
     case RoutingType.DUTCH_LIMIT:
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      return DutchQuote.fromResponseBody(
-        request as DutchRequest,
-        quote as DutchQuoteJSON,
-        nonce,
-        portionBips,
-        portionRecipient
-      );
+      return DutchQuote.fromResponseBody(request as DutchRequest, quote as DutchQuoteJSON, nonce, portion);
     case RoutingType.CLASSIC:
       // TODO: figure out how to determine tradetype from output JSON
       // also: is this parsing quote responses even needed outside of testing?

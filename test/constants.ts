@@ -3,9 +3,9 @@ import { DAI_MAINNET, USDC_MAINNET, WBTC_MAINNET } from '@uniswap/smart-order-ro
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { BigNumber } from 'ethers';
 import { getAddress } from 'ethers/lib/utils';
-import { RoutingType } from '../lib/constants';
 import { DAI_ON, USDC_ON, USDT_ON } from './utils/tokens';
 import { BPS, RoutingType } from '../lib/constants';
+import { Portion, PortionType } from '../lib/fetchers/PortionFetcher';
 
 export const CHAIN_IN_ID = 1;
 export const CHAIN_OUT_ID = 1;
@@ -27,6 +27,12 @@ export const INELIGIBLE_TOKEN = '0x72e4f9f808c49a2a61de9c5896298920dc4eeea9';
 
 export const PORTION_BIPS = 12;
 export const PORTION_RECIPIENT = '0xd8da6bf26964af9d7eed9e03e53415d37aa96045';
+
+export const FLAT_PORTION: Portion = {
+  bips: PORTION_BIPS,
+  recipient: PORTION_RECIPIENT,
+  type: PortionType.Flat,
+};
 
 export const DL_CONFIG = {
   routingType: RoutingType.DUTCH_LIMIT,
@@ -343,11 +349,7 @@ export const DUTCH_LIMIT_ORDER_JSON_WITH_PORTION = {
   startTimeBufferSecs: 45,
   auctionPeriodSecs: 60,
   slippageTolerance: '0.5',
-<<<<<<< HEAD
-  orderHash: '0x8859113385dac928f6e064e6d49539fd94cab32687e1a37592ef6f3192948513',
-=======
   orderHash: '0x0ce5181c85484b2c506800056a75ad25e0eea224fb067071447536905b8cf3b3',
->>>>>>> acd2cb6 (new comments)
 };
 
 export const GREENLIST_TOKEN_PAIRS: Array<[Currency, Currency]> = [

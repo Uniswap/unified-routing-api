@@ -6,10 +6,10 @@ import { BigNumber } from 'ethers';
 import NodeCache from 'node-cache';
 import { v4 as uuid } from 'uuid';
 import { QuoteRequestInfo } from '../../../../lib/entities';
-import { GetPortionResponse, PortionFetcher, PortionType } from '../../../../lib/fetchers/PortionFetcher';
+import { GetPortionResponse, PortionFetcher } from '../../../../lib/fetchers/PortionFetcher';
 import { PortionProvider } from '../../../../lib/providers';
 import axios from '../../../../lib/providers/quoters/helpers';
-import { GREENLIST_TOKEN_PAIRS, PORTION_BIPS, PORTION_RECIPIENT } from '../../../constants';
+import { FLAT_PORTION, GREENLIST_TOKEN_PAIRS, PORTION_BIPS, PORTION_RECIPIENT } from '../../../constants';
 import {
   BUSD_MAINNET,
   DAI_ON,
@@ -30,11 +30,7 @@ describe('PortionProvider test', () => {
     describe('exact in quote test', () => {
       const portionResponse: GetPortionResponse = {
         hasPortion: true,
-        portion: {
-          bips: PORTION_BIPS,
-          recipient: PORTION_RECIPIENT,
-          type: PortionType.Flat,
-        },
+        portion: FLAT_PORTION,
       };
 
       const createSpy = jest.spyOn(axios, 'create');

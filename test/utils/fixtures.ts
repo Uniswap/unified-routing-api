@@ -11,6 +11,7 @@ import {
   QuoteRequestBodyJSON,
 } from '../../lib/entities';
 import { ClassicQuote, DutchQuote, Quote } from '../../lib/entities/quote';
+import { Portion } from '../../lib/fetchers/PortionFetcher';
 import {
   AMOUNT,
   AMOUNT_BETTER,
@@ -20,6 +21,7 @@ import {
   CHAIN_IN_ID,
   CHAIN_OUT_ID,
   FILLER,
+  FLAT_PORTION,
   PORTION_BIPS,
   PORTION_RECIPIENT,
   SWAPPER,
@@ -257,8 +259,7 @@ export function createDutchQuote(
   overrides: Partial<DutchQuoteJSON>,
   type: string,
   nonce?: string,
-  portionBips?: number,
-  portionRecipient?: string,
+  portion?: Portion,
   sendPortionEnabled?: boolean
 ): DutchQuote {
   return buildQuoteResponse(
@@ -267,8 +268,7 @@ export function createDutchQuote(
     }),
     makeDutchRequest({ type, sendPortionEnabled }),
     nonce,
-    portionBips,
-    portionRecipient
+    portion
   ) as DutchQuote;
 }
 
@@ -325,8 +325,7 @@ export const DL_QUOTE_NATIVE_EXACT_IN_LARGE_WITH_PORTION = createDutchQuote(
   { amountOut: AMOUNT_BETTER, tokenIn: NATIVE_ADDRESS },
   'EXACT_INPUT',
   '1',
-  PORTION_BIPS,
-  PORTION_RECIPIENT
+  FLAT_PORTION
 );
 export const DL_QUOTE_EXACT_IN_WORSE_PREFERENCE = createDutchQuote({ amountOut: AMOUNT_LARGE }, 'EXACT_INPUT');
 export const DL_QUOTE_EXACT_IN_WORSE = createDutchQuote({ amountOut: AMOUNT }, 'EXACT_INPUT');
@@ -335,8 +334,7 @@ export const DL_QUOTE_EXACT_IN_LARGE_WITH_PORTION = createDutchQuote(
   { amountOut: AMOUNT_LARGE },
   'EXACT_INPUT',
   '1',
-  PORTION_BIPS,
-  PORTION_RECIPIENT
+  FLAT_PORTION
 );
 export const DL_QUOTE_EXACT_OUT_BETTER = createDutchQuote({ amountIn: AMOUNT }, 'EXACT_OUTPUT');
 export const DL_QUOTE_EXACT_OUT_WORSE = createDutchQuote({ amountIn: AMOUNT_BETTER }, 'EXACT_OUTPUT');

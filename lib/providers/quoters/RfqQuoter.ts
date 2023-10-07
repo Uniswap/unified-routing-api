@@ -72,13 +72,7 @@ export class RfqQuoter implements Quoter {
             log.debug(results[1].reason, 'RfqQuoterErr: GET nonce failed');
             metrics.putMetric(`RfqQuoterLatency`, Date.now() - now);
             metrics.putMetric(`RfqQuoterNonceErr`, 1);
-            quote = DutchQuote.fromResponseBody(
-              request,
-              response,
-              generateRandomNonce(),
-              getPortionResponse.portion?.bips,
-              getPortionResponse.portion?.recipient
-            );
+            quote = DutchQuote.fromResponseBody(request, response, generateRandomNonce(), getPortionResponse.portion);
           } else {
             log.info(results[1].value.data, 'RfqQuoter: GET nonce success');
             metrics.putMetric(`RfqQuoterLatency`, Date.now() - now);
@@ -87,8 +81,7 @@ export class RfqQuoter implements Quoter {
               request,
               response,
               BigNumber.from(results[1].value.data.nonce).add(1).toString(),
-              getPortionResponse.portion?.bips,
-              getPortionResponse.portion?.recipient
+              getPortionResponse.portion
             );
           }
         }

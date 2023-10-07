@@ -1,5 +1,5 @@
 import { TradeType } from '@uniswap/sdk-core';
-import { DutchOrder, DutchOrderBuilder, DutchOrderInfoJSON, DutchOutput } from '@uniswap/uniswapx-sdk';
+import { DutchOrder, DutchOrderBuilder, DutchOrderInfoJSON } from '@uniswap/uniswapx-sdk';
 import { BigNumber, ethers } from 'ethers';
 
 import { PermitTransferFromData } from '@uniswap/permit2-sdk';
@@ -9,7 +9,7 @@ import { DutchRequest } from '..';
 import {
   BPS,
   DEFAULT_START_TIME_BUFFER_SECS,
-  FRONTEND_LOGICAL_AND_BACKEND_ENABLE_PORTION_FLAG,
+  frontendAndUraEnablePortion,
   NATIVE_ADDRESS,
   OPEN_QUOTE_START_TIME_BUFFER_SECS,
   RoutingType,
@@ -18,6 +18,7 @@ import {
   WETH_WRAP_GAS,
   WETH_WRAP_GAS_ALREADY_APPROVED,
 } from '../../constants';
+import { Portion } from '../../fetchers/PortionFetcher';
 import { log } from '../../util/log';
 import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
@@ -78,8 +79,7 @@ export class DutchQuote implements IQuote {
     request: DutchRequest,
     body: DutchQuoteJSON,
     nonce?: string,
-    portionBips?: number,
-    portionRecipient?: string
+    portion?: Portion
   ): DutchQuote {
     const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchQuote.applySlippage(
       { amountIn: BigNumber.from(body.amountIn), amountOut: BigNumber.from(body.amountOut) },
@@ -101,8 +101,8 @@ export class DutchQuote implements IQuote {
       DutchQuoteType.RFQ,
       body.filler,
       nonce,
-      portionBips,
-      portionRecipient
+      portion?.bips,
+      portion?.recipient
     );
   }
 
@@ -234,6 +234,8 @@ export class DutchQuote implements IQuote {
       deadlineBufferSecs: this.deadlineBufferSecs,
       slippageTolerance: this.request.info.slippageTolerance,
       permitData: this.getPermitData(),
+      portionBips: this.portionBips,
+      portionRecipient: this.portionRecipient,
     };
   }
 
@@ -260,8 +262,12 @@ export class DutchQuote implements IQuote {
         recipient: this.request.config.swapper,
       });
 
-    if (this.shouldAppendPortion()) {
-      builder.output(<DutchOutput>{
+    if (
+      this.portionRecipient &&
+      this.portionBips &&
+      frontendAndUraEnablePortion(this.request.info.sendPortionEnabled)
+    ) {
+      builder.output({
         token: this.tokenOut,
         startAmount: this.portionAmountOutStart,
         endAmount: this.portionAmountOutEnd,
@@ -290,6 +296,7 @@ export class DutchQuote implements IQuote {
       endAmountOut: this.amountOutEnd.toString(),
       amountInGasAdjusted: this.amountInStart.toString(),
       amountOutGasAdjusted: this.amountOutStart.toString(),
+      amountOutGasAndPortionAdjusted: this.amountOutGasAndPortionAdjusted.toString(),
       swapper: this.swapper,
       filler: this.filler,
       routing: RoutingType[this.routingType],
@@ -368,6 +375,10 @@ export class DutchQuote implements IQuote {
     return this.amountOutEnd.mul(this.portionBips ?? 0).div(BPS);
   }
 
+  public get amountOutGasAndPortionAdjusted(): BigNumber {
+    return this.amountOutEnd.sub(this.portionAmountOutEnd);
+  }
+
   validate(): boolean {
     if (this.amountOutStart.lt(this.amountOutEnd)) return false;
     if (this.amountInStart.gt(this.amountInEnd)) return false;
@@ -382,12 +393,8 @@ export class DutchQuote implements IQuote {
     return !this.isExclusiveQuote();
   }
 
-  shouldAppendPortion(): boolean {
-    return (
-      !!this.portionBips &&
-      !!this.portionRecipient &&
-      FRONTEND_LOGICAL_AND_BACKEND_ENABLE_PORTION_FLAG(this.request.info.sendPortionEnabled, process.env.ENABLE_PORTION)
-    );
+  shouldAppendPortion(portionRecipient?: string): boolean {
+    return !this.portionBips && !!portionRecipient && frontendAndUraEnablePortion(this.request.info.sendPortionEnabled);
   }
 
   // static helpers
