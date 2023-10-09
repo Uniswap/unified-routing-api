@@ -338,6 +338,13 @@ export const DL_QUOTE_EXACT_IN_LARGE_WITH_PORTION = createDutchQuote(
 );
 export const DL_QUOTE_EXACT_OUT_BETTER = createDutchQuote({ amountIn: AMOUNT }, 'EXACT_OUTPUT');
 export const DL_QUOTE_EXACT_OUT_WORSE = createDutchQuote({ amountIn: AMOUNT_BETTER }, 'EXACT_OUTPUT');
+export const DL_QUOTE_EXACT_OUT_WORSE_WITH_PORTION = createDutchQuote(
+  { amountIn: AMOUNT_BETTER },
+  'EXACT_OUTPUT',
+  undefined,
+  FLAT_PORTION,
+  true
+);
 export const DL_QUOTE_EXACT_OUT_LARGE = createDutchQuote({ amountOut: AMOUNT_LARGE }, 'EXACT_OUTPUT');
 export const CLASSIC_QUOTE_EXACT_IN_BETTER_PREFERENCE = createClassicQuote(
   { quote: '100100', quoteGasAdjusted: '100100' },
@@ -402,8 +409,16 @@ export const CLASSIC_QUOTE_EXACT_OUT_BETTER = createClassicQuote(
   { quote: AMOUNT, quoteGasAdjusted: AMOUNT },
   { type: 'EXACT_OUTPUT' }
 );
+export const CLASSIC_QUOTE_EXACT_OUT_BETTER_WITH_PORTION = createClassicQuote(
+  { quote: AMOUNT, quoteGasAdjusted: AMOUNT, quoteGasAndPortionAdjusted: AMOUNT },
+  { type: 'EXACT_OUTPUT' }
+);
 export const CLASSIC_QUOTE_EXACT_OUT_WORSE = createClassicQuote(
   { quote: AMOUNT_BETTER, quoteGasAdjusted: AMOUNT_BETTER },
+  { type: 'EXACT_OUTPUT' }
+);
+export const CLASSIC_QUOTE_EXACT_OUT_WORSE_WITH_PORTION = createClassicQuote(
+  { quote: AMOUNT_BETTER, quoteGasAdjusted: AMOUNT_BETTER, quoteGasAndPortionAdjusted: AMOUNT_BETTER },
   { type: 'EXACT_OUTPUT' }
 );
 export const CLASSIC_QUOTE_EXACT_OUT_LARGE = createClassicQuote(

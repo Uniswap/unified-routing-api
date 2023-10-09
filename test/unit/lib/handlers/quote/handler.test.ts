@@ -5,14 +5,16 @@ import {
   BASE_REQUEST_INFO_EXACT_OUT,
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_IN_WORSE,
-  CLASSIC_QUOTE_EXACT_OUT_BETTER,
+  CLASSIC_QUOTE_EXACT_OUT_BETTER_WITH_PORTION,
   CLASSIC_QUOTE_EXACT_OUT_WORSE,
+  CLASSIC_QUOTE_EXACT_OUT_WORSE_WITH_PORTION,
   CLASSIC_REQUEST_BODY,
   createClassicQuote,
   DL_QUOTE_EXACT_IN_BETTER,
   DL_QUOTE_EXACT_IN_WORSE,
   DL_QUOTE_EXACT_OUT_BETTER,
   DL_QUOTE_EXACT_OUT_WORSE,
+  DL_QUOTE_EXACT_OUT_WORSE_WITH_PORTION,
   DL_REQUEST_BODY,
   QUOTE_REQUEST_BODY_MULTI,
   QUOTE_REQUEST_BODY_MULTI_SYNTHETIC,
@@ -726,37 +728,49 @@ describe('QuoteHandler', () => {
       expect(compareQuotes(CLASSIC_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_IN_WORSE, TradeType.EXACT_INPUT)).toBe(
         true
       );
-      expect(compareQuotes(CLASSIC_QUOTE_EXACT_OUT_BETTER, CLASSIC_QUOTE_EXACT_OUT_WORSE, TradeType.EXACT_OUTPUT)).toBe(
-        true
-      );
+      expect(
+        compareQuotes(
+          CLASSIC_QUOTE_EXACT_OUT_BETTER_WITH_PORTION,
+          CLASSIC_QUOTE_EXACT_OUT_WORSE_WITH_PORTION,
+          TradeType.EXACT_OUTPUT
+        )
+      ).toBe(true);
     });
 
     it('returns false if lhs is a worse classic quote', () => {
       expect(compareQuotes(CLASSIC_QUOTE_EXACT_IN_WORSE, CLASSIC_QUOTE_EXACT_IN_BETTER, TradeType.EXACT_INPUT)).toBe(
         false
       );
-      expect(compareQuotes(CLASSIC_QUOTE_EXACT_OUT_WORSE, CLASSIC_QUOTE_EXACT_OUT_BETTER, TradeType.EXACT_OUTPUT)).toBe(
-        false
-      );
+      expect(
+        compareQuotes(
+          CLASSIC_QUOTE_EXACT_OUT_WORSE_WITH_PORTION,
+          CLASSIC_QUOTE_EXACT_OUT_BETTER_WITH_PORTION,
+          TradeType.EXACT_OUTPUT
+        )
+      ).toBe(false);
     });
 
     it('returns true if lhs is a better mixed type', () => {
       expect(compareQuotes(DL_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_IN_WORSE, TradeType.EXACT_INPUT)).toBe(true);
       expect(compareQuotes(CLASSIC_QUOTE_EXACT_IN_BETTER, DL_QUOTE_EXACT_IN_WORSE, TradeType.EXACT_INPUT)).toBe(true);
-      expect(compareQuotes(DL_QUOTE_EXACT_OUT_BETTER, CLASSIC_QUOTE_EXACT_OUT_WORSE, TradeType.EXACT_OUTPUT)).toBe(
-        true
-      );
+      expect(
+        compareQuotes(DL_QUOTE_EXACT_OUT_BETTER, CLASSIC_QUOTE_EXACT_OUT_WORSE_WITH_PORTION, TradeType.EXACT_OUTPUT)
+      ).toBe(true);
     });
 
     it('returns false if lhs is a worse mixed type', () => {
       expect(compareQuotes(DL_QUOTE_EXACT_IN_WORSE, CLASSIC_QUOTE_EXACT_IN_BETTER, TradeType.EXACT_INPUT)).toBe(false);
       expect(compareQuotes(CLASSIC_QUOTE_EXACT_IN_WORSE, DL_QUOTE_EXACT_IN_BETTER, TradeType.EXACT_INPUT)).toBe(false);
-      expect(compareQuotes(DL_QUOTE_EXACT_OUT_WORSE, CLASSIC_QUOTE_EXACT_OUT_BETTER, TradeType.EXACT_OUTPUT)).toBe(
-        false
-      );
-      expect(compareQuotes(CLASSIC_QUOTE_EXACT_OUT_WORSE, DL_QUOTE_EXACT_OUT_BETTER, TradeType.EXACT_OUTPUT)).toBe(
-        false
-      );
+      expect(
+        compareQuotes(
+          DL_QUOTE_EXACT_OUT_WORSE_WITH_PORTION,
+          CLASSIC_QUOTE_EXACT_OUT_BETTER_WITH_PORTION,
+          TradeType.EXACT_OUTPUT
+        )
+      ).toBe(false);
+      expect(
+        compareQuotes(CLASSIC_QUOTE_EXACT_OUT_WORSE_WITH_PORTION, DL_QUOTE_EXACT_OUT_BETTER, TradeType.EXACT_OUTPUT)
+      ).toBe(false);
     });
   });
 

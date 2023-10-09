@@ -254,13 +254,29 @@ export class DutchQuote implements IQuote {
         token: this.tokenIn,
         startAmount: this.amountInStart,
         endAmount: this.amountInEnd,
-      })
-      .output({
+      });
+
+    if (
+      this.portionRecipient &&
+      this.portionBips &&
+      frontendAndUraEnablePortion(this.request.info.sendPortionEnabled) &&
+      this.request.info.type === TradeType.EXACT_INPUT
+    ) {
+      // we must adjust down the amount out to account for the portion for exact in
+      builder.output({
+        token: this.tokenOut,
+        startAmount: this.amountOutStart.sub(this.portionAmountOutStart),
+        endAmount: this.amountOutEnd.sub(this.portionAmountOutEnd),
+        recipient: this.request.config.swapper,
+      });
+    } else {
+      builder.output({
         token: this.tokenOut,
         startAmount: this.amountOutStart,
         endAmount: this.amountOutEnd,
         recipient: this.request.config.swapper,
       });
+    }
 
     if (
       this.portionRecipient &&
@@ -295,6 +311,7 @@ export class DutchQuote implements IQuote {
       endAmountIn: this.amountInEnd.toString(),
       endAmountOut: this.amountOutEnd.toString(),
       amountInGasAdjusted: this.amountInStart.toString(),
+      amountInGasAndPortionAdjusted: this.amountInGasAndPortionAdjusted.toString(),
       amountOutGasAdjusted: this.amountOutStart.toString(),
       amountOutGasAndPortionAdjusted: this.amountOutGasAndPortionAdjusted.toString(),
       swapper: this.swapper,
@@ -375,8 +392,12 @@ export class DutchQuote implements IQuote {
     return this.amountOutEnd.mul(this.portionBips ?? 0).div(BPS);
   }
 
+  public get amountInGasAndPortionAdjusted(): BigNumber {
+    return this.amountIn.add(this.portionAmountOutStart);
+  }
+
   public get amountOutGasAndPortionAdjusted(): BigNumber {
-    return this.amountOutEnd.sub(this.portionAmountOutEnd);
+    return this.amountOut.sub(this.portionAmountOutEnd);
   }
 
   validate(): boolean {
@@ -391,10 +412,6 @@ export class DutchQuote implements IQuote {
 
   isOpenQuote(): boolean {
     return !this.isExclusiveQuote();
-  }
-
-  shouldAppendPortion(portionRecipient?: string): boolean {
-    return !this.portionBips && !!portionRecipient && frontendAndUraEnablePortion(this.request.info.sendPortionEnabled);
   }
 
   // static helpers
