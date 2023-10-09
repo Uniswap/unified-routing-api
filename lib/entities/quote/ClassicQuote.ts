@@ -69,12 +69,6 @@ export type ClassicQuoteDataJSON = {
   permitData?: PermitSingleData | PermitTransferFromData;
   tradeType: string;
   slippage: number;
-  portionBips?: number;
-  portionRecipient?: string;
-  portionAmount?: string;
-  portionAmountDecimals?: string;
-  quoteGasAndPortionAdjusted?: string;
-  quoteGasAndPortionAdjustedDecimals?: string;
 };
 
 export class ClassicQuote implements IQuote {
@@ -124,12 +118,6 @@ export class ClassicQuote implements IQuote {
       createdAt: this.createdAt,
       createdAtMs: this.createdAtMs,
       gasPriceWei: this.gasPriceWei,
-      portionBips: this.quoteData.portionBips,
-      portionRecipient: this.quoteData.portionRecipient,
-      portionAmount: this.quoteData.portionAmount,
-      portionAmountDecimals: this.quoteData.portionAmountDecimals,
-      quoteGasAndPortionAdjusted: this.quoteData.quoteGasAndPortionAdjusted,
-      quoteGasAndPortionAdjustedDecimals: this.quoteData.quoteGasAndPortionAdjustedDecimals,
     };
   }
 
