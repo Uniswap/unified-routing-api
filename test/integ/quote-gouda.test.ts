@@ -48,6 +48,10 @@ if (!process.env.URA_INTERNAL_API_KEY) {
   console.log('URA_INTERNAL_API_KEY env variable is not set. This is recommended for integ tests.');
 }
 
+if (!process.env.PORTION_API_URL) {
+  console.log('PORTION_API_URL env variable is not set. This is recommended for integ tests.');
+}
+
 const API = `${process.env.UNISWAP_API!}quote`;
 const ROUTING_API = `${process.env.ROUTING_API!}/quote`;
 
@@ -748,29 +752,132 @@ describe('quoteUniswapX', function () {
 
         GREENLIST_STABLE_TO_STABLE_PAIRS.forEach(([tokenIn, tokenOut]) => {
           sendPortionEnabledValues.forEach((sendPortionEnabled) => {
-            it(`stable-to-stable ${tokenIn.symbol} -> ${tokenOut.symbol} carveout sendPortionEnabled = ${sendPortionEnabled}`, async () => {
-              // Arrange:
-              // - token amount from swapper
-              // - greenlist token pairs
-              // - parametrize on sendPortionEnabled
-              getAmount(1, type, tokenIn.symbol!, tokenOut.symbol!, '100');
+            // portion service doesn't have the stable-to-stable carveout merged yet
+            // all carveout tests are skipped for now
+            const shouldSkip = sendPortionEnabled;
 
-              // Act:
-              // - call dutch quote
+            shouldSkip
+              ? it.skip
+              : it(`stable-to-stable ${tokenIn.symbol} -> ${tokenOut.symbol} carveout sendPortionEnabled = ${sendPortionEnabled}`, async () => {
+                  const originalAmount = '100';
+                  const tokenInAddress = tokenIn.isNative ? NATIVE_ADDRESS : tokenIn.address;
+                  const tokenOutAddress = tokenOut.isNative ? NATIVE_ADDRESS : tokenOut.address;
+                  const amount = await getAmountFromToken(type, tokenIn.wrapped, tokenOut.wrapped, originalAmount);
+                  const getPortionResponse = await portionFetcher.getPortion(
+                    tokenIn.chainId,
+                    tokenInAddress,
+                    tokenOut.chainId,
+                    tokenOutAddress
+                  );
 
-              // Assert:
-              // - check if the response is 200
-              // - check if the response contains only portionBips and portionAmount all equal to zero if sendPortionEnabled not send, explicitly check for portionRecipient = undefined
+                  if (sendPortionEnabled) {
+                    expect(getPortionResponse.hasPortion).to.be.false;
+                    expect(getPortionResponse.portion).to.be.undefined;
+                  }
 
-              // Act:
-              // use the dutch encoded order to connect to reactor and execute the swap
+                  const quoteReq: QuoteRequestBodyJSON = {
+                    requestId: 'id',
+                    useUniswapX: true,
+                    tokenIn: tokenInAddress,
+                    tokenInChainId: 1,
+                    tokenOut: tokenOutAddress,
+                    tokenOutChainId: 1,
+                    amount: amount,
+                    type,
+                    slippageTolerance: SLIPPAGE,
+                    configs: [
+                      {
+                        routingType: RoutingType.DUTCH_LIMIT,
+                        swapper: alice.address,
+                        useSyntheticQuotes: true,
+                      },
+                    ] as RoutingConfigJSON[],
+                  };
 
-              // Assert:
-              // - check if the swap is successful
-              // - check if the token balances are correct
-              //   - token balances assertion will stay the same for exact in and exact out
-              //   - need to explicitly check if the portion recipient balances has no change
-            });
+                  const response = await call(quoteReq);
+                  const {
+                    data: { quote },
+                    status,
+                  } = response;
+
+                  const order = new DutchOrder((quote as any).orderInfo, 1);
+                  expect(status).to.equal(200);
+                  // account for gas and slippage
+                  expect(order.info.swapper).to.equal(alice.address);
+                  // doesn't matter portion enabled or not, only one output order
+                  expect(order.info.outputs.length).to.equal(1);
+
+                  const {
+                    tokenInBefore,
+                    tokenInAfter,
+                    tokenOutBefore,
+                    tokenOutAfter,
+                    tokenOutPortionRecipientBefore,
+                    tokenOutPortionRecipientAfter,
+                  } = await executeSwap(order, tokenIn, tokenOut, getPortionResponse.portion);
+
+                  if (type == 'EXACT_INPUT') {
+                    // if the token in is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
+                    if (!tokenIn.isNative) {
+                      expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal(originalAmount);
+                    }
+
+                    // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
+                    if (!tokenOut.isNative) {
+                      checkQuoteToken(
+                        tokenOutBefore,
+                        tokenOutAfter,
+                        CurrencyAmount.fromRawAmount(
+                          tokenOut,
+                          (quote as DutchQuoteDataJSON).orderInfo.outputs[0].startAmount
+                        )
+                      );
+                    }
+
+                    if (sendPortionEnabled) {
+                      const expectedPortionAmount = CurrencyAmount.fromRawAmount(
+                        tokenOut,
+                        (quote as DutchQuoteDataJSON).portionAmount ?? '0'
+                      );
+                      checkPortionRecipientToken(
+                        tokenOutPortionRecipientBefore!,
+                        tokenOutPortionRecipientAfter!,
+                        expectedPortionAmount
+                      );
+                    }
+                  } else {
+                    // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
+                    if (!tokenOut.isNative) {
+                      // exact out swap amount might not be exactly the request amount, due to delay curve
+                      // same assertion as other existing tests
+                      expect(
+                        tokenOutAfter.subtract(tokenOutBefore).greaterThan(originalAmount) ||
+                          tokenOutAfter.subtract(tokenOutBefore).equalTo(originalAmount)
+                      ).to.be.true;
+                    }
+
+                    // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
+                    if (!tokenIn.isNative) {
+                      checkQuoteToken(
+                        tokenInBefore,
+                        tokenInAfter,
+                        CurrencyAmount.fromRawAmount(tokenIn, order.info.input.startAmount.toString())
+                      );
+                    }
+
+                    if (sendPortionEnabled) {
+                      const expectedPortionAmount = CurrencyAmount.fromRawAmount(
+                        tokenOut,
+                        (quote as DutchQuoteDataJSON).portionAmount ?? '0'
+                      );
+                      checkPortionRecipientToken(
+                        tokenOutPortionRecipientBefore!,
+                        tokenOutPortionRecipientAfter!,
+                        expectedPortionAmount
+                      );
+                    }
+                  }
+                });
           });
         });
 
