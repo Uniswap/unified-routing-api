@@ -20,16 +20,18 @@ import chaiSubset from 'chai-subset';
 import { BigNumber } from 'ethers';
 import hre from 'hardhat';
 import _ from 'lodash';
+import NodeCache from 'node-cache';
 import qs from 'qs';
-import { NATIVE_ADDRESS, RoutingType } from '../../lib/constants';
-import { ClassicQuoteDataJSON, QuoteRequestBodyJSON, RoutingConfigJSON } from '../../lib/entities';
+import { BPS, NATIVE_ADDRESS, RoutingType } from '../../lib/constants';
+import { ClassicQuoteDataJSON, DutchQuoteDataJSON, QuoteRequestBodyJSON, RoutingConfigJSON } from '../../lib/entities';
+import { Portion, PortionFetcher } from '../../lib/fetchers/PortionFetcher';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { ExclusiveDutchOrderReactor__factory } from '../../lib/types/ext';
 import { GREENLIST_STABLE_TO_STABLE_PAIRS, GREENLIST_TOKEN_PAIRS } from '../constants';
 import { fund, resetAndFundAtBlock } from '../utils/forkAndFund';
 import { getBalance, getBalanceAndApprove } from '../utils/getBalanceAndApprove';
 import { RoutingApiQuoteResponse } from '../utils/quoteResponse';
-import { getAmount } from '../utils/tokens';
+import { getAmount, getAmountFromToken } from '../utils/tokens';
 
 const { ethers } = hre;
 
@@ -96,6 +98,28 @@ const checkQuoteToken = (
   expect(percentDiff.lessThan(new Fraction(parseInt(SLIPPAGE), 100))).to.be.true;
 };
 
+const checkPortionRecipientToken = (
+  before: CurrencyAmount<Currency>,
+  after: CurrencyAmount<Currency>,
+  expectedPortionAmountReceived: CurrencyAmount<Currency>
+) => {
+  const actualPortionAmountReceived = after.subtract(before);
+
+  const tokensDiff = expectedPortionAmountReceived.greaterThan(actualPortionAmountReceived)
+    ? expectedPortionAmountReceived.subtract(actualPortionAmountReceived)
+    : actualPortionAmountReceived.subtract(expectedPortionAmountReceived);
+  // There will be a slight difference between expected and actual due to slippage during the hardhat fork swap.
+  const percentDiff = tokensDiff.asFraction.divide(expectedPortionAmountReceived.asFraction);
+  // We can be very very strict here. Slippage tolerance is 5%, but we can make the difference between expected and actual to be within 0.05%,
+  // due to the fact the test setups are swapping the very high liquidity pairs with deep market depth, with fairly small input token amount.
+  expect(percentDiff.lessThan(new Fraction(parseInt(SLIPPAGE), 10000))).to.be.true;
+  // As long as the actual portion amount is less than the expected portion amount, we are good.
+  expect(
+    actualPortionAmountReceived.lessThan(expectedPortionAmountReceived) ||
+      actualPortionAmountReceived.equalTo(expectedPortionAmountReceived)
+  ).to.be.true;
+};
+
 describe('quoteUniswapX', function () {
   // Help with test flakiness by retrying.
   this.retries(2);
@@ -105,23 +129,31 @@ describe('quoteUniswapX', function () {
   let alice: SignerWithAddress;
   let filler: SignerWithAddress;
   let block: number;
+  let portionFetcher: PortionFetcher;
 
   const executeSwap = async (
     order: DutchOrder,
     currencyIn: Currency,
-    currencyOut: Currency
+    currencyOut: Currency,
+    portion?: Portion
   ): Promise<{
     tokenInAfter: CurrencyAmount<Currency>;
     tokenInBefore: CurrencyAmount<Currency>;
     tokenOutAfter: CurrencyAmount<Currency>;
     tokenOutBefore: CurrencyAmount<Currency>;
+    tokenOutPortionRecipientAfter: CurrencyAmount<Currency>;
+    tokenOutPortionRecipientBefore: CurrencyAmount<Currency>;
   }> => {
     const reactor = ExclusiveDutchOrderReactor__factory.connect(order.info.reactor, filler);
+    const portionRecipientSigner = portion?.recipient ? await ethers.getSigner(portion?.recipient) : undefined;
 
     // Approve Permit2 for Alice
     // Note we pass in currency.wrapped, since Gouda does not support native ETH in
     const tokenInBefore = await getBalanceAndApprove(alice, PERMIT2_ADDRESS, currencyIn.wrapped);
     const tokenOutBefore = await getBalance(alice, currencyOut);
+    const tokenOutPortionRecipientBefore = portionRecipientSigner
+      ? await getBalance(portionRecipientSigner, currencyOut)
+      : CurrencyAmount.fromRawAmount(currencyOut, '0');
 
     // Directly approve reactor for filler funds
     await getBalanceAndApprove(filler, order.info.reactor, currencyOut);
@@ -134,12 +166,17 @@ describe('quoteUniswapX', function () {
 
     const tokenInAfter = await getBalance(alice, currencyIn.wrapped);
     const tokenOutAfter = await getBalance(alice, currencyOut);
+    const tokenOutPortionRecipientAfter = portionRecipientSigner
+      ? await getBalance(portionRecipientSigner, currencyOut)
+      : CurrencyAmount.fromRawAmount(currencyOut, '0');
 
     return {
       tokenInAfter,
       tokenInBefore,
       tokenOutAfter,
       tokenOutBefore,
+      tokenOutPortionRecipientAfter,
+      tokenOutPortionRecipientBefore,
     };
   };
 
@@ -188,6 +225,11 @@ describe('quoteUniswapX', function () {
       parseAmount('4000', WETH9[1]),
       parseAmount('5000000', DAI_MAINNET),
     ]);
+
+    process.env.ENABLING_PORTION = 'true';
+    if (process.env.PORTION_API_URL) {
+      portionFetcher = new PortionFetcher(process.env.PORTION_API_URL, new NodeCache());
+    }
   });
 
   // size filter may not apply for exact output
@@ -557,31 +599,150 @@ describe('quoteUniswapX', function () {
         const sendPortionEnabledValues = [true, undefined];
         GREENLIST_TOKEN_PAIRS.forEach(([tokenIn, tokenOut]) => {
           sendPortionEnabledValues.forEach((sendPortionEnabled) => {
-            it(`${tokenIn.symbol} -> ${tokenOut.symbol} sendPortionEnabled = ${sendPortionEnabled}`, async () => {
-              // Arrange:
-              // - token amount from swapper
-              // - greenlist token pairs
-              // - parametrize on sendPortionEnabled
-              getAmount(1, type, tokenIn.symbol!, tokenOut.symbol!, '100');
+            const shouldSkip =
+              // there's a known bug of portion service not supporting the native address 0x00.00 lookup
+              // that will cause the native token portion tests to fail
+              tokenIn.isNative || tokenOut.isNative || sendPortionEnabled;
+            // any portion enable test will fail due to non-implementation in the dutch quoter yet
 
-              // Act:
-              // - call dutch quote
+            shouldSkip
+              ? it.skip
+              : it(`${tokenIn.symbol} -> ${tokenOut.symbol} sendPortionEnabled = ${sendPortionEnabled}`, async () => {
+                  // if the token amount involves WBTC we have to reduce the WTBC amount to avoid the transfer from failed gas error.
+                  const originalAmount =
+                    (tokenIn.symbol === 'WBTC' && type === 'EXACT_INPUT') ||
+                    (tokenOut.symbol === 'WBTC' && type === 'EXACT_OUTPUT')
+                      ? '1'
+                      : '10';
+                  const tokenInAddress = tokenIn.isNative ? NATIVE_ADDRESS : tokenIn.address;
+                  const tokenOutAddress = tokenOut.isNative ? NATIVE_ADDRESS : tokenOut.address;
+                  const amount = await getAmountFromToken(type, tokenIn.wrapped, tokenOut.wrapped, originalAmount);
+                  const getPortionResponse = await portionFetcher.getPortion(
+                    tokenIn.chainId,
+                    tokenInAddress,
+                    tokenOut.chainId,
+                    tokenOutAddress
+                  );
+                  expect(getPortionResponse.hasPortion).to.be.true;
+                  expect(getPortionResponse.portion).to.not.be.undefined;
 
-              // Assert:
-              // - check if the response is 200
-              // - check if the response contains portion-related payloads if sendPortionEnabled = true
-              // - check if the response contains only portionBips and portionAmount if sendPortionEnabled not send, explicitly check for portionRecipient = undefined
+                  const quoteReq: QuoteRequestBodyJSON = {
+                    requestId: 'id',
+                    useUniswapX: true,
+                    tokenIn: tokenInAddress,
+                    tokenInChainId: 1,
+                    tokenOut: tokenOutAddress,
+                    tokenOutChainId: 1,
+                    amount: amount,
+                    type,
+                    slippageTolerance: SLIPPAGE,
+                    configs: [
+                      {
+                        routingType: RoutingType.DUTCH_LIMIT,
+                        swapper: alice.address,
+                        useSyntheticQuotes: true,
+                      },
+                    ] as RoutingConfigJSON[],
+                  };
 
-              // Act:
-              // use the dutch encoded order to connect to reactor and execute the swap
+                  const response = await call(quoteReq);
+                  const {
+                    data: { quote },
+                    status,
+                  } = response;
 
-              // Assert:
-              // - check if the swap is successful
-              // - check if the token balances are correct
-              //   - token balances assertion will stay the same for exact in and exact out
-              //   - need to explicitly check if the portion recipient balances increases for exact in and exact out (new setup)
-              //   - explicitly check that the portion recipient balances increase is the portion Bips against token out balance changes
-            });
+                  const order = new DutchOrder((quote as any).orderInfo, 1);
+                  expect(status).to.equal(200);
+                  // account for gas and slippage
+                  expect(order.info.swapper).to.equal(alice.address);
+
+                  if (sendPortionEnabled) {
+                    expect(order.info.outputs.length).to.equal(2);
+
+                    // second order is the dutch portion order
+                    const expectedDutchPortionOrderStartAmount = order.info.outputs[0].startAmount
+                      .mul(getPortionResponse.portion?.bips ?? 0)
+                      .div(BPS);
+                    const expectedDutchPortionOrderEndAmount = order.info.outputs[0].endAmount
+                      .mul(getPortionResponse.portion?.bips ?? 0)
+                      .div(BPS);
+                    expect(order.info.outputs[1].startAmount).to.equal(expectedDutchPortionOrderStartAmount);
+                    expect(order.info.outputs[1].endAmount).to.equal(expectedDutchPortionOrderEndAmount);
+                  } else {
+                    expect(order.info.outputs.length).to.equal(1);
+                  }
+
+                  const {
+                    tokenInBefore,
+                    tokenInAfter,
+                    tokenOutBefore,
+                    tokenOutAfter,
+                    tokenOutPortionRecipientBefore,
+                    tokenOutPortionRecipientAfter,
+                  } = await executeSwap(order, tokenIn, tokenOut, getPortionResponse.portion);
+
+                  if (type == 'EXACT_INPUT') {
+                    // if the token in is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
+                    if (!tokenIn.isNative) {
+                      expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal(originalAmount);
+                    }
+
+                    // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
+                    if (!tokenOut.isNative) {
+                      checkQuoteToken(
+                        tokenOutBefore,
+                        tokenOutAfter,
+                        CurrencyAmount.fromRawAmount(
+                          tokenOut,
+                          (quote as DutchQuoteDataJSON).orderInfo.outputs[0].startAmount
+                        )
+                      );
+                    }
+
+                    if (sendPortionEnabled) {
+                      const expectedPortionAmount = CurrencyAmount.fromRawAmount(
+                        tokenOut,
+                        (quote as DutchQuoteDataJSON).portionAmount ?? '0'
+                      );
+                      checkPortionRecipientToken(
+                        tokenOutPortionRecipientBefore!,
+                        tokenOutPortionRecipientAfter!,
+                        expectedPortionAmount
+                      );
+                    }
+                  } else {
+                    // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
+                    if (!tokenOut.isNative) {
+                      // exact out swap amount might not be exactly the request amount, due to delay curve
+                      // same assertion as other existing tests
+                      expect(
+                        tokenOutAfter.subtract(tokenOutBefore).greaterThan(originalAmount) ||
+                          tokenOutAfter.subtract(tokenOutBefore).equalTo(originalAmount)
+                      ).to.be.true;
+                    }
+
+                    // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
+                    if (!tokenIn.isNative) {
+                      checkQuoteToken(
+                        tokenInBefore,
+                        tokenInAfter,
+                        CurrencyAmount.fromRawAmount(tokenIn, order.info.input.startAmount.toString())
+                      );
+                    }
+
+                    if (sendPortionEnabled) {
+                      const expectedPortionAmount = CurrencyAmount.fromRawAmount(
+                        tokenOut,
+                        (quote as DutchQuoteDataJSON).portionAmount ?? '0'
+                      );
+                      checkPortionRecipientToken(
+                        tokenOutPortionRecipientBefore!,
+                        tokenOutPortionRecipientAfter!,
+                        expectedPortionAmount
+                      );
+                    }
+                  }
+                });
           });
         });
 
