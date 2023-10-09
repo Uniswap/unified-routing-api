@@ -36,7 +36,6 @@ export const BASE_REQUEST_INFO_EXACT_IN = {
   type: 'EXACT_INPUT',
   swapper: SWAPPER,
   useUniswapX: true,
-  sendPortionEnabled: false,
 };
 
 export const REQUEST_INFO_ETH_EXACT_IN = {
@@ -124,7 +123,6 @@ export function makeClassicRequest(overrides: Partial<QuoteRequestBodyJSON>): Cl
 }
 
 export const QUOTE_REQUEST_CLASSIC = makeClassicRequest({});
-export const QUOTE_REQUEST_CLASSIC_FE_SEND_PORTION = makeClassicRequest({ sendPortionEnabled: true });
 
 export function makeDutchRequest(
   overrides: Partial<QuoteRequestBodyJSON>,

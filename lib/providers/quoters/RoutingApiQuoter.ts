@@ -3,11 +3,7 @@ import { NATIVE_NAMES_BY_ID } from '@uniswap/smart-order-router';
 import { AxiosError, AxiosResponse } from 'axios';
 import querystring from 'querystring';
 
-import {
-  FRONTEND_LOGICAL_AND_BACKEND_ENABLE_PORTION_FLAG,
-  NATIVE_ADDRESS,
-  RoutingType
-} from '../../constants';
+import { ENABLE_PORTION, NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { ClassicQuote, ClassicQuoteDataJSON, ClassicRequest, Quote } from '../../entities';
 import { Portion } from '../../fetchers/PortionFetcher';
 import { TokenFetcher } from '../../fetchers/TokenFetcher';
@@ -90,14 +86,12 @@ export class RoutingApiQuoter implements Quoter {
 
       const portionAdjustedResponse: AxiosResponse<ClassicQuoteDataJSON> = {
         ...response,
-        data: FRONTEND_LOGICAL_AND_BACKEND_ENABLE_PORTION_FLAG(request.info.sendPortionEnabled, process.env.ENABLE_PORTION)
+        data: ENABLE_PORTION(process.env.ENABLE_PORTION)
           ? {
               ...response.data,
-              // TODO: ROUTE-97 - re-evaluate how to properly code up returning portionBips in case of no fee in URA
-              portionBips: portion?.bips ?? 0, // important for exact in, clients are expected to use this for exact in swaps
+              portionBips: portion?.bips, // important for exact in, clients are expected to use this for exact in swaps
               portionRecipient: portion?.recipient, // important, clients are expected to use this for exact in and exact out swaps
-              // TODO: ROUTE-97 - re-evaluate how to properly code up returning portionAmount in case of no fee in URA
-              portionAmount: portionAmount?.quotient.toString() ?? '0', // important for exact out, clients are expected to use this for exact out swaps
+              portionAmount: portionAmount?.quotient.toString(), // important for exact out, clients are expected to use this for exact out swaps
               portionAmountDecimals: portionAmount?.toExact(), // important for exact out, clients are expected to use this for exact out swaps
               quoteGasAndPortionAdjusted: quoteGasAndPortionAdjusted, // not important, clients disregard this
               quoteGasAndPortionAdjustedDecimals: quoteGasAndPortionAdjustedDecimals, // not important, clients disregard this
@@ -193,7 +187,7 @@ export class RoutingApiQuoter implements Quoter {
         }),
         ...(request.info.type === TradeType.EXACT_OUTPUT &&
           portion &&
-          FRONTEND_LOGICAL_AND_BACKEND_ENABLE_PORTION_FLAG(request.info.sendPortionEnabled, process.env.ENABLE_PORTION) && {
+          ENABLE_PORTION(process.env.ENABLE_PORTION) && {
             portionAmount: this.portionProvider
               .getPortionAmount(amount, portion, resolvedTokenOut)
               ?.quotient.toString(),
@@ -201,7 +195,7 @@ export class RoutingApiQuoter implements Quoter {
           }),
         ...(request.info.type === TradeType.EXACT_INPUT &&
           portion &&
-          FRONTEND_LOGICAL_AND_BACKEND_ENABLE_PORTION_FLAG(request.info.sendPortionEnabled, process.env.ENABLE_PORTION) && {
+          ENABLE_PORTION(process.env.ENABLE_PORTION) && {
             portionBips: portion.bips,
             portionRecipient: portion.recipient,
           }),

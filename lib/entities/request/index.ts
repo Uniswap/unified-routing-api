@@ -28,7 +28,6 @@ export interface QuoteRequestInfo {
   slippageTolerance?: string;
   swapper?: string;
   useUniswapX?: boolean;
-  sendPortionEnabled?: boolean;
 }
 
 export interface QuoteRequestBodyJSON extends Omit<QuoteRequestInfo, 'type' | 'amount'> {
@@ -60,7 +59,6 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON): {
     type: parseTradeType(body.type),
     slippageTolerance: body.slippageTolerance ?? DEFAULT_SLIPPAGE_TOLERANCE,
     swapper: body.swapper,
-    sendPortionEnabled: body.sendPortionEnabled,
   };
 
   const requests = body.configs.flatMap((config) => {
