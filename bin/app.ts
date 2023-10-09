@@ -133,6 +133,10 @@ export class APIPipeline extends Stack {
       secretCompleteArn: 'arn:aws:secretsmanager:us-east-2:644039819003:secret:UniswapX/ParamApi/ApiKeys-hYyUt1',
     });
 
+    const portionFlagSecret = sm.Secret.fromSecretAttributes(this, 'portion-flag', {
+      secretCompleteArn: 'arn:aws:secretsmanager:us-east-2:644039819003:secret:portion-flag-yR0VGr',
+    });
+
     // Beta us-east-2
     const betaUsEast2Stage = new APIStage(this, 'beta-us-east-2', {
       env: { account: '665191769009', region: 'us-east-2' },
@@ -149,6 +153,8 @@ export class APIPipeline extends Stack {
         SYNTH_SWITCH_API_KEY: syntheticSwitchApiKeySecret.secretValueFromJson('AUTH_BETA').toString(),
         ROUTING_API_URL: urlSecrets.secretValueFromJson('ROUTING_API_BETA').toString(),
         SERVICE_URL: urlSecrets.secretValueFromJson('GOUDA_SERVICE_BETA').toString(),
+        PORTION_API_URL: urlSecrets.secretValueFromJson('PORTION_API_BETA').toString(),
+        ENABLE_PORTION: portionFlagSecret.secretValueFromJson('ENABLE_PORTION').toString(),
         REQUEST_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_REQUEST_DESTINATION_BETA').toString(),
         RESPONSE_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_RESPONSE_DESTINATION_BETA').toString(),
       },
@@ -174,6 +180,8 @@ export class APIPipeline extends Stack {
         SYNTH_SWITCH_API_KEY: syntheticSwitchApiKeySecret.secretValueFromJson('AUTH_PROD').toString(),
         ROUTING_API_URL: urlSecrets.secretValueFromJson('ROUTING_API_PROD').toString(),
         SERVICE_URL: urlSecrets.secretValueFromJson('GOUDA_SERVICE_PROD').toString(),
+        PORTION_API_URL: urlSecrets.secretValueFromJson('PORTION_API_PROD').toString(),
+        ENABLE_PORTION: portionFlagSecret.secretValueFromJson('ENABLE_PORTION').toString(),
         REQUEST_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_REQUEST_DESTINATION_PROD').toString(),
         RESPONSE_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_RESPONSE_DESTINATION_PROD').toString(),
       },
@@ -237,6 +245,7 @@ export class APIPipeline extends Stack {
         'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc',
         'echo "UNISWAP_API=${UNISWAP_API}" >> .env',
         'echo "ROUTING_API_URL=${ROUTING_API}" >> .env',
+        'echo "PORTION_API_URL=${PORTION_API_URL}" >> .env',
         'echo "ARCHIVE_NODE_RPC=${ARCHIVE_NODE_RPC}" >> .env',
         'echo "URA_INTERNAL_API_KEY=${URA_INTERNAL_API_KEY}" >> .env',
         'yarn install --frozen-lockfile --network-concurrency 1',
@@ -267,6 +276,8 @@ envVars['PARAMETERIZATION_API_KEY'] = process.env['PARAMETERIZATION_API_KEY'] ||
 envVars['SYNTH_SWITCH_API_KEY'] = process.env['SYNTH_SWITCH_API_KEY'] || '';
 envVars['ROUTING_API_URL'] = process.env['ROUTING_API_URL'] || '';
 envVars['SERVICE_URL'] = process.env['SERVICE_URL'] || '';
+envVars['PORTION_API_URL'] = process.env['PORTION_API_URL'] || '';
+envVars['ENABLE_PORTION'] = process.env['ENABLE_PORTION'] || '';
 envVars['REQUEST_DESTINATION_ARN'] = process.env['REQUEST_DESTINATION_ARN'] || '';
 envVars['RESPONSE_DESTINATION_ARN'] = process.env['RESPONSE_DESTINATION_ARN'] || '';
 envVars['ROUTING_API_KEY'] = process.env['ROUTING_API_KEY'] || 'test-api-key';

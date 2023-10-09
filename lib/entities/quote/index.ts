@@ -29,6 +29,12 @@ export type LogJSON = {
   slippage: number;
   filler?: string;
   gasPriceWei?: string;
+  portionBips?: number;
+  portionRecipient?: string;
+  portionAmount?: string;
+  portionAmountDecimals?: string;
+  quoteGasAndPortionAdjusted?: string;
+  quoteGasAndPortionAdjustedDecimals?: string;
 };
 
 export interface IQuote {

@@ -22,3 +22,31 @@ export enum RoutingType {
   CLASSIC = 'CLASSIC',
   DUTCH_LIMIT = 'DUTCH_LIMIT',
 }
+
+export const DEFAULT_POSITIVE_CACHE_ENTRY_TTL = 600; // 10 minutes
+export const DEFAULT_NEGATIVE_CACHE_ENTRY_TTL = 600; // 10 minute
+
+// we need this functional style of always enquirying the env var,
+// otherwise when assigning process.env.ENABLE_PORTION to const variables,
+// an update in process.env.ENABLE_PORTION will not be reflected in the lambda invocations until lambda recycles.
+export const getEnablePortionEnvVar = () => process.env.ENABLE_PORTION;
+
+export const uraEnablePortion = () => {
+  const portionFlag = getEnablePortionEnvVar();
+
+  switch (portionFlag) {
+    case 'true':
+    case 'false':
+      return JSON.parse(portionFlag);
+    default:
+      return false;
+  }
+};
+
+export const frontendEnablePortion = (sendPortionFlag?: boolean) => {
+  return sendPortionFlag;
+};
+
+export const frontendAndUraEnablePortion = (sendPortionFlag?: boolean) => {
+  return frontendEnablePortion(sendPortionFlag) && uraEnablePortion();
+};

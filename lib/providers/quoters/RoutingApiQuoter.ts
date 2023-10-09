@@ -3,8 +3,9 @@ import { NATIVE_NAMES_BY_ID } from '@uniswap/smart-order-router';
 import { AxiosError } from 'axios';
 import querystring from 'querystring';
 
-import { NATIVE_ADDRESS, RoutingType } from '../../constants';
+import { frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { ClassicQuote, ClassicRequest, Quote } from '../../entities';
+import { Portion, PortionFetcher } from '../../fetchers/PortionFetcher';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import axios from './helpers';
@@ -13,7 +14,7 @@ import { Quoter, QuoterType } from './index';
 export class RoutingApiQuoter implements Quoter {
   static readonly type: QuoterType.ROUTING_API;
 
-  constructor(private routingApiUrl: string, private routingApiKey: string) {}
+  constructor(private routingApiUrl: string, private routingApiKey: string, private portionFetcher: PortionFetcher) {}
 
   async quote(request: ClassicRequest): Promise<Quote | null> {
     if (request.routingType !== RoutingType.CLASSIC) {
@@ -22,7 +23,16 @@ export class RoutingApiQuoter implements Quoter {
 
     metrics.putMetric(`RoutingApiQuoterRequest`, 1);
     try {
-      const req = this.buildRequest(request);
+      const portion = (
+        await this.portionFetcher.getPortion(
+          request.info.tokenInChainId,
+          request.info.tokenIn,
+          request.info.tokenOutChainId,
+          request.info.tokenOut
+        )
+      ).portion;
+
+      const req = this.buildRequest(request, portion);
       const now = Date.now();
       const response = await axios.get(req, { headers: { 'x-api-key': this.routingApiKey } });
       metrics.putMetric(`RoutingApiQuoterSuccess`, 1);
@@ -62,7 +72,7 @@ export class RoutingApiQuoter implements Quoter {
     }
   }
 
-  buildRequest(request: ClassicRequest): string {
+  buildRequest(request: ClassicRequest, portion?: Portion): string {
     const tradeType = request.info.type === TradeType.EXACT_INPUT ? 'exactIn' : 'exactOut';
     const config = request.config;
     return (
@@ -109,6 +119,11 @@ export class RoutingApiQuoter implements Quoter {
         ...(config.enableFeeOnTransferFeeFetching !== undefined && {
           enableFeeOnTransferFeeFetching: config.enableFeeOnTransferFeeFetching,
         }),
+        ...(portion &&
+          frontendAndUraEnablePortion(request.info.sendPortionEnabled) && {
+            portionBips: portion.bips,
+            portionRecipient: portion.recipient,
+          }),
       })
     );
   }
