@@ -34,10 +34,9 @@ export class RoutingApiQuoter implements Quoter {
 
       try {
         // we will need to call token fetcher to resolve the tokenIn and tokenOut
-        // there's no guarantee that the tokenIn and tokenOut are in the token address, can be in the token symbol.
-        // for erc20 tokens, portion service only recognize token address, not token symbol.
+        // there's no guarantee that the tokenIn and tokenOut are in the token address
         // also the tokenIn and tokenOut can be native token
-        // in that case, portion service recognize the token symbol.
+        // portion service only accepts wrapped token address
         [resolvedTokenIn, resolveTokenOut] = await Promise.all([
           this.tokenFetcher.resolveTokenBySymbolOrAddress(request.info.tokenInChainId, request.info.tokenIn),
           this.tokenFetcher.resolveTokenBySymbolOrAddress(request.info.tokenOutChainId, request.info.tokenOut),
@@ -56,8 +55,8 @@ export class RoutingApiQuoter implements Quoter {
       const portion = (
         await this.portionProvider.getPortion(
           request.info,
-          resolvedTokenIn?.isNative ? request.info.tokenIn : resolvedTokenIn?.wrapped.address,
-          resolveTokenOut?.isNative ? request.info.tokenOut : resolveTokenOut?.wrapped.address
+          resolvedTokenIn?.wrapped.address,
+          resolveTokenOut?.wrapped.address
         )
       ).portion;
 
