@@ -937,8 +937,6 @@ describe('quote', function () {
                       }
                     }
 
-                    // Act:
-                    // use the methodParameters to execute the swap
                     const {
                       tokenInBefore,
                       tokenInAfter,
@@ -1008,43 +1006,151 @@ describe('quote', function () {
                         );
                       }
                     }
-
-                    // Assert:
-                    // - check if the swap is successful
-                    // - check if the token balances are correct
-                    //   - token balances assertion will stay the same for exact in and exact out
-                    //   - need to explicitly check if the portion recipient balances increases for exact in and exact out (new setup)
-                    //   - explicitly check that the portion recipient balances increase is the portion Bips against token out balance changes
                   });
             });
           });
 
           GREENLIST_CARVEOUT_PAIRS.forEach(([tokenIn, tokenOut]) => {
             sendPortionEnabledValues.forEach((sendPortionEnabled) => {
-              it(`stable-to-stable ${tokenIn.symbol} -> ${tokenOut.symbol} carveout sendPortionEnabled = ${sendPortionEnabled}`, async () => {
-                // Arrange:
-                // - token amount from swapper
-                // - greenlist token pairs
-                // - parametrize on sendPortionEnabled
-                getAmount(1, type, tokenIn.symbol!, tokenOut.symbol!, '100');
+              // portion service doesn't have the stable-to-stable carveout merged yet
+              // all carveout tests are skipped for now
+              const shouldSkip = sendPortionEnabled;
 
-                // Act:
-                // - call classic quote
+              shouldSkip
+                ? it.skip
+                : it(`stable-to-stable ${tokenIn.symbol} -> ${tokenOut.symbol} carveout sendPortionEnabled = ${sendPortionEnabled}`, async () => {
+                    const originalAmount = '10';
+                    const tokenInSymbol = tokenIn.symbol!;
+                    const tokenOutSymbol = tokenOut.symbol!;
+                    const tokenInAddress = tokenIn.isNative ? tokenInSymbol : tokenIn.address;
+                    const tokenOutAddress = tokenOut.isNative ? tokenOutSymbol : tokenOut.address;
+                    const amount = await getAmountFromToken(type, tokenIn.wrapped, tokenOut.wrapped, originalAmount);
+                    const getPortionResponse = await portionFetcher.getPortion(
+                      tokenIn.chainId,
+                      tokenInAddress,
+                      tokenOut.chainId,
+                      tokenOutAddress
+                    );
 
-                // Assert:
-                // - check if the response is 200
-                // - check if the response contains the methodParameters
-                // - check if the response contains only portionBips and portionAmount all equal to zero if sendPortionEnabled not send, explicitly check for portionRecipient = undefined
+                    if (sendPortionEnabled) {
+                      expect(getPortionResponse.hasPortion).to.be.false;
+                      expect(getPortionResponse.portion).to.be.undefined;
+                    }
 
-                // Act:
-                // use the methodParameters to execute the swap
+                    const quoteReq: QuoteRequestBodyJSON = {
+                      requestId: 'id',
+                      tokenIn: tokenInSymbol,
+                      tokenInChainId: tokenIn.chainId,
+                      tokenOut: tokenOutSymbol,
+                      tokenOutChainId: tokenOut.chainId,
+                      amount: amount,
+                      type,
+                      slippageTolerance: SLIPPAGE,
+                      sendPortionEnabled: sendPortionEnabled,
+                      configs: [
+                        {
+                          routingType: RoutingType.CLASSIC,
+                          recipient: alice.address,
+                          deadline: 360,
+                          algorithm,
+                          enableUniversalRouter: true,
+                        },
+                      ],
+                    };
 
-                // Assert:
-                // - check if the swap is successful
-                // - check if the token balances are correct
-                //   - token balances assertion will stay the same for exact in and exact out
-                //   - need to explicitly check if the portion recipient balances has no change
-              });
+                    const response = await call(quoteReq);
+                    const { data, status } = response;
+                    const quoteJSON = data.quote as ClassicQuoteDataJSON;
+
+                    expect(status).to.equal(200);
+                    expect(quoteJSON.methodParameters).to.not.be.undefined;
+
+                    if (sendPortionEnabled) {
+                      // portion recipient must be undefined for carveout
+                      expect(quoteJSON.portionRecipient).to.be.undefined;
+
+                      // all other fields must be defined for clients to know that portion bips is 0%.
+                      expect(quoteJSON.portionBips).to.not.be.undefined;
+                      expect(quoteJSON.portionAmount).to.not.be.undefined;
+                      expect(quoteJSON.portionAmountDecimals).to.not.be.undefined;
+                      expect(quoteJSON.quoteGasAndPortionAdjusted).to.not.be.undefined;
+                      expect(quoteJSON.quoteGasAndPortionAdjustedDecimals).to.not.be.undefined;
+
+                      expect(quoteJSON.portionBips).to.equal(0);
+                      expect(quoteJSON.portionAmount).to.equal('0');
+                      expect(quoteJSON.portionAmountDecimals).to.equal(0);
+                    }
+
+                    const {
+                      tokenInBefore,
+                      tokenInAfter,
+                      tokenOutBefore,
+                      tokenOutAfter,
+                      tokenOutPortionRecipientBefore,
+                      tokenOutPortionRecipientAfter,
+                    } = await executeSwap(
+                      quoteJSON.methodParameters!,
+                      tokenIn,
+                      tokenOut!,
+                      false,
+                      tokenIn.chainId,
+                      getPortionResponse.portion
+                    );
+
+                    if (type == 'EXACT_INPUT') {
+                      // if the token in is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
+                      if (!tokenIn.isNative) {
+                        expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal(originalAmount);
+                      }
+
+                      // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
+                      if (!tokenOut.isNative) {
+                        checkQuoteToken(
+                          tokenOutBefore,
+                          tokenOutAfter,
+                          CurrencyAmount.fromRawAmount(tokenOut, quoteJSON.quote)
+                        );
+                      }
+
+                      if (sendPortionEnabled) {
+                        const expectedPortionAmount = CurrencyAmount.fromRawAmount(
+                          tokenOut,
+                          quoteJSON.portionAmount ?? '0'
+                        );
+                        checkPortionRecipientToken(
+                          tokenOutPortionRecipientBefore!,
+                          tokenOutPortionRecipientAfter!,
+                          expectedPortionAmount
+                        );
+                      }
+                    } else {
+                      // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
+                      if (!tokenOut.isNative) {
+                        expect(tokenOutAfter.subtract(tokenOutBefore).toExact()).to.equal(originalAmount);
+                      }
+
+                      // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
+                      if (!tokenIn.isNative) {
+                        checkQuoteToken(
+                          tokenInBefore,
+                          tokenInAfter,
+                          CurrencyAmount.fromRawAmount(tokenIn, quoteJSON.quote)
+                        );
+                      }
+
+                      if (sendPortionEnabled) {
+                        const expectedPortionAmount = CurrencyAmount.fromRawAmount(
+                          tokenOut,
+                          quoteJSON.portionAmount ?? '0'
+                        );
+                        checkPortionRecipientToken(
+                          tokenOutPortionRecipientBefore!,
+                          tokenOutPortionRecipientAfter!,
+                          expectedPortionAmount
+                        );
+                      }
+                    }
+                  });
             });
           });
 
