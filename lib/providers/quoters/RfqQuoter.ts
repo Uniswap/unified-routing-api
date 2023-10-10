@@ -3,7 +3,7 @@ import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-ro
 import { BigNumber } from 'ethers';
 import axios from './helpers';
 
-import { NATIVE_ADDRESS, RoutingType } from '../../constants';
+import { frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { DutchQuote, DutchRequest, Quote } from '../../entities';
 import { PostQuoteResponseJoi } from '../../handlers/quote';
 import { log } from '../../util/log';
@@ -38,7 +38,7 @@ export class RfqQuoter implements Quoter {
       portion?.bips && request.info.type === TradeType.EXACT_OUTPUT
         ? request.info.amount.mul(portion?.bips)
         : undefined;
-    const amount = portionAmount ? request.info.amount.add(portionAmount) : request.info.amount;
+    const amount = portionAmount && frontendAndUraEnablePortion(request.info.sendPortionEnabled) ? request.info.amount.add(portionAmount) : request.info.amount;
     const requests = [
       axios.post(
         `${this.rfqUrl}quote`,
