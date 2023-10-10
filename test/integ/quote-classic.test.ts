@@ -259,7 +259,7 @@ describe('quote', function () {
       parseAmount('5000000', DAI_MAINNET),
     ]);
 
-    process.env.ENABLING_PORTION = 'true';
+    process.env.ENABLE_PORTION = 'true';
     if (process.env.PORTION_API_URL) {
       portionFetcher = new PortionFetcher(process.env.PORTION_API_URL, new NodeCache());
     }
@@ -1673,7 +1673,8 @@ describe('quote', function () {
               }
             });
 
-            const sendPortionEnabledValues = [true, undefined];
+            // TODO: when prod secret is true, we will need to test sendPortionEnabledValues = true
+            const sendPortionEnabledValues = [undefined]; // [true, undefined];
             GREENLIST_TOKEN_PAIRS.forEach(([tokenIn, tokenOut]) => {
               sendPortionEnabledValues.forEach((sendPortionEnabled) => {
                 // TODO: remove shouldSkip once the bug is fixed
@@ -1701,10 +1702,8 @@ describe('quote', function () {
                         tokenOutAddress
                       );
 
-                      if (sendPortionEnabled) {
-                        expect(getPortionResponse.hasPortion).to.be.true;
-                        expect(getPortionResponse.portion).to.not.be.undefined;
-                      }
+                      expect(getPortionResponse.hasPortion).to.be.true;
+                      expect(getPortionResponse.portion).to.not.be.undefined;
 
                       const quoteReq: QuoteRequestBodyJSON = {
                         requestId: 'id',
@@ -1856,6 +1855,7 @@ describe('quote', function () {
                         tokenOutAddress
                       );
 
+                      // TODO: remove the if statement, once portion service doesn't return portion for stable-to-stable
                       if (sendPortionEnabled) {
                         expect(getPortionResponse.hasPortion).to.be.false;
                         expect(getPortionResponse.portion).to.be.undefined;
