@@ -32,6 +32,19 @@ export interface IPortionProvider {
   ): CurrencyAmount<Currency> | undefined;
 
   /**
+   * Get portion quote amount based on the token in amount
+   *
+   * @param portionAmountToken portion amount token from token out
+   * @param quoteCurrencyAmount quote currency amount from the token in
+   * @param amount token out amount from the swapper
+   */
+  getPortionQuoteAmount(
+    portionAmountToken: CurrencyAmount<Currency>,
+    quoteCurrencyAmount: CurrencyAmount<Currency>,
+    amount: CurrencyAmount<Currency>
+  ): CurrencyAmount<Currency>;
+
+  /**
    *
    * @param sharedInfo shared quote request info across classic and dutch
    * @param quote quote from the classic

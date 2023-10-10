@@ -7,11 +7,8 @@ import NodeCache from 'node-cache';
 import { v4 as uuid } from 'uuid';
 import { QuoteRequestInfo } from '../../../../lib/entities';
 import { GetPortionResponse, PortionFetcher, PortionType } from '../../../../lib/fetchers/PortionFetcher';
-import { TokenFetcher } from '../../../../lib/fetchers/TokenFetcher';
 import { PortionProvider } from '../../../../lib/providers';
 import axios from '../../../../lib/providers/quoters/helpers';
-import { log } from '../../../../lib/util/log';
-import { metrics } from '../../../../lib/util/metrics';
 import { GREENLIST_TOKEN_PAIRS, PORTION_BIPS, PORTION_RECIPIENT } from '../../../constants';
 import {
   BUSD_MAINNET,
@@ -24,6 +21,7 @@ import {
 } from '../../../utils/tokens';
 
 describe('PortionProvider test', () => {
+  const expectedRequestAmount = '1.01';
   const expectedQuote = '1605.56';
   const expectedGas = '2.35';
   process.env.ENABLE_PORTION = 'true';
@@ -60,7 +58,7 @@ describe('PortionProvider test', () => {
         const tokenAddress2 = token2.wrapped.address;
 
         it(`token address ${tokenAddress1} to token address ${tokenAddress2} within the list, should have portion`, async () => {
-          const requestedAmount = BigNumber.from(parseAmount('1.01', token1).quotient.toString());
+          const requestedAmount = BigNumber.from(parseAmount(expectedRequestAmount, token1).quotient.toString());
           const sharedInfo: QuoteRequestInfo = {
             requestId: uuid(),
             tokenInChainId: ChainId.MAINNET,
@@ -73,11 +71,11 @@ describe('PortionProvider test', () => {
             swapper: uuid(),
             useUniswapX: false,
           };
-          await exactInGetPortionAndAssert(sharedInfo, token2);
+          await exactInGetPortionAndAssert(sharedInfo, token1, token2);
         });
 
         it(`token symbol ${tokenSymbol1} to token symbol ${tokenSymbol2} within the list, should have portion`, async () => {
-          const requestedAmount = BigNumber.from(parseAmount('1.01', token1).quotient.toString());
+          const requestedAmount = BigNumber.from(parseAmount(expectedRequestAmount, token1).quotient.toString());
           const sharedInfo: QuoteRequestInfo = {
             requestId: uuid(),
             tokenInChainId: ChainId.MAINNET,
@@ -91,36 +89,22 @@ describe('PortionProvider test', () => {
             useUniswapX: false,
           };
 
-          await exactInGetPortionAndAssert(sharedInfo, token2);
+          await exactInGetPortionAndAssert(sharedInfo, token1, token2);
         });
       });
 
-      async function exactInGetPortionAndAssert(sharedInfo: QuoteRequestInfo, token2: Currency | Token) {
-        let [resolvedTokenIn, resolveTokenOut]: [Currency | undefined, Currency | undefined] = [undefined, undefined];
-
-        try {
-          const tokenFetcher = new TokenFetcher();
-          // we will need to call token fetcher to resolve the tokenIn and tokenOut
-          // there's no guarantee that the tokenIn and tokenOut are in the token address
-          // also the tokenIn and tokenOut can be native token
-          // portion service only accepts wrapped token address
-          [resolvedTokenIn, resolveTokenOut] = await Promise.all([
-            tokenFetcher.resolveTokenBySymbolOrAddress(sharedInfo.tokenInChainId, sharedInfo.tokenIn),
-            tokenFetcher.resolveTokenBySymbolOrAddress(sharedInfo.tokenOutChainId, sharedInfo.tokenOut),
-          ]);
-        } catch (e) {
-          // possible to throw validation error, we have to catch here because we have to proceed
-          log.error({ e }, 'Failed to resolve tokenIn & tokenOut');
-          metrics.putMetric(`PortionProvider.resolveTokenErr`, 1);
-        }
-
+      async function exactInGetPortionAndAssert(
+        sharedInfo: QuoteRequestInfo,
+        token1: Currency | Token,
+        token2: Currency | Token
+      ) {
         const quoteAmount = parseAmount(expectedQuote, token2);
         const quoteGasAdjustedAmount = quoteAmount.subtract(parseAmount(expectedGas, token2));
 
         const getPortionResponse = await portionProvider.getPortion(
           sharedInfo,
-          resolvedTokenIn?.wrapped.address,
-          resolveTokenOut?.wrapped.address
+          token1.wrapped.address,
+          token2.wrapped.address
         );
         expect(getPortionResponse?.hasPortion).toBe(portionResponse.hasPortion);
         expect(getPortionResponse?.portion).toBeDefined();
@@ -129,24 +113,21 @@ describe('PortionProvider test', () => {
         const portionAmount = portionProvider.getPortionAmount(
           quoteAmount.quotient.toString(),
           getPortionResponse.portion,
-          resolveTokenOut
+          token2
         );
         const portionAdjustedQuote = portionProvider.getPortionAdjustedQuote(
           sharedInfo,
           quoteAmount.quotient.toString(),
           quoteGasAdjustedAmount.quotient.toString(),
           portionAmount,
-          resolvedTokenIn,
-          resolveTokenOut
+          token1,
+          token2
         );
 
         // 1605.56 * 10^8 * 5 / 10000 = 80278000
         const expectedPortionAmount = quoteAmount.multiply(new Fraction(portionResponse.portion?.bips ?? 0, 10000));
-
-        // important assertions
         expect(portionAmount?.quotient.toString()).toBe(expectedPortionAmount.quotient.toString());
 
-        // not important assertions
         // (1605.56 - 2.35) * 10^8 - 80278000 = 160240722000
         const expectedQuoteGasAndPortionAdjusted = quoteGasAdjustedAmount.subtract(expectedPortionAmount);
         expect(portionAdjustedQuote?.quotient.toString()).toBe(expectedQuoteGasAndPortionAdjusted.quotient.toString());
@@ -196,7 +177,7 @@ describe('PortionProvider test', () => {
         const tokenAddress2 = token2.wrapped.address;
 
         it(`token address ${tokenAddress1} to token address ${tokenAddress2} within the list, should have portion`, async () => {
-          const requestedAmount = BigNumber.from(parseAmount('1.01', token1).quotient.toString());
+          const requestedAmount = BigNumber.from(parseAmount(expectedRequestAmount, token2).quotient.toString());
           const sharedInfo: QuoteRequestInfo = {
             requestId: uuid(),
             tokenInChainId: ChainId.MAINNET,
@@ -209,11 +190,11 @@ describe('PortionProvider test', () => {
             swapper: uuid(),
             useUniswapX: false,
           };
-          await exactOutGetPortionAndAssert(sharedInfo, token2);
+          await exactOutGetPortionAndAssert(sharedInfo, token1, token2);
         });
 
         it(`token symbol ${tokenSymbol1} to token symbol ${tokenSymbol2} within the list, should have portion`, async () => {
-          const requestedAmount = BigNumber.from(parseAmount('1.01', token1).quotient.toString());
+          const requestedAmount = BigNumber.from(parseAmount(expectedRequestAmount, token2).quotient.toString());
           const sharedInfo: QuoteRequestInfo = {
             requestId: uuid(),
             tokenInChainId: ChainId.MAINNET,
@@ -227,65 +208,57 @@ describe('PortionProvider test', () => {
             useUniswapX: false,
           };
 
-          await exactOutGetPortionAndAssert(sharedInfo, token2);
+          await exactOutGetPortionAndAssert(sharedInfo, token1, token2);
         });
       });
 
-      async function exactOutGetPortionAndAssert(sharedInfo: QuoteRequestInfo, token2: Currency | Token) {
-        let [resolvedTokenIn, resolveTokenOut]: [Currency | undefined, Currency | undefined] = [undefined, undefined];
-
-        try {
-          const tokenFetcher = new TokenFetcher();
-          // we will need to call token fetcher to resolve the tokenIn and tokenOut
-          // there's no guarantee that the tokenIn and tokenOut are in the token address
-          // also the tokenIn and tokenOut can be native token
-          // portion service only accepts wrapped token address
-          [resolvedTokenIn, resolveTokenOut] = await Promise.all([
-            tokenFetcher.resolveTokenBySymbolOrAddress(sharedInfo.tokenInChainId, sharedInfo.tokenIn),
-            tokenFetcher.resolveTokenBySymbolOrAddress(sharedInfo.tokenOutChainId, sharedInfo.tokenOut),
-          ]);
-        } catch (e) {
-          // possible to throw validation error, we have to catch here because we have to proceed
-          log.error({ e }, 'Failed to resolve tokenIn & tokenOut');
-          metrics.putMetric(`PortionProvider.resolveTokenErr`, 1);
-        }
-
-        const userTypedTokenOutAmount = parseAmount(expectedQuote, token2);
+      async function exactOutGetPortionAndAssert(
+        sharedInfo: QuoteRequestInfo,
+        token1: Currency | Token,
+        token2: Currency | Token
+      ) {
+        const amount = parseAmount(expectedRequestAmount, token2);
+        const quoteAmount = parseAmount(expectedQuote, token1);
         const getPortionResponse = await portionProvider.getPortion(
           sharedInfo,
-          resolvedTokenIn?.wrapped.address,
-          resolveTokenOut?.wrapped.address
+          token1?.wrapped.address,
+          token2?.wrapped.address
         );
         expect(getPortionResponse?.hasPortion).toBe(portionResponse.hasPortion);
         expect(getPortionResponse?.portion).toBeDefined;
         expect(getPortionResponse?.portion).toStrictEqual(portionResponse.portion);
 
-        const quote = userTypedTokenOutAmount.quotient.toString();
-        const portionAmount = portionProvider.getPortionAmount(quote, getPortionResponse.portion, resolveTokenOut);
-        const quoteGasAdjusted = portionAmount?.add(userTypedTokenOutAmount).quotient.toString() ?? quote;
+        const quote = quoteAmount.quotient.toString();
+        const portionAmount = portionProvider.getPortionAmount(
+          amount.quotient.toString(),
+          getPortionResponse.portion,
+          token2
+        );
+        const quoteGasAdjustedAmount = quoteAmount.add(parseAmount(expectedGas, token1));
         const portionAdjustedQuote = portionProvider.getPortionAdjustedQuote(
           sharedInfo,
           quote,
-          quoteGasAdjusted,
+          quoteGasAdjustedAmount.quotient.toString(),
           portionAmount,
-          resolvedTokenIn,
-          resolveTokenOut
+          token1,
+          token2
         );
 
-        // 1605.56 * 10^8 * 5 / 10000 = 80278000
-        const expectedPortionAmount = userTypedTokenOutAmount.multiply(
-          new Fraction(portionResponse.portion.bips, 10000)
-        );
-
-        // important assertions
+        // 1.01 * 10^8 * 12 / 10000 = 121200
+        // (exact out requested amount) * (USDC decimal scale) * (portion bips) / 10000 = portion amount
+        const expectedPortionAmount = amount.multiply(new Fraction(portionResponse.portion.bips, 10000));
         expect(portionAmount?.quotient.toString()).toBe(expectedPortionAmount.quotient.toString());
 
-        // 1605.56 * 10^8 + 80278000 = 160636278000
-        // not important assertions
-        const expectedPortionAdjustedTokenOutAmount = userTypedTokenOutAmount.add(expectedPortionAmount);
-        expect(portionAdjustedQuote?.quotient.toString()).toBe(
-          expectedPortionAdjustedTokenOutAmount.quotient.toString()
+        const expectedPortionQuoteAmount = portionProvider.getPortionQuoteAmount(
+          expectedPortionAmount,
+          quoteAmount,
+          amount
         );
+
+        // 1605.56 * 10^18 + 121200 / (1.01 * 10^8 + 121200) * 1605.56 * 10^18 = 1.6074867e+21
+        // (exact in quote amount) * (ETH decimal scale) + (portion amount) / (exact out requested amount + portion amount) * (exact in quote amount) * (ETH decimal scale) = portion adjusted quote amount
+        const expectedQuoteGasAndPortionAdjusted = quoteGasAdjustedAmount.add(expectedPortionQuoteAmount);
+        expect(portionAdjustedQuote?.quotient.toString()).toBe(expectedQuoteGasAndPortionAdjusted.quotient.toString());
       }
     });
   });
