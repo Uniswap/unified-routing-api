@@ -249,11 +249,7 @@ describe('PortionProvider test', () => {
         const expectedPortionAmount = amount.multiply(new Fraction(portionResponse.portion.bips, 10000));
         expect(portionAmount?.quotient.toString()).toBe(expectedPortionAmount.quotient.toString());
 
-        const expectedPortionQuoteAmount = portionProvider.getPortionQuoteAmount(
-          expectedPortionAmount,
-          quoteAmount,
-          amount
-        );
+        const expectedPortionQuoteAmount = portionProvider.getPortionQuoteAmount(expectedPortionAmount, quoteAmount, amount);
 
         // 1605.56 * 10^18 + 121200 / (1.01 * 10^8 + 121200) * 1605.56 * 10^18 = 1.6074867e+21
         // (exact in quote amount) * (ETH decimal scale) + (portion amount) / (exact out requested amount + portion amount) * (exact in quote amount) * (ETH decimal scale) = portion adjusted quote amount
