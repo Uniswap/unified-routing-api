@@ -36,12 +36,12 @@ export interface IPortionProvider {
    *
    * @param portionAmount portion amount token from token out
    * @param quoteAmount quote currency amount from the token in
-   * @param amount token out amount from the swapper
+   * @param swapperRequestedExactOutAmount token out amount from the swapper
    */
   getPortionQuoteAmount(
     portionAmount: CurrencyAmount<Currency>,
     quoteAmount: CurrencyAmount<Currency>,
-    amount: CurrencyAmount<Currency>
+    swapperRequestedExactOutAmount: CurrencyAmount<Currency>
   ): CurrencyAmount<Currency>;
 
   /**

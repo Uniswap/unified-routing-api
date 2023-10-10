@@ -41,12 +41,12 @@ export class PortionProvider implements IPortionProvider {
   getPortionQuoteAmount(
     portionAmount: CurrencyAmount<Currency>,
     quoteAmount: CurrencyAmount<Currency>,
-    amount: CurrencyAmount<Currency>
+    swapperRequestedExactOutAmount: CurrencyAmount<Currency>
   ): CurrencyAmount<Currency> {
     // 1. we know the portion amount for exact out with 100% correctness,
     //    so we can add the portion amount into the exact out amount swapper requested.
     //    i.e. portionAdjustedAmount = amount + portionAmountToken
-    const portionAdjustedAmount = amount.add(portionAmount);
+    const portionAdjustedAmount = swapperRequestedExactOutAmount.add(portionAmount);
     // 2. then we know portion amount and portion adjusted exact out amount,
     //    we can get a ratio
     //    i.e. portionToPortionAdjustedAmountSpotPrice = portionAmountToken / portionAdjustedAmount
@@ -118,17 +118,17 @@ export class PortionProvider implements IPortionProvider {
    * @param portionAmount this is the token out portion amount in decimal-less/unit-less token quantities
    * @param quoteAmount this is the token in quote amount in decimal-less/unit-less token quantities
    * @param quoteGasAdjustedAmount this is the token in quote adjusted gas amount in decimal-less/unit-less token quantities
-   * @param amount this is the token out amount requested by the swapper for exact out swap
+   * @param swapperRequestedExactOutAmount this is the token out amount requested by the swapper for exact out swap
    * @private
    */
   private getQuoteGasAndPortionAdjustedForExactOut(
     portionAmount: CurrencyAmount<Currency>,
     quoteAmount: CurrencyAmount<Currency>,
     quoteGasAdjustedAmount: CurrencyAmount<Currency>,
-    amount: CurrencyAmount<Currency>
+    swapperRequestedExactOutAmount: CurrencyAmount<Currency>
   ): CurrencyAmount<Currency> {
     // we have a simple heuristic to estimate the quote gas and portion adjusted for exact out
-    const portionQuoteAmount = this.getPortionQuoteAmount(portionAmount, quoteAmount, amount);
+    const portionQuoteAmount = this.getPortionQuoteAmount(portionAmount, quoteAmount, swapperRequestedExactOutAmount);
 
     // 4. finally we have the estimated portion quote amount, we can add it to the quote gas adjusted amount,
     //    i.e. quoteGasAdjustedCurrencyAmount = quoteGasAdjustedCurrencyAmount + portionQuoteAmount
