@@ -306,7 +306,4 @@ export const GREENLIST_TOKEN_PAIRS: Array<[Currency, Currency]> = [
   [DAI_ON(ChainId.MAINNET), WBTC_MAINNET],
 ];
 
-export const GREENLIST_CARVEOUT_PAIRS: Array<[Currency, Currency]> = [
-  [USDC_MAINNET, DAI_MAINNET],
-  [WETH9[ChainId.MAINNET], Ether.onChain(ChainId.MAINNET)],
-];
+export const GREENLIST_STABLE_TO_STABLE_PAIRS: Array<[Currency, Currency]> = [[USDC_MAINNET, DAI_MAINNET]];

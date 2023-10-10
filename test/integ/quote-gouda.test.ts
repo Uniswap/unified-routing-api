@@ -25,7 +25,7 @@ import { NATIVE_ADDRESS, RoutingType } from '../../lib/constants';
 import { ClassicQuoteDataJSON, QuoteRequestBodyJSON, RoutingConfigJSON } from '../../lib/entities';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { ExclusiveDutchOrderReactor__factory } from '../../lib/types/ext';
-import { GREENLIST_CARVEOUT_PAIRS, GREENLIST_TOKEN_PAIRS } from '../constants';
+import { GREENLIST_STABLE_TO_STABLE_PAIRS, GREENLIST_TOKEN_PAIRS } from '../constants';
 import { fund, resetAndFundAtBlock } from '../utils/forkAndFund';
 import { getBalance, getBalanceAndApprove } from '../utils/getBalanceAndApprove';
 import { RoutingApiQuoteResponse } from '../utils/quoteResponse';
@@ -585,7 +585,7 @@ describe('quoteUniswapX', function () {
           });
         });
 
-        GREENLIST_CARVEOUT_PAIRS.forEach(([tokenIn, tokenOut]) => {
+        GREENLIST_STABLE_TO_STABLE_PAIRS.forEach(([tokenIn, tokenOut]) => {
           sendPortionEnabledValues.forEach((sendPortionEnabled) => {
             it(`stable-to-stable ${tokenIn.symbol} -> ${tokenOut.symbol} carveout sendPortionEnabled = ${sendPortionEnabled}`, async () => {
               // Arrange:

@@ -238,6 +238,10 @@ export class APIPipeline extends Stack {
             value: 'ura-internal-api-key',
             type: BuildEnvironmentVariableType.SECRETS_MANAGER,
           },
+          PORTION_API_URL: {
+            value: `${stage}/portion-api/url`,
+            type: BuildEnvironmentVariableType.SECRETS_MANAGER,
+          }
         },
       },
       commands: [
