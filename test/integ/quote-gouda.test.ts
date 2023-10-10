@@ -868,7 +868,7 @@ describe('quoteUniswapX', function () {
                     }
 
                     if (sendPortionEnabled) {
-                      expect((quote as DutchQuoteDataJSON).portionAmount).not.to.be.undefined
+                      expect((quote as DutchQuoteDataJSON).portionAmount).not.to.be.undefined;
 
                       const expectedPortionAmount = CurrencyAmount.fromRawAmount(
                         tokenOut,
