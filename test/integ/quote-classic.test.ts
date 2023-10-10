@@ -259,7 +259,7 @@ describe('quote', function () {
       parseAmount('5000000', DAI_MAINNET),
     ]);
 
-    process.env.ENABLING_PORTION = 'true';
+    process.env.ENABLE_PORTION = 'true';
     if (process.env.PORTION_API_URL) {
       portionFetcher = new PortionFetcher(process.env.PORTION_API_URL, new NodeCache());
     }
