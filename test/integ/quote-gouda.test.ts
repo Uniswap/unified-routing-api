@@ -845,7 +845,7 @@ describe('quoteUniswapX', function () {
 
                       const expectedPortionAmount = CurrencyAmount.fromRawAmount(
                         tokenOut,
-                        (quote as DutchQuoteDataJSON).portionAmount
+                        (quote as DutchQuoteDataJSON).portionAmount!
                       );
                       checkPortionRecipientToken(
                         tokenOutPortionRecipientBefore!,
