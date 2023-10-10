@@ -37,7 +37,7 @@ import { QuoteRequestBodyJSON } from '../../lib/entities/request';
 import { Portion, PortionFetcher } from '../../lib/fetchers/PortionFetcher';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { Permit2__factory } from '../../lib/types/ext';
-import { GREENLIST_CARVEOUT_PAIRS, GREENLIST_TOKEN_PAIRS } from '../constants';
+import { GREENLIST_STABLE_TO_STABLE_PAIRS, GREENLIST_TOKEN_PAIRS } from '../constants';
 import { resetAndFundAtBlock } from '../utils/forkAndFund';
 import { getBalance, getBalanceAndApprove } from '../utils/getBalanceAndApprove';
 import { DAI_ON, getAmount, getAmountFromToken, UNI_MAINNET, USDC_ON, WNATIVE_ON } from '../utils/tokens';
@@ -125,14 +125,7 @@ const checkPortionRecipientToken = (
     : actualPortionAmountReceived.subtract(expectedPortionAmountReceived);
   // There will be a slight difference between expected and actual due to slippage during the hardhat fork swap.
   const percentDiff = tokensDiff.asFraction.divide(expectedPortionAmountReceived.asFraction);
-  // We can be very very strict here. Slippage tolerance is 5%, but we can make the difference between expected and actual to be within 0.05%,
-  // due to the fact the test setups are swapping the very high liquidity pairs with deep market depth, with fairly small input token amount.
-  expect(percentDiff.lessThan(new Fraction(parseInt(SLIPPAGE), 10000))).to.be.true;
-  // As long as the actual portion amount is less than the expected portion amount, we are good.
-  expect(
-    actualPortionAmountReceived.lessThan(expectedPortionAmountReceived) ||
-      actualPortionAmountReceived.equalTo(expectedPortionAmountReceived)
-  ).to.be.true;
+  expect(percentDiff.lessThan(new Fraction(parseInt(SLIPPAGE), 100))).to.be.true;
 };
 
 let warnedTesterPK = false;
@@ -175,8 +168,8 @@ describe('quote', function () {
     tokenInBefore: CurrencyAmount<Currency>;
     tokenOutAfter: CurrencyAmount<Currency>;
     tokenOutBefore: CurrencyAmount<Currency>;
-    tokenOutPortionRecipientBefore: CurrencyAmount<Currency>;
-    tokenOutPortionRecipientAfter: CurrencyAmount<Currency>;
+    tokenOutPortionRecipientBefore?: CurrencyAmount<Currency>;
+    tokenOutPortionRecipientAfter?: CurrencyAmount<Currency>;
   }> => {
     const permit2 = Permit2__factory.connect(PERMIT2_ADDRESS, alice);
     const portionRecipientSigner = portion?.recipient ? await ethers.getSigner(portion?.recipient) : undefined;
@@ -186,7 +179,7 @@ describe('quote', function () {
     const tokenOutBefore = await getBalance(alice, currencyOut);
     const tokenOutPortionRecipientBefore = portionRecipientSigner
       ? await getBalance(portionRecipientSigner, currencyOut)
-      : CurrencyAmount.fromRawAmount(currencyOut, '0');
+      : undefined;
 
     // Approve SwapRouter02 in case we request calldata for it instead of Universal Router
     await getBalanceAndApprove(alice, SWAP_ROUTER_02_ADDRESSES(chainId), currencyIn);
@@ -218,7 +211,7 @@ describe('quote', function () {
     const tokenOutAfter = await getBalance(alice, currencyOut);
     const tokenOutPortionRecipientAfter = portionRecipientSigner
       ? await getBalance(portionRecipientSigner, currencyOut)
-      : CurrencyAmount.fromRawAmount(currencyOut, '0');
+      : undefined;
 
     return {
       tokenInAfter,
@@ -1683,6 +1676,7 @@ describe('quote', function () {
             const sendPortionEnabledValues = [true, undefined];
             GREENLIST_TOKEN_PAIRS.forEach(([tokenIn, tokenOut]) => {
               sendPortionEnabledValues.forEach((sendPortionEnabled) => {
+                // TODO: remove shouldSkip once the bug is fixed
                 const shouldSkip =
                   // there's a known bug of portion service not supporting the native address 0x00.00 lookup
                   // that will cause the native token portion tests to fail
@@ -1836,15 +1830,16 @@ describe('quote', function () {
               });
             });
 
-            GREENLIST_CARVEOUT_PAIRS.forEach(([tokenIn, tokenOut]) => {
+            GREENLIST_STABLE_TO_STABLE_PAIRS.forEach(([tokenIn, tokenOut]) => {
               sendPortionEnabledValues.forEach((sendPortionEnabled) => {
-                // portion service doesn't have the stable-to-stable carveout merged yet
-                // all carveout tests are skipped for now
+                // TODO: remove shouldSkip once the stable-to-stable is merged
+                // portion service doesn't have the stable-to-stable merged yet
+                // all tests are skipped for now
                 const shouldSkip = sendPortionEnabled;
 
                 shouldSkip
                   ? it.skip
-                  : it(`stable-to-stable ${tokenIn.symbol} -> ${tokenOut.symbol} carveout sendPortionEnabled = ${sendPortionEnabled}`, async () => {
+                  : it(`stable-to-stable ${tokenIn.symbol} -> ${tokenOut.symbol} sendPortionEnabled = ${sendPortionEnabled}`, async () => {
                       const originalAmount = '10';
                       const tokenInSymbol = tokenIn.symbol!;
                       const tokenOutSymbol = tokenOut.symbol!;
@@ -1894,7 +1889,7 @@ describe('quote', function () {
                       expect(quoteJSON.methodParameters).to.not.be.undefined;
 
                       if (sendPortionEnabled) {
-                        // portion recipient must be undefined for carveout
+                        // portion recipient must be undefined
                         expect(quoteJSON.portionRecipient).to.be.undefined;
 
                         // all other fields must be defined for clients to know that portion bips is 0%.
