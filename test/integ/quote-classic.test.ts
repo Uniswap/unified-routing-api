@@ -1700,8 +1700,11 @@ describe('quote', function () {
                         tokenOut.chainId,
                         tokenOutAddress
                       );
-                      expect(getPortionResponse.hasPortion).to.be.true;
-                      expect(getPortionResponse.portion).to.not.be.undefined;
+
+                      if (sendPortionEnabled) {
+                        expect(getPortionResponse.hasPortion).to.be.true;
+                        expect(getPortionResponse.portion).to.not.be.undefined;
+                      }
 
                       const quoteReq: QuoteRequestBodyJSON = {
                         requestId: 'id',
