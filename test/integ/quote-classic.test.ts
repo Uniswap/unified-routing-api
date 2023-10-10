@@ -58,7 +58,7 @@ if (!process.env.URA_INTERNAL_API_KEY) {
 }
 
 if (!process.env.PORTION_API_URL) {
-  console.log('PORTION_API_URL env variable is not set. This is recommended for integ tests.');
+  throw new Error('Must set PORTION_API_URL env variables for integ tests. See README');
 }
 
 const API = `${process.env.UNISWAP_API!}quote`;
