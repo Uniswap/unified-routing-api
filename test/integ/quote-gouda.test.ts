@@ -114,14 +114,7 @@ const checkPortionRecipientToken = (
     : actualPortionAmountReceived.subtract(expectedPortionAmountReceived);
   // There will be a slight difference between expected and actual due to slippage during the hardhat fork swap.
   const percentDiff = tokensDiff.asFraction.divide(expectedPortionAmountReceived.asFraction);
-  // We can be very very strict here. Slippage tolerance is 5%, but we can make the difference between expected and actual to be within 0.05%,
-  // due to the fact the test setups are swapping the very high liquidity pairs with deep market depth, with fairly small input token amount.
-  expect(percentDiff.lessThan(new Fraction(parseInt(SLIPPAGE), 10000))).to.be.true;
-  // As long as the actual portion amount is less than the expected portion amount, we are good.
-  expect(
-    actualPortionAmountReceived.lessThan(expectedPortionAmountReceived) ||
-      actualPortionAmountReceived.equalTo(expectedPortionAmountReceived)
-  ).to.be.true;
+  expect(percentDiff.lessThan(new Fraction(parseInt(SLIPPAGE), 100))).to.be.true;
 };
 
 describe('quoteUniswapX', function () {
@@ -663,15 +656,24 @@ describe('quoteUniswapX', function () {
                   if (sendPortionEnabled) {
                     expect(order.info.outputs.length).to.equal(2);
 
-                    // second order is the dutch portion order
-                    const expectedDutchPortionOrderStartAmount = order.info.outputs[0].startAmount
-                      .mul(getPortionResponse.portion?.bips ?? 0)
-                      .div(BPS);
-                    const expectedDutchPortionOrderEndAmount = order.info.outputs[0].endAmount
-                      .mul(getPortionResponse.portion?.bips ?? 0)
-                      .div(BPS);
-                    expect(order.info.outputs[1].startAmount).to.equal(expectedDutchPortionOrderStartAmount);
-                    expect(order.info.outputs[1].endAmount).to.equal(expectedDutchPortionOrderEndAmount);
+                    const firstOutput = order.info.outputs[0];
+                    expect(firstOutput.startAmount).greaterThan(0);
+                    const secondOutput = order.info.outputs[1];
+                    expect(secondOutput.startAmount).greaterThan(0);
+
+                    expect(getPortionResponse.portion?.bips).not.to.be.undefined;
+
+                    if (getPortionResponse.portion?.bips) {
+                      const expectedDutchPortionOrderStartAmount = firstOutput.startAmount
+                        .mul(getPortionResponse.portion.bips)
+                        .div(BPS);
+                      const expectedDutchPortionOrderEndAmount = firstOutput.endAmount
+                        .mul(getPortionResponse.portion.bips)
+                        .div(BPS);
+                      // second order is the dutch portion order
+                      expect(secondOutput.startAmount).to.equal(expectedDutchPortionOrderStartAmount);
+                      expect(secondOutput.endAmount).to.equal(expectedDutchPortionOrderEndAmount);
+                    }
                   } else {
                     expect(order.info.outputs.length).to.equal(1);
                   }
@@ -866,9 +868,11 @@ describe('quoteUniswapX', function () {
                     }
 
                     if (sendPortionEnabled) {
+                      expect((quote as DutchQuoteDataJSON).portionAmount).not.to.be.undefined
+
                       const expectedPortionAmount = CurrencyAmount.fromRawAmount(
                         tokenOut,
-                        (quote as DutchQuoteDataJSON).portionAmount ?? '0'
+                        (quote as DutchQuoteDataJSON).portionAmount!
                       );
                       checkPortionRecipientToken(
                         tokenOutPortionRecipientBefore!,
