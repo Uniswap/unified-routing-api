@@ -1791,9 +1791,11 @@ describe('quote', function () {
                         }
 
                         if (sendPortionEnabled) {
+                          expect(quoteJSON.portionAmount).not.to.be.undefined;
+
                           const expectedPortionAmount = CurrencyAmount.fromRawAmount(
                             tokenOut,
-                            quoteJSON.portionAmount ?? '0'
+                            quoteJSON.portionAmount!
                           );
                           checkPortionRecipientToken(
                             tokenOutPortionRecipientBefore!,
@@ -1817,9 +1819,11 @@ describe('quote', function () {
                         }
 
                         if (sendPortionEnabled) {
+                          expect(quoteJSON.portionAmount).not.to.be.undefined;
+
                           const expectedPortionAmount = CurrencyAmount.fromRawAmount(
                             tokenOut,
-                            quoteJSON.portionAmount ?? '0'
+                            quoteJSON.portionAmount!
                           );
                           checkPortionRecipientToken(
                             tokenOutPortionRecipientBefore!,
@@ -1939,9 +1943,11 @@ describe('quote', function () {
                         }
 
                         if (sendPortionEnabled) {
+                          expect(quoteJSON.portionAmount).not.to.be.undefined;
+
                           const expectedPortionAmount = CurrencyAmount.fromRawAmount(
                             tokenOut,
-                            quoteJSON.portionAmount ?? '0'
+                            quoteJSON.portionAmount!
                           );
                           checkPortionRecipientToken(
                             tokenOutPortionRecipientBefore!,
@@ -1965,9 +1971,11 @@ describe('quote', function () {
                         }
 
                         if (sendPortionEnabled) {
+                          expect(quoteJSON.portionAmount).not.to.be.undefined;
+
                           const expectedPortionAmount = CurrencyAmount.fromRawAmount(
                             tokenOut,
-                            quoteJSON.portionAmount ?? '0'
+                            quoteJSON.portionAmount!
                           );
                           checkPortionRecipientToken(
                             tokenOutPortionRecipientBefore!,

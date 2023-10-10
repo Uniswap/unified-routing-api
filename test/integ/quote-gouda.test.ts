@@ -706,9 +706,11 @@ describe('quoteUniswapX', function () {
                     }
 
                     if (sendPortionEnabled) {
+                      expect(quote as DutchQuoteDataJSON).not.to.be.undefined;
+
                       const expectedPortionAmount = CurrencyAmount.fromRawAmount(
                         tokenOut,
-                        (quote as DutchQuoteDataJSON).portionAmount ?? '0'
+                        (quote as DutchQuoteDataJSON).portionAmount!
                       );
                       checkPortionRecipientToken(
                         tokenOutPortionRecipientBefore!,
@@ -737,9 +739,11 @@ describe('quoteUniswapX', function () {
                     }
 
                     if (sendPortionEnabled) {
+                      expect((quote as DutchQuoteDataJSON).portionAmount).not.to.be.undefined;
+
                       const expectedPortionAmount = CurrencyAmount.fromRawAmount(
                         tokenOut,
-                        (quote as DutchQuoteDataJSON).portionAmount ?? '0'
+                        (quote as DutchQuoteDataJSON).portionAmount!
                       );
                       checkPortionRecipientToken(
                         tokenOutPortionRecipientBefore!,
