@@ -1,14 +1,9 @@
 import { AxiosInstance } from 'axios';
 import NodeCache from 'node-cache';
 import { DEFAULT_NEGATIVE_CACHE_ENTRY_TTL, DEFAULT_POSITIVE_CACHE_ENTRY_TTL } from '../../../../lib/constants';
-import {
-  GetPortionResponse,
-  GET_NO_PORTION_RESPONSE,
-  PortionFetcher,
-  PortionType,
-} from '../../../../lib/fetchers/PortionFetcher';
+import { GetPortionResponse, GET_NO_PORTION_RESPONSE, PortionFetcher } from '../../../../lib/fetchers/PortionFetcher';
 import axios from '../../../../lib/providers/quoters/helpers';
-import { PORTION_BIPS, PORTION_RECIPIENT } from '../../../constants';
+import { FLAT_PORTION } from '../../../constants';
 
 describe('PortionFetcher Unit Tests', () => {
   process.env.ENABLE_PORTION = 'true';
@@ -27,11 +22,7 @@ describe('PortionFetcher Unit Tests', () => {
   it('Portion Service returns portion data', async () => {
     const portionResponse: GetPortionResponse = {
       hasPortion: true,
-      portion: {
-        bips: PORTION_BIPS,
-        recipient: PORTION_RECIPIENT,
-        type: PortionType.Flat,
-      },
+      portion: FLAT_PORTION,
     };
 
     const createSpy = jest.spyOn(axios, 'create');

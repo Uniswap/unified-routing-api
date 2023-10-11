@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { RoutingType } from '../../constants';
 import {
   ClassicQuote,
+  DutchQuote,
   DutchQuoteType,
   parseQuoteContexts,
   parseQuoteRequests,
@@ -383,14 +384,14 @@ export function compareQuotes(lhs: Quote, rhs: Quote, tradeType: TradeType): boo
 const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
   if (tradeType === TradeType.EXACT_INPUT) {
     if (quote.routingType === RoutingType.CLASSIC) {
-      return (quote as ClassicQuote).amountOutGasAdjusted;
+      return (quote as ClassicQuote).amountOutGasAndPortionAdjusted;
     }
-    return (quote as Quote).amountOut;
+    return (quote as DutchQuote).amountOutGasAndPortionAdjusted;
   } else {
     if (quote.routingType === RoutingType.CLASSIC) {
-      return (quote as ClassicQuote).amountInGasAdjusted;
+      return (quote as ClassicQuote).amountInGasAndPortionAdjusted;
     }
-    return (quote as Quote).amountIn;
+    return (quote as DutchQuote).amountInGasAndPortionAdjusted;
   }
 };
 

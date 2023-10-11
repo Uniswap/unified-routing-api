@@ -67,7 +67,7 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
 
     return {
       quoters: {
-        [RoutingType.DUTCH_LIMIT]: new RfqQuoter(paramApiUrl, serviceUrl, paramApiKey),
+        [RoutingType.DUTCH_LIMIT]: new RfqQuoter(paramApiUrl, serviceUrl, paramApiKey, portionProvider),
         [RoutingType.CLASSIC]: new RoutingApiQuoter(routingApiUrl, routingApiKey, portionProvider, tokenFetcher),
       },
       rpcUrlMap,

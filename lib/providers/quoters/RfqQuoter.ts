@@ -3,18 +3,24 @@ import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-ro
 import { BigNumber } from 'ethers';
 import axios from './helpers';
 
-import { NATIVE_ADDRESS, RoutingType } from '../../constants';
+import { frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { DutchQuote, DutchRequest, Quote } from '../../entities';
 import { PostQuoteResponseJoi } from '../../handlers/quote';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import { generateRandomNonce } from '../../util/nonce';
+import { PortionProvider } from '../portion/PortionProvider';
 import { Quoter, QuoterType } from './index';
 
 export class RfqQuoter implements Quoter {
   static readonly type: QuoterType.UNISWAPX_RFQ;
 
-  constructor(private rfqUrl: string, private serviceUrl: string, private paramApiKey: string) {}
+  constructor(
+    private rfqUrl: string,
+    private serviceUrl: string,
+    private paramApiKey: string,
+    private portionProvider: PortionProvider
+  ) {}
 
   async quote(request: DutchRequest): Promise<Quote | null> {
     if (request.routingType !== RoutingType.DUTCH_LIMIT) {
@@ -22,8 +28,20 @@ export class RfqQuoter implements Quoter {
       return null;
     }
 
+    const portion = (await this.portionProvider.getPortion(request.info, request.info.tokenIn, request.info.tokenOut))
+      .portion;
+
     const swapper = request.config.swapper;
     const now = Date.now();
+    // we must adjust up the exact out swap amount to account for portion, before requesting quote from RFQ quoter
+    const portionAmount =
+      portion?.bips && request.info.type === TradeType.EXACT_OUTPUT
+        ? request.info.amount.mul(portion?.bips)
+        : undefined;
+
+    // we will only add portion to the exact out swap amount if the URA ENABLE_PORTION is true
+    // as well as the frontend sendPortionEnabled is true
+    const amount = portionAmount && frontendAndUraEnablePortion(request.info.sendPortionEnabled) ? request.info.amount.add(portionAmount) : request.info.amount;
     const requests = [
       axios.post(
         `${this.rfqUrl}quote`,
@@ -32,7 +50,7 @@ export class RfqQuoter implements Quoter {
           tokenOutChainId: request.info.tokenOutChainId,
           tokenIn: mapNative(request.info.tokenIn, request.info.tokenInChainId),
           tokenOut: request.info.tokenOut,
-          amount: request.info.amount.toString(),
+          amount: amount.toString(),
           swapper: swapper,
           requestId: request.info.requestId,
           type: TradeType[request.info.type],
@@ -60,7 +78,7 @@ export class RfqQuoter implements Quoter {
             log.debug(results[1].reason, 'RfqQuoterErr: GET nonce failed');
             metrics.putMetric(`RfqQuoterLatency`, Date.now() - now);
             metrics.putMetric(`RfqQuoterNonceErr`, 1);
-            quote = DutchQuote.fromResponseBody(request, response, generateRandomNonce());
+            quote = DutchQuote.fromResponseBody(request, response, generateRandomNonce(), portion);
           } else {
             log.info(results[1].value.data, 'RfqQuoter: GET nonce success');
             metrics.putMetric(`RfqQuoterLatency`, Date.now() - now);
@@ -68,7 +86,8 @@ export class RfqQuoter implements Quoter {
             quote = DutchQuote.fromResponseBody(
               request,
               response,
-              BigNumber.from(results[1].value.data.nonce).add(1).toString()
+              BigNumber.from(results[1].value.data.nonce).add(1).toString(),
+              portion
             );
           }
         }

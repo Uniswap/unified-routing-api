@@ -19,7 +19,9 @@ export type LogJSON = {
   endAmountIn: string;
   endAmountOut: string;
   amountInGasAdjusted?: string;
+  amountInGasAndPortionAdjusted?: string;
   amountOutGasAdjusted?: string;
+  amountOutGasAndPortionAdjusted?: string;
   tokenInChainId: number;
   tokenOutChainId: number;
   swapper: string;
@@ -35,6 +37,8 @@ export type LogJSON = {
   portionAmountDecimals?: string;
   quoteGasAndPortionAdjusted?: string;
   quoteGasAndPortionAdjustedDecimals?: string;
+  portionAmountOutStart?: string;
+  portionAmountOutEnd?: string;
 };
 
 export interface IQuote {

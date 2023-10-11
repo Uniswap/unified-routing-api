@@ -88,7 +88,7 @@ export class ClassicQuote implements IQuote {
     return new ClassicQuote(request, body);
   }
 
-  constructor(public request: QuoteRequest, private quoteData: ClassicQuoteDataJSON) {
+  private constructor(public request: QuoteRequest, private quoteData: ClassicQuoteDataJSON) {
     this.createdAtMs = currentTimestampInMs();
     this.createdAt = timestampInMstoSeconds(parseInt(this.createdAtMs));
   }
@@ -161,6 +161,15 @@ export class ClassicQuote implements IQuote {
       : BigNumber.from(this.quoteData.amount);
   }
 
+  public get amountOutGasAndPortionAdjusted(): BigNumber {
+    return this.request.info.type === TradeType.EXACT_INPUT
+      // there's a possibility that quoteGasAndPortionAdjusted doesn't get populated if the flag is off
+      // in that case fallback to existing quoteGasAdjusted.
+      // undefined will cause the request to fail due to BigNumber.from(undefined)
+      ? BigNumber.from(this.quoteData.quoteGasAndPortionAdjusted ?? this.quoteData.quoteGasAdjusted)
+      : BigNumber.from(this.quoteData.amount);
+  }
+
   public get amountIn(): BigNumber {
     return this.request.info.type === TradeType.EXACT_OUTPUT
       ? BigNumber.from(this.quoteData.quote)
@@ -170,6 +179,15 @@ export class ClassicQuote implements IQuote {
   public get amountInGasAdjusted(): BigNumber {
     return this.request.info.type === TradeType.EXACT_OUTPUT
       ? BigNumber.from(this.quoteData.quoteGasAdjusted)
+      : BigNumber.from(this.quoteData.amount);
+  }
+
+  public get amountInGasAndPortionAdjusted(): BigNumber {
+    return this.request.info.type === TradeType.EXACT_OUTPUT
+      // there's a possibility that quoteGasAndPortionAdjusted doesn't get populated if the flag is off
+      // in that case fallback to existing quoteGasAdjusted.
+      // undefined will cause the request to fail due to BigNumber.from(undefined)
+      ? BigNumber.from(this.quoteData.quoteGasAndPortionAdjusted ?? this.quoteData.quoteGasAdjusted)
       : BigNumber.from(this.quoteData.amount);
   }
 
@@ -183,5 +201,13 @@ export class ClassicQuote implements IQuote {
 
   public get slippage(): number {
     return this.request.info.slippageTolerance ? parseFloat(this.request.info.slippageTolerance) : -1;
+  }
+
+  public getPortionBips(): number | undefined {
+    return this.quoteData.portionBips;
+  }
+
+  public getPortionRecipient(): string | undefined {
+    return this.quoteData.portionRecipient;
   }
 }

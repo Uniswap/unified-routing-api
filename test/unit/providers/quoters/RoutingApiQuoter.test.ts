@@ -1,11 +1,12 @@
+import { ChainId, WETH9 } from '@uniswap/sdk-core';
 import { AxiosError } from 'axios';
 import NodeCache from 'node-cache';
 import { ClassicQuote } from '../../../../lib/entities';
 import {
-  GET_NO_PORTION_RESPONSE,
   GetPortionResponse,
+  GET_NO_PORTION_RESPONSE,
   PortionFetcher,
-  PortionType
+  PortionType,
 } from '../../../../lib/fetchers/PortionFetcher';
 import { TokenFetcher } from '../../../../lib/fetchers/TokenFetcher';
 import { PortionProvider } from '../../../../lib/providers';
@@ -15,9 +16,8 @@ import { PORTION_BIPS, PORTION_RECIPIENT } from '../../../constants';
 import {
   CLASSIC_QUOTE_DATA,
   QUOTE_REQUEST_CLASSIC,
-  QUOTE_REQUEST_CLASSIC_FE_SEND_PORTION
+  QUOTE_REQUEST_CLASSIC_FE_SEND_PORTION,
 } from '../../../utils/fixtures';
-import {ChainId, WETH9} from "@uniswap/sdk-core";
 
 describe('RoutingApiQuoter', () => {
   const portionResponse: GetPortionResponse = {
@@ -121,7 +121,12 @@ describe('RoutingApiQuoter', () => {
       const portionProvider = new PortionProvider(portionFetcher);
       jest.spyOn(portionFetcher, 'getPortion').mockResolvedValue(portionResponse);
       const tokenFetcher = new TokenFetcher();
-      const routingApiQuoter = new RoutingApiQuoter('https://api.uniswap.org/', 'test-key', portionProvider, tokenFetcher);
+      const routingApiQuoter = new RoutingApiQuoter(
+        'https://api.uniswap.org/',
+        'test-key',
+        portionProvider,
+        tokenFetcher
+      );
 
       process.env.ENABLE_PORTION = 'true';
       axiosMock.mockResolvedValue({ data: CLASSIC_QUOTE_DATA.quote });
@@ -142,7 +147,12 @@ describe('RoutingApiQuoter', () => {
       const portionProvider = new PortionProvider(portionFetcher);
       jest.spyOn(portionFetcher, 'getPortion').mockResolvedValue(portionResponse);
       const tokenFetcher = new TokenFetcher();
-      const routingApiQuoter = new RoutingApiQuoter('https://api.uniswap.org/', 'test-key', portionProvider, tokenFetcher);
+      const routingApiQuoter = new RoutingApiQuoter(
+        'https://api.uniswap.org/',
+        'test-key',
+        portionProvider,
+        tokenFetcher
+      );
 
       process.env.ENABLE_PORTION = 'true';
       axiosMock.mockResolvedValue({ data: CLASSIC_QUOTE_DATA.quote });
@@ -163,7 +173,12 @@ describe('RoutingApiQuoter', () => {
       const portionProvider = new PortionProvider(portionFetcher);
       jest.spyOn(portionFetcher, 'getPortion').mockResolvedValue(portionResponse);
       const tokenFetcher = new TokenFetcher();
-      const routingApiQuoter = new RoutingApiQuoter('https://api.uniswap.org/', 'test-key', portionProvider, tokenFetcher);
+      const routingApiQuoter = new RoutingApiQuoter(
+        'https://api.uniswap.org/',
+        'test-key',
+        portionProvider,
+        tokenFetcher
+      );
 
       process.env.ENABLE_PORTION = 'false';
       axiosMock.mockResolvedValue({ data: CLASSIC_QUOTE_DATA.quote });
@@ -188,24 +203,38 @@ describe('RoutingApiQuoter', () => {
     it('properly builds query string with FE portion flag and BE portion flag', async () => {
       process.env.ENABLE_PORTION = 'true';
 
-      expect(await routingApiQuoter.buildRequest(QUOTE_REQUEST_CLASSIC_FE_SEND_PORTION, portionResponse.portion, WETH9[ChainId.MAINNET])).toEqual(
-          `https://api.uniswap.org/quote?tokenInAddress=0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984&tokenInChainId=1&tokenOutAddress=0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2&tokenOutChainId=1&amount=1000000000000000000&type=exactIn&protocols=v3&gasPriceWei=12&portionBips=${PORTION_BIPS}&portionRecipient=${PORTION_RECIPIENT}`
+      expect(
+        await routingApiQuoter.buildRequest(
+          QUOTE_REQUEST_CLASSIC_FE_SEND_PORTION,
+          portionResponse.portion,
+          WETH9[ChainId.MAINNET]
+        )
+      ).toEqual(
+        `https://api.uniswap.org/quote?tokenInAddress=0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984&tokenInChainId=1&tokenOutAddress=0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2&tokenOutChainId=1&amount=1000000000000000000&type=exactIn&protocols=v3&gasPriceWei=12&portionBips=${PORTION_BIPS}&portionRecipient=${PORTION_RECIPIENT}`
       );
     });
 
     it('properly builds query string with only FE portion flag', async () => {
       process.env.ENABLE_PORTION = 'false';
 
-      expect(await routingApiQuoter.buildRequest(QUOTE_REQUEST_CLASSIC_FE_SEND_PORTION, portionResponse.portion, WETH9[ChainId.MAINNET])).toEqual(
-          `https://api.uniswap.org/quote?tokenInAddress=0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984&tokenInChainId=1&tokenOutAddress=0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2&tokenOutChainId=1&amount=1000000000000000000&type=exactIn&protocols=v3&gasPriceWei=12`
+      expect(
+        await routingApiQuoter.buildRequest(
+          QUOTE_REQUEST_CLASSIC_FE_SEND_PORTION,
+          portionResponse.portion,
+          WETH9[ChainId.MAINNET]
+        )
+      ).toEqual(
+        `https://api.uniswap.org/quote?tokenInAddress=0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984&tokenInChainId=1&tokenOutAddress=0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2&tokenOutChainId=1&amount=1000000000000000000&type=exactIn&protocols=v3&gasPriceWei=12`
       );
     });
 
     it('properly builds query string with only BE portion flag', async () => {
       process.env.ENABLE_PORTION = 'true';
 
-      expect(await routingApiQuoter.buildRequest(QUOTE_REQUEST_CLASSIC, portionResponse.portion, WETH9[ChainId.MAINNET])).toEqual(
-          `https://api.uniswap.org/quote?tokenInAddress=0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984&tokenInChainId=1&tokenOutAddress=0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2&tokenOutChainId=1&amount=1000000000000000000&type=exactIn&protocols=v3&gasPriceWei=12`
+      expect(
+        await routingApiQuoter.buildRequest(QUOTE_REQUEST_CLASSIC, portionResponse.portion, WETH9[ChainId.MAINNET])
+      ).toEqual(
+        `https://api.uniswap.org/quote?tokenInAddress=0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984&tokenInChainId=1&tokenOutAddress=0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2&tokenOutChainId=1&amount=1000000000000000000&type=exactIn&protocols=v3&gasPriceWei=12`
       );
     });
   });
