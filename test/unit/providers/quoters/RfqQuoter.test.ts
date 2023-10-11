@@ -6,7 +6,11 @@ import { GetPortionResponse, PortionFetcher, PortionType } from '../../../../lib
 import { PortionProvider, RfqQuoter } from '../../../../lib/providers';
 import axios from '../../../../lib/providers/quoters/helpers';
 import { AMOUNT, PORTION_BIPS, PORTION_RECIPIENT, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
-import { QUOTE_REQUEST_DL, QUOTE_REQUEST_DL_EXACT_OUT } from '../../../utils/fixtures';
+import {
+  QUOTE_REQUEST_DL,
+  QUOTE_REQUEST_DL_EXACT_OUT,
+  QUOTE_REQUEST_DL_FE_SEND_PORTION,
+} from '../../../utils/fixtures';
 
 const UUID = 'c67c2882-24aa-4a68-a90b-53250ef81517';
 
@@ -45,6 +49,40 @@ describe('RfqQuoter test', () => {
         filler: SWAPPER,
       });
       process.env.ENABLE_PORTION = undefined;
+    });
+
+    it('sets numOutputs to 2 if portionEnabled', async () => {
+      process.env.ENABLE_PORTION = 'true';
+      await quoter.quote(QUOTE_REQUEST_DL_FE_SEND_PORTION);
+      expect(axios.post).toBeCalledWith(
+        'https://api.uniswap.org/quote',
+        expect.objectContaining({
+          numOutputs: 2,
+        }),
+        expect.anything()
+      );
+    });
+
+    it('sets numOutputs to 1 if either FE or BE portion flag is set to false', async () => {
+      process.env.ENABLE_PORTION = 'false';
+      await quoter.quote(QUOTE_REQUEST_DL_FE_SEND_PORTION);
+      expect(axios.post).toBeCalledWith(
+        'https://api.uniswap.org/quote',
+        expect.objectContaining({
+          numOutputs: 1,
+        }),
+        expect.anything()
+      );
+
+      process.env.ENABLE_PORTION = 'true';
+      await quoter.quote(QUOTE_REQUEST_DL);
+      expect(axios.post).toBeCalledWith(
+        'https://api.uniswap.org/quote',
+        expect.objectContaining({
+          numOutputs: 1,
+        }),
+        expect.anything()
+      );
     });
 
     it('returns null if quote response is invalid', async () => {
