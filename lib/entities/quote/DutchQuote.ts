@@ -34,6 +34,9 @@ export type DutchQuoteDataJSON = {
   deadlineBufferSecs: number;
   slippageTolerance: string;
   permitData: PermitTransferFromData;
+  portionBips?: number;
+  portionAmount?: string;
+  portionRecipient?: string;
 };
 
 export type DutchQuoteJSON = {
