@@ -33,6 +33,7 @@ export class RfqQuoter implements Quoter {
 
     const swapper = request.config.swapper;
     const now = Date.now();
+    const portionEnabled = frontendAndUraEnablePortion(request.info.sendPortionEnabled);
     // we must adjust up the exact out swap amount to account for portion, before requesting quote from RFQ quoter
     const portionAmount =
       portion?.bips && request.info.type === TradeType.EXACT_OUTPUT
@@ -41,7 +42,7 @@ export class RfqQuoter implements Quoter {
 
     // we will only add portion to the exact out swap amount if the URA ENABLE_PORTION is true
     // as well as the frontend sendPortionEnabled is true
-    const amount = portionAmount && frontendAndUraEnablePortion(request.info.sendPortionEnabled) ? request.info.amount.add(portionAmount) : request.info.amount;
+    const amount = portionAmount && portionEnabled ? request.info.amount.add(portionAmount) : request.info.amount;
     const requests = [
       axios.post(
         `${this.rfqUrl}quote`,
@@ -54,6 +55,7 @@ export class RfqQuoter implements Quoter {
           swapper: swapper,
           requestId: request.info.requestId,
           type: TradeType[request.info.type],
+          numOutputs: portionEnabled ? 2 : 1,
         },
         { headers: { 'x-api-key': this.paramApiKey } }
       ),
