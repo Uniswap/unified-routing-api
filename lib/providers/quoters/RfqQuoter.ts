@@ -38,6 +38,9 @@ export class RfqQuoter implements Quoter {
       portion?.bips && request.info.type === TradeType.EXACT_OUTPUT
         ? request.info.amount.mul(portion?.bips)
         : undefined;
+
+    // we will only add portion to the exact out swap amount if the URA ENABLE_PORTION is true
+    // as well as the frontend sendPortionEnabled is true
     const amount = portionAmount && frontendAndUraEnablePortion(request.info.sendPortionEnabled) ? request.info.amount.add(portionAmount) : request.info.amount;
     const requests = [
       axios.post(

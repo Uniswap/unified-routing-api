@@ -163,7 +163,10 @@ export class ClassicQuote implements IQuote {
 
   public get amountOutGasAndPortionAdjusted(): BigNumber {
     return this.request.info.type === TradeType.EXACT_INPUT
-      ? BigNumber.from(this.quoteData.quoteGasAndPortionAdjusted)
+      // there's a possibility that quoteGasAndPortionAdjusted doesn't get populated if the flag is off
+      // in that case fallback to existing quoteGasAdjusted.
+      // undefined will cause the request to fail due to BigNumber.from(undefined)
+      ? BigNumber.from(this.quoteData.quoteGasAndPortionAdjusted ?? this.quoteData.quoteGasAdjusted)
       : BigNumber.from(this.quoteData.amount);
   }
 
@@ -181,7 +184,10 @@ export class ClassicQuote implements IQuote {
 
   public get amountInGasAndPortionAdjusted(): BigNumber {
     return this.request.info.type === TradeType.EXACT_OUTPUT
-      ? BigNumber.from(this.quoteData.quoteGasAndPortionAdjusted)
+      // there's a possibility that quoteGasAndPortionAdjusted doesn't get populated if the flag is off
+      // in that case fallback to existing quoteGasAdjusted.
+      // undefined will cause the request to fail due to BigNumber.from(undefined)
+      ? BigNumber.from(this.quoteData.quoteGasAndPortionAdjusted ?? this.quoteData.quoteGasAdjusted)
       : BigNumber.from(this.quoteData.amount);
   }
 
