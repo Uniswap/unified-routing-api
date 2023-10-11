@@ -31,7 +31,7 @@ import hre from 'hardhat';
 import _ from 'lodash';
 import NodeCache from 'node-cache';
 import { SUPPORTED_CHAINS } from '../../lib/config/chains';
-import { RoutingType } from '../../lib/constants';
+import { NATIVE_ADDRESS, RoutingType } from '../../lib/constants';
 import { ClassicQuoteDataJSON } from '../../lib/entities/quote';
 import { QuoteRequestBodyJSON } from '../../lib/entities/request';
 import { Portion, PortionFetcher } from '../../lib/fetchers/PortionFetcher';
@@ -1681,7 +1681,7 @@ describe('quote', function () {
                 const shouldSkip =
                   // there's a known bug of portion service not supporting the native address 0x00.00 lookup
                   // that will cause the native token portion tests to fail
-                  ((tokenIn.isNative || tokenOut.isNative) && sendPortionEnabled) ||
+                  ((tokenIn.isNative || tokenOut.isNative)) ||
                   (sendPortionEnabled && type === 'EXACT_OUTPUT');
                 // there's a known bug of SOR not adding the portion amount to the route output amount
                 // that will cause the exact output token amount increase assertion to fail
@@ -1692,8 +1692,8 @@ describe('quote', function () {
                       const originalAmount = '10';
                       const tokenInSymbol = tokenIn.symbol!;
                       const tokenOutSymbol = tokenOut.symbol!;
-                      const tokenInAddress = tokenIn.isNative ? tokenInSymbol : tokenIn.address;
-                      const tokenOutAddress = tokenOut.isNative ? tokenOutSymbol : tokenOut.address;
+                      const tokenInAddress = tokenIn.isNative ? NATIVE_ADDRESS : tokenIn.address;
+                      const tokenOutAddress = tokenOut.isNative ? NATIVE_ADDRESS : tokenOut.address;
                       const amount = await getAmountFromToken(type, tokenIn.wrapped, tokenOut.wrapped, originalAmount);
                       const getPortionResponse = await portionFetcher.getPortion(
                         tokenIn.chainId,
