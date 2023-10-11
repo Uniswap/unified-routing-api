@@ -1848,11 +1848,8 @@ describe('quote', function () {
                     tokenOutAddress
                   );
 
-                  // TODO: remove the if statement, once portion service doesn't return portion for stable-to-stable
-                  if (sendPortionEnabled) {
-                    expect(getPortionResponse.hasPortion).to.be.false;
-                    expect(getPortionResponse.portion).to.be.undefined;
-                  }
+                  expect(getPortionResponse.hasPortion).to.be.false;
+                  expect(getPortionResponse.portion).to.be.undefined;
 
                   const quoteReq: QuoteRequestBodyJSON = {
                     requestId: 'id',
