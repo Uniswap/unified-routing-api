@@ -16,7 +16,7 @@ import {
   UNISWAPX_BASE_GAS,
   WETH_UNWRAP_GAS,
   WETH_WRAP_GAS,
-  WETH_WRAP_GAS_ALREADY_APPROVED,
+  WETH_WRAP_GAS_ALREADY_APPROVED
 } from '../../constants';
 import { Portion } from '../../fetchers/PortionFetcher';
 import { log } from '../../util/log';
@@ -312,9 +312,9 @@ export class DutchQuote implements IQuote {
       endAmountIn: this.amountInEnd.toString(),
       endAmountOut: this.amountOutEnd.toString(),
       amountInGasAdjusted: this.amountInStart.toString(),
-      amountInGasAndPortionAdjusted: this.amountInGasAndPortionAdjusted.toString(),
+      amountInGasAndPortionAdjusted: frontendAndUraEnablePortion(this.request.info.sendPortionEnabled) && this.request.info.type === TradeType.EXACT_OUTPUT ? this.amountInGasAndPortionAdjusted.toString() : undefined,
       amountOutGasAdjusted: this.amountOutStart.toString(),
-      amountOutGasAndPortionAdjusted: this.amountOutGasAndPortionAdjusted.toString(),
+      amountOutGasAndPortionAdjusted: frontendAndUraEnablePortion(this.request.info.sendPortionEnabled) && this.request.info.type === TradeType.EXACT_OUTPUT ? this.amountOutGasAndPortionAdjusted.toString() : undefined,
       swapper: this.swapper,
       filler: this.filler,
       routing: RoutingType[this.routingType],
@@ -323,8 +323,8 @@ export class DutchQuote implements IQuote {
       createdAtMs: this.createdAtMs,
       portionBips: this.portionBips,
       portionRecipient: this.portionRecipient,
-      portionAmountOutStart: this.portionAmountOutStart.toString(),
-      portionAmountOutEnd: this.portionAmountOutEnd.toString(),
+      portionAmountOutStart: frontendAndUraEnablePortion(this.request.info.sendPortionEnabled) ? this.portionAmountOutStart.toString() : undefined,
+      portionAmountOutEnd: frontendAndUraEnablePortion(this.request.info.sendPortionEnabled) ? this.portionAmountOutEnd.toString() : undefined,
     };
   }
 
