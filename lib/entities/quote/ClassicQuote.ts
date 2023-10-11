@@ -161,13 +161,11 @@ export class ClassicQuote implements IQuote {
       : BigNumber.from(this.quoteData.amount);
   }
 
-  /**
   public get amountOutGasAndPortionAdjusted(): BigNumber {
     return this.request.info.type === TradeType.EXACT_INPUT
       ? BigNumber.from(this.quoteData.quoteGasAndPortionAdjusted)
       : BigNumber.from(this.quoteData.amount);
   }
-  */
 
   public get amountIn(): BigNumber {
     return this.request.info.type === TradeType.EXACT_OUTPUT

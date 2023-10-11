@@ -384,29 +384,13 @@ export function compareQuotes(lhs: Quote, rhs: Quote, tradeType: TradeType): boo
 const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
   if (tradeType === TradeType.EXACT_INPUT) {
     if (quote.routingType === RoutingType.CLASSIC) {
-      // TODO: check with the team whether they'd like to compare amountOutGasAndPortionAdjusted instead
-      // Alternative is commented out below, comparing amountOutGasAndPortionAdjusted instead of amountOutGasAdjusted
-      // return (quote as ClassicQuote).amountOutGasAndPortionAdjusted;
-      // recommendation is to use amountOutGasAndPortionAdjusted
-      return (quote as ClassicQuote).amountOutGasAdjusted;
+      return (quote as ClassicQuote).amountOutGasAndPortionAdjusted;
     }
-    // Alternative is commented out below, comparing amountOutGasAndPortionAdjusted instead of amountOut (which is only gas adjusted)
-    // return (quote as DutchQuote).amountOutGasAndPortionAdjusted;
-    // recommendation is to use (quote as DutchQuote).amountOutGasAndPortionAdjusted
-    //
-    // below is equivalent to (quote as Quote).amountOutStart.sub(this.portionAmountOutStart) + this.portionAmountOutStart
-    return (quote as Quote).amountOut;
+    return (quote as DutchQuote).amountOutGasAndPortionAdjusted;
   } else {
     if (quote.routingType === RoutingType.CLASSIC) {
-      // Alternative is commented out below, comparing amountInGasAdjusted instead of amountInGasAndPortionAdjusted
-      // return (quote as ClassicQuote).amountInGasAdjusted;
-      // recommendation is to use amountInGasAndPortionAdjusted
       return (quote as ClassicQuote).amountInGasAndPortionAdjusted;
     }
-
-    // Alternative is commented out below, comparing amountInGasAdjusted instead of amountInGasAndPortionAdjusted
-    // return (quote as Quote).amountIn;
-    // recommendation is to use (quote as DutchQuote).amountInGasAndPortionAdjusted
     return (quote as DutchQuote).amountInGasAndPortionAdjusted;
   }
 };

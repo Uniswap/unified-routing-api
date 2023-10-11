@@ -256,38 +256,39 @@ export class DutchQuote implements IQuote {
         endAmount: this.amountInEnd,
       });
 
-    if (
-      this.portionRecipient &&
-      this.portionBips &&
-      frontendAndUraEnablePortion(this.request.info.sendPortionEnabled) &&
-      this.request.info.type === TradeType.EXACT_INPUT
-    ) {
-      // we must adjust down the amount out to account for the portion for exact in
-      builder.output({
-        token: this.tokenOut,
-        startAmount: this.amountOutStart.sub(this.portionAmountOutStart),
-        endAmount: this.amountOutEnd.sub(this.portionAmountOutEnd),
-        recipient: this.request.config.swapper,
-      });
-    } else {
-      builder.output({
-        token: this.tokenOut,
-        startAmount: this.amountOutStart,
-        endAmount: this.amountOutEnd,
-        recipient: this.request.config.swapper,
-      });
-    }
+    if (this.portionRecipient && this.portionBips && frontendAndUraEnablePortion(this.request.info.sendPortionEnabled)) {
+      if (this.request.info.type === TradeType.EXACT_INPUT) {
+        // Amount to swapper
+        builder.output({
+          token: this.tokenOut,
+          startAmount: this.amountOutStart.sub(this.portionAmountOutStart),
+          endAmount: this.amountOutEnd.sub(this.portionAmountOutEnd),
+          recipient: this.request.config.swapper,
+        });
+      } else if (this.request.info.type === TradeType.EXACT_OUTPUT) {
+        // Amount to swapper
+        builder.output({
+          token: this.tokenOut,
+          startAmount: this.amountOutStart,
+          endAmount: this.amountOutEnd,
+          recipient: this.request.config.swapper,
+        });
+      }
 
-    if (
-      this.portionRecipient &&
-      this.portionBips &&
-      frontendAndUraEnablePortion(this.request.info.sendPortionEnabled)
-    ) {
+      // Amount to portion recipient
       builder.output({
         token: this.tokenOut,
         startAmount: this.portionAmountOutStart,
         endAmount: this.portionAmountOutEnd,
         recipient: this.portionRecipient,
+      });
+    } else {
+      // Amount to swapper
+      builder.output({
+        token: this.tokenOut,
+        startAmount: this.amountOutStart,
+        endAmount: this.amountOutEnd,
+        recipient: this.request.config.swapper,
       });
     }
 
@@ -397,7 +398,7 @@ export class DutchQuote implements IQuote {
   }
 
   public get amountOutGasAndPortionAdjusted(): BigNumber {
-    return this.amountOut.sub(this.portionAmountOutEnd);
+    return this.amountOut.sub(this.portionAmountOutStart);
   }
 
   validate(): boolean {
