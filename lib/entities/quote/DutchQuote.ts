@@ -312,9 +312,9 @@ export class DutchQuote implements IQuote {
       endAmountIn: this.amountInEnd.toString(),
       endAmountOut: this.amountOutEnd.toString(),
       amountInGasAdjusted: this.amountInStart.toString(),
-      amountInGasAndPortionAdjusted: frontendAndUraEnablePortion(this.request.info.sendPortionEnabled) && this.request.info.type === TradeType.EXACT_OUTPUT ? this.amountInGasAndPortionAdjusted.toString() : undefined,
+      amountInGasAndPortionAdjusted: this.request.info.type === TradeType.EXACT_OUTPUT ? this.amountInGasAndPortionAdjusted.toString() : undefined,
       amountOutGasAdjusted: this.amountOutStart.toString(),
-      amountOutGasAndPortionAdjusted: frontendAndUraEnablePortion(this.request.info.sendPortionEnabled) && this.request.info.type === TradeType.EXACT_OUTPUT ? this.amountOutGasAndPortionAdjusted.toString() : undefined,
+      amountOutGasAndPortionAdjusted: this.request.info.type === TradeType.EXACT_INPUT ? this.amountOutGasAndPortionAdjusted.toString() : undefined,
       swapper: this.swapper,
       filler: this.filler,
       routing: RoutingType[this.routingType],
@@ -323,8 +323,8 @@ export class DutchQuote implements IQuote {
       createdAtMs: this.createdAtMs,
       portionBips: this.portionBips,
       portionRecipient: this.portionRecipient,
-      portionAmountOutStart: frontendAndUraEnablePortion(this.request.info.sendPortionEnabled) ? this.portionAmountOutStart.toString() : undefined,
-      portionAmountOutEnd: frontendAndUraEnablePortion(this.request.info.sendPortionEnabled) ? this.portionAmountOutEnd.toString() : undefined,
+      portionAmountOutStart: this.portionAmountOutStart.toString(),
+      portionAmountOutEnd: this.portionAmountOutEnd.toString(),
     };
   }
 
@@ -393,8 +393,14 @@ export class DutchQuote implements IQuote {
     return this.amountOutEnd.mul(this.portionBips ?? 0).div(BPS);
   }
 
+  public get portionAmountInStart(): BigNumber {
+    // we have to multiply first, and then divide
+    // because BigNumber doesn't support decimals
+    return this.portionAmountOutStart.mul(this.amountInStart).div(this.amountOutStart.add(this.portionAmountOutStart));
+  }
+
   public get amountInGasAndPortionAdjusted(): BigNumber {
-    return this.amountIn.add(this.portionAmountOutStart);
+    return this.amountIn.add(this.portionAmountInStart);
   }
 
   public get amountOutGasAndPortionAdjusted(): BigNumber {
