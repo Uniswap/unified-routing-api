@@ -70,6 +70,7 @@ const axios = axiosStatic.create();
 const axiosConfig: AxiosRequestConfig<any> = {
   headers: {
     ...(process.env.URA_INTERNAL_API_KEY && { 'x-api-key': process.env.URA_INTERNAL_API_KEY }),
+    ...(process.env.FORCE_PORTION_SECRET && { 'X-UNISWAP-FORCE-PORTION-SECRET': process.env.FORCE_PORTION_SECRET}),
   },
 };
 
@@ -1673,8 +1674,7 @@ describe('quote', function () {
               }
             });
 
-            // TODO: when prod secret is true, we will need to test sendPortionEnabledValues = true
-            const sendPortionEnabledValues = [undefined]; // [true, undefined];
+            const sendPortionEnabledValues = [true, undefined];
             GREENLIST_TOKEN_PAIRS.forEach(([tokenIn, tokenOut]) => {
               sendPortionEnabledValues.forEach((sendPortionEnabled) => {
                 // TODO: remove shouldSkip once the bug is fixed

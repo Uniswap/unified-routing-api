@@ -62,6 +62,7 @@ axios.defaults.timeout = 20000;
 const axiosConfig: AxiosRequestConfig<any> = {
   headers: {
     ...(process.env.URA_INTERNAL_API_KEY && { 'x-api-key': process.env.URA_INTERNAL_API_KEY }),
+    ...(process.env.FORCE_PORTION_SECRET && { 'X-UNISWAP-FORCE-PORTION-SECRET': process.env.FORCE_PORTION_SECRET}),
   },
 };
 
@@ -593,14 +594,10 @@ describe('quoteUniswapX', function () {
           }
         });
 
-        // TODO: when prod secret is true, we will need to test sendPortionEnabledValues = true
-        const sendPortionEnabledValues = [undefined]; // [true, undefined];
+        const sendPortionEnabledValues = [true, undefined];
         GREENLIST_TOKEN_PAIRS.forEach(([tokenIn, tokenOut]) => {
           sendPortionEnabledValues.forEach((sendPortionEnabled) => {
-            const shouldSkip =
-              // there's a known bug of portion service not supporting the native address 0x00.00 lookup
-              // that will cause the native token portion tests to fail
-              tokenIn.isNative || tokenOut.isNative || sendPortionEnabled;
+            const shouldSkip = sendPortionEnabled;
             // any portion enable test will fail due to non-implementation in the dutch quoter yet
 
             shouldSkip
