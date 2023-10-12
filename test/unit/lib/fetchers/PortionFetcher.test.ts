@@ -48,10 +48,11 @@ function testPortion() {
     if (portionData.hasPortion && portionData.portion) {
       expect(portionData.portion).toStrictEqual(portionResponse.portion);
 
+      const cachedPortionData = portionCache.get<GetPortionResponse>(
+        PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
+      );
+
       if (!forcePortion) {
-        const cachedPortionData = portionCache.get<GetPortionResponse>(
-          PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
-        );
         expect(cachedPortionData).toBeDefined;
         expect(cachedPortionData?.portion).toBeDefined;
         expect(cachedPortionData?.hasPortion).toEqual(true);
@@ -67,6 +68,8 @@ function testPortion() {
         expect(Math.floor((ttl ?? 0) / 1000)).toBeLessThanOrEqual(
           currentEpochTimeInSeconds + DEFAULT_POSITIVE_CACHE_ENTRY_TTL + ttlUpperBoundBuffer
         );
+      } else {
+        expect(cachedPortionData).toBeUndefined;
       }
     }
   });
@@ -91,10 +94,11 @@ function testPortion() {
     );
     expect(portionData.hasPortion).toEqual(GET_NO_PORTION_RESPONSE.hasPortion);
 
+    const cachedPortionData = portionCache.get<GetPortionResponse>(
+      PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
+    );
+
     if (!forcePortion) {
-      const cachedPortionData = portionCache.get<GetPortionResponse>(
-        PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
-      );
       expect(cachedPortionData).toBeDefined;
       expect(cachedPortionData?.hasPortion).toEqual(GET_NO_PORTION_RESPONSE.hasPortion);
 
@@ -108,6 +112,8 @@ function testPortion() {
       expect(Math.floor((ttl ?? 0) / 1000)).toBeLessThanOrEqual(
         currentEpochTimeInSeconds + DEFAULT_NEGATIVE_CACHE_ENTRY_TTL + ttlUpperBoundBuffer
       );
+    } else {
+      expect(cachedPortionData).toBeUndefined;
     }
   });
 
