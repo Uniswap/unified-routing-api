@@ -1674,8 +1674,7 @@ describe('quote', function () {
               }
             });
 
-            // TODO: when prod secret is true, we will need to test sendPortionEnabledValues = true
-            const sendPortionEnabledValues = [undefined]; // [true, undefined];
+            const sendPortionEnabledValues = [true, undefined];
             GREENLIST_TOKEN_PAIRS.forEach(([tokenIn, tokenOut]) => {
               sendPortionEnabledValues.forEach((sendPortionEnabled) => {
                 // TODO: remove shouldSkip once the bug is fixed
