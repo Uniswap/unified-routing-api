@@ -67,7 +67,7 @@ export class PortionFetcher {
     }
 
     // We bypass the cache if `forcePortion` is true.
-    // We do this is to avoid cache conflicts since `forcePortion` is only for testing purposes.
+    // We do it to avoid cache conflicts since `forcePortion` is only for testing purposes.
     const portionFromCache = !forcePortion && this.portionCache.get<GetPortionResponse>(
       this.PORTION_CACHE_KEY(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress)
     );
@@ -93,11 +93,15 @@ export class PortionFetcher {
       metrics.putMetric(`PortionFetcherSuccess`, 1);
       metrics.putMetric(`PortionFetcherCacheMiss`, 1);
 
-      this.portionCache.set<GetPortionResponse>(
-        this.PORTION_CACHE_KEY(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress),
-        portionResponse.data,
-        portionResponse.data.portion ? this.positiveCacheEntryTtl : this.negativeCacheEntryTtl
-      );
+      // We bypass the cache if `forcePortion` is true.
+      // We do it to avoid cache conflicts since `forcePortion` is only for testing purposes.
+      if (!forcePortion) {
+        this.portionCache.set<GetPortionResponse>(
+          this.PORTION_CACHE_KEY(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress),
+          portionResponse.data,
+          portionResponse.data.portion ? this.positiveCacheEntryTtl : this.negativeCacheEntryTtl
+        );
+      }
 
       return portionResponse.data;
     } catch (e) {
