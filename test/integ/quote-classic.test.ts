@@ -1894,7 +1894,7 @@ describe('quote', function () {
 
                     expect(quoteJSON.portionBips).to.equal(0);
                     expect(quoteJSON.portionAmount).to.equal('0');
-                    expect(quoteJSON.portionAmountDecimals).to.equal(0);
+                    expect(quoteJSON.portionAmountDecimals).to.equal('0');
                   }
 
                   const {
@@ -1929,14 +1929,8 @@ describe('quote', function () {
                     }
 
                     if (sendPortionEnabled) {
-                      expect(quoteJSON.portionAmount).not.to.be.undefined;
-
-                      const expectedPortionAmount = CurrencyAmount.fromRawAmount(tokenOut, quoteJSON.portionAmount!);
-                      checkPortionRecipientToken(
-                        tokenOutPortionRecipientBefore!,
-                        tokenOutPortionRecipientAfter!,
-                        expectedPortionAmount
-                      );
+                      expect(tokenOutPortionRecipientAfter).to.be.undefined;
+                      expect(tokenOutPortionRecipientBefore).to.be.undefined;
                     }
                   } else {
                     // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
@@ -1954,14 +1948,8 @@ describe('quote', function () {
                     }
 
                     if (sendPortionEnabled) {
-                      expect(quoteJSON.portionAmount).not.to.be.undefined;
-
-                      const expectedPortionAmount = CurrencyAmount.fromRawAmount(tokenOut, quoteJSON.portionAmount!);
-                      checkPortionRecipientToken(
-                        tokenOutPortionRecipientBefore!,
-                        tokenOutPortionRecipientAfter!,
-                        expectedPortionAmount
-                      );
+                      expect(tokenOutPortionRecipientAfter).to.be.undefined;
+                      expect(tokenOutPortionRecipientBefore).to.be.undefined;
                     }
                   }
                 });
