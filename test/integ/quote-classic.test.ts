@@ -1715,6 +1715,7 @@ describe('quote', function () {
                         type,
                         slippageTolerance: SLIPPAGE,
                         sendPortionEnabled: sendPortionEnabled,
+                        forcePortionString: process.env.FORCE_PORTION_SECRET,
                         configs: [
                           {
                             routingType: RoutingType.CLASSIC,
@@ -1875,6 +1876,7 @@ describe('quote', function () {
                         type,
                         slippageTolerance: SLIPPAGE,
                         sendPortionEnabled: sendPortionEnabled,
+                        forcePortionString: process.env.FORCE_PORTION_SECRET,
                         configs: [
                           {
                             routingType: RoutingType.CLASSIC,
