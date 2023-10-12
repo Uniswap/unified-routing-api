@@ -56,18 +56,18 @@ function testPortion() {
         expect(cachedPortionData?.portion).toBeDefined;
         expect(cachedPortionData?.hasPortion).toEqual(true);
         expect(cachedPortionData?.portion).toStrictEqual(portionResponse.portion);
-      }
 
-      const ttlUpperBoundBuffer = 1; // in seconds
-      const ttl = portionCache.getTtl(
-        PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
-      );
-      expect(Math.floor((ttl ?? 0) / 1000)).toBeGreaterThanOrEqual(
-        currentEpochTimeInSeconds + DEFAULT_POSITIVE_CACHE_ENTRY_TTL
-      );
-      expect(Math.floor((ttl ?? 0) / 1000)).toBeLessThanOrEqual(
-        currentEpochTimeInSeconds + DEFAULT_POSITIVE_CACHE_ENTRY_TTL + ttlUpperBoundBuffer
-      );
+        const ttlUpperBoundBuffer = 1; // in seconds
+        const ttl = portionCache.getTtl(
+          PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
+        );
+        expect(Math.floor((ttl ?? 0) / 1000)).toBeGreaterThanOrEqual(
+          currentEpochTimeInSeconds + DEFAULT_POSITIVE_CACHE_ENTRY_TTL
+        );
+        expect(Math.floor((ttl ?? 0) / 1000)).toBeLessThanOrEqual(
+          currentEpochTimeInSeconds + DEFAULT_POSITIVE_CACHE_ENTRY_TTL + ttlUpperBoundBuffer
+        );
+      }
     }
   });
 
@@ -97,18 +97,18 @@ function testPortion() {
       );
       expect(cachedPortionData).toBeDefined;
       expect(cachedPortionData?.hasPortion).toEqual(GET_NO_PORTION_RESPONSE.hasPortion);
-    }
 
-    const ttlUpperBoundBuffer = 1; // in seconds
-    const ttl = portionCache.getTtl(
-      PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
-    );
-    expect(Math.floor((ttl ?? 0) / 1000)).toBeGreaterThanOrEqual(
-      currentEpochTimeInSeconds + DEFAULT_NEGATIVE_CACHE_ENTRY_TTL
-    );
-    expect(Math.floor((ttl ?? 0) / 1000)).toBeLessThanOrEqual(
-      currentEpochTimeInSeconds + DEFAULT_NEGATIVE_CACHE_ENTRY_TTL + ttlUpperBoundBuffer
-    );
+      const ttlUpperBoundBuffer = 1; // in seconds
+      const ttl = portionCache.getTtl(
+        PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
+      );
+      expect(Math.floor((ttl ?? 0) / 1000)).toBeGreaterThanOrEqual(
+        currentEpochTimeInSeconds + DEFAULT_NEGATIVE_CACHE_ENTRY_TTL
+      );
+      expect(Math.floor((ttl ?? 0) / 1000)).toBeLessThanOrEqual(
+        currentEpochTimeInSeconds + DEFAULT_NEGATIVE_CACHE_ENTRY_TTL + ttlUpperBoundBuffer
+      );
+    }
   });
 
   it('Portion Service encounters runtime error', async () => {
