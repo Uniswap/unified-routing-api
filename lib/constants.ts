@@ -1,4 +1,5 @@
 import { BigNumber } from 'ethers';
+import { forcePortion } from './util/portion';
 
 export const DEFAULT_SLIPPAGE_TOLERANCE = '0.5'; // 0.5%
 export const DEFAULT_ROUTING_API_DEADLINE = 600; // 10 minutes
@@ -32,14 +33,10 @@ export const DEFAULT_NEGATIVE_CACHE_ENTRY_TTL = 600; // 10 minute
 export const getEnablePortionEnvVar = () => process.env.ENABLE_PORTION;
 
 export const uraEnablePortion = () => {
-  const portionFlag = getEnablePortionEnvVar();
-
-  switch (portionFlag) {
-    case 'true':
-    case 'false':
-      return JSON.parse(portionFlag);
-    default:
-      return false;
+  if (forcePortion) {
+    return true;
+  } else {
+    return getEnablePortionEnvVar() === 'true';
   }
 };
 
