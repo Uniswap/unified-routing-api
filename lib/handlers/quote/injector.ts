@@ -20,7 +20,6 @@ import {
 } from '../../providers';
 import { setGlobalLogger } from '../../util/log';
 import { setGlobalMetrics } from '../../util/metrics';
-import { setGlobalForcePortion } from '../../util/portion';
 import { checkDefined } from '../../util/preconditions';
 import { ApiInjector, ApiRInj } from '../base/api-handler';
 
@@ -82,7 +81,7 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
     _containerInjected: ContainerInjected,
     requestBody: QuoteRequestBodyJSON,
     _requestQueryParams: void,
-    event: APIGatewayProxyEvent,
+    _event: APIGatewayProxyEvent,
     context: Context,
     log: Logger,
     metrics: MetricsLogger
@@ -94,11 +93,6 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
       requestBody: requestBody,
       requestId,
     });
-
-    setGlobalForcePortion(
-      process.env.FORCE_PORTION_STRING !== undefined &&
-      event.headers['X-UNISWAP-FORCE-PORTION-SECRET'] === process.env.FORCE_PORTION_STRING
-    )
 
     setGlobalLogger(log);
 
