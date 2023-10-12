@@ -157,7 +157,6 @@ export class APIPipeline extends Stack {
         ENABLE_PORTION: portionFlagSecret.secretValueFromJson('ENABLE_PORTION').toString(),
         REQUEST_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_REQUEST_DESTINATION_BETA').toString(),
         RESPONSE_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_RESPONSE_DESTINATION_BETA').toString(),
-        FORCE_PORTION_STRING: portionFlagSecret.secretValueFromJson('FORCE_PORTION_STRING').toString(),
       },
     });
 
@@ -185,7 +184,6 @@ export class APIPipeline extends Stack {
         ENABLE_PORTION: portionFlagSecret.secretValueFromJson('ENABLE_PORTION').toString(),
         REQUEST_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_REQUEST_DESTINATION_PROD').toString(),
         RESPONSE_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_RESPONSE_DESTINATION_PROD').toString(),
-        FORCE_PORTION_STRING: portionFlagSecret.secretValueFromJson('FORCE_PORTION_STRING').toString(),
       },
     });
 
@@ -243,10 +241,6 @@ export class APIPipeline extends Stack {
           PORTION_API_URL: {
             value: `${stage}/portion-api/url`,
             type: BuildEnvironmentVariableType.SECRETS_MANAGER,
-          },
-          FORCE_PORTION_SECRET: {
-            value: 'force-portion-secret',
-            type: BuildEnvironmentVariableType.SECRETS_MANAGER,
           }
         },
       },
@@ -258,7 +252,6 @@ export class APIPipeline extends Stack {
         'echo "PORTION_API_URL=${PORTION_API_URL}" >> .env',
         'echo "ARCHIVE_NODE_RPC=${ARCHIVE_NODE_RPC}" >> .env',
         'echo "URA_INTERNAL_API_KEY=${URA_INTERNAL_API_KEY}" >> .env',
-        'echo "FORCE_PORTION_SECRET=${FORCE_PORTION_SECRET}" >> .env',
         'yarn install --frozen-lockfile --network-concurrency 1',
         'yarn build',
         'yarn test:integ',
@@ -293,7 +286,6 @@ envVars['REQUEST_DESTINATION_ARN'] = process.env['REQUEST_DESTINATION_ARN'] || '
 envVars['RESPONSE_DESTINATION_ARN'] = process.env['RESPONSE_DESTINATION_ARN'] || '';
 envVars['ROUTING_API_KEY'] = process.env['ROUTING_API_KEY'] || 'test-api-key';
 envVars['PARAMETERIZATION_API_KEY'] = process.env['PARAMETERIZATION_API_KEY'] || 'test-api-key';
-envVars['FORCE_PORTION_SECRET'] = process.env['FORCE_PORTION_SECRET'] || '';
 
 const jsonRpcProviders = {} as { [chainKey: string]: string };
 SUPPORTED_CHAINS[RoutingType.CLASSIC].forEach((chainId: ChainId) => {
