@@ -70,6 +70,7 @@ const axios = axiosStatic.create();
 const axiosConfig: AxiosRequestConfig<any> = {
   headers: {
     ...(process.env.URA_INTERNAL_API_KEY && { 'x-api-key': process.env.URA_INTERNAL_API_KEY }),
+    ...(process.env.FORCE_PORTION_SECRET && { 'X-UNISWAP-FORCE-PORTION-SECRET': process.env.FORCE_PORTION_SECRET}),
   },
 };
 
@@ -1715,7 +1716,6 @@ describe('quote', function () {
                         type,
                         slippageTolerance: SLIPPAGE,
                         sendPortionEnabled: sendPortionEnabled,
-                        forcePortionString: process.env.FORCE_PORTION_SECRET,
                         configs: [
                           {
                             routingType: RoutingType.CLASSIC,
@@ -1876,7 +1876,6 @@ describe('quote', function () {
                         type,
                         slippageTolerance: SLIPPAGE,
                         sendPortionEnabled: sendPortionEnabled,
-                        forcePortionString: process.env.FORCE_PORTION_SECRET,
                         configs: [
                           {
                             routingType: RoutingType.CLASSIC,
