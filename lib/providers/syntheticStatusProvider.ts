@@ -47,3 +47,14 @@ export class UPASyntheticStatusProvider implements SyntheticStatusProvider {
     }
   }
 }
+
+// disabled synthetic status
+export class DisabledSyntheticStatusProvider implements SyntheticStatusProvider {
+  constructor() {}
+
+  async getStatus(_quoteRequest: QuoteRequestInfo): Promise<SyntheticStatus> {
+    return {
+      syntheticEnabled: false,
+    };
+  }
+}
