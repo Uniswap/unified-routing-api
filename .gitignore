@@ -67,5 +67,6 @@ typings/
 dist/
 cdk.out/
 idea/
+.idea/
 cache/
 lib/types/
