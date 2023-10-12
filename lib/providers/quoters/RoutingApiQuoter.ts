@@ -94,7 +94,7 @@ export class RoutingApiQuoter implements Quoter {
               portionRecipient: portion?.recipient, // important, clients are expected to use this for exact in and exact out swaps
               // TODO: ROUTE-97 - re-evaluate how to properly code up returning portionAmount in case of no fee in URA
               portionAmount: portionAmount?.quotient.toString() ?? '0', // important for exact out, clients are expected to use this for exact out swaps
-              portionAmountDecimals: portionAmount?.toExact(), // important for exact out, clients are expected to use this for exact out swaps
+              portionAmountDecimals: portionAmount?.toExact() ?? '0', // important for exact out, clients are expected to use this for exact out swaps
               quoteGasAndPortionAdjusted: quoteGasAndPortionAdjusted, // not important, clients disregard this
               quoteGasAndPortionAdjustedDecimals: quoteGasAndPortionAdjustedDecimals, // not important, clients disregard this
             }
