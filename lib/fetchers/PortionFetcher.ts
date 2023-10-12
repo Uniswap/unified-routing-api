@@ -6,6 +6,7 @@ import { DEFAULT_NEGATIVE_CACHE_ENTRY_TTL, DEFAULT_POSITIVE_CACHE_ENTRY_TTL, BAC
 import axios from '../providers/quoters/helpers';
 import { log } from '../util/log';
 import { metrics } from '../util/metrics';
+import { forcePortion } from '../util/portion';
 
 export enum PortionType {
   Flat = 'flat',
@@ -60,12 +61,12 @@ export class PortionFetcher {
 
     // we check ENABLE_PORTION for every request, so that the update to the lambda env var gets reflected
     // in real time
-    if (!BACKEND_CONTROLLED_ENABLE_PORTION(process.env.ENABLE_PORTION)) {
+    if (!forcePortion && !BACKEND_CONTROLLED_ENABLE_PORTION(process.env.ENABLE_PORTION)) {
       metrics.putMetric(`PortionFetcherFlagDisabled`, 1);
       return GET_NO_PORTION_RESPONSE;
     }
 
-    const portionFromCache = this.portionCache.get<GetPortionResponse>(
+    const portionFromCache = !forcePortion && this.portionCache.get<GetPortionResponse>(
       this.PORTION_CACHE_KEY(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress)
     );
 
