@@ -66,6 +66,8 @@ export class PortionFetcher {
       return GET_NO_PORTION_RESPONSE;
     }
 
+    // We bypass the cache if `forcePortion` is true.
+    // We do this is to avoid cache conflicts since `forcePortion` is only for testing purposes.
     const portionFromCache = !forcePortion && this.portionCache.get<GetPortionResponse>(
       this.PORTION_CACHE_KEY(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress)
     );
