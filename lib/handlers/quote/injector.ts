@@ -16,7 +16,7 @@ import {
   RfqQuoter,
   RoutingApiQuoter,
   SyntheticStatusProvider,
-  UPASyntheticStatusProvider,
+  DisabledSyntheticStatusProvider,
 } from '../../providers';
 import { setGlobalLogger } from '../../util/log';
 import { setGlobalMetrics } from '../../util/metrics';
@@ -49,7 +49,6 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
     const routingApiUrl = checkDefined(process.env.ROUTING_API_URL, 'ROUTING_API_URL is not defined');
     const routingApiKey = checkDefined(process.env.ROUTING_API_KEY, 'ROUTING_API_KEY is not defined');
     const paramApiKey = checkDefined(process.env.PARAMETERIZATION_API_KEY, 'PARAMETERIZATION_API_KEY is not defined');
-    const synthSwitchApiKey = checkDefined(process.env.SYNTH_SWITCH_API_KEY, 'SYNTH_SWITCH_API_KEY is not defined');
     const serviceUrl = checkDefined(process.env.SERVICE_URL, 'SERVICE_URL is not defined');
     const portionApiUrl = checkDefined(process.env.PORTION_API_URL, 'PORTION_API_URL is not defined');
 
@@ -74,7 +73,7 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
       rpcUrlMap,
       tokenFetcher: tokenFetcher,
       permit2Fetcher: new Permit2Fetcher(rpcUrlMap),
-      syntheticStatusProvider: new UPASyntheticStatusProvider(paramApiUrl, synthSwitchApiKey),
+      syntheticStatusProvider: new DisabledSyntheticStatusProvider(),
     };
   }
 
