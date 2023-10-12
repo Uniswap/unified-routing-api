@@ -36,15 +36,7 @@ export const uraEnablePortion = () => {
   if (forcePortion) {
     return true;
   } else {
-    const portionFlag = getEnablePortionEnvVar();
-
-    switch (portionFlag) {
-      case 'true':
-      case 'false':
-        return JSON.parse(portionFlag);
-      default:
-        return false;
-    }
+    return getEnablePortionEnvVar() === 'true';
   }
 };
 
