@@ -2,16 +2,16 @@ import { AxiosInstance } from 'axios';
 import NodeCache from 'node-cache';
 import { DEFAULT_NEGATIVE_CACHE_ENTRY_TTL, DEFAULT_POSITIVE_CACHE_ENTRY_TTL } from '../../../../lib/constants';
 import {
-  GetPortionResponse,
   GET_NO_PORTION_RESPONSE,
+  GetPortionResponse,
   PortionFetcher,
-  PortionType,
+  PortionType
 } from '../../../../lib/fetchers/PortionFetcher';
 import axios from '../../../../lib/providers/quoters/helpers';
+import { setGlobalForcePortion } from '../../../../lib/util/portion';
 import { PORTION_BIPS, PORTION_RECIPIENT } from '../../../constants';
 
-describe('PortionFetcher Unit Tests', () => {
-  process.env.ENABLE_PORTION = 'true';
+function testPortion() {
   const tokenInChainId = 1;
   const tokenInAddress = '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984';
   const tokenOutChainId = 1;
@@ -152,5 +152,29 @@ describe('PortionFetcher Unit Tests', () => {
     expect(Math.floor((ttl ?? 0) / 1000)).toBeLessThanOrEqual(
       currentEpochTimeInSeconds + DEFAULT_NEGATIVE_CACHE_ENTRY_TTL + ttlUpperBoundBuffer
     );
+  });
+}
+
+describe('PortionFetcher Unit Tests', () => {
+  describe('with ENABLE_PORTION flag', () => {
+    beforeEach(() => {
+      process.env.ENABLE_PORTION = 'true';
+    });
+
+    afterEach(() => {
+      process.env.ENABLE_PORTION = undefined;
+    });
+    testPortion();
+  });
+
+  describe('with forcePortion global', () => {
+    beforeEach(() => {
+      setGlobalForcePortion(true);
+    });
+
+    afterEach(() => {
+      setGlobalForcePortion(false);
+    });
+    testPortion();
   });
 });
