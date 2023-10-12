@@ -150,6 +150,7 @@ describe('PortionFetcher Unit Tests', () => {
   describe('with ENABLE_PORTION flag', () => {
     beforeEach(() => {
       process.env.ENABLE_PORTION = 'true';
+      setGlobalForcePortion(false);
     });
 
     afterEach(() => {
@@ -160,6 +161,7 @@ describe('PortionFetcher Unit Tests', () => {
 
   describe('with forcePortion global', () => {
     beforeEach(() => {
+      process.env.ENABLE_PORTION = undefined;
       setGlobalForcePortion(true);
     });
 
