@@ -181,7 +181,7 @@ export class APIPipeline extends Stack {
         ROUTING_API_URL: urlSecrets.secretValueFromJson('ROUTING_API_PROD').toString(),
         SERVICE_URL: urlSecrets.secretValueFromJson('GOUDA_SERVICE_PROD').toString(),
         PORTION_API_URL: urlSecrets.secretValueFromJson('PORTION_API_PROD').toString(),
-        ENABLE_PORTION: portionFlagSecret.secretValueFromJson('ENABLE_PORTION').toString(),
+        ENABLE_PORTION: portionFlagSecret.secretValueFromJson('ENABLE_PORTION_PROD').toString(),
         REQUEST_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_REQUEST_DESTINATION_PROD').toString(),
         RESPONSE_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_RESPONSE_DESTINATION_PROD').toString(),
       },
