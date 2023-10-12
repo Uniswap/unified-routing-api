@@ -608,11 +608,18 @@ describe('quoteUniswapX', function () {
               ? it.skip
               : it(`${tokenIn.symbol} -> ${tokenOut.symbol} sendPortionEnabled = ${sendPortionEnabled}`, async () => {
                   // if the token amount involves WBTC we have to reduce the WTBC amount to avoid the transfer from failed gas error.
-                  const originalAmount =
-                    (tokenIn.symbol === 'WBTC' && type === 'EXACT_INPUT') ||
-                    (tokenOut.symbol === 'WBTC' && type === 'EXACT_OUTPUT')
-                      ? '1'
-                      : '10';
+                  let originalAmount = '10000'
+
+                  if ((tokenIn.symbol === 'WBTC' && type === 'EXACT_INPUT') ||
+                    (tokenOut.symbol === 'WBTC' && type === 'EXACT_OUTPUT')) {
+                    originalAmount = '1'
+                  }
+
+                  if ((tokenIn.wrapped.symbol === 'WETH' && type === 'EXACT_INPUT') ||
+                    (tokenOut.wrapped.symbol === 'WETH' && type === 'EXACT_OUTPUT')) {
+                    originalAmount = '10'
+                  }
+
                   const tokenInAddress = tokenIn.isNative ? NATIVE_ADDRESS : tokenIn.address;
                   const tokenOutAddress = tokenOut.isNative ? NATIVE_ADDRESS : tokenOut.address;
                   const amount = await getAmountFromToken(type, tokenIn.wrapped, tokenOut.wrapped, originalAmount);

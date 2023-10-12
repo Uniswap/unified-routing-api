@@ -3,11 +3,7 @@ import { NATIVE_NAMES_BY_ID } from '@uniswap/smart-order-router';
 import { AxiosError, AxiosResponse } from 'axios';
 import querystring from 'querystring';
 
-import {
-  FRONTEND_LOGICAL_AND_BACKEND_ENABLE_PORTION_FLAG,
-  NATIVE_ADDRESS,
-  RoutingType
-} from '../../constants';
+import { frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { ClassicQuote, ClassicQuoteDataJSON, ClassicRequest, Quote } from '../../entities';
 import { Portion } from '../../fetchers/PortionFetcher';
 import { TokenFetcher } from '../../fetchers/TokenFetcher';
@@ -90,7 +86,7 @@ export class RoutingApiQuoter implements Quoter {
 
       const portionAdjustedResponse: AxiosResponse<ClassicQuoteDataJSON> = {
         ...response,
-        data: FRONTEND_LOGICAL_AND_BACKEND_ENABLE_PORTION_FLAG(request.info.sendPortionEnabled, process.env.ENABLE_PORTION)
+        data: frontendAndUraEnablePortion(request.info.sendPortionEnabled)
           ? {
               ...response.data,
               // TODO: ROUTE-97 - re-evaluate how to properly code up returning portionBips in case of no fee in URA
@@ -193,7 +189,7 @@ export class RoutingApiQuoter implements Quoter {
         }),
         ...(request.info.type === TradeType.EXACT_OUTPUT &&
           portion &&
-          FRONTEND_LOGICAL_AND_BACKEND_ENABLE_PORTION_FLAG(request.info.sendPortionEnabled, process.env.ENABLE_PORTION) && {
+          frontendAndUraEnablePortion(request.info.sendPortionEnabled) && {
             portionAmount: this.portionProvider
               .getPortionAmount(amount, portion, resolvedTokenOut)
               ?.quotient.toString(),
@@ -201,7 +197,7 @@ export class RoutingApiQuoter implements Quoter {
           }),
         ...(request.info.type === TradeType.EXACT_INPUT &&
           portion &&
-          FRONTEND_LOGICAL_AND_BACKEND_ENABLE_PORTION_FLAG(request.info.sendPortionEnabled, process.env.ENABLE_PORTION) && {
+          frontendAndUraEnablePortion(request.info.sendPortionEnabled) && {
             portionBips: portion.bips,
             portionRecipient: portion.recipient,
           }),
