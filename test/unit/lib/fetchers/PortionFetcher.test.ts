@@ -3,7 +3,7 @@ import NodeCache from 'node-cache';
 import { DEFAULT_NEGATIVE_CACHE_ENTRY_TTL, DEFAULT_POSITIVE_CACHE_ENTRY_TTL } from '../../../../lib/constants';
 import { GetPortionResponse, GET_NO_PORTION_RESPONSE, PortionFetcher } from '../../../../lib/fetchers/PortionFetcher';
 import axios from '../../../../lib/providers/quoters/helpers';
-import { setGlobalForcePortion } from '../../../../lib/util/portion';
+import { forcePortion, setGlobalForcePortion } from '../../../../lib/util/portion';
 import { FLAT_PORTION } from '../../../constants';
 
 function testPortion() {
@@ -48,13 +48,15 @@ function testPortion() {
     if (portionData.hasPortion && portionData.portion) {
       expect(portionData.portion).toStrictEqual(portionResponse.portion);
 
-      const cachedPortionData = portionCache.get<GetPortionResponse>(
-        PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
-      );
-      expect(cachedPortionData).toBeDefined;
-      expect(cachedPortionData?.portion).toBeDefined;
-      expect(cachedPortionData?.hasPortion).toEqual(true);
-      expect(cachedPortionData?.portion).toStrictEqual(portionResponse.portion);
+      if (!forcePortion) {
+        const cachedPortionData = portionCache.get<GetPortionResponse>(
+          PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
+        );
+        expect(cachedPortionData).toBeDefined;
+        expect(cachedPortionData?.portion).toBeDefined;
+        expect(cachedPortionData?.hasPortion).toEqual(true);
+        expect(cachedPortionData?.portion).toStrictEqual(portionResponse.portion);
+      }
 
       const ttlUpperBoundBuffer = 1; // in seconds
       const ttl = portionCache.getTtl(
@@ -89,11 +91,13 @@ function testPortion() {
     );
     expect(portionData.hasPortion).toEqual(GET_NO_PORTION_RESPONSE.hasPortion);
 
-    const cachedPortionData = portionCache.get<GetPortionResponse>(
-      PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
-    );
-    expect(cachedPortionData).toBeDefined;
-    expect(cachedPortionData?.hasPortion).toEqual(GET_NO_PORTION_RESPONSE.hasPortion);
+    if (!forcePortion) {
+      const cachedPortionData = portionCache.get<GetPortionResponse>(
+        PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
+      );
+      expect(cachedPortionData).toBeDefined;
+      expect(cachedPortionData?.hasPortion).toEqual(GET_NO_PORTION_RESPONSE.hasPortion);
+    }
 
     const ttlUpperBoundBuffer = 1; // in seconds
     const ttl = portionCache.getTtl(
