@@ -1,10 +1,6 @@
 import { ethers } from 'ethers';
 
-import {
-  DEFAULT_ROUTING_API_DEADLINE,
-  RoutingType,
-  UNISWAP_DOT_ETH_ADDRESS,
-} from '../../constants';
+import { RoutingType } from '../../constants';
 import { ClassicConfig, ClassicRequest, DutchRequest, Quote, QuoteRequest } from '../../entities';
 
 import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
