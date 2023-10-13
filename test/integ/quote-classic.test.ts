@@ -1943,6 +1943,7 @@ describe('quote', function () {
             });
           });
         }
+
         it(`erc20 -> erc20 no recipient/deadline/slippage`, async () => {
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
@@ -1978,7 +1979,51 @@ describe('quote', function () {
             expect(parseFloat(quoteGasAdjustedDecimals)).to.be.greaterThanOrEqual(parseFloat(quoteDecimals));
           }
 
-          expect(methodParameters).to.be.undefined;
+          // Since ur-sdk hardcodes recipient in case of no recipient https://github.com/Uniswap/universal-router-sdk/blob/main/src/entities/protocols/uniswap.ts#L68
+          // the calldata will still get generated even if URA doesn't pass in recipient
+          expect(methodParameters).not.to.be.undefined;
+        });
+
+        it(`one of recipient/deadline/slippage is missing`, async () => {
+          const quoteReq: QuoteRequestBodyJSON = {
+            requestId: 'id',
+            tokenIn: 'USDC',
+            tokenInChainId: 1,
+            tokenOut: 'USDT',
+            tokenOutChainId: 1,
+            amount: await getAmount(1, type, 'USDC', 'USDT', '100'),
+            type,
+            slippageTolerance: SLIPPAGE,
+            configs: [
+              {
+                routingType: RoutingType.CLASSIC,
+                deadline: 360,
+                algorithm,
+                enableUniversalRouter: true,
+              },
+            ],
+          };
+
+          const response: AxiosResponse<QuoteResponseJSON> = await call(quoteReq);
+          const {
+            data: { quote: quoteJSON },
+            status,
+          } = response;
+          const { quoteDecimals, quoteGasAdjustedDecimals, methodParameters } = quoteJSON as ClassicQuoteDataJSON;
+
+          expect(status).to.equal(200);
+          expect(parseFloat(quoteDecimals)).to.be.greaterThan(90);
+          expect(parseFloat(quoteDecimals)).to.be.lessThan(110);
+
+          if (type == 'EXACT_INPUT') {
+            expect(parseFloat(quoteGasAdjustedDecimals)).to.be.lessThanOrEqual(parseFloat(quoteDecimals));
+          } else {
+            expect(parseFloat(quoteGasAdjustedDecimals)).to.be.greaterThanOrEqual(parseFloat(quoteDecimals));
+          }
+
+          // Since ur-sdk hardcodes recipient in case of no recipient https://github.com/Uniswap/universal-router-sdk/blob/main/src/entities/protocols/uniswap.ts#L68
+          // the calldata will still get generated even if URA doesn't pass in recipient
+          expect(methodParameters).not.to.be.undefined;
         });
 
         it(`erc20 -> erc20 gas price specified`, async () => {
@@ -2400,35 +2445,6 @@ describe('quote', function () {
               {
                 routingType: RoutingType.CLASSIC,
                 recipient: alice.address,
-                deadline: 360,
-                algorithm,
-                enableUniversalRouter: true,
-              },
-            ],
-          };
-          await callAndExpectFail(quoteReq, {
-            status: 404,
-            data: {
-              detail: 'No quotes available',
-              errorCode: 'QUOTE_ERROR',
-            },
-          });
-        });
-
-        // TODO: improve handling here by checking locally or rethrowing errors from routing-api
-        it(`one of recipient/deadline/slippage is missing`, async () => {
-          const quoteReq: QuoteRequestBodyJSON = {
-            requestId: 'id',
-            tokenIn: 'USDC',
-            tokenInChainId: 1,
-            tokenOut: 'USDT',
-            tokenOutChainId: 1,
-            amount: await getAmount(1, type, 'USDC', 'USDT', '100'),
-            type,
-            slippageTolerance: SLIPPAGE,
-            configs: [
-              {
-                routingType: RoutingType.CLASSIC,
                 deadline: 360,
                 algorithm,
                 enableUniversalRouter: true,
