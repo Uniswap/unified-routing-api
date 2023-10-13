@@ -1,5 +1,6 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { Currency, CurrencyAmount, Ether, Fraction, WETH9 } from '@uniswap/sdk-core';
+import { ZERO } from '@uniswap/router-sdk';
+import { Currency, CurrencyAmount, Ether, Fraction, Percent, WETH9 } from '@uniswap/sdk-core';
 import {
   DAI_MAINNET,
   ID_TO_NETWORK_NAME,
@@ -114,7 +115,9 @@ const checkPortionRecipientToken = (
     ? expectedPortionAmountReceived.subtract(actualPortionAmountReceived)
     : actualPortionAmountReceived.subtract(expectedPortionAmountReceived);
   // There will be a slight difference between expected and actual due to slippage during the hardhat fork swap.
-  const percentDiff = tokensDiff.asFraction.divide(expectedPortionAmountReceived.asFraction);
+  const percentDiff = tokensDiff.equalTo(ZERO)
+    ? new Percent(ZERO)
+    : tokensDiff.asFraction.divide(expectedPortionAmountReceived.asFraction);
   expect(percentDiff.lessThan(new Fraction(parseInt(SLIPPAGE), 100))).to.be.true;
 };
 
@@ -637,6 +640,7 @@ describe('quoteUniswapX', function () {
                 amount: amount,
                 type,
                 slippageTolerance: SLIPPAGE,
+                sendPortionEnabled,
                 configs: [
                   {
                     routingType: RoutingType.DUTCH_LIMIT,
@@ -661,22 +665,35 @@ describe('quoteUniswapX', function () {
                 expect(order.info.outputs.length).to.equal(2);
 
                 const firstOutput = order.info.outputs[0];
-                expect(firstOutput.startAmount).greaterThan(0);
+                expect(BigNumber.from(firstOutput.startAmount).toNumber()).greaterThan(0);
                 const secondOutput = order.info.outputs[1];
-                expect(secondOutput.startAmount).greaterThan(0);
+                expect(BigNumber.from(secondOutput.startAmount).toNumber()).greaterThan(0);
 
                 expect(getPortionResponse.portion?.bips).not.to.be.undefined;
 
                 if (getPortionResponse.portion?.bips) {
-                  const expectedDutchPortionOrderStartAmount = firstOutput.startAmount
+                  const totalOrderStartAmount =
+                    type === 'EXACT_INPUT'
+                      ? BigNumber.from(firstOutput.startAmount).add(secondOutput.startAmount)
+                      : BigNumber.from(firstOutput.startAmount);
+                  const totalOrderEndAmount =
+                    type === 'EXACT_INPUT'
+                      ? BigNumber.from(firstOutput.endAmount).add(secondOutput.endAmount)
+                      : BigNumber.from(firstOutput.endAmount);
+
+                  const expectedDutchPortionOrderStartAmount = totalOrderStartAmount
                     .mul(getPortionResponse.portion.bips)
                     .div(BPS);
-                  const expectedDutchPortionOrderEndAmount = firstOutput.endAmount
+                  const expectedDutchPortionOrderEndAmount = totalOrderEndAmount
                     .mul(getPortionResponse.portion.bips)
                     .div(BPS);
                   // second order is the dutch portion order
-                  expect(secondOutput.startAmount).to.equal(expectedDutchPortionOrderStartAmount);
-                  expect(secondOutput.endAmount).to.equal(expectedDutchPortionOrderEndAmount);
+                  expect(BigNumber.from(secondOutput.startAmount).toString()).to.equal(
+                    expectedDutchPortionOrderStartAmount.toString()
+                  );
+                  expect(BigNumber.from(secondOutput.endAmount).toString()).to.equal(
+                    expectedDutchPortionOrderEndAmount.toString()
+                  );
                 }
               } else {
                 expect(order.info.outputs.length).to.equal(1);
@@ -711,6 +728,8 @@ describe('quoteUniswapX', function () {
 
                 if (sendPortionEnabled) {
                   expect(quote as DutchQuoteDataJSON).not.to.be.undefined;
+                  expect((quote as DutchQuoteDataJSON).portionBips).not.to.be.undefined;
+                  expect((quote as DutchQuoteDataJSON).portionBips).to.be.equal(getPortionResponse.portion?.bips);
 
                   const expectedPortionAmount = CurrencyAmount.fromRawAmount(
                     tokenOut,
@@ -744,6 +763,8 @@ describe('quoteUniswapX', function () {
 
                 if (sendPortionEnabled) {
                   expect((quote as DutchQuoteDataJSON).portionAmount).not.to.be.undefined;
+                  expect((quote as DutchQuoteDataJSON).portionBips).not.to.be.undefined;
+                  expect((quote as DutchQuoteDataJSON).portionBips).to.be.equal(getPortionResponse.portion?.bips);
 
                   const expectedPortionAmount = CurrencyAmount.fromRawAmount(
                     tokenOut,
@@ -789,6 +810,7 @@ describe('quoteUniswapX', function () {
                 amount: amount,
                 type,
                 slippageTolerance: SLIPPAGE,
+                sendPortionEnabled,
                 configs: [
                   {
                     routingType: RoutingType.DUTCH_LIMIT,
@@ -840,6 +862,9 @@ describe('quoteUniswapX', function () {
 
                 if (sendPortionEnabled) {
                   expect((quote as DutchQuoteDataJSON).portionAmount).not.to.be.undefined;
+                  expect((quote as DutchQuoteDataJSON).portionAmount).to.be.equal('0');
+                  expect((quote as DutchQuoteDataJSON).portionBips).not.to.be.undefined;
+                  expect((quote as DutchQuoteDataJSON).portionBips!).to.be.equal(0);
 
                   const expectedPortionAmount = CurrencyAmount.fromRawAmount(
                     tokenOut,
@@ -873,6 +898,9 @@ describe('quoteUniswapX', function () {
 
                 if (sendPortionEnabled) {
                   expect((quote as DutchQuoteDataJSON).portionAmount).not.to.be.undefined;
+                  expect((quote as DutchQuoteDataJSON).portionAmount).to.be.equal('0');
+                  expect((quote as DutchQuoteDataJSON).portionBips).not.to.be.undefined;
+                  expect((quote as DutchQuoteDataJSON).portionBips!).to.be.equal(0);
 
                   const expectedPortionAmount = CurrencyAmount.fromRawAmount(
                     tokenOut,
