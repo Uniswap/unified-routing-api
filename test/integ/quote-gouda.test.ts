@@ -730,6 +730,9 @@ describe('quoteUniswapX', function () {
                   expect(quote as DutchQuoteDataJSON).not.to.be.undefined;
                   expect((quote as DutchQuoteDataJSON).portionBips).not.to.be.undefined;
                   expect((quote as DutchQuoteDataJSON).portionBips).to.be.equal(getPortionResponse.portion?.bips);
+                  expect((quote as DutchQuoteDataJSON).portionAmount).not.to.be.undefined;
+                  const secondOutput = order.info.outputs[1];
+                  expect((quote as DutchQuoteDataJSON).portionAmount).to.be.equal(BigNumber.from(secondOutput.startAmount).toString());
 
                   const expectedPortionAmount = CurrencyAmount.fromRawAmount(
                     tokenOut,
@@ -740,6 +743,9 @@ describe('quoteUniswapX', function () {
                     tokenOutPortionRecipientAfter!,
                     expectedPortionAmount
                   );
+                } else {
+                  expect((quote as DutchQuoteDataJSON).portionBips).to.be.undefined;
+                  expect((quote as DutchQuoteDataJSON).portionAmount).to.be.undefined;
                 }
               } else {
                 // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
@@ -775,6 +781,9 @@ describe('quoteUniswapX', function () {
                     tokenOutPortionRecipientAfter!,
                     expectedPortionAmount
                   );
+                } else {
+                  expect((quote as DutchQuoteDataJSON).portionBips).to.be.undefined;
+                  expect((quote as DutchQuoteDataJSON).portionAmount).to.be.undefined;
                 }
               }
             });
@@ -875,6 +884,9 @@ describe('quoteUniswapX', function () {
                     tokenOutPortionRecipientAfter!,
                     expectedPortionAmount
                   );
+                } else {
+                  expect((quote as DutchQuoteDataJSON).portionBips).to.be.undefined;
+                  expect((quote as DutchQuoteDataJSON).portionAmount).to.be.undefined;
                 }
               } else {
                 // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
@@ -911,6 +923,9 @@ describe('quoteUniswapX', function () {
                     tokenOutPortionRecipientAfter!,
                     expectedPortionAmount
                   );
+                } else {
+                  expect((quote as DutchQuoteDataJSON).portionBips).to.be.undefined;
+                  expect((quote as DutchQuoteDataJSON).portionAmount).to.be.undefined;
                 }
               }
             });
