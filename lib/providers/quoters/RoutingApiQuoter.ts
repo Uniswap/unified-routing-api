@@ -37,14 +37,16 @@ export class RoutingApiQuoter implements Quoter {
       const response = await axios.get<ClassicQuoteDataJSON>(req, { headers: { 'x-api-key': this.routingApiKey } });
       const portionAdjustedResponse: AxiosResponse<ClassicQuoteDataJSON> = {
         ...response,
+        // NOTE: important to show portion-related fields under flag on only
+        // this is FE requirement
         data: frontendAndUraEnablePortion(request.info.sendPortionEnabled)
           ? {
               ...response.data,
-              // TODO: ROUTE-97 - re-evaluate how to properly code up returning portionBips in case of no fee in URA
-              portionBips: response.data.portionBips ?? 0, // important for exact in, clients are expected to use this for exact in swaps
-              // TODO: ROUTE-97 - re-evaluate how to properly code up returning portionAmount in case of no fee in URA
-              portionAmount: response.data.portionAmount ?? '0', // important for exact out, clients are expected to use this for exact out swaps
-              portionAmountDecimals: response.data.portionAmountDecimals ?? '0', // important for exact out, clients are expected to use this for exact out swaps
+              // NOTE: important for URA to return 0 bps and amount, in case of no portion.
+              // this is FE requirement
+              portionBips: response.data.portionBips ?? 0,
+              portionAmount: response.data.portionAmount ?? '0',
+              portionAmountDecimals: response.data.portionAmountDecimals ?? '0',
             }
           : response.data,
       };
