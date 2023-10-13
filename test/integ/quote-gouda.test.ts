@@ -62,7 +62,7 @@ axios.defaults.timeout = 20000;
 const axiosConfig: AxiosRequestConfig<any> = {
   headers: {
     ...(process.env.URA_INTERNAL_API_KEY && { 'x-api-key': process.env.URA_INTERNAL_API_KEY }),
-    ...(process.env.FORCE_PORTION_SECRET && { 'X-UNISWAP-FORCE-PORTION-SECRET': process.env.FORCE_PORTION_SECRET}),
+    ...(process.env.FORCE_PORTION_SECRET && { 'X-UNISWAP-FORCE-PORTION-SECRET': process.env.FORCE_PORTION_SECRET }),
   },
 };
 
@@ -597,302 +597,295 @@ describe('quoteUniswapX', function () {
         const sendPortionEnabledValues = [true, undefined];
         GREENLIST_TOKEN_PAIRS.forEach(([tokenIn, tokenOut]) => {
           sendPortionEnabledValues.forEach((sendPortionEnabled) => {
-            const shouldSkip = sendPortionEnabled;
-            // any portion enable test will fail due to non-implementation in the dutch quoter yet
+            it(`${tokenIn.symbol} -> ${tokenOut.symbol} sendPortionEnabled = ${sendPortionEnabled}`, async () => {
+              // if the token amount involves WBTC we have to reduce the WTBC amount to avoid the transfer from failed gas error.
+              let originalAmount = '10000';
 
-            shouldSkip
-              ? it.skip
-              : it(`${tokenIn.symbol} -> ${tokenOut.symbol} sendPortionEnabled = ${sendPortionEnabled}`, async () => {
-                  // if the token amount involves WBTC we have to reduce the WTBC amount to avoid the transfer from failed gas error.
-                  let originalAmount = '10000'
+              if (
+                (tokenIn.symbol === 'WBTC' && type === 'EXACT_INPUT') ||
+                (tokenOut.symbol === 'WBTC' && type === 'EXACT_OUTPUT')
+              ) {
+                originalAmount = '1';
+              }
 
-                  if ((tokenIn.symbol === 'WBTC' && type === 'EXACT_INPUT') ||
-                    (tokenOut.symbol === 'WBTC' && type === 'EXACT_OUTPUT')) {
-                    originalAmount = '1'
-                  }
+              if (
+                (tokenIn.wrapped.symbol === 'WETH' && type === 'EXACT_INPUT') ||
+                (tokenOut.wrapped.symbol === 'WETH' && type === 'EXACT_OUTPUT')
+              ) {
+                originalAmount = '10';
+              }
 
-                  if ((tokenIn.wrapped.symbol === 'WETH' && type === 'EXACT_INPUT') ||
-                    (tokenOut.wrapped.symbol === 'WETH' && type === 'EXACT_OUTPUT')) {
-                    originalAmount = '10'
-                  }
+              const tokenInAddress = tokenIn.isNative ? NATIVE_ADDRESS : tokenIn.address;
+              const tokenOutAddress = tokenOut.isNative ? NATIVE_ADDRESS : tokenOut.address;
+              const amount = await getAmountFromToken(type, tokenIn.wrapped, tokenOut.wrapped, originalAmount);
+              const getPortionResponse = await portionFetcher.getPortion(
+                tokenIn.chainId,
+                tokenInAddress,
+                tokenOut.chainId,
+                tokenOutAddress
+              );
+              expect(getPortionResponse.hasPortion).to.be.true;
+              expect(getPortionResponse.portion).to.not.be.undefined;
 
-                  const tokenInAddress = tokenIn.isNative ? NATIVE_ADDRESS : tokenIn.address;
-                  const tokenOutAddress = tokenOut.isNative ? NATIVE_ADDRESS : tokenOut.address;
-                  const amount = await getAmountFromToken(type, tokenIn.wrapped, tokenOut.wrapped, originalAmount);
-                  const getPortionResponse = await portionFetcher.getPortion(
-                    tokenIn.chainId,
-                    tokenInAddress,
-                    tokenOut.chainId,
-                    tokenOutAddress
-                  );
-                  expect(getPortionResponse.hasPortion).to.be.true;
-                  expect(getPortionResponse.portion).to.not.be.undefined;
+              const quoteReq: QuoteRequestBodyJSON = {
+                requestId: 'id',
+                useUniswapX: true,
+                tokenIn: tokenInAddress,
+                tokenInChainId: 1,
+                tokenOut: tokenOutAddress,
+                tokenOutChainId: 1,
+                amount: amount,
+                type,
+                slippageTolerance: SLIPPAGE,
+                configs: [
+                  {
+                    routingType: RoutingType.DUTCH_LIMIT,
+                    swapper: alice.address,
+                    useSyntheticQuotes: true,
+                  },
+                ] as RoutingConfigJSON[],
+              };
 
-                  const quoteReq: QuoteRequestBodyJSON = {
-                    requestId: 'id',
-                    useUniswapX: true,
-                    tokenIn: tokenInAddress,
-                    tokenInChainId: 1,
-                    tokenOut: tokenOutAddress,
-                    tokenOutChainId: 1,
-                    amount: amount,
-                    type,
-                    slippageTolerance: SLIPPAGE,
-                    configs: [
-                      {
-                        routingType: RoutingType.DUTCH_LIMIT,
-                        swapper: alice.address,
-                        useSyntheticQuotes: true,
-                      },
-                    ] as RoutingConfigJSON[],
-                  };
+              const response = await call(quoteReq);
+              const {
+                data: { quote },
+                status,
+              } = response;
 
-                  const response = await call(quoteReq);
-                  const {
-                    data: { quote },
-                    status,
-                  } = response;
+              const order = new DutchOrder((quote as any).orderInfo, 1);
+              expect(status).to.equal(200);
+              // account for gas and slippage
+              expect(order.info.swapper).to.equal(alice.address);
 
-                  const order = new DutchOrder((quote as any).orderInfo, 1);
-                  expect(status).to.equal(200);
-                  // account for gas and slippage
-                  expect(order.info.swapper).to.equal(alice.address);
+              if (sendPortionEnabled) {
+                expect(order.info.outputs.length).to.equal(2);
 
-                  if (sendPortionEnabled) {
-                    expect(order.info.outputs.length).to.equal(2);
+                const firstOutput = order.info.outputs[0];
+                expect(firstOutput.startAmount).greaterThan(0);
+                const secondOutput = order.info.outputs[1];
+                expect(secondOutput.startAmount).greaterThan(0);
 
-                    const firstOutput = order.info.outputs[0];
-                    expect(firstOutput.startAmount).greaterThan(0);
-                    const secondOutput = order.info.outputs[1];
-                    expect(secondOutput.startAmount).greaterThan(0);
+                expect(getPortionResponse.portion?.bips).not.to.be.undefined;
 
-                    expect(getPortionResponse.portion?.bips).not.to.be.undefined;
+                if (getPortionResponse.portion?.bips) {
+                  const expectedDutchPortionOrderStartAmount = firstOutput.startAmount
+                    .mul(getPortionResponse.portion.bips)
+                    .div(BPS);
+                  const expectedDutchPortionOrderEndAmount = firstOutput.endAmount
+                    .mul(getPortionResponse.portion.bips)
+                    .div(BPS);
+                  // second order is the dutch portion order
+                  expect(secondOutput.startAmount).to.equal(expectedDutchPortionOrderStartAmount);
+                  expect(secondOutput.endAmount).to.equal(expectedDutchPortionOrderEndAmount);
+                }
+              } else {
+                expect(order.info.outputs.length).to.equal(1);
+              }
 
-                    if (getPortionResponse.portion?.bips) {
-                      const expectedDutchPortionOrderStartAmount = firstOutput.startAmount
-                        .mul(getPortionResponse.portion.bips)
-                        .div(BPS);
-                      const expectedDutchPortionOrderEndAmount = firstOutput.endAmount
-                        .mul(getPortionResponse.portion.bips)
-                        .div(BPS);
-                      // second order is the dutch portion order
-                      expect(secondOutput.startAmount).to.equal(expectedDutchPortionOrderStartAmount);
-                      expect(secondOutput.endAmount).to.equal(expectedDutchPortionOrderEndAmount);
-                    }
-                  } else {
-                    expect(order.info.outputs.length).to.equal(1);
-                  }
+              const {
+                tokenInBefore,
+                tokenInAfter,
+                tokenOutBefore,
+                tokenOutAfter,
+                tokenOutPortionRecipientBefore,
+                tokenOutPortionRecipientAfter,
+              } = await executeSwap(order, tokenIn, tokenOut, getPortionResponse.portion);
 
-                  const {
-                    tokenInBefore,
-                    tokenInAfter,
+              if (type == 'EXACT_INPUT') {
+                // if the token in is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
+                if (!tokenIn.isNative) {
+                  expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal(originalAmount);
+                }
+
+                // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
+                if (!tokenOut.isNative) {
+                  checkQuoteToken(
                     tokenOutBefore,
                     tokenOutAfter,
-                    tokenOutPortionRecipientBefore,
-                    tokenOutPortionRecipientAfter,
-                  } = await executeSwap(order, tokenIn, tokenOut, getPortionResponse.portion);
+                    CurrencyAmount.fromRawAmount(
+                      tokenOut,
+                      (quote as DutchQuoteDataJSON).orderInfo.outputs[0].startAmount
+                    )
+                  );
+                }
 
-                  if (type == 'EXACT_INPUT') {
-                    // if the token in is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
-                    if (!tokenIn.isNative) {
-                      expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal(originalAmount);
-                    }
+                if (sendPortionEnabled) {
+                  expect(quote as DutchQuoteDataJSON).not.to.be.undefined;
 
-                    // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
-                    if (!tokenOut.isNative) {
-                      checkQuoteToken(
-                        tokenOutBefore,
-                        tokenOutAfter,
-                        CurrencyAmount.fromRawAmount(
-                          tokenOut,
-                          (quote as DutchQuoteDataJSON).orderInfo.outputs[0].startAmount
-                        )
-                      );
-                    }
+                  const expectedPortionAmount = CurrencyAmount.fromRawAmount(
+                    tokenOut,
+                    (quote as DutchQuoteDataJSON).portionAmount!
+                  );
+                  checkPortionRecipientToken(
+                    tokenOutPortionRecipientBefore!,
+                    tokenOutPortionRecipientAfter!,
+                    expectedPortionAmount
+                  );
+                }
+              } else {
+                // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
+                if (!tokenOut.isNative) {
+                  // exact out swap amount might not be exactly the request amount, due to delay curve
+                  // same assertion as other existing tests
+                  expect(
+                    tokenOutAfter.subtract(tokenOutBefore).greaterThan(originalAmount) ||
+                      tokenOutAfter.subtract(tokenOutBefore).equalTo(originalAmount)
+                  ).to.be.true;
+                }
 
-                    if (sendPortionEnabled) {
-                      expect(quote as DutchQuoteDataJSON).not.to.be.undefined;
+                // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
+                if (!tokenIn.isNative) {
+                  checkQuoteToken(
+                    tokenInBefore,
+                    tokenInAfter,
+                    CurrencyAmount.fromRawAmount(tokenIn, order.info.input.startAmount.toString())
+                  );
+                }
 
-                      const expectedPortionAmount = CurrencyAmount.fromRawAmount(
-                        tokenOut,
-                        (quote as DutchQuoteDataJSON).portionAmount!
-                      );
-                      checkPortionRecipientToken(
-                        tokenOutPortionRecipientBefore!,
-                        tokenOutPortionRecipientAfter!,
-                        expectedPortionAmount
-                      );
-                    }
-                  } else {
-                    // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
-                    if (!tokenOut.isNative) {
-                      // exact out swap amount might not be exactly the request amount, due to delay curve
-                      // same assertion as other existing tests
-                      expect(
-                        tokenOutAfter.subtract(tokenOutBefore).greaterThan(originalAmount) ||
-                          tokenOutAfter.subtract(tokenOutBefore).equalTo(originalAmount)
-                      ).to.be.true;
-                    }
+                if (sendPortionEnabled) {
+                  expect((quote as DutchQuoteDataJSON).portionAmount).not.to.be.undefined;
 
-                    // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
-                    if (!tokenIn.isNative) {
-                      checkQuoteToken(
-                        tokenInBefore,
-                        tokenInAfter,
-                        CurrencyAmount.fromRawAmount(tokenIn, order.info.input.startAmount.toString())
-                      );
-                    }
-
-                    if (sendPortionEnabled) {
-                      expect((quote as DutchQuoteDataJSON).portionAmount).not.to.be.undefined;
-
-                      const expectedPortionAmount = CurrencyAmount.fromRawAmount(
-                        tokenOut,
-                        (quote as DutchQuoteDataJSON).portionAmount!
-                      );
-                      checkPortionRecipientToken(
-                        tokenOutPortionRecipientBefore!,
-                        tokenOutPortionRecipientAfter!,
-                        expectedPortionAmount
-                      );
-                    }
-                  }
-                });
+                  const expectedPortionAmount = CurrencyAmount.fromRawAmount(
+                    tokenOut,
+                    (quote as DutchQuoteDataJSON).portionAmount!
+                  );
+                  checkPortionRecipientToken(
+                    tokenOutPortionRecipientBefore!,
+                    tokenOutPortionRecipientAfter!,
+                    expectedPortionAmount
+                  );
+                }
+              }
+            });
           });
         });
 
         GREENLIST_STABLE_TO_STABLE_PAIRS.forEach(([tokenIn, tokenOut]) => {
           sendPortionEnabledValues.forEach((sendPortionEnabled) => {
-            // portion service doesn't have the stable-to-stable carveout merged yet
-            // all carveout tests are skipped for now
-            const shouldSkip = sendPortionEnabled;
+            it(`stable-to-stable ${tokenIn.symbol} -> ${tokenOut.symbol} carveout sendPortionEnabled = ${sendPortionEnabled}`, async () => {
+              const originalAmount = '100';
+              const tokenInAddress = tokenIn.isNative ? NATIVE_ADDRESS : tokenIn.address;
+              const tokenOutAddress = tokenOut.isNative ? NATIVE_ADDRESS : tokenOut.address;
+              const amount = await getAmountFromToken(type, tokenIn.wrapped, tokenOut.wrapped, originalAmount);
+              const getPortionResponse = await portionFetcher.getPortion(
+                tokenIn.chainId,
+                tokenInAddress,
+                tokenOut.chainId,
+                tokenOutAddress
+              );
 
-            shouldSkip
-              ? it.skip
-              : it(`stable-to-stable ${tokenIn.symbol} -> ${tokenOut.symbol} carveout sendPortionEnabled = ${sendPortionEnabled}`, async () => {
-                  const originalAmount = '100';
-                  const tokenInAddress = tokenIn.isNative ? NATIVE_ADDRESS : tokenIn.address;
-                  const tokenOutAddress = tokenOut.isNative ? NATIVE_ADDRESS : tokenOut.address;
-                  const amount = await getAmountFromToken(type, tokenIn.wrapped, tokenOut.wrapped, originalAmount);
-                  const getPortionResponse = await portionFetcher.getPortion(
-                    tokenIn.chainId,
-                    tokenInAddress,
-                    tokenOut.chainId,
-                    tokenOutAddress
-                  );
+              if (sendPortionEnabled) {
+                expect(getPortionResponse.hasPortion).to.be.false;
+                expect(getPortionResponse.portion).to.be.undefined;
+              }
 
-                  if (sendPortionEnabled) {
-                    expect(getPortionResponse.hasPortion).to.be.false;
-                    expect(getPortionResponse.portion).to.be.undefined;
-                  }
+              const quoteReq: QuoteRequestBodyJSON = {
+                requestId: 'id',
+                useUniswapX: true,
+                tokenIn: tokenInAddress,
+                tokenInChainId: 1,
+                tokenOut: tokenOutAddress,
+                tokenOutChainId: 1,
+                amount: amount,
+                type,
+                slippageTolerance: SLIPPAGE,
+                configs: [
+                  {
+                    routingType: RoutingType.DUTCH_LIMIT,
+                    swapper: alice.address,
+                    useSyntheticQuotes: true,
+                  },
+                ] as RoutingConfigJSON[],
+              };
 
-                  const quoteReq: QuoteRequestBodyJSON = {
-                    requestId: 'id',
-                    useUniswapX: true,
-                    tokenIn: tokenInAddress,
-                    tokenInChainId: 1,
-                    tokenOut: tokenOutAddress,
-                    tokenOutChainId: 1,
-                    amount: amount,
-                    type,
-                    slippageTolerance: SLIPPAGE,
-                    configs: [
-                      {
-                        routingType: RoutingType.DUTCH_LIMIT,
-                        swapper: alice.address,
-                        useSyntheticQuotes: true,
-                      },
-                    ] as RoutingConfigJSON[],
-                  };
+              const response = await call(quoteReq);
+              const {
+                data: { quote },
+                status,
+              } = response;
 
-                  const response = await call(quoteReq);
-                  const {
-                    data: { quote },
-                    status,
-                  } = response;
+              const order = new DutchOrder((quote as any).orderInfo, 1);
+              expect(status).to.equal(200);
+              // account for gas and slippage
+              expect(order.info.swapper).to.equal(alice.address);
+              // doesn't matter portion enabled or not, only one output order
+              expect(order.info.outputs.length).to.equal(1);
 
-                  const order = new DutchOrder((quote as any).orderInfo, 1);
-                  expect(status).to.equal(200);
-                  // account for gas and slippage
-                  expect(order.info.swapper).to.equal(alice.address);
-                  // doesn't matter portion enabled or not, only one output order
-                  expect(order.info.outputs.length).to.equal(1);
+              const {
+                tokenInBefore,
+                tokenInAfter,
+                tokenOutBefore,
+                tokenOutAfter,
+                tokenOutPortionRecipientBefore,
+                tokenOutPortionRecipientAfter,
+              } = await executeSwap(order, tokenIn, tokenOut, getPortionResponse.portion);
 
-                  const {
-                    tokenInBefore,
-                    tokenInAfter,
+              if (type == 'EXACT_INPUT') {
+                // if the token in is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
+                if (!tokenIn.isNative) {
+                  expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal(originalAmount);
+                }
+
+                // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
+                if (!tokenOut.isNative) {
+                  checkQuoteToken(
                     tokenOutBefore,
                     tokenOutAfter,
-                    tokenOutPortionRecipientBefore,
-                    tokenOutPortionRecipientAfter,
-                  } = await executeSwap(order, tokenIn, tokenOut, getPortionResponse.portion);
+                    CurrencyAmount.fromRawAmount(
+                      tokenOut,
+                      (quote as DutchQuoteDataJSON).orderInfo.outputs[0].startAmount
+                    )
+                  );
+                }
 
-                  if (type == 'EXACT_INPUT') {
-                    // if the token in is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
-                    if (!tokenIn.isNative) {
-                      expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal(originalAmount);
-                    }
+                if (sendPortionEnabled) {
+                  expect((quote as DutchQuoteDataJSON).portionAmount).not.to.be.undefined;
 
-                    // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
-                    if (!tokenOut.isNative) {
-                      checkQuoteToken(
-                        tokenOutBefore,
-                        tokenOutAfter,
-                        CurrencyAmount.fromRawAmount(
-                          tokenOut,
-                          (quote as DutchQuoteDataJSON).orderInfo.outputs[0].startAmount
-                        )
-                      );
-                    }
+                  const expectedPortionAmount = CurrencyAmount.fromRawAmount(
+                    tokenOut,
+                    (quote as DutchQuoteDataJSON).portionAmount!
+                  );
+                  checkPortionRecipientToken(
+                    tokenOutPortionRecipientBefore!,
+                    tokenOutPortionRecipientAfter!,
+                    expectedPortionAmount
+                  );
+                }
+              } else {
+                // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
+                if (!tokenOut.isNative) {
+                  // exact out swap amount might not be exactly the request amount, due to delay curve
+                  // same assertion as other existing tests
+                  expect(
+                    tokenOutAfter.subtract(tokenOutBefore).greaterThan(originalAmount) ||
+                      tokenOutAfter.subtract(tokenOutBefore).equalTo(originalAmount)
+                  ).to.be.true;
+                }
 
-                    if (sendPortionEnabled) {
-                      expect((quote as DutchQuoteDataJSON).portionAmount).not.to.be.undefined;
+                // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
+                if (!tokenIn.isNative) {
+                  checkQuoteToken(
+                    tokenInBefore,
+                    tokenInAfter,
+                    CurrencyAmount.fromRawAmount(tokenIn, order.info.input.startAmount.toString())
+                  );
+                }
 
-                      const expectedPortionAmount = CurrencyAmount.fromRawAmount(
-                        tokenOut,
-                        (quote as DutchQuoteDataJSON).portionAmount!
-                      );
-                      checkPortionRecipientToken(
-                        tokenOutPortionRecipientBefore!,
-                        tokenOutPortionRecipientAfter!,
-                        expectedPortionAmount
-                      );
-                    }
-                  } else {
-                    // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
-                    if (!tokenOut.isNative) {
-                      // exact out swap amount might not be exactly the request amount, due to delay curve
-                      // same assertion as other existing tests
-                      expect(
-                        tokenOutAfter.subtract(tokenOutBefore).greaterThan(originalAmount) ||
-                          tokenOutAfter.subtract(tokenOutBefore).equalTo(originalAmount)
-                      ).to.be.true;
-                    }
+                if (sendPortionEnabled) {
+                  expect((quote as DutchQuoteDataJSON).portionAmount).not.to.be.undefined;
 
-                    // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
-                    if (!tokenIn.isNative) {
-                      checkQuoteToken(
-                        tokenInBefore,
-                        tokenInAfter,
-                        CurrencyAmount.fromRawAmount(tokenIn, order.info.input.startAmount.toString())
-                      );
-                    }
-
-                    if (sendPortionEnabled) {
-                      expect((quote as DutchQuoteDataJSON).portionAmount).not.to.be.undefined;
-
-                      const expectedPortionAmount = CurrencyAmount.fromRawAmount(
-                        tokenOut,
-                        (quote as DutchQuoteDataJSON).portionAmount!
-                      );
-                      checkPortionRecipientToken(
-                        tokenOutPortionRecipientBefore!,
-                        tokenOutPortionRecipientAfter!,
-                        expectedPortionAmount
-                      );
-                    }
-                  }
-                });
+                  const expectedPortionAmount = CurrencyAmount.fromRawAmount(
+                    tokenOut,
+                    (quote as DutchQuoteDataJSON).portionAmount!
+                  );
+                  checkPortionRecipientToken(
+                    tokenOutPortionRecipientBefore!,
+                    tokenOutPortionRecipientAfter!,
+                    expectedPortionAmount
+                  );
+                }
+              }
+            });
           });
         });
 
