@@ -1943,6 +1943,7 @@ describe('quote', function () {
             });
           });
         }
+
         it(`erc20 -> erc20 no recipient/deadline/slippage`, async () => {
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
@@ -1978,7 +1979,9 @@ describe('quote', function () {
             expect(parseFloat(quoteGasAdjustedDecimals)).to.be.greaterThanOrEqual(parseFloat(quoteDecimals));
           }
 
-          expect(methodParameters).to.be.undefined;
+          // Since ur-sdk hardcodes recipient in case of no recipient https://github.com/Uniswap/universal-router-sdk/blob/main/src/entities/protocols/uniswap.ts#L68
+          // the calldata will still get generated even if URA doesn't pass in recipient
+          expect(methodParameters).not.to.be.undefined;
         });
 
         it(`one of recipient/deadline/slippage is missing`, async () => {
