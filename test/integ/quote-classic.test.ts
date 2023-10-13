@@ -1706,10 +1706,9 @@ describe('quote', function () {
                     sendPortionEnabled: sendPortionEnabled,
                     configs: [
                       {
-                        // intentionally don't send deadline and recipient here,
-                        // to make sure the portion amount is still applied as part of
-                        // enabling the universal router path
                         routingType: RoutingType.CLASSIC,
+                        recipient: alice.address,
+                        deadline: 360,
                         algorithm,
                         simulateFromAddress: '0xf584f8728b874a6a5c7a8d4d387c9aae9172d621',
                         enableUniversalRouter: true,
