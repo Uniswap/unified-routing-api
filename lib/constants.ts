@@ -5,7 +5,6 @@ export const DEFAULT_SLIPPAGE_TOLERANCE = '0.5'; // 0.5%
 export const DEFAULT_ROUTING_API_DEADLINE = 600; // 10 minutes
 export const BPS = 10000; // 100.00%
 export const NATIVE_ADDRESS = '0x0000000000000000000000000000000000000000';
-export const UNISWAP_DOT_ETH_ADDRESS = '0x1a9C8182C09F50C8318d769245beA52c32BE35BC';
 
 // Because we don't natively support ETH input and require users to wrap their ETH before swapping,
 // the user experience is significantly worse (requiring 3 user interactions).

@@ -3,7 +3,7 @@ import { DAI_MAINNET, USDC_MAINNET, WBTC_MAINNET } from '@uniswap/smart-order-ro
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { BigNumber } from 'ethers';
 import { getAddress } from 'ethers/lib/utils';
-import { BPS, RoutingType } from '../lib/constants';
+import { BPS, RoutingType, UNISWAP_DOT_ETH_ADDRESS } from '../lib/constants';
 import { Portion, PortionType } from '../lib/fetchers/PortionFetcher';
 import { DAI_ON, USDC_ON, USDT_ON } from './utils/tokens';
 
@@ -31,6 +31,12 @@ export const PORTION_RECIPIENT = '0xd8da6bf26964af9d7eed9e03e53415d37aa96045';
 export const FLAT_PORTION: Portion = {
   bips: PORTION_BIPS,
   recipient: PORTION_RECIPIENT,
+  type: PortionType.Flat,
+};
+
+export const NO_PORTION: Portion = {
+  bips: 0,
+  recipient: UNISWAP_DOT_ETH_ADDRESS,
   type: PortionType.Flat,
 };
 

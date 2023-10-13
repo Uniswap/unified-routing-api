@@ -113,14 +113,8 @@ export function mergeRequests(base: QuoteRequest, layer: QuoteRequest): QuoteReq
     const config = Object.assign({}, baseConfig, {
       // if base does not specify simulation params but layer does, then we add them
       simulateFromAddress: baseConfig.simulateFromAddress ?? layerConfig.simulateFromAddress,
-      // NOTE: This is agreed upon between cross team,
-      // FE doesn't pass the deadline for classic config only quote request,
-      // so in that case URA passes down the hardcoded deadline
-      // FE only passes recipient down, if the wallet is connected,
-      // so in case the wallet is connected, and if it's a pure classic config only quote request,
-      // FE still doesn't pass the recipient, so URA passes down the hardcoded recipient
-      deadline: baseConfig.deadline ?? layerConfig.deadline ?? DEFAULT_ROUTING_API_DEADLINE,
-      recipient: baseConfig.recipient ?? layerConfig.recipient ?? UNISWAP_DOT_ETH_ADDRESS,
+      deadline: baseConfig.deadline ?? layerConfig.deadline,
+      recipient: baseConfig.recipient ?? layerConfig.recipient,
       // otherwise defer to base
     });
     return ClassicRequest.fromRequest(base.info, config);
