@@ -4,7 +4,7 @@ import NodeCache from 'node-cache';
 import { BPS } from '../../../../lib/constants';
 import { DutchQuote, DutchQuoteDataJSON, DutchQuoteJSON } from '../../../../lib/entities';
 import { GetPortionResponse, PortionFetcher, PortionType } from '../../../../lib/fetchers/PortionFetcher';
-import { PortionProvider, RfqQuoter } from '../../../../lib/providers';
+import { RfqQuoter } from '../../../../lib/providers';
 import axios from '../../../../lib/providers/quoters/helpers';
 import {
   AMOUNT,
@@ -40,9 +40,8 @@ describe('RfqQuoter test', () => {
   };
   const portionCache = new NodeCache({ stdTTL: 600 });
   const portionFetcher = new PortionFetcher('https://portion.uniswap.org/', portionCache);
-  const portionProvider = new PortionProvider(portionFetcher);
   jest.spyOn(portionFetcher, 'getPortion').mockResolvedValue(portionResponse);
-  const quoter = new RfqQuoter('https://api.uniswap.org/', 'https://api.uniswap.org/', 'test-api-key', portionProvider);
+  const quoter = new RfqQuoter('https://api.uniswap.org/', 'https://api.uniswap.org/', 'test-api-key', portionFetcher);
 
   describe('quote test', () => {
     beforeEach(() => {
