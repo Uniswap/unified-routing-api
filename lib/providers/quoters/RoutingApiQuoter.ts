@@ -47,6 +47,8 @@ export class RoutingApiQuoter implements Quoter {
               portionBips: response.data.portionBips ?? 0,
               portionAmount: response.data.portionAmount ?? '0',
               portionAmountDecimals: response.data.portionAmountDecimals ?? '0',
+              quoteGasAndPortionAdjusted: response.data.quoteGasAndPortionAdjusted ?? response.data.quoteGasAdjusted,
+              quoteGasAndPortionAdjustedDecimals: response.data.quoteGasAndPortionAdjustedDecimals ?? response.data.quoteGasAdjustedDecimals,
             }
           : response.data,
       };
