@@ -29,6 +29,8 @@ export interface QuoteRequestInfo {
   swapper?: string;
   useUniswapX?: boolean;
   sendPortionEnabled?: boolean;
+  portionBips?: number;
+  portionRecipient?: string;
 }
 
 export interface QuoteRequestBodyJSON extends Omit<QuoteRequestInfo, 'type' | 'amount'> {

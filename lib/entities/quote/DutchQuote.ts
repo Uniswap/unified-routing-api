@@ -194,8 +194,8 @@ export class DutchQuote implements IQuote {
       quote.quoteType,
       quote.filler,
       quote.nonce,
-      classic.getPortionBips() ?? quote.portionBips,
-      classic.getPortionRecipient() ?? quote.portionRecipient
+      classic.getPortionBips(),
+      classic.getPortionRecipient()
     );
   }
 

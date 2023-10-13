@@ -61,6 +61,13 @@ export class RoutingApiQuoter implements Quoter {
         )
       ).portion;
 
+      // This is a workaround to make sure the DutchQuoteContext.dependencies() can populate the portionBips and portionRecipient
+      // from the re-instantiated classicRequest instance
+      // This is to address the case where a dutch-only config quote request gets sent to URA,
+      // and it will always go through DutchQuote.reparameterize(...)
+      request.info.portionBips = portion?.bips;
+      request.info.portionRecipient = portion?.recipient;
+
       const req = this.buildRequest(request, portion, resolveTokenOut);
       const now = Date.now();
       const response = await axios.get<ClassicQuoteDataJSON>(req, { headers: { 'x-api-key': this.routingApiKey } });
