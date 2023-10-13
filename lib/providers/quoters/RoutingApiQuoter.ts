@@ -156,11 +156,7 @@ export class RoutingApiQuoter implements Quoter {
         ...(config.protocols &&
           config.protocols.length && { protocols: config.protocols.map((p) => p.toLowerCase()).join(',') }),
         ...(config.gasPriceWei !== undefined && { gasPriceWei: config.gasPriceWei }),
-        // routing-api only accepts slippage tolerance if deadline and recipient are provided
-        // we have default slippage tolerances in URA so need these extra checks
-        ...(request.info.slippageTolerance !== undefined &&
-          config.recipient &&
-          config.deadline && { slippageTolerance: request.info.slippageTolerance }),
+        ...(request.info.slippageTolerance !== undefined && { slippageTolerance: request.info.slippageTolerance }),
         ...(config.minSplits !== undefined && { minSplits: config.minSplits }),
         ...(config.forceCrossProtocol !== undefined && { forceCrossProtocol: config.forceCrossProtocol }),
         ...(config.forceMixedRoutes !== undefined && { forceMixedRoutes: config.forceMixedRoutes }),
