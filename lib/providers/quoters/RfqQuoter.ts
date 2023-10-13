@@ -5,12 +5,12 @@ import axios from './helpers';
 
 import { BPS, frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { DutchQuote, DutchRequest, Quote } from '../../entities';
+import { PortionFetcher } from '../../fetchers/PortionFetcher';
 import { PostQuoteResponseJoi } from '../../handlers/quote';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import { generateRandomNonce } from '../../util/nonce';
 import { Quoter, QuoterType } from './index';
-import { PortionFetcher } from '../../fetchers/PortionFetcher';
 
 export class RfqQuoter implements Quoter {
   static readonly type: QuoterType.UNISWAPX_RFQ;
@@ -28,8 +28,14 @@ export class RfqQuoter implements Quoter {
       return null;
     }
 
-    const portion = (await this.portionFetcher.getPortion(request.info.tokenInChainId, request.info.tokenIn, request.info.tokenOutChainId, request.info.tokenOut))
-      .portion;
+    const portion = (
+      await this.portionFetcher.getPortion(
+        request.info.tokenInChainId,
+        request.info.tokenIn,
+        request.info.tokenOutChainId,
+        request.info.tokenOut
+      )
+    ).portion;
 
     const swapper = request.config.swapper;
     const now = Date.now();
