@@ -259,6 +259,35 @@ export const CLASSIC_QUOTE_DATA = {
     permitNonce: '1',
     tradeType: 'exactIn',
     slippage: 0.5,
+    portionBips: 0, // always assume portion Bips will get returned from routing-api
+  },
+};
+
+export const CLASSIC_QUOTE_DATA_WITH_PORTION = {
+  routing: RoutingType.CLASSIC,
+  quote: {
+    requestId: 'requestId',
+    quoteId: '1',
+    amount: AMOUNT,
+    amountDecimals: '18',
+    quote: AMOUNT,
+    quoteDecimals: '18',
+    quoteGasAdjusted: AMOUNT,
+    quoteGasAdjustedDecimals: '18',
+    gasUseEstimate: '100',
+    gasUseEstimateQuote: '100',
+    gasUseEstimateQuoteDecimals: '18',
+    gasUseEstimateUSD: '100',
+    simulationStatus: 'start',
+    gasPriceWei: '10000',
+    blockNumber: '1234',
+    route: [],
+    routeString: 'USD-ETH',
+    permitNonce: '1',
+    tradeType: 'exactIn',
+    slippage: 0.5,
+    portionBips: PORTION_BIPS,
+    portionRecipient: PORTION_RECIPIENT,
   },
 };
 

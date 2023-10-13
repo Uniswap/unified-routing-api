@@ -11,7 +11,6 @@ import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
 import { PortionFetcher } from '../../fetchers/PortionFetcher';
 import { TokenFetcher } from '../../fetchers/TokenFetcher';
 import {
-  PortionProvider,
   Quoter,
   RfqQuoter,
   RoutingApiQuoter,
@@ -63,12 +62,11 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
     const portionCache = new NodeCache({ stdTTL: 600 });
     const tokenFetcher = new TokenFetcher();
     const portionFetcher = new PortionFetcher(portionApiUrl, portionCache);
-    const portionProvider = new PortionProvider(portionFetcher);
 
     return {
       quoters: {
-        [RoutingType.DUTCH_LIMIT]: new RfqQuoter(paramApiUrl, serviceUrl, paramApiKey, portionProvider),
-        [RoutingType.CLASSIC]: new RoutingApiQuoter(routingApiUrl, routingApiKey, portionProvider, tokenFetcher),
+        [RoutingType.DUTCH_LIMIT]: new RfqQuoter(paramApiUrl, serviceUrl, paramApiKey, portionFetcher),
+        [RoutingType.CLASSIC]: new RoutingApiQuoter(routingApiUrl, routingApiKey, portionFetcher),
       },
       rpcUrlMap,
       tokenFetcher: tokenFetcher,

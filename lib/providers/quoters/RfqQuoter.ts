@@ -9,8 +9,8 @@ import { PostQuoteResponseJoi } from '../../handlers/quote';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import { generateRandomNonce } from '../../util/nonce';
-import { PortionProvider } from '../portion/PortionProvider';
 import { Quoter, QuoterType } from './index';
+import { PortionFetcher } from '../../fetchers/PortionFetcher';
 
 export class RfqQuoter implements Quoter {
   static readonly type: QuoterType.UNISWAPX_RFQ;
@@ -19,7 +19,7 @@ export class RfqQuoter implements Quoter {
     private rfqUrl: string,
     private serviceUrl: string,
     private paramApiKey: string,
-    private portionProvider: PortionProvider
+    private portionFetcher: PortionFetcher
   ) {}
 
   async quote(request: DutchRequest): Promise<Quote | null> {
@@ -28,7 +28,7 @@ export class RfqQuoter implements Quoter {
       return null;
     }
 
-    const portion = (await this.portionProvider.getPortion(request.info, request.info.tokenIn, request.info.tokenOut))
+    const portion = (await this.portionFetcher.getPortion(request.info.tokenInChainId, request.info.tokenIn, request.info.tokenOutChainId, request.info.tokenOut))
       .portion;
 
     const swapper = request.config.swapper;
