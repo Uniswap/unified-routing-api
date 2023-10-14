@@ -2068,7 +2068,7 @@ describe('quote', function () {
             expect(parseFloat(quoteGasAdjustedDecimals)).to.be.greaterThanOrEqual(parseFloat(quoteDecimals));
           }
 
-          // Since ur-sdk hardcodes recipient in case of no recipient https://github.com/Uniswap/universal-router-sdk/blob/main/src/entities/protocols/uniswap.ts#L68
+          // Since ur-sdk hardcodes recipient in case of no recipient https://github.com/Uniswap/universal-router-sdk/blob/d496ba03426a6c855885e8eec92370e517c50668/src/entities/protocols/uniswap.ts#L68
           // the calldata will still get generated even if URA doesn't pass in recipient
           expect(methodParameters).not.to.be.undefined;
         });
