@@ -602,11 +602,11 @@ describe('quoteUniswapX', function () {
         });
 
         const sendPortionEnabledValues = [true, undefined];
-        const useSyntheticQuoteValues = [true, false];
+        const useSyntheticQuotesValues = [true, false];
         GREENLIST_TOKEN_PAIRS.forEach(([tokenIn, tokenOut]) => {
           sendPortionEnabledValues.forEach((sendPortionEnabled) => {
-            useSyntheticQuoteValues.forEach((useSyntheticQuote) => {
-              it(`${tokenIn.symbol} -> ${tokenOut.symbol} sendPortionEnabled = ${sendPortionEnabled} useSyntheticQuote = ${useSyntheticQuote}`, async () => {
+            useSyntheticQuotesValues.forEach((useSyntheticQuotes) => {
+              it(`${tokenIn.symbol} -> ${tokenOut.symbol} sendPortionEnabled = ${sendPortionEnabled} useSyntheticQuote = ${useSyntheticQuotes}`, async () => {
                 // if the token amount involves WBTC we have to reduce the WTBC amount to avoid the transfer from failed gas error.
                 let originalAmount = '1000';
 
@@ -651,7 +651,7 @@ describe('quoteUniswapX', function () {
                     {
                       routingType: RoutingType.DUTCH_LIMIT,
                       swapper: alice.address,
-                      useSyntheticQuotes: useSyntheticQuote,
+                      useSyntheticQuotes: useSyntheticQuotes,
                     },
                   ] as RoutingConfigJSON[],
                 };
