@@ -5,7 +5,7 @@ import { BigNumber } from 'ethers';
 import { getAddress } from 'ethers/lib/utils';
 import { BPS, RoutingType } from '../lib/constants';
 import { Portion, PortionType } from '../lib/fetchers/PortionFetcher';
-import { DAI_ON, USDC_ON, USDT_ON } from './utils/tokens';
+import { agEUR_MAINNET, DAI_ON, USDC_ON, USDT_ON, XSGD_MAINNET } from './utils/tokens';
 
 export const CHAIN_IN_ID = 1;
 export const CHAIN_OUT_ID = 1;
@@ -358,6 +358,7 @@ export const GREENLIST_TOKEN_PAIRS: Array<[Currency, Currency]> = [
   [Ether.onChain(ChainId.MAINNET), USDC_ON(ChainId.MAINNET)],
   [WETH9[ChainId.MAINNET], USDT_ON(ChainId.MAINNET)],
   [DAI_ON(ChainId.MAINNET), WBTC_MAINNET],
+  [agEUR_MAINNET, XSGD_MAINNET], // good pair that simultaneously test two use cases: 1) stable-to-stable which is not in carve-out 2) newly published tokens in the default token list
 ];
 
 export const GREENLIST_STABLE_TO_STABLE_PAIRS: Array<[Currency, Currency]> = [[USDC_MAINNET, DAI_MAINNET]];

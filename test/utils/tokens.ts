@@ -84,7 +84,7 @@ export const agEUR_MAINNET = new Token(
   '0x1a7e4e63778B4f12a199C062f3eFdD288afCBce8',
   18,
   'agEUR',
-  'agEUR'
+  'agEur'
 );
 
 export const GUSD_MAINNET = new Token(

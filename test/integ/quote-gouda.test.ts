@@ -32,7 +32,7 @@ import { GREENLIST_STABLE_TO_STABLE_PAIRS, GREENLIST_TOKEN_PAIRS } from '../cons
 import { fund, resetAndFundAtBlock } from '../utils/forkAndFund';
 import { getBalance, getBalanceAndApprove } from '../utils/getBalanceAndApprove';
 import { RoutingApiQuoteResponse } from '../utils/quoteResponse';
-import { getAmount, getAmountFromToken } from '../utils/tokens';
+import { agEUR_MAINNET, getAmount, getAmountFromToken, XSGD_MAINNET } from '../utils/tokens';
 
 const { ethers } = hre;
 
@@ -216,6 +216,8 @@ describe('quoteUniswapX', function () {
       parseAmount('5000', UNI_MAINNET),
       parseAmount('4000', WETH9[1]),
       parseAmount('5000000', DAI_MAINNET),
+      parseAmount('18000', agEUR_MAINNET),
+      parseAmount('475000', XSGD_MAINNET),
     ]);
 
     filler = await fund(filler, [
@@ -225,6 +227,8 @@ describe('quoteUniswapX', function () {
       parseAmount('5000', UNI_MAINNET),
       parseAmount('4000', WETH9[1]),
       parseAmount('5000000', DAI_MAINNET),
+      parseAmount('18000', agEUR_MAINNET),
+      parseAmount('475000', XSGD_MAINNET),
     ]);
 
     process.env.ENABLE_PORTION = 'true';

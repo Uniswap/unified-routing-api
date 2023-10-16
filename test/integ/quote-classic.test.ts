@@ -1,6 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { AllowanceTransfer, PermitSingle } from '@uniswap/permit2-sdk';
-import { ChainId, Currency, CurrencyAmount, Ether, Fraction, Token, WETH9 } from '@uniswap/sdk-core';
+import { ZERO } from '@uniswap/router-sdk';
+import { ChainId, Currency, CurrencyAmount, Ether, Fraction, Percent, Token, WETH9 } from '@uniswap/sdk-core';
 import {
   CEUR_CELO,
   CEUR_CELO_ALFAJORES,
@@ -37,10 +38,19 @@ import { QuoteRequestBodyJSON } from '../../lib/entities/request';
 import { Portion, PortionFetcher } from '../../lib/fetchers/PortionFetcher';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { Permit2__factory } from '../../lib/types/ext';
-import { GREENLIST_STABLE_TO_STABLE_PAIRS, GREENLIST_TOKEN_PAIRS } from '../constants';
+import { FLAT_PORTION, GREENLIST_STABLE_TO_STABLE_PAIRS, GREENLIST_TOKEN_PAIRS } from '../constants';
 import { resetAndFundAtBlock } from '../utils/forkAndFund';
 import { getBalance, getBalanceAndApprove } from '../utils/getBalanceAndApprove';
-import { DAI_ON, getAmount, getAmountFromToken, UNI_MAINNET, USDC_ON, WNATIVE_ON } from '../utils/tokens';
+import {
+  agEUR_MAINNET,
+  DAI_ON,
+  getAmount,
+  getAmountFromToken,
+  UNI_MAINNET,
+  USDC_ON,
+  WNATIVE_ON,
+  XSGD_MAINNET,
+} from '../utils/tokens';
 
 const { ethers } = hre;
 
@@ -125,7 +135,9 @@ const checkPortionRecipientToken = (
     ? expectedPortionAmountReceived.subtract(actualPortionAmountReceived)
     : actualPortionAmountReceived.subtract(expectedPortionAmountReceived);
   // There will be a slight difference between expected and actual due to slippage during the hardhat fork swap.
-  const percentDiff = tokensDiff.asFraction.divide(expectedPortionAmountReceived.asFraction);
+  const percentDiff = tokensDiff.equalTo(ZERO)
+    ? new Percent(ZERO)
+    : tokensDiff.asFraction.divide(expectedPortionAmountReceived.asFraction);
   expect(percentDiff.lessThan(new Fraction(parseInt(SLIPPAGE), 100))).to.be.true;
 };
 
@@ -258,6 +270,8 @@ describe('quote', function () {
       parseAmount('10000', UNI_MAINNET),
       parseAmount('40000', WETH9[1]),
       parseAmount('5000000', DAI_MAINNET),
+      parseAmount('18000', agEUR_MAINNET),
+      parseAmount('475000', XSGD_MAINNET),
     ]);
 
     process.env.ENABLE_PORTION = 'true';
@@ -1716,6 +1730,7 @@ describe('quote', function () {
                     ],
                   };
                   const response = await call(quoteReq);
+
                   const { data, status } = response;
                   const quoteJSON = data.quote as ClassicQuoteDataJSON;
 
@@ -1745,6 +1760,15 @@ describe('quote', function () {
                       );
                       expect(quoteJSON.portionAmount).to.equal(expectedPortionAmount.quotient.toString());
                     }
+                  } else {
+                    // when the flag is off,
+                    // ensure all the portion-related response fields are not returned
+                    expect(quoteJSON.portionRecipient).to.be.undefined;
+                    expect(quoteJSON.portionBips).to.be.undefined;
+                    expect(quoteJSON.portionAmount).to.be.undefined;
+                    expect(quoteJSON.portionAmountDecimals).to.be.undefined;
+                    expect(quoteJSON.quoteGasAndPortionAdjusted).to.be.undefined;
+                    expect(quoteJSON.quoteGasAndPortionAdjustedDecimals).to.be.undefined;
                   }
 
                   const {
@@ -1881,6 +1905,15 @@ describe('quote', function () {
                     expect(quoteJSON.portionBips).to.equal(0);
                     expect(quoteJSON.portionAmount).to.equal('0');
                     expect(quoteJSON.portionAmountDecimals).to.equal('0');
+                  } else {
+                    // when the flag is off,
+                    // ensure all the portion-related response fields are not returned
+                    expect(quoteJSON.portionRecipient).to.be.undefined;
+                    expect(quoteJSON.portionBips).to.be.undefined;
+                    expect(quoteJSON.portionAmount).to.be.undefined;
+                    expect(quoteJSON.portionAmountDecimals).to.be.undefined;
+                    expect(quoteJSON.quoteGasAndPortionAdjusted).to.be.undefined;
+                    expect(quoteJSON.quoteGasAndPortionAdjustedDecimals).to.be.undefined;
                   }
 
                   const {
@@ -1896,7 +1929,10 @@ describe('quote', function () {
                     tokenOut!,
                     false,
                     tokenIn.chainId,
-                    getPortionResponse.portion
+                    // getPortionResponse.portion is undefined (asserted above), but in the test setup, we only hardcode in FLAT_PORTION
+                    // then we can set up the swap on the fork to have portion against FLAT_PORTION.recipient
+                    // then below we can still checkPortionRecipientToken, which will be zero balance difference
+                    FLAT_PORTION
                   );
 
                   if (type == 'EXACT_INPUT') {
@@ -1915,8 +1951,13 @@ describe('quote', function () {
                     }
 
                     if (sendPortionEnabled) {
-                      expect(tokenOutPortionRecipientAfter).to.be.undefined;
-                      expect(tokenOutPortionRecipientBefore).to.be.undefined;
+                      expect(quoteJSON.portionAmount).not.to.be.undefined;
+                      const expectedPortionAmount = CurrencyAmount.fromRawAmount(tokenOut, quoteJSON.portionAmount!);
+                      checkPortionRecipientToken(
+                        tokenOutPortionRecipientBefore!,
+                        tokenOutPortionRecipientAfter!,
+                        expectedPortionAmount
+                      );
                     }
                   } else {
                     // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
@@ -1934,8 +1975,13 @@ describe('quote', function () {
                     }
 
                     if (sendPortionEnabled) {
-                      expect(tokenOutPortionRecipientAfter).to.be.undefined;
-                      expect(tokenOutPortionRecipientBefore).to.be.undefined;
+                      expect(quoteJSON.portionAmount).not.to.be.undefined;
+                      const expectedPortionAmount = CurrencyAmount.fromRawAmount(tokenOut, quoteJSON.portionAmount!);
+                      checkPortionRecipientToken(
+                        tokenOutPortionRecipientBefore!,
+                        tokenOutPortionRecipientAfter!,
+                        expectedPortionAmount
+                      );
                     }
                   }
                 });
