@@ -387,39 +387,38 @@ describe('DutchQuote', () => {
     });
   });
 
-  describe.only('fromResponseBody (RFQ)', () => {
-    process.env.ENABLE_PORTION = 'true';
-    // portion is 12 bps
-    const amountOut = AMOUNT;
-    const dutchQuote = createDutchQuote({ amountOut }, 'EXACT_OUTPUT', '1', FLAT_PORTION, true);
-    console.log(dutchQuote.toJSON());
-    // since we add the amount to RFQ request
-    const amountOutWithPortion = dutchQuote.amountOutStart.add(dutchQuote.portionAmountOutStart);
-    // RFQ returns same as mock dutch quote
-    const DL_QUOTE_JSON_RFQ: DutchQuoteJSON = {
-      chainId: 1,
-      requestId: '0xrequestId',
-      quoteId: '0xquoteId',
-      tokenIn: dutchQuote.tokenIn,
-      amountIn: dutchQuote.amountInStart.toString(),
-      tokenOut: dutchQuote.tokenOut,
-      amountOut: amountOutWithPortion.toString(),
-      swapper: '0x1111111111111111111111111111111111111111',
-      filler: '0x1111111111111111111111111111111111111111',
-    };
-    expect(DL_QUOTE_JSON_RFQ.amountOut).toEqual(amountOutWithPortion.toString());
+  describe('fromResponseBody (RFQ)', () => {
+    it('properly appends portion order with correct output amount', () => {
+      // portion is 12 bps
+      const amountOut = AMOUNT;
+      const dutchQuote = createDutchQuote({ amountOut }, 'EXACT_OUTPUT', '1', FLAT_PORTION, true);
+      console.log(dutchQuote.toJSON());
+      // since we add the amount to RFQ request
+      const amountOutWithPortion = dutchQuote.amountOutStart.add(dutchQuote.portionAmountOutStart);
+      // RFQ returns same as mock dutch quote
+      const DL_QUOTE_JSON_RFQ: DutchQuoteJSON = {
+        chainId: 1,
+        requestId: '0xrequestId',
+        quoteId: '0xquoteId',
+        tokenIn: dutchQuote.tokenIn,
+        amountIn: dutchQuote.amountInStart.toString(),
+        tokenOut: dutchQuote.tokenOut,
+        amountOut: amountOutWithPortion.toString(),
+        swapper: '0x1111111111111111111111111111111111111111',
+        filler: '0x1111111111111111111111111111111111111111',
+      };
+      expect(DL_QUOTE_JSON_RFQ.amountOut).toEqual(amountOutWithPortion.toString());
 
-    const quote = DutchQuote.fromResponseBody(dutchQuote.request, DL_QUOTE_JSON_RFQ, '1', FLAT_PORTION);
+      const quote = DutchQuote.fromResponseBody(dutchQuote.request, DL_QUOTE_JSON_RFQ, '1', FLAT_PORTION);
 
-    console.log(quote.toJSON().orderInfo.outputs);
-    // expect the sum of outputs to be amountOutWithPortion,
-    // but the first output to the swapper tob e amountOut, and the second output to be the portion to the recipient
-    expect(quote.toJSON().orderInfo.outputs[0].startAmount).toEqual(amountOut);
-    expect(quote.toJSON().orderInfo.outputs[0].endAmount).toEqual(amountOut);
-    expect(quote.toJSON().orderInfo.outputs[1].startAmount).toEqual(dutchQuote.portionAmountOutStart.toString());
-    expect(quote.toJSON().orderInfo.outputs[1].endAmount).toEqual(dutchQuote.portionAmountOutEnd.toString());
-
-    process.env.ENABLE_PORTION = 'false';
+      console.log(quote.toJSON().orderInfo.outputs);
+      // expect the sum of outputs to be amountOutWithPortion,
+      // but the first output to the swapper tob e amountOut, and the second output to be the portion to the recipient
+      expect(quote.toJSON().orderInfo.outputs[0].startAmount).toEqual(amountOut);
+      expect(quote.toJSON().orderInfo.outputs[0].endAmount).toEqual(amountOut);
+      expect(quote.toJSON().orderInfo.outputs[1].startAmount).toEqual(dutchQuote.portionAmountOutStart.toString());
+      expect(quote.toJSON().orderInfo.outputs[1].endAmount).toEqual(dutchQuote.portionAmountOutEnd.toString());
+    });
   });
 
   describe('getGasAdjustedAmounts', () => {
