@@ -1,27 +1,19 @@
-import { Currency, TradeType } from '@uniswap/sdk-core';
+import { TradeType } from '@uniswap/sdk-core';
 import { NATIVE_NAMES_BY_ID } from '@uniswap/smart-order-router';
 import { AxiosError, AxiosResponse } from 'axios';
 import querystring from 'querystring';
 
 import { frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { ClassicQuote, ClassicQuoteDataJSON, ClassicRequest, Quote } from '../../entities';
-import { Portion } from '../../fetchers/PortionFetcher';
-import { TokenFetcher } from '../../fetchers/TokenFetcher';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
-import { IPortionProvider } from '../portion';
 import axios from './helpers';
 import { Quoter, QuoterType } from './index';
 
 export class RoutingApiQuoter implements Quoter {
   static readonly type: QuoterType.ROUTING_API;
 
-  constructor(
-    private routingApiUrl: string,
-    private routingApiKey: string,
-    private portionProvider: IPortionProvider,
-    private tokenFetcher: TokenFetcher
-  ) {}
+  constructor(private routingApiUrl: string, private routingApiKey: string) {}
 
   async quote(request: ClassicRequest): Promise<Quote | null> {
     if (request.routingType !== RoutingType.CLASSIC) {
@@ -30,79 +22,24 @@ export class RoutingApiQuoter implements Quoter {
 
     metrics.putMetric(`RoutingApiQuoterRequest`, 1);
     try {
-      let [resolvedTokenIn, resolveTokenOut]: [Currency | undefined, Currency | undefined] = [undefined, undefined];
-
-      try {
-        // we will need to call token fetcher to resolve the tokenIn and tokenOut
-        // there's no guarantee that the tokenIn and tokenOut are in the token address, can be in the token symbol.
-        // for erc20 tokens, portion service only recognize token address, not token symbol.
-        // also the tokenIn and tokenOut can be native token
-        // in that case, portion service recognize the token symbol.
-        [resolvedTokenIn, resolveTokenOut] = await Promise.all([
-          this.tokenFetcher.resolveTokenBySymbolOrAddress(request.info.tokenInChainId, request.info.tokenIn),
-          this.tokenFetcher.resolveTokenBySymbolOrAddress(request.info.tokenOutChainId, request.info.tokenOut),
-        ]);
-      } catch (e) {
-        // TODO: ROUTE-96 add dashboarding and monitoring for URA <-> resolve token for portion
-        // token fetcher can throw ValidationError,
-        // we must swallow the error and continue, meanwhile logging them,
-        // not being able to resolve the tokens here means we don't have portion amount
-        // throughout the lifecycle of this quote request processing,
-        // and we simply don't account for portion and let quote request processing continue
-        log.error({ e }, 'Failed to resolve tokenIn & tokenOut');
-        metrics.putMetric(`PortionProviderResolveTokenError`, 1);
-      }
-
-      const portion = (
-        await this.portionProvider.getPortion(
-          request.info,
-          resolvedTokenIn?.isNative ? request.info.tokenIn : resolvedTokenIn?.wrapped.address,
-          resolveTokenOut?.isNative ? request.info.tokenOut : resolveTokenOut?.wrapped.address
-        )
-      ).portion;
-
-      // This is a workaround to make sure the DutchQuoteContext.dependencies() can populate the portionBips and portionRecipient
-      // from the re-instantiated classicRequest instance
-      // This is to address the case where a dutch-only config quote request gets sent to URA,
-      // and it will always go through DutchQuote.reparameterize(...)
-      request.info.portion = portion;
-
-      const req = this.buildRequest(request, portion, resolveTokenOut);
+      const req = this.buildRequest(request);
       const now = Date.now();
       const response = await axios.get<ClassicQuoteDataJSON>(req, { headers: { 'x-api-key': this.routingApiKey } });
-
-      // we need to use raw quote amount for exact in, not quote adjusted gas amount, because raw quote amount is more accurate to estimate
-      // the portion amount
-      // although clients are expected to use the portionBips for exact in swaps for the best accurate, i.e. tokenOutAmount not important for exact in
-      // tokenOutAmount only important for exact out, which is requested amount
-      const tokenOutAmount =
-        request.info.type === TradeType.EXACT_OUTPUT ? request.info.amount.toString() : response.data.quote;
-      const portionAmount = this.portionProvider.getPortionAmount(tokenOutAmount, portion, resolveTokenOut);
-      const portionAdjustedQuote = this.portionProvider.getPortionAdjustedQuote(
-        request.info,
-        response.data.quote,
-        response.data.quoteGasAdjusted,
-        portionAmount,
-        resolvedTokenIn,
-        resolveTokenOut
-      );
-      const quoteGasAndPortionAdjusted = portionAdjustedQuote?.quotient.toString() ?? response.data.quoteGasAdjusted;
-      const quoteGasAndPortionAdjustedDecimals =
-        portionAdjustedQuote?.toExact() ?? response.data.quoteGasAdjustedDecimals;
-
       const portionAdjustedResponse: AxiosResponse<ClassicQuoteDataJSON> = {
         ...response,
+        // NOTE: important to show portion-related fields under flag on only
+        // this is FE requirement
         data: frontendAndUraEnablePortion(request.info.sendPortionEnabled)
           ? {
               ...response.data,
-              // TODO: ROUTE-97 - re-evaluate how to properly code up returning portionBips in case of no fee in URA
-              portionBips: portion?.bips ?? 0, // important for exact in, clients are expected to use this for exact in swaps
-              portionRecipient: portion?.recipient, // important, clients are expected to use this for exact in and exact out swaps
-              // TODO: ROUTE-97 - re-evaluate how to properly code up returning portionAmount in case of no fee in URA
-              portionAmount: portionAmount?.quotient.toString() ?? '0', // important for exact out, clients are expected to use this for exact out swaps
-              portionAmountDecimals: portionAmount?.toExact() ?? '0', // important for exact out, clients are expected to use this for exact out swaps
-              quoteGasAndPortionAdjusted: quoteGasAndPortionAdjusted, // not important, clients disregard this
-              quoteGasAndPortionAdjustedDecimals: quoteGasAndPortionAdjustedDecimals, // not important, clients disregard this
+              // NOTE: important for URA to return 0 bps and amount, in case of no portion.
+              // this is FE requirement
+              portionBips: response.data.portionBips ?? 0,
+              portionAmount: response.data.portionAmount ?? '0',
+              portionAmountDecimals: response.data.portionAmountDecimals ?? '0',
+              quoteGasAndPortionAdjusted: response.data.quoteGasAndPortionAdjusted ?? response.data.quoteGasAdjusted,
+              quoteGasAndPortionAdjustedDecimals:
+                response.data.quoteGasAndPortionAdjustedDecimals ?? response.data.quoteGasAdjustedDecimals,
             }
           : response.data,
       };
@@ -144,7 +81,7 @@ export class RoutingApiQuoter implements Quoter {
     }
   }
 
-  buildRequest(request: ClassicRequest, portion?: Portion, resolvedTokenOut?: Currency): string {
+  buildRequest(request: ClassicRequest): string {
     const tradeType = request.info.type === TradeType.EXACT_INPUT ? 'exactIn' : 'exactOut';
     const config = request.config;
     const amount = request.info.amount.toString();
@@ -189,19 +126,10 @@ export class RoutingApiQuoter implements Quoter {
         ...(config.enableFeeOnTransferFeeFetching !== undefined && {
           enableFeeOnTransferFeeFetching: config.enableFeeOnTransferFeeFetching,
         }),
-        ...(request.info.type === TradeType.EXACT_OUTPUT &&
-          portion &&
+        ...(request.info.portion &&
           frontendAndUraEnablePortion(request.info.sendPortionEnabled) && {
-            portionAmount: this.portionProvider
-              .getPortionAmount(amount, portion, resolvedTokenOut)
-              ?.quotient.toString(),
-            portionRecipient: portion.recipient,
-          }),
-        ...(request.info.type === TradeType.EXACT_INPUT &&
-          portion &&
-          frontendAndUraEnablePortion(request.info.sendPortionEnabled) && {
-            portionBips: portion.bips,
-            portionRecipient: portion.recipient,
+            portionBips: request.info.portion.bips,
+            portionRecipient: request.info.portion.recipient,
           }),
       })
     );

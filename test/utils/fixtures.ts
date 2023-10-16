@@ -129,7 +129,10 @@ export function makeClassicRequest(overrides: Partial<QuoteRequestBodyJSON>): Cl
 }
 
 export const QUOTE_REQUEST_CLASSIC = makeClassicRequest({});
-export const QUOTE_REQUEST_CLASSIC_FE_SEND_PORTION = makeClassicRequest({ sendPortionEnabled: true });
+export const QUOTE_REQUEST_CLASSIC_FE_SEND_PORTION = makeClassicRequest({
+  sendPortionEnabled: true,
+  portion: FLAT_PORTION,
+});
 
 export function makeDutchRequest(
   overrides: Partial<QuoteRequestBodyJSON>,
@@ -153,13 +156,13 @@ export function makeDutchRequest(
 }
 
 export const QUOTE_REQUEST_DL = makeDutchRequest({}, { useSyntheticQuotes: true });
-export const QUOTE_REQUEST_DL_FE_SEND_PORTION = makeDutchRequest({ sendPortionEnabled: true });
+export const QUOTE_REQUEST_DL_FE_SEND_PORTION = makeDutchRequest({ sendPortionEnabled: true, portion: FLAT_PORTION });
 export const QUOTE_REQUEST_DL_EXACT_OUT = makeDutchRequest({ type: 'EXACT_OUTPUT' });
-export const QUOTE_REQUEST_DL_EXACT_OUT_SEND_PORTION = makeDutchRequest({
+export const QUOTE_REQUEST_DL_EXACT_OUT_WITH_PORTION = makeDutchRequest({
   type: 'EXACT_OUTPUT',
   sendPortionEnabled: true,
+  portion: FLAT_PORTION,
 });
-
 export const QUOTE_REQUEST_DL_NATIVE_IN = makeDutchRequest({
   tokenIn: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_IN_ID)].address,
 });
@@ -259,6 +262,35 @@ export const CLASSIC_QUOTE_DATA = {
     permitNonce: '1',
     tradeType: 'exactIn',
     slippage: 0.5,
+    portionBips: 0, // always assume portion Bips will get returned from routing-api
+  },
+};
+
+export const CLASSIC_QUOTE_DATA_WITH_PORTION = {
+  routing: RoutingType.CLASSIC,
+  quote: {
+    requestId: 'requestId',
+    quoteId: '1',
+    amount: AMOUNT,
+    amountDecimals: '18',
+    quote: AMOUNT,
+    quoteDecimals: '18',
+    quoteGasAdjusted: AMOUNT,
+    quoteGasAdjustedDecimals: '18',
+    gasUseEstimate: '100',
+    gasUseEstimateQuote: '100',
+    gasUseEstimateQuoteDecimals: '18',
+    gasUseEstimateUSD: '100',
+    simulationStatus: 'start',
+    gasPriceWei: '10000',
+    blockNumber: '1234',
+    route: [],
+    routeString: 'USD-ETH',
+    permitNonce: '1',
+    tradeType: 'exactIn',
+    slippage: 0.5,
+    portionBips: PORTION_BIPS,
+    portionRecipient: PORTION_RECIPIENT,
   },
 };
 

@@ -4,7 +4,7 @@ import NodeCache from 'node-cache';
 import { BPS } from '../../../../lib/constants';
 import { DutchQuote, DutchQuoteDataJSON, DutchQuoteJSON } from '../../../../lib/entities';
 import { GetPortionResponse, PortionFetcher, PortionType } from '../../../../lib/fetchers/PortionFetcher';
-import { PortionProvider, RfqQuoter } from '../../../../lib/providers';
+import { RfqQuoter } from '../../../../lib/providers';
 import axios from '../../../../lib/providers/quoters/helpers';
 import {
   AMOUNT,
@@ -17,9 +17,8 @@ import {
 } from '../../../constants';
 import {
   QUOTE_REQUEST_DL,
-  QUOTE_REQUEST_DL_EXACT_OUT,
-  QUOTE_REQUEST_DL_EXACT_OUT_SEND_PORTION,
-  QUOTE_REQUEST_DL_FE_SEND_PORTION,
+  QUOTE_REQUEST_DL_EXACT_OUT, QUOTE_REQUEST_DL_EXACT_OUT_WITH_PORTION,
+  QUOTE_REQUEST_DL_FE_SEND_PORTION
 } from '../../../utils/fixtures';
 
 const UUID = 'c67c2882-24aa-4a68-a90b-53250ef81517';
@@ -40,9 +39,8 @@ describe('RfqQuoter test', () => {
   };
   const portionCache = new NodeCache({ stdTTL: 600 });
   const portionFetcher = new PortionFetcher('https://portion.uniswap.org/', portionCache);
-  const portionProvider = new PortionProvider(portionFetcher);
   jest.spyOn(portionFetcher, 'getPortion').mockResolvedValue(portionResponse);
-  const quoter = new RfqQuoter('https://api.uniswap.org/', 'https://api.uniswap.org/', 'test-api-key', portionProvider);
+  const quoter = new RfqQuoter('https://api.uniswap.org/', 'https://api.uniswap.org/', 'test-api-key');
 
   describe('quote test', () => {
     beforeEach(() => {
@@ -164,7 +162,7 @@ describe('RfqQuoter test', () => {
     });
 
     it('returns EXACT_INPUT quote with portion', async () => {
-      const quote = await quoter.quote(QUOTE_REQUEST_DL);
+      const quote = await quoter.quote(QUOTE_REQUEST_DL_FE_SEND_PORTION);
       expect(quote).toMatchObject({
         chainId: 1,
         tokenIn: TOKEN_IN,
@@ -224,7 +222,7 @@ describe('RfqQuoter test', () => {
     it('returns EXACT_OUTPUT quote with portion', async () => {
       process.env.ENABLE_PORTION = 'true';
 
-      const quote = await quoter.quote(QUOTE_REQUEST_DL_EXACT_OUT_SEND_PORTION);
+      const quote = await quoter.quote(QUOTE_REQUEST_DL_EXACT_OUT_WITH_PORTION);
       expect(quote).toMatchObject({
         chainId: 1,
         tokenIn: TOKEN_IN,

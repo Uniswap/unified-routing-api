@@ -7,7 +7,7 @@ import { ethers } from 'ethers';
 
 import _ from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
-import { RoutingType } from '../../constants';
+import { frontendAndUraEnablePortion, RoutingType } from '../../constants';
 import {
   ClassicQuote,
   DutchQuote,
@@ -56,7 +56,7 @@ export class QuoteHandler extends APIGLambdaHandler<
   ): Promise<ErrorResponse | Response<QuoteResponseJSON>> {
     const {
       requestBody,
-      containerInjected: { quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider, rpcUrlMap },
+      containerInjected: { quoters, tokenFetcher, portionFetcher, permit2Fetcher, syntheticStatusProvider, rpcUrlMap },
     } = params;
 
     const startTime = Date.now();
@@ -80,10 +80,22 @@ export class QuoteHandler extends APIGLambdaHandler<
       Unit.Milliseconds
     );
 
+    const portion = frontendAndUraEnablePortion(request.sendPortionEnabled)
+      ? (
+          await portionFetcher.getPortion(
+            request.tokenInChainId,
+            tokenInAddress,
+            request.tokenOutChainId,
+            tokenOutAddress
+          )
+        ).portion
+      : undefined;
+
     const requestWithTokenAddresses = {
       ...request,
       tokenIn: tokenInAddress,
       tokenOut: tokenOutAddress,
+      portion: portion,
     };
 
     log.info({ requestBody: request }, 'request');

@@ -9,18 +9,12 @@ import { PostQuoteResponseJoi } from '../../handlers/quote';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import { generateRandomNonce } from '../../util/nonce';
-import { PortionProvider } from '../portion/PortionProvider';
 import { Quoter, QuoterType } from './index';
 
 export class RfqQuoter implements Quoter {
   static readonly type: QuoterType.UNISWAPX_RFQ;
 
-  constructor(
-    private rfqUrl: string,
-    private serviceUrl: string,
-    private paramApiKey: string,
-    private portionProvider: PortionProvider
-  ) {}
+  constructor(private rfqUrl: string, private serviceUrl: string, private paramApiKey: string) {}
 
   async quote(request: DutchRequest): Promise<Quote | null> {
     if (request.routingType !== RoutingType.DUTCH_LIMIT) {
@@ -28,16 +22,13 @@ export class RfqQuoter implements Quoter {
       return null;
     }
 
-    const portion = (await this.portionProvider.getPortion(request.info, request.info.tokenIn, request.info.tokenOut))
-      .portion;
-
     const swapper = request.config.swapper;
     const now = Date.now();
     const portionEnabled = frontendAndUraEnablePortion(request.info.sendPortionEnabled);
     // we must adjust up the exact out swap amount to account for portion, before requesting quote from RFQ quoter
     const portionAmount =
-      portion?.bips && request.info.type === TradeType.EXACT_OUTPUT
-        ? request.info.amount.mul(portion?.bips).div(BPS)
+      request.info.portion && request.info.type === TradeType.EXACT_OUTPUT
+        ? request.info.amount.mul(request.info.portion.bips).div(BPS)
         : undefined;
 
     // we will only add portion to the exact out swap amount if the URA ENABLE_PORTION is true
@@ -80,7 +71,7 @@ export class RfqQuoter implements Quoter {
             log.debug(results[1].reason, 'RfqQuoterErr: GET nonce failed');
             metrics.putMetric(`RfqQuoterLatency`, Date.now() - now);
             metrics.putMetric(`RfqQuoterNonceErr`, 1);
-            quote = DutchQuote.fromResponseBody(request, response, generateRandomNonce(), portion);
+            quote = DutchQuote.fromResponseBody(request, response, generateRandomNonce(), request.info.portion);
           } else {
             log.info(results[1].value.data, 'RfqQuoter: GET nonce success');
             metrics.putMetric(`RfqQuoterLatency`, Date.now() - now);
@@ -89,7 +80,7 @@ export class RfqQuoter implements Quoter {
               request,
               response,
               BigNumber.from(results[1].value.data.nonce).add(1).toString(),
-              portion
+              request.info.portion
             );
           }
         }
