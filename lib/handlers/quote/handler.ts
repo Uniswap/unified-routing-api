@@ -278,7 +278,6 @@ export class QuoteHandler extends APIGLambdaHandler<
     const responseBody = JSON.parse(response.body!);
     const rawBody = JSON.parse(event.body!);
 
-    log.info({ rawBody }, 'rawBody');
     if (statusCode != 200 && responseBody.errorCode == ErrorCode.ValidationError) {
       metrics.putMetric(`QuoteRequestValidationError`, 1);
       return;

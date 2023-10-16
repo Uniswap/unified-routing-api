@@ -96,7 +96,6 @@ export class MetricPair {
 
   private parse(value: string, currency: Currency): CurrencyAmount<Currency> {
     const typedValueParsed = parseUnits(value, currency.decimals).toString();
-    log.info(`parsed value: ${typedValueParsed}`);
     return CurrencyAmount.fromRawAmount(currency, typedValueParsed);
   }
 }
@@ -243,7 +242,6 @@ export const emitUniswapXPairMetricIfTracking = async (
       bestQuoteType
     );
     if (emitted) {
-      log.info(`custom pair tracking metric emitted for ${emitted}`);
       return;
     }
   }

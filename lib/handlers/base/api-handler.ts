@@ -113,7 +113,7 @@ export abstract class APIGLambdaHandler<
           requestId: context.awsRequestId,
         });
 
-        log.info({ event, context }, 'Request started.');
+        log.info({ eventBody: event.body, eventHeaders: event.headers, context }, 'Request started.');
 
         let requestBody: ReqBody;
         let requestQueryParams: ReqQueryParams;
