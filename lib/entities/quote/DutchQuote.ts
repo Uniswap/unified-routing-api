@@ -81,8 +81,11 @@ export class DutchQuote implements IQuote {
     nonce?: string,
     portion?: Portion
   ): DutchQuote {
+    // if it's exact out, we will explicitly define the amount out start to be the swapper's requested amount
+    const amountOutStart =
+      request.info.type === TradeType.EXACT_OUTPUT ? request.info.amount : BigNumber.from(body.amountOut);
     const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchQuote.applySlippage(
-      { amountIn: BigNumber.from(body.amountIn), amountOut: BigNumber.from(body.amountOut) },
+      { amountIn: BigNumber.from(body.amountIn), amountOut: amountOutStart },
       request
     );
     return new DutchQuote(
@@ -95,7 +98,7 @@ export class DutchQuote implements IQuote {
       body.tokenOut,
       BigNumber.from(body.amountIn),
       amountInEnd,
-      BigNumber.from(body.amountOut),
+      amountOutStart,
       amountOutEnd,
       body.swapper,
       DutchQuoteType.RFQ,
