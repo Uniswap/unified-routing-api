@@ -3,7 +3,7 @@ import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-ro
 import { BigNumber } from 'ethers';
 import axios from './helpers';
 
-import { frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
+import { BPS, frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { DutchQuote, DutchRequest, Quote } from '../../entities';
 import { PostQuoteResponseJoi } from '../../handlers/quote';
 import { log } from '../../util/log';
@@ -37,7 +37,7 @@ export class RfqQuoter implements Quoter {
     // we must adjust up the exact out swap amount to account for portion, before requesting quote from RFQ quoter
     const portionAmount =
       portion?.bips && request.info.type === TradeType.EXACT_OUTPUT
-        ? request.info.amount.mul(portion?.bips)
+        ? request.info.amount.mul(portion?.bips).div(BPS)
         : undefined;
 
     // we will only add portion to the exact out swap amount if the URA ENABLE_PORTION is true
