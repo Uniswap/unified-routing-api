@@ -272,8 +272,8 @@ export class DutchQuote implements IQuote {
         // Amount to swapper
         builder.output({
           token: this.tokenOut,
-          startAmount: this.amountOutStart,
-          endAmount: this.amountOutEnd,
+          startAmount: this.request.info.amount,
+          endAmount: this.request.info.amount,
           recipient: this.request.config.swapper,
         });
       }
