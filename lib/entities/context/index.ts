@@ -4,7 +4,6 @@ import { RoutingType } from '../../constants';
 import { ClassicConfig, ClassicRequest, DutchRequest, Quote, QuoteRequest } from '../../entities';
 
 import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
-import { PortionFetcher } from '../../fetchers/PortionFetcher';
 import { SyntheticStatusProvider } from '../../providers';
 import { log } from '../../util/log';
 import { ClassicQuoteContext } from './ClassicQuoteContext';
@@ -86,7 +85,6 @@ export class QuoteContextManager {
 
 export type QuoteContextProviders = {
   permit2Fetcher: Permit2Fetcher;
-  portionFetcher: PortionFetcher;
   rpcProvider: ethers.providers.JsonRpcProvider;
   syntheticStatusProvider: SyntheticStatusProvider;
 };

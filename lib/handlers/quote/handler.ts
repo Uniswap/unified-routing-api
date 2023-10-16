@@ -80,13 +80,16 @@ export class QuoteHandler extends APIGLambdaHandler<
       Unit.Milliseconds
     );
 
-    const portion = frontendAndUraEnablePortion(request.sendPortionEnabled) ?
-      (await portionFetcher.getPortion(
-        request.tokenInChainId,
-        tokenInAddress,
-        request.tokenOutChainId,
-        tokenOutAddress
-      )).portion : undefined;
+    const portion = frontendAndUraEnablePortion(request.sendPortionEnabled)
+      ? (
+          await portionFetcher.getPortion(
+            request.tokenInChainId,
+            tokenInAddress,
+            request.tokenOutChainId,
+            tokenOutAddress
+          )
+        ).portion
+      : undefined;
 
     const requestWithTokenAddresses = {
       ...request,
@@ -109,7 +112,6 @@ export class QuoteHandler extends APIGLambdaHandler<
       parseQuoteContexts(quoteRequests, {
         rpcProvider: provider,
         permit2Fetcher,
-        portionFetcher,
         syntheticStatusProvider,
       })
     );
