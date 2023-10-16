@@ -5,7 +5,6 @@ import querystring from 'querystring';
 
 import { frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { ClassicQuote, ClassicQuoteDataJSON, ClassicRequest, Quote } from '../../entities';
-import { Portion, PortionFetcher } from '../../fetchers/PortionFetcher';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import axios from './helpers';
@@ -14,7 +13,7 @@ import { Quoter, QuoterType } from './index';
 export class RoutingApiQuoter implements Quoter {
   static readonly type: QuoterType.ROUTING_API;
 
-  constructor(private routingApiUrl: string, private routingApiKey: string, private portionFetcher: PortionFetcher) {}
+  constructor(private routingApiUrl: string, private routingApiKey: string) {}
 
   async quote(request: ClassicRequest): Promise<Quote | null> {
     if (request.routingType !== RoutingType.CLASSIC) {
@@ -23,16 +22,7 @@ export class RoutingApiQuoter implements Quoter {
 
     metrics.putMetric(`RoutingApiQuoterRequest`, 1);
     try {
-      const portion = (
-        await this.portionFetcher.getPortion(
-          request.info.tokenInChainId,
-          request.info.tokenIn,
-          request.info.tokenOutChainId,
-          request.info.tokenOut
-        )
-      ).portion;
-
-      const req = this.buildRequest(request, portion);
+      const req = this.buildRequest(request);
       const now = Date.now();
       const response = await axios.get<ClassicQuoteDataJSON>(req, { headers: { 'x-api-key': this.routingApiKey } });
       const portionAdjustedResponse: AxiosResponse<ClassicQuoteDataJSON> = {
@@ -48,7 +38,8 @@ export class RoutingApiQuoter implements Quoter {
               portionAmount: response.data.portionAmount ?? '0',
               portionAmountDecimals: response.data.portionAmountDecimals ?? '0',
               quoteGasAndPortionAdjusted: response.data.quoteGasAndPortionAdjusted ?? response.data.quoteGasAdjusted,
-              quoteGasAndPortionAdjustedDecimals: response.data.quoteGasAndPortionAdjustedDecimals ?? response.data.quoteGasAdjustedDecimals,
+              quoteGasAndPortionAdjustedDecimals:
+                response.data.quoteGasAndPortionAdjustedDecimals ?? response.data.quoteGasAdjustedDecimals,
             }
           : response.data,
       };
@@ -90,7 +81,7 @@ export class RoutingApiQuoter implements Quoter {
     }
   }
 
-  buildRequest(request: ClassicRequest, portion?: Portion): string {
+  buildRequest(request: ClassicRequest): string {
     const tradeType = request.info.type === TradeType.EXACT_INPUT ? 'exactIn' : 'exactOut';
     const config = request.config;
     const amount = request.info.amount.toString();
@@ -135,10 +126,10 @@ export class RoutingApiQuoter implements Quoter {
         ...(config.enableFeeOnTransferFeeFetching !== undefined && {
           enableFeeOnTransferFeeFetching: config.enableFeeOnTransferFeeFetching,
         }),
-        ...(portion &&
+        ...(request.info.portion &&
           frontendAndUraEnablePortion(request.info.sendPortionEnabled) && {
-            portionBips: portion.bips,
-            portionRecipient: portion.recipient,
+            portionBips: request.info.portion.bips,
+            portionRecipient: request.info.portion.recipient,
           }),
       })
     );

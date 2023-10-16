@@ -4,9 +4,11 @@ import { QuoteByKey, QuoteContext } from '.';
 import { RoutingType } from '../../constants';
 import { ClassicQuote, ClassicRequest, Quote, QuoteRequest } from '../../entities';
 import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
+import { PortionFetcher } from '../../fetchers/PortionFetcher';
 
 export type ClassicQuoteContextProviders = {
   permit2Fetcher: Permit2Fetcher;
+  portionFetcher: PortionFetcher;
 };
 
 // manages context around a single top level classic quote request
@@ -14,10 +16,12 @@ export class ClassicQuoteContext implements QuoteContext {
   routingType: RoutingType.CLASSIC;
   private log: Logger;
   private permit2Fetcher: Permit2Fetcher;
+  private portionFetcher: PortionFetcher;
 
   constructor(_log: Logger, public request: ClassicRequest, providers: ClassicQuoteContextProviders) {
     this.log = _log.child({ context: 'ClassicQuoteContext' });
     this.permit2Fetcher = providers.permit2Fetcher;
+    this.portionFetcher = providers.portionFetcher;
   }
 
   // classic quotes have no explicit dependencies and can be resolved by themselves
@@ -41,6 +45,17 @@ export class ClassicQuoteContext implements QuoteContext {
 
       (quote as ClassicQuote).setAllowanceData(allowance);
     }
+
+    const portion = (
+      await this.portionFetcher.getPortion(
+        quote.request.info.tokenInChainId,
+        quote.request.info.tokenIn,
+        quote.request.info.tokenOutChainId,
+        quote.request.info.tokenOut
+      )
+    ).portion;
+
+    (quote as ClassicQuote).setPortion(portion);
 
     return quote;
   }

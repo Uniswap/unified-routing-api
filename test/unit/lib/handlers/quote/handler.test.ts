@@ -34,10 +34,12 @@ import { DutchOrderInfoJSON } from '@uniswap/uniswapx-sdk';
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { MetricsLogger } from 'aws-embedded-metrics';
 import { AxiosError } from 'axios';
+import NodeCache from 'node-cache';
 import { RoutingType } from '../../../../../lib/constants';
 import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, Quote } from '../../../../../lib/entities';
 import { QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index';
 import { Permit2Fetcher } from '../../../../../lib/fetchers/Permit2Fetcher';
+import { GetPortionResponse, PortionFetcher } from '../../../../../lib/fetchers/PortionFetcher';
 import { TokenFetcher } from '../../../../../lib/fetchers/TokenFetcher';
 import { ApiInjector, ApiRInj } from '../../../../../lib/handlers/base';
 import {
@@ -52,10 +54,14 @@ import { Quoter, SyntheticStatusProvider } from '../../../../../lib/providers';
 import { Erc20__factory } from '../../../../../lib/types/ext/factories/Erc20__factory';
 import { ErrorCode } from '../../../../../lib/util/errors';
 import { setGlobalLogger } from '../../../../../lib/util/log';
-import { PERMIT2_USED, PERMIT_DETAILS, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../../constants';
+import { FLAT_PORTION, PERMIT2_USED, PERMIT_DETAILS, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../../constants';
 
 describe('QuoteHandler', () => {
   const OLD_ENV = process.env;
+  const portionResponse: GetPortionResponse = {
+    hasPortion: true,
+    portion: FLAT_PORTION,
+  };
 
   beforeAll(() => {
     jest.resetModules(); // Most important - it clears the cache
@@ -100,6 +106,7 @@ describe('QuoteHandler', () => {
     const injectorPromiseMock = (
       quoters: QuoterByRoutingType,
       tokenFetcher: TokenFetcher,
+      portionFetcher: PortionFetcher,
       permit2Fetcher: Permit2Fetcher,
       syntheticStatusProvider: SyntheticStatusProvider
     ): Promise<ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>> =>
@@ -113,6 +120,7 @@ describe('QuoteHandler', () => {
             return {
               quoters: quoters,
               tokenFetcher: tokenFetcher,
+              portionFetcher: portionFetcher,
               permit2Fetcher: permit2Fetcher,
               syntheticStatusProvider,
               rpcUrlMap,
@@ -125,9 +133,14 @@ describe('QuoteHandler', () => {
     const getQuoteHandler = (
       quoters: QuoterByRoutingType,
       tokenFetcher: TokenFetcher,
+      portionFetcher: PortionFetcher,
       permit2Fetcher: Permit2Fetcher,
       syntheticStatusProvider: SyntheticStatusProvider
-    ) => new QuoteHandler('quote', injectorPromiseMock(quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider));
+    ) =>
+      new QuoteHandler(
+        'quote',
+        injectorPromiseMock(quoters, tokenFetcher, portionFetcher, permit2Fetcher, syntheticStatusProvider)
+      );
 
     const RfqQuoterMock = (dlQuote: DutchQuote): Quoter => {
       return {
@@ -161,6 +174,12 @@ describe('QuoteHandler', () => {
       }
       return fetcher as unknown as TokenFetcher;
     };
+    const PortionFetcherMock = (portionResponse: GetPortionResponse): PortionFetcher => {
+      const portionCache = new NodeCache({ stdTTL: 600 });
+      const portionFetcher = new PortionFetcher('https://portion.uniswap.org/', portionCache);
+      jest.spyOn(portionFetcher, 'getPortion').mockResolvedValue(portionResponse);
+      return portionFetcher;
+    };
     const Permit2FetcherMock = (permitDetails: PermitDetails, isError = false): Permit2Fetcher => {
       const fetcher = {
         fetchAllowance: jest.fn(),
@@ -192,13 +211,17 @@ describe('QuoteHandler', () => {
       it('handles exactIn classic quotes', async () => {
         const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE) };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(portionResponse);
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
-        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider).handler(
-          getEvent(CLASSIC_REQUEST_BODY),
-          {} as unknown as Context
-        );
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(CLASSIC_REQUEST_BODY), {} as unknown as Context);
         const quoteJSON = JSON.parse(res.body).quote as ClassicQuoteDataJSON;
         expect(quoteJSON.quoteGasAdjusted).toBe(CLASSIC_QUOTE_EXACT_IN_WORSE.amountOutGasAdjusted.toString());
       });
@@ -216,13 +239,17 @@ describe('QuoteHandler', () => {
 
         const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_OUT_WORSE) };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(portionResponse);
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
-        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider).handler(
-          getEvent(request),
-          {} as unknown as Context
-        );
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(request), {} as unknown as Context);
         const quoteJSON = JSON.parse(res.body).quote as ClassicQuoteDataJSON;
         expect(quoteJSON.quoteGasAdjusted).toBe(CLASSIC_QUOTE_EXACT_OUT_WORSE.amountInGasAdjusted.toString());
       });
@@ -230,13 +257,17 @@ describe('QuoteHandler', () => {
       it('handles exactIn DL quotes', async () => {
         const quoters = { [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER) };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(portionResponse);
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
-        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider).handler(
-          getEvent(DL_REQUEST_BODY),
-          {} as unknown as Context
-        );
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(DL_REQUEST_BODY), {} as unknown as Context);
         const quoteJSON = JSON.parse(res.body).quote.orderInfo as DutchOrderInfoJSON;
         expect(quoteJSON.outputs[0].startAmount).toBe(DL_QUOTE_EXACT_IN_BETTER.amountOut.toString());
       });
@@ -257,13 +288,17 @@ describe('QuoteHandler', () => {
         };
         const quoters = { [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_OUT_BETTER) };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(portionResponse);
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
-        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider).handler(
-          getEvent(request),
-          {} as unknown as Context
-        );
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(request), {} as unknown as Context);
         const quoteJSON = JSON.parse(res.body).quote.orderInfo as DutchOrderInfoJSON;
         expect(quoteJSON.input.startAmount).toBe(DL_QUOTE_EXACT_OUT_BETTER.amountIn.toString());
       });
@@ -274,13 +309,17 @@ describe('QuoteHandler', () => {
           [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),
         };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(portionResponse);
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
-        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider).handler(
-          getEvent(QUOTE_REQUEST_BODY_MULTI),
-          {} as unknown as Context
-        );
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(QUOTE_REQUEST_BODY_MULTI), {} as unknown as Context);
         const { amountOut: amountOutClassic } = DutchQuote.applyGasAdjustment(
           {
             amountIn: CLASSIC_QUOTE_EXACT_IN_WORSE.amountInGasAdjusted,
@@ -300,13 +339,17 @@ describe('QuoteHandler', () => {
           [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),
         };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(portionResponse);
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
-        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider).handler(
-          getEvent(QUOTE_REQUEST_BODY_MULTI),
-          {} as unknown as Context
-        );
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(QUOTE_REQUEST_BODY_MULTI), {} as unknown as Context);
 
         const allQuotes = JSON.parse(res.body).allQuotes;
         expect(allQuotes.length).toEqual(2);
@@ -320,13 +363,17 @@ describe('QuoteHandler', () => {
           [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),
         };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(portionResponse);
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
-        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider).handler(
-          getEvent(QUOTE_REQUEST_BODY_MULTI),
-          {} as unknown as Context
-        );
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(QUOTE_REQUEST_BODY_MULTI), {} as unknown as Context);
 
         const requestId = JSON.parse(res.body).requestId;
         expect(requestId).toBeDefined();
@@ -337,13 +384,17 @@ describe('QuoteHandler', () => {
           [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),
         };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(portionResponse);
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
-        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider).handler(
-          getEvent(QUOTE_REQUEST_BODY_MULTI),
-          {} as unknown as Context
-        );
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(QUOTE_REQUEST_BODY_MULTI), {} as unknown as Context);
 
         const allQuotes = JSON.parse(res.body).allQuotes;
         expect(allQuotes.length).toEqual(2);
@@ -356,13 +407,17 @@ describe('QuoteHandler', () => {
           [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),
         };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(portionResponse);
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
-        const response = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider).handler(
-          getEvent(QUOTE_REQUEST_BODY_MULTI),
-          {} as unknown as Context
-        );
+        const response = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(QUOTE_REQUEST_BODY_MULTI), {} as unknown as Context);
 
         const responseBody = JSON.parse(response.body);
         const permitData = responseBody.quote.permitData;
@@ -378,6 +433,7 @@ describe('QuoteHandler', () => {
           [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
         };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(portionResponse);
         const permit2Fetcher = Permit2FetcherMock({
           ...PERMIT_DETAILS,
           amount: '0',
@@ -387,7 +443,13 @@ describe('QuoteHandler', () => {
         jest.useFakeTimers({
           now: 0,
         });
-        const response = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider).handler(
+        const response = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(
           getEvent({
             ...CLASSIC_REQUEST_BODY,
             swapper: SWAPPER,
@@ -411,16 +473,20 @@ describe('QuoteHandler', () => {
           [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
         };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(portionResponse);
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
         jest.useFakeTimers({
           now: 0,
         });
-        const response = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider).handler(
-          getEvent(CLASSIC_REQUEST_BODY),
-          {} as unknown as Context
-        );
+        const response = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(CLASSIC_REQUEST_BODY), {} as unknown as Context);
         const responseBody = JSON.parse(response.body);
 
         expect(responseBody.quote.permitData).toBeUndefined();
@@ -440,13 +506,20 @@ describe('QuoteHandler', () => {
           ),
         };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(portionResponse);
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
         jest.useFakeTimers({
           now: 0,
         });
-        const response = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider).handler(
+        const response = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(
           getEvent({
             ...CLASSIC_REQUEST_BODY,
             swapper: undefined,
@@ -465,13 +538,17 @@ describe('QuoteHandler', () => {
           [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
         };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT], true);
+        const portionFetcher = PortionFetcherMock(portionResponse);
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
-        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider).handler(
-          getEvent(QUOTE_REQUEST_BODY_MULTI),
-          {} as unknown as Context
-        );
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(QUOTE_REQUEST_BODY_MULTI), {} as unknown as Context);
 
         const responseBody = JSON.parse(res.body);
         expect(res.statusCode).toBe(500);
@@ -483,13 +560,17 @@ describe('QuoteHandler', () => {
           [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER),
         };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(portionResponse);
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
-        const response = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider).handler(
-          getEvent(QUOTE_REQUEST_BODY_MULTI),
-          {} as unknown as Context
-        );
+        const response = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(QUOTE_REQUEST_BODY_MULTI), {} as unknown as Context);
 
         const responseBody = JSON.parse(response.body);
         const quote = responseBody.quote;
@@ -508,13 +589,17 @@ describe('QuoteHandler', () => {
           [RoutingType.CLASSIC]: RfqQuoterErrorMock(axiosError),
         };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(portionResponse);
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
-        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider).handler(
-          getEvent(DL_REQUEST_BODY),
-          {} as unknown as Context
-        );
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(DL_REQUEST_BODY), {} as unknown as Context);
         expect(res.statusCode).toBe(500);
         const errorResponseJson = JSON.parse(res.body);
         expect(errorResponseJson.errorCode).toBe(ErrorCode.QuoteError);
@@ -533,13 +618,17 @@ describe('QuoteHandler', () => {
           [RoutingType.CLASSIC]: RfqQuoterErrorMock(axiosError),
         };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(portionResponse);
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
-        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider).handler(
-          getEvent(DL_REQUEST_BODY),
-          {} as unknown as Context
-        );
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(DL_REQUEST_BODY), {} as unknown as Context);
         expect(res.statusCode).toBe(500);
         const errorResponseJson = JSON.parse(res.body);
         expect(errorResponseJson.errorCode).toBe(ErrorCode.QuoteError);
@@ -558,13 +647,17 @@ describe('QuoteHandler', () => {
           [RoutingType.CLASSIC]: RfqQuoterErrorMock(axiosError),
         };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(portionResponse);
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
-        const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider).handler(
-          getEvent(DL_REQUEST_BODY),
-          {} as unknown as Context
-        );
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(DL_REQUEST_BODY), {} as unknown as Context);
         expect(res.statusCode).toBe(500);
         const errorResponseJson = JSON.parse(res.body);
         expect(errorResponseJson.errorCode).toBe(ErrorCode.QuoteError);
@@ -577,13 +670,17 @@ describe('QuoteHandler', () => {
             [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
           };
           const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+          const portionFetcher = PortionFetcherMock(portionResponse);
           const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
           const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
-          const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider).handler(
-            getEvent(QUOTE_REQUEST_BODY_MULTI),
-            {} as unknown as Context
-          );
+          const res = await getQuoteHandler(
+            quoters,
+            tokenFetcher,
+            portionFetcher,
+            permit2Fetcher,
+            syntheticStatusProvider
+          ).handler(getEvent(QUOTE_REQUEST_BODY_MULTI), {} as unknown as Context);
 
           const bodyJSON = JSON.parse(res.body);
           expect(bodyJSON.routing).toEqual(RoutingType.CLASSIC);
@@ -594,13 +691,17 @@ describe('QuoteHandler', () => {
             [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
           };
           const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+          const portionFetcher = PortionFetcherMock(portionResponse);
           const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
           const syntheticStatusProvider = SyntheticStatusProviderMock(true);
 
-          const res = await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider).handler(
-            getEvent(QUOTE_REQUEST_BODY_MULTI_SYNTHETIC),
-            {} as unknown as Context
-          );
+          const res = await getQuoteHandler(
+            quoters,
+            tokenFetcher,
+            portionFetcher,
+            permit2Fetcher,
+            syntheticStatusProvider
+          ).handler(getEvent(QUOTE_REQUEST_BODY_MULTI_SYNTHETIC), {} as unknown as Context);
 
           const bodyJSON = JSON.parse(res.body);
           expect(bodyJSON.routing).toEqual(RoutingType.DUTCH_LIMIT);
@@ -612,10 +713,11 @@ describe('QuoteHandler', () => {
       it('logs the requests and response in correct format', async () => {
         const quoters = { [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER) };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(portionResponse);
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
-        await getQuoteHandler(quoters, tokenFetcher, permit2Fetcher, syntheticStatusProvider).handler(
+        await getQuoteHandler(quoters, tokenFetcher, portionFetcher, permit2Fetcher, syntheticStatusProvider).handler(
           getEvent(QUOTE_REQUEST_BODY_MULTI),
           {} as unknown as Context
         );
@@ -666,12 +768,14 @@ describe('QuoteHandler', () => {
           body: JSON.stringify(CLASSIC_REQUEST_BODY),
         } as APIGatewayProxyEvent;
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(portionResponse);
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
         const res = await getQuoteHandler(
           quoters,
           tokenFetcher,
+          portionFetcher,
           permit2Fetcher,
           syntheticStatusProvider
         ).parseAndValidateRequest(event, logger as unknown as Logger);
@@ -687,12 +791,14 @@ describe('QuoteHandler', () => {
           }),
         } as APIGatewayProxyEvent;
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(portionResponse);
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
         const res = await getQuoteHandler(
           quoters,
           tokenFetcher,
+          portionFetcher,
           permit2Fetcher,
           syntheticStatusProvider
         ).parseAndValidateRequest(event, logger as unknown as Logger);
@@ -705,12 +811,14 @@ describe('QuoteHandler', () => {
           body: JSON.stringify(DL_REQUEST_BODY),
         } as APIGatewayProxyEvent;
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(portionResponse);
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
         const res = await getQuoteHandler(
           quoters,
           tokenFetcher,
+          portionFetcher,
           permit2Fetcher,
           syntheticStatusProvider
         ).parseAndValidateRequest(event, logger as unknown as Logger);

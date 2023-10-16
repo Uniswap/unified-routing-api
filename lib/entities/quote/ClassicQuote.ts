@@ -6,6 +6,7 @@ import { PermitDetails, PermitSingleData, PermitTransferFromData } from '@uniswa
 import { v4 as uuidv4 } from 'uuid';
 import { QuoteRequest } from '..';
 import { RoutingType } from '../../constants';
+import { Portion } from '../../fetchers/PortionFetcher';
 import { createPermitData } from '../../util/permit2';
 import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
 import { IQuote, LogJSON } from './index';
@@ -163,10 +164,10 @@ export class ClassicQuote implements IQuote {
 
   public get amountOutGasAndPortionAdjusted(): BigNumber {
     return this.request.info.type === TradeType.EXACT_INPUT
-      // there's a possibility that quoteGasAndPortionAdjusted doesn't get populated if the flag is off
-      // in that case fallback to existing quoteGasAdjusted.
-      // undefined will cause the request to fail due to BigNumber.from(undefined)
-      ? BigNumber.from(this.quoteData.quoteGasAndPortionAdjusted ?? this.quoteData.quoteGasAdjusted)
+      ? // there's a possibility that quoteGasAndPortionAdjusted doesn't get populated if the flag is off
+        // in that case fallback to existing quoteGasAdjusted.
+        // undefined will cause the request to fail due to BigNumber.from(undefined)
+        BigNumber.from(this.quoteData.quoteGasAndPortionAdjusted ?? this.quoteData.quoteGasAdjusted)
       : BigNumber.from(this.quoteData.amount);
   }
 
@@ -184,10 +185,10 @@ export class ClassicQuote implements IQuote {
 
   public get amountInGasAndPortionAdjusted(): BigNumber {
     return this.request.info.type === TradeType.EXACT_OUTPUT
-      // there's a possibility that quoteGasAndPortionAdjusted doesn't get populated if the flag is off
-      // in that case fallback to existing quoteGasAdjusted.
-      // undefined will cause the request to fail due to BigNumber.from(undefined)
-      ? BigNumber.from(this.quoteData.quoteGasAndPortionAdjusted ?? this.quoteData.quoteGasAdjusted)
+      ? // there's a possibility that quoteGasAndPortionAdjusted doesn't get populated if the flag is off
+        // in that case fallback to existing quoteGasAdjusted.
+        // undefined will cause the request to fail due to BigNumber.from(undefined)
+        BigNumber.from(this.quoteData.quoteGasAndPortionAdjusted ?? this.quoteData.quoteGasAdjusted)
       : BigNumber.from(this.quoteData.amount);
   }
 
@@ -209,5 +210,10 @@ export class ClassicQuote implements IQuote {
 
   public getPortionRecipient(): string | undefined {
     return this.quoteData.portionRecipient;
+  }
+
+  public setPortion(portion?: Portion): void {
+    this.quoteData.portionBips = portion?.bips;
+    this.quoteData.portionRecipient = portion?.recipient;
   }
 }

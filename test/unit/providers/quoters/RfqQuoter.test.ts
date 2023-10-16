@@ -18,7 +18,7 @@ import {
 import {
   QUOTE_REQUEST_DL,
   QUOTE_REQUEST_DL_EXACT_OUT,
-  QUOTE_REQUEST_DL_EXACT_OUT_SEND_PORTION,
+  QUOTE_REQUEST_DL_EXACT_OUT_WITH_PORTION,
   QUOTE_REQUEST_DL_FE_SEND_PORTION,
 } from '../../../utils/fixtures';
 
@@ -41,7 +41,7 @@ describe('RfqQuoter test', () => {
   const portionCache = new NodeCache({ stdTTL: 600 });
   const portionFetcher = new PortionFetcher('https://portion.uniswap.org/', portionCache);
   jest.spyOn(portionFetcher, 'getPortion').mockResolvedValue(portionResponse);
-  const quoter = new RfqQuoter('https://api.uniswap.org/', 'https://api.uniswap.org/', 'test-api-key', portionFetcher);
+  const quoter = new RfqQuoter('https://api.uniswap.org/', 'https://api.uniswap.org/', 'test-api-key');
 
   describe('quote test', () => {
     beforeEach(() => {
@@ -163,7 +163,7 @@ describe('RfqQuoter test', () => {
     });
 
     it('returns EXACT_INPUT quote with portion', async () => {
-      const quote = await quoter.quote(QUOTE_REQUEST_DL);
+      const quote = await quoter.quote(QUOTE_REQUEST_DL_FE_SEND_PORTION);
       expect(quote).toMatchObject({
         chainId: 1,
         tokenIn: TOKEN_IN,
