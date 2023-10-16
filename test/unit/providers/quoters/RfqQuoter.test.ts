@@ -17,9 +17,8 @@ import {
 } from '../../../constants';
 import {
   QUOTE_REQUEST_DL,
-  QUOTE_REQUEST_DL_EXACT_OUT,
-  QUOTE_REQUEST_DL_EXACT_OUT_WITH_PORTION,
-  QUOTE_REQUEST_DL_FE_SEND_PORTION,
+  QUOTE_REQUEST_DL_EXACT_OUT, QUOTE_REQUEST_DL_EXACT_OUT_WITH_PORTION,
+  QUOTE_REQUEST_DL_FE_SEND_PORTION
 } from '../../../utils/fixtures';
 
 const UUID = 'c67c2882-24aa-4a68-a90b-53250ef81517';
@@ -223,7 +222,7 @@ describe('RfqQuoter test', () => {
     it('returns EXACT_OUTPUT quote with portion', async () => {
       process.env.ENABLE_PORTION = 'true';
 
-      const quote = await quoter.quote(QUOTE_REQUEST_DL_EXACT_OUT_SEND_PORTION);
+      const quote = await quoter.quote(QUOTE_REQUEST_DL_EXACT_OUT_WITH_PORTION);
       expect(quote).toMatchObject({
         chainId: 1,
         tokenIn: TOKEN_IN,
