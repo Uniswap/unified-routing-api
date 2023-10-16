@@ -46,17 +46,6 @@ export class ClassicQuoteContext implements QuoteContext {
       (quote as ClassicQuote).setAllowanceData(allowance);
     }
 
-    const portion = (
-      await this.portionFetcher.getPortion(
-        quote.request.info.tokenInChainId,
-        quote.request.info.tokenIn,
-        quote.request.info.tokenOutChainId,
-        quote.request.info.tokenOut
-      )
-    ).portion;
-
-    (quote as ClassicQuote).setPortion(portion);
-
     return quote;
   }
 }
