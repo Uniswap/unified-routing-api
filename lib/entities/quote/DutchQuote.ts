@@ -234,7 +234,10 @@ export class DutchQuote implements IQuote {
       deadlineBufferSecs: this.deadlineBufferSecs,
       slippageTolerance: this.request.info.slippageTolerance,
       permitData: this.getPermitData(),
-      portionBips: this.portionBips,
+      // NOTE: important for URA to return 0 bps and amount, in case of no portion.
+      // this is FE requirement
+      portionBips: frontendAndUraEnablePortion(this.request.info.sendPortionEnabled) ? this.portionBips ?? 0 : undefined,
+      portionAmount: frontendAndUraEnablePortion(this.request.info.sendPortionEnabled) ? this.portionAmountOutStart.toString() ?? '0' : undefined,
       portionRecipient: this.portionRecipient,
     };
   }

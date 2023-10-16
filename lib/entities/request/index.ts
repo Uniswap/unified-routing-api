@@ -6,6 +6,7 @@ import { DEFAULT_SLIPPAGE_TOLERANCE, RoutingType } from '../../constants';
 import { ValidationError } from '../../util/errors';
 import { ClassicConfig, ClassicConfigJSON, ClassicRequest } from './ClassicRequest';
 import { DutchConfig, DutchConfigJSON, DutchRequest } from './DutchRequest';
+import { Portion } from '../../fetchers/PortionFetcher';
 
 export * from './ClassicRequest';
 export * from './DutchRequest';
@@ -29,6 +30,7 @@ export interface QuoteRequestInfo {
   swapper?: string;
   useUniswapX?: boolean;
   sendPortionEnabled?: boolean;
+  portion?: Portion;
 }
 
 export interface QuoteRequestBodyJSON extends Omit<QuoteRequestInfo, 'type' | 'amount'> {
@@ -61,6 +63,7 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON): {
     slippageTolerance: body.slippageTolerance ?? DEFAULT_SLIPPAGE_TOLERANCE,
     swapper: body.swapper,
     sendPortionEnabled: body.sendPortionEnabled,
+    portion: body.portion,
   };
 
   const requests = body.configs.flatMap((config) => {
