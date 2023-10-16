@@ -110,12 +110,6 @@ export class PortionFetcher {
       metrics.putMetric(`PortionFetcherErr`, 1);
       metrics.putMetric(`PortionFetcherCacheMiss`, 1);
 
-      this.portionCache.set<GetPortionResponse>(
-        this.PORTION_CACHE_KEY(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress),
-        GET_NO_PORTION_RESPONSE,
-        this.negativeCacheEntryTtl
-      );
-
       return GET_NO_PORTION_RESPONSE;
     }
   }

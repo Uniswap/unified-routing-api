@@ -125,7 +125,6 @@ function testPortion() {
       // You can optionally mock other methods here, such as post, put, etc.
     };
     createSpy.mockReturnValueOnce(axiosInstanceMock);
-    const currentEpochTimeInSeconds = Math.floor(Date.now() / 1000);
 
     const portionCache = new NodeCache({ stdTTL: 600 });
     const portionFetcher = new PortionFetcher('https://portion.uniswap.org/', portionCache);
@@ -140,19 +139,7 @@ function testPortion() {
     const cachedPortionData = portionCache.get<GetPortionResponse>(
       PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
     );
-    expect(cachedPortionData).toBeDefined;
-    expect(cachedPortionData?.hasPortion).toEqual(GET_NO_PORTION_RESPONSE.hasPortion);
-
-    const ttlUpperBoundBuffer = 1; // in seconds
-    const ttl = portionCache.getTtl(
-      PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
-    );
-    expect(Math.floor((ttl ?? 0) / 1000)).toBeGreaterThanOrEqual(
-      currentEpochTimeInSeconds + DEFAULT_NEGATIVE_CACHE_ENTRY_TTL
-    );
-    expect(Math.floor((ttl ?? 0) / 1000)).toBeLessThanOrEqual(
-      currentEpochTimeInSeconds + DEFAULT_NEGATIVE_CACHE_ENTRY_TTL + ttlUpperBoundBuffer
-    );
+    expect(cachedPortionData).toBeUndefined;
   });
 }
 
