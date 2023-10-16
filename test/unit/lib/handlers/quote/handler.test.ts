@@ -4,15 +4,21 @@ import { default as Logger } from 'bunyan';
 import {
   BASE_REQUEST_INFO_EXACT_OUT,
   CLASSIC_QUOTE_EXACT_IN_BETTER,
+  CLASSIC_QUOTE_EXACT_IN_BETTER_WITH_PORTION,
   CLASSIC_QUOTE_EXACT_IN_WORSE,
+  CLASSIC_QUOTE_EXACT_IN_WORSE_WITH_PORTION,
+  CLASSIC_QUOTE_EXACT_OUT_BETTER,
   CLASSIC_QUOTE_EXACT_OUT_BETTER_WITH_PORTION,
   CLASSIC_QUOTE_EXACT_OUT_WORSE,
   CLASSIC_QUOTE_EXACT_OUT_WORSE_WITH_PORTION,
   CLASSIC_REQUEST_BODY,
   createClassicQuote,
   DL_QUOTE_EXACT_IN_BETTER,
+  DL_QUOTE_EXACT_IN_BETTER_WITH_PORTION,
   DL_QUOTE_EXACT_IN_WORSE,
+  DL_QUOTE_EXACT_IN_WORSE_WITH_PORTION,
   DL_QUOTE_EXACT_OUT_BETTER,
+  DL_QUOTE_EXACT_OUT_BETTER_WITH_PORTION,
   DL_QUOTE_EXACT_OUT_WORSE,
   DL_QUOTE_EXACT_OUT_WORSE_WITH_PORTION,
   DL_REQUEST_BODY,
@@ -719,15 +725,62 @@ describe('QuoteHandler', () => {
       expect(compareQuotes(DL_QUOTE_EXACT_OUT_BETTER, DL_QUOTE_EXACT_OUT_WORSE, TradeType.EXACT_OUTPUT)).toBe(true);
     });
 
+    it('returns true if lhs is a better dutch limit with portion quote than rhs', () => {
+      expect(
+        compareQuotes(
+          DL_QUOTE_EXACT_IN_BETTER_WITH_PORTION,
+          DL_QUOTE_EXACT_IN_WORSE_WITH_PORTION,
+          TradeType.EXACT_INPUT
+        )
+      ).toBe(true);
+      expect(
+        compareQuotes(
+          DL_QUOTE_EXACT_OUT_BETTER_WITH_PORTION,
+          DL_QUOTE_EXACT_OUT_WORSE_WITH_PORTION,
+          TradeType.EXACT_OUTPUT
+        )
+      ).toBe(true);
+    });
+
     it('returns false if lhs is a worse dutch limit quote than rhs', () => {
       expect(compareQuotes(DL_QUOTE_EXACT_IN_WORSE, DL_QUOTE_EXACT_IN_BETTER, TradeType.EXACT_INPUT)).toBe(false);
       expect(compareQuotes(DL_QUOTE_EXACT_OUT_WORSE, DL_QUOTE_EXACT_OUT_BETTER, TradeType.EXACT_OUTPUT)).toBe(false);
+    });
+
+    it('returns false if lhs is a worse dutch limit with portion quote than rhs', () => {
+      expect(
+        compareQuotes(
+          DL_QUOTE_EXACT_IN_WORSE_WITH_PORTION,
+          DL_QUOTE_EXACT_IN_BETTER_WITH_PORTION,
+          TradeType.EXACT_INPUT
+        )
+      ).toBe(false);
+      expect(
+        compareQuotes(
+          DL_QUOTE_EXACT_OUT_WORSE_WITH_PORTION,
+          DL_QUOTE_EXACT_OUT_BETTER_WITH_PORTION,
+          TradeType.EXACT_OUTPUT
+        )
+      ).toBe(false);
     });
 
     it('returns true if lhs is a better classic quote', () => {
       expect(compareQuotes(CLASSIC_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_IN_WORSE, TradeType.EXACT_INPUT)).toBe(
         true
       );
+      expect(compareQuotes(CLASSIC_QUOTE_EXACT_OUT_BETTER, CLASSIC_QUOTE_EXACT_OUT_WORSE, TradeType.EXACT_OUTPUT)).toBe(
+        true
+      );
+    });
+
+    it('returns true if lhs is a better classic with portion quote', () => {
+      expect(
+        compareQuotes(
+          CLASSIC_QUOTE_EXACT_IN_BETTER_WITH_PORTION,
+          CLASSIC_QUOTE_EXACT_IN_WORSE_WITH_PORTION,
+          TradeType.EXACT_INPUT
+        )
+      ).toBe(true);
       expect(
         compareQuotes(
           CLASSIC_QUOTE_EXACT_OUT_BETTER_WITH_PORTION,
@@ -741,6 +794,19 @@ describe('QuoteHandler', () => {
       expect(compareQuotes(CLASSIC_QUOTE_EXACT_IN_WORSE, CLASSIC_QUOTE_EXACT_IN_BETTER, TradeType.EXACT_INPUT)).toBe(
         false
       );
+      expect(compareQuotes(CLASSIC_QUOTE_EXACT_OUT_WORSE, CLASSIC_QUOTE_EXACT_OUT_BETTER, TradeType.EXACT_OUTPUT)).toBe(
+        false
+      );
+    });
+
+    it('returns false if lhs is a worse classic with portion quote', () => {
+      expect(
+        compareQuotes(
+          CLASSIC_QUOTE_EXACT_IN_WORSE_WITH_PORTION,
+          CLASSIC_QUOTE_EXACT_IN_BETTER_WITH_PORTION,
+          TradeType.EXACT_INPUT
+        )
+      ).toBe(false);
       expect(
         compareQuotes(
           CLASSIC_QUOTE_EXACT_OUT_WORSE_WITH_PORTION,
@@ -753,14 +819,61 @@ describe('QuoteHandler', () => {
     it('returns true if lhs is a better mixed type', () => {
       expect(compareQuotes(DL_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_IN_WORSE, TradeType.EXACT_INPUT)).toBe(true);
       expect(compareQuotes(CLASSIC_QUOTE_EXACT_IN_BETTER, DL_QUOTE_EXACT_IN_WORSE, TradeType.EXACT_INPUT)).toBe(true);
+      expect(compareQuotes(DL_QUOTE_EXACT_OUT_BETTER, CLASSIC_QUOTE_EXACT_OUT_WORSE, TradeType.EXACT_OUTPUT)).toBe(
+        true
+      );
+    });
+
+    it('returns true if lhs is a better mixed type with portion', () => {
       expect(
-        compareQuotes(DL_QUOTE_EXACT_OUT_BETTER, CLASSIC_QUOTE_EXACT_OUT_WORSE_WITH_PORTION, TradeType.EXACT_OUTPUT)
+        compareQuotes(
+          DL_QUOTE_EXACT_IN_BETTER_WITH_PORTION,
+          CLASSIC_QUOTE_EXACT_IN_WORSE_WITH_PORTION,
+          TradeType.EXACT_INPUT
+        )
+      ).toBe(true);
+      expect(
+        compareQuotes(
+          CLASSIC_QUOTE_EXACT_IN_BETTER_WITH_PORTION,
+          DL_QUOTE_EXACT_IN_WORSE_WITH_PORTION,
+          TradeType.EXACT_INPUT
+        )
+      ).toBe(true);
+      expect(
+        compareQuotes(
+          DL_QUOTE_EXACT_OUT_BETTER_WITH_PORTION,
+          CLASSIC_QUOTE_EXACT_OUT_WORSE_WITH_PORTION,
+          TradeType.EXACT_OUTPUT
+        )
       ).toBe(true);
     });
 
     it('returns false if lhs is a worse mixed type', () => {
       expect(compareQuotes(DL_QUOTE_EXACT_IN_WORSE, CLASSIC_QUOTE_EXACT_IN_BETTER, TradeType.EXACT_INPUT)).toBe(false);
       expect(compareQuotes(CLASSIC_QUOTE_EXACT_IN_WORSE, DL_QUOTE_EXACT_IN_BETTER, TradeType.EXACT_INPUT)).toBe(false);
+      expect(compareQuotes(DL_QUOTE_EXACT_OUT_WORSE, CLASSIC_QUOTE_EXACT_OUT_BETTER, TradeType.EXACT_OUTPUT)).toBe(
+        false
+      );
+      expect(compareQuotes(CLASSIC_QUOTE_EXACT_OUT_WORSE, DL_QUOTE_EXACT_OUT_BETTER, TradeType.EXACT_OUTPUT)).toBe(
+        false
+      );
+    });
+
+    it('returns false if lhs is a worse mixed type with portion', () => {
+      expect(
+        compareQuotes(
+          DL_QUOTE_EXACT_IN_WORSE_WITH_PORTION,
+          CLASSIC_QUOTE_EXACT_IN_BETTER_WITH_PORTION,
+          TradeType.EXACT_INPUT
+        )
+      ).toBe(false);
+      expect(
+        compareQuotes(
+          CLASSIC_QUOTE_EXACT_IN_WORSE_WITH_PORTION,
+          DL_QUOTE_EXACT_IN_BETTER_WITH_PORTION,
+          TradeType.EXACT_INPUT
+        )
+      ).toBe(false);
       expect(
         compareQuotes(
           DL_QUOTE_EXACT_OUT_WORSE_WITH_PORTION,
@@ -769,7 +882,11 @@ describe('QuoteHandler', () => {
         )
       ).toBe(false);
       expect(
-        compareQuotes(CLASSIC_QUOTE_EXACT_OUT_WORSE_WITH_PORTION, DL_QUOTE_EXACT_OUT_BETTER, TradeType.EXACT_OUTPUT)
+        compareQuotes(
+          CLASSIC_QUOTE_EXACT_OUT_WORSE_WITH_PORTION,
+          DL_QUOTE_EXACT_OUT_BETTER_WITH_PORTION,
+          TradeType.EXACT_OUTPUT
+        )
       ).toBe(false);
     });
   });
@@ -826,6 +943,19 @@ describe('QuoteHandler', () => {
       expect(bestQuote).toEqual(DL_QUOTE_EXACT_IN_BETTER);
     });
 
+    it('returns the best quote among two dutch limit with portion quotes', async () => {
+      let quoters: QuoterByRoutingType = {
+        DUTCH_LIMIT: quoterMock(DL_QUOTE_EXACT_IN_WORSE_WITH_PORTION),
+      };
+      let quotes = await getQuotes(quoters, [QUOTE_REQUEST_DL]);
+      quoters = {
+        DUTCH_LIMIT: quoterMock(DL_QUOTE_EXACT_IN_BETTER_WITH_PORTION),
+      };
+      quotes = quotes.concat(await getQuotes(quoters, [QUOTE_REQUEST_DL]));
+      const bestQuote = await getBestQuote(quotes);
+      expect(bestQuote).toEqual(DL_QUOTE_EXACT_IN_BETTER_WITH_PORTION);
+    });
+
     it('returns the dutch limit quote if no classic specified', async () => {
       const quoters: QuoterByRoutingType = {
         DUTCH_LIMIT: quoterMock(DL_QUOTE_EXACT_IN_WORSE),
@@ -834,6 +964,16 @@ describe('QuoteHandler', () => {
       const quotes = await getQuotes(quoters, [QUOTE_REQUEST_DL]);
       const bestQuote = await getBestQuote(quotes);
       expect(bestQuote).toEqual(DL_QUOTE_EXACT_IN_WORSE);
+    });
+
+    it('returns the dutch limit with portion quote if no classic specified', async () => {
+      const quoters: QuoterByRoutingType = {
+        DUTCH_LIMIT: quoterMock(DL_QUOTE_EXACT_IN_WORSE_WITH_PORTION),
+        CLASSIC: quoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER_WITH_PORTION),
+      };
+      const quotes = await getQuotes(quoters, [QUOTE_REQUEST_DL]);
+      const bestQuote = await getBestQuote(quotes);
+      expect(bestQuote).toEqual(DL_QUOTE_EXACT_IN_WORSE_WITH_PORTION);
     });
 
     it('returns the classic quote among one DL quote and one classic quote', async () => {
@@ -846,6 +986,16 @@ describe('QuoteHandler', () => {
       expect(bestQuote).toEqual(CLASSIC_QUOTE_EXACT_IN_BETTER);
     });
 
+    it('returns the classic with portion quote among one DL with portion quote and one classic with portion quote', async () => {
+      const quoters: QuoterByRoutingType = {
+        DUTCH_LIMIT: quoterMock(DL_QUOTE_EXACT_IN_WORSE_WITH_PORTION),
+        CLASSIC: quoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER_WITH_PORTION),
+      };
+      const quotes = await getQuotes(quoters, QUOTE_REQUEST_MULTI);
+      const bestQuote = await getBestQuote(quotes);
+      expect(bestQuote).toEqual(CLASSIC_QUOTE_EXACT_IN_BETTER_WITH_PORTION);
+    });
+
     it('returns the DL quote among one DL quote and one classic quote', async () => {
       const quoters: QuoterByRoutingType = {
         DUTCH_LIMIT: quoterMock(DL_QUOTE_EXACT_IN_BETTER),
@@ -854,6 +1004,16 @@ describe('QuoteHandler', () => {
       const quotes = await getQuotes(quoters, QUOTE_REQUEST_MULTI);
       const bestQuote = await getBestQuote(quotes);
       expect(bestQuote).toEqual(DL_QUOTE_EXACT_IN_BETTER);
+    });
+
+    it('returns the DL with portion quote among one DL with portion quote and one classic with portion quote', async () => {
+      const quoters: QuoterByRoutingType = {
+        DUTCH_LIMIT: quoterMock(DL_QUOTE_EXACT_IN_BETTER_WITH_PORTION),
+        CLASSIC: quoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE_WITH_PORTION),
+      };
+      const quotes = await getQuotes(quoters, QUOTE_REQUEST_MULTI);
+      const bestQuote = await getBestQuote(quotes);
+      expect(bestQuote).toEqual(DL_QUOTE_EXACT_IN_BETTER_WITH_PORTION);
     });
   });
 

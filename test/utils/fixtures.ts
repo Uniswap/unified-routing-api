@@ -1,6 +1,7 @@
 import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
-import { NATIVE_ADDRESS, RoutingType } from '../../lib/constants';
+import { BPS, NATIVE_ADDRESS, RoutingType } from '../../lib/constants';
 
+import { BigNumber } from 'ethers';
 import {
   ClassicQuoteDataJSON,
   ClassicRequest,
@@ -293,11 +294,15 @@ export function createDutchQuoteWithRequest(
 
 export function createClassicQuote(
   overrides: Partial<ClassicQuoteDataJSON>,
-  requestOverrides: Partial<QuoteRequestBodyJSON>
+  requestOverrides: Partial<QuoteRequestBodyJSON>,
+  nonce?: string,
+  portion?: Portion
 ): ClassicQuote {
   return buildQuoteResponse(
     Object.assign({}, CLASSIC_QUOTE_DATA, { quote: { ...CLASSIC_QUOTE_DATA.quote, ...overrides } }),
-    makeClassicRequest(requestOverrides)
+    makeClassicRequest(requestOverrides),
+    nonce,
+    portion
   ) as ClassicQuote;
 }
 
@@ -318,6 +323,13 @@ export function createRouteBackToNativeQuote(overrides: Partial<ClassicQuoteData
 }
 
 export const DL_QUOTE_EXACT_IN_BETTER = createDutchQuote({ amountOut: AMOUNT_BETTER }, 'EXACT_INPUT');
+export const DL_QUOTE_EXACT_IN_BETTER_WITH_PORTION = createDutchQuote(
+  { amountOut: AMOUNT_BETTER },
+  'EXACT_INPUT',
+  undefined,
+  FLAT_PORTION,
+  true
+);
 export const DL_QUOTE_NATIVE_EXACT_IN_BETTER = createDutchQuote(
   { amountOut: AMOUNT_BETTER, tokenIn: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_OUT_ID)].address },
   'EXACT_INPUT'
@@ -335,6 +347,13 @@ export const DL_QUOTE_NATIVE_EXACT_IN_LARGE_WITH_PORTION = createDutchQuote(
 );
 export const DL_QUOTE_EXACT_IN_WORSE_PREFERENCE = createDutchQuote({ amountOut: AMOUNT_LARGE }, 'EXACT_INPUT');
 export const DL_QUOTE_EXACT_IN_WORSE = createDutchQuote({ amountOut: AMOUNT }, 'EXACT_INPUT');
+export const DL_QUOTE_EXACT_IN_WORSE_WITH_PORTION = createDutchQuote(
+  { amountOut: AMOUNT },
+  'EXACT_INPUT',
+  undefined,
+  FLAT_PORTION,
+  true
+);
 export const DL_QUOTE_EXACT_IN_LARGE = createDutchQuote({ amountOut: AMOUNT_LARGE }, 'EXACT_INPUT', '1');
 export const DL_QUOTE_EXACT_IN_LARGE_WITH_PORTION = createDutchQuote(
   { amountOut: AMOUNT_LARGE },
@@ -343,6 +362,13 @@ export const DL_QUOTE_EXACT_IN_LARGE_WITH_PORTION = createDutchQuote(
   FLAT_PORTION
 );
 export const DL_QUOTE_EXACT_OUT_BETTER = createDutchQuote({ amountIn: AMOUNT }, 'EXACT_OUTPUT');
+export const DL_QUOTE_EXACT_OUT_BETTER_WITH_PORTION = createDutchQuote(
+  { amountIn: AMOUNT },
+  'EXACT_OUTPUT',
+  undefined,
+  FLAT_PORTION,
+  true
+);
 export const DL_QUOTE_EXACT_OUT_WORSE = createDutchQuote({ amountIn: AMOUNT_BETTER }, 'EXACT_OUTPUT');
 export const DL_QUOTE_EXACT_OUT_WORSE_WITH_PORTION = createDutchQuote(
   { amountIn: AMOUNT_BETTER },
@@ -360,19 +386,52 @@ export const CLASSIC_QUOTE_EXACT_IN_BETTER = createClassicQuote(
   { quote: AMOUNT_BETTER, quoteGasAdjusted: AMOUNT_BETTER },
   { type: 'EXACT_INPUT' }
 );
+export const CLASSIC_QUOTE_EXACT_IN_BETTER_WITH_PORTION = createClassicQuote(
+  {
+    quote: AMOUNT_BETTER,
+    quoteGasAdjusted: AMOUNT_BETTER,
+    quoteGasAndPortionAdjusted: BigNumber.from(AMOUNT_BETTER)
+      .sub(BigNumber.from(AMOUNT_BETTER).mul(FLAT_PORTION.bips).div(BPS))
+      .toString(),
+    portionBips: PORTION_BIPS,
+    portionRecipient: PORTION_RECIPIENT,
+  },
+  { type: 'EXACT_INPUT' },
+  undefined,
+  FLAT_PORTION
+);
 export const CLASSIC_QUOTE_EXACT_IN_WORSE = createClassicQuote(
   { quote: AMOUNT, quoteGasAdjusted: AMOUNT },
   { type: 'EXACT_INPUT' }
+);
+export const CLASSIC_QUOTE_EXACT_IN_WORSE_WITH_PORTION = createClassicQuote(
+  {
+    quote: AMOUNT,
+    quoteGasAdjusted: AMOUNT,
+    quoteGasAndPortionAdjusted: BigNumber.from(AMOUNT)
+      .sub(BigNumber.from(AMOUNT).mul(FLAT_PORTION.bips).div(BPS))
+      .toString(),
+    portionBips: PORTION_BIPS,
+    portionRecipient: PORTION_RECIPIENT,
+  },
+  { type: 'EXACT_INPUT' },
+  undefined,
+  FLAT_PORTION
 );
 export const CLASSIC_QUOTE_EXACT_IN_LARGE = createClassicQuote({}, { type: 'EXACT_INPUT' });
 export const CLASSIC_QUOTE_EXACT_IN_LARGE_WITH_PORTION = createClassicQuote(
   {
     quote: AMOUNT_LARGE,
     quoteGasAdjusted: AMOUNT_LARGE_GAS_ADJUSTED,
+    quoteGasAndPortionAdjusted: BigNumber.from(AMOUNT_LARGE_GAS_ADJUSTED)
+      .sub(BigNumber.from(AMOUNT_LARGE).mul(FLAT_PORTION.bips).div(BPS))
+      .toString(),
     portionBips: PORTION_BIPS,
     portionRecipient: PORTION_RECIPIENT,
   },
-  { type: 'EXACT_INPUT' }
+  { type: 'EXACT_INPUT' },
+  undefined,
+  FLAT_PORTION
 );
 export const CLASSIC_QUOTE_EXACT_IN_LARGE_GAS = createClassicQuote(
   // quote: 1 ETH, quoteGasAdjusted: 0.9 ETH, gasUseEstimate: 100000, gasUseEstimateQuote: 0.1 ETH
@@ -416,7 +475,15 @@ export const CLASSIC_QUOTE_EXACT_OUT_BETTER = createClassicQuote(
   { type: 'EXACT_OUTPUT' }
 );
 export const CLASSIC_QUOTE_EXACT_OUT_BETTER_WITH_PORTION = createClassicQuote(
-  { quote: AMOUNT, quoteGasAdjusted: AMOUNT, quoteGasAndPortionAdjusted: AMOUNT },
+  {
+    quote: AMOUNT,
+    quoteGasAdjusted: AMOUNT,
+    quoteGasAndPortionAdjusted: BigNumber.from(AMOUNT)
+      .add(BigNumber.from(AMOUNT).mul(FLAT_PORTION.bips).div(BPS))
+      .toString(),
+    portionBips: PORTION_BIPS,
+    portionRecipient: PORTION_RECIPIENT,
+  },
   { type: 'EXACT_OUTPUT' }
 );
 export const CLASSIC_QUOTE_EXACT_OUT_WORSE = createClassicQuote(
@@ -424,7 +491,15 @@ export const CLASSIC_QUOTE_EXACT_OUT_WORSE = createClassicQuote(
   { type: 'EXACT_OUTPUT' }
 );
 export const CLASSIC_QUOTE_EXACT_OUT_WORSE_WITH_PORTION = createClassicQuote(
-  { quote: AMOUNT_BETTER, quoteGasAdjusted: AMOUNT_BETTER, quoteGasAndPortionAdjusted: AMOUNT_BETTER },
+  {
+    quote: AMOUNT_BETTER,
+    quoteGasAdjusted: AMOUNT_BETTER,
+    quoteGasAndPortionAdjusted: BigNumber.from(AMOUNT_BETTER)
+      .add(BigNumber.from(AMOUNT_BETTER).mul(FLAT_PORTION.bips).div(BPS))
+      .toString(),
+    portionBips: PORTION_BIPS,
+    portionRecipient: PORTION_RECIPIENT,
+  },
   { type: 'EXACT_OUTPUT' }
 );
 export const CLASSIC_QUOTE_EXACT_OUT_LARGE = createClassicQuote(
