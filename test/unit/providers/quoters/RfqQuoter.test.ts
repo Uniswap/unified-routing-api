@@ -1,14 +1,24 @@
 import { BigNumber, ethers } from 'ethers';
 
 import NodeCache from 'node-cache';
+import { BPS } from '../../../../lib/constants';
 import { DutchQuote, DutchQuoteDataJSON, DutchQuoteJSON } from '../../../../lib/entities';
 import { GetPortionResponse, PortionFetcher, PortionType } from '../../../../lib/fetchers/PortionFetcher';
 import { PortionProvider, RfqQuoter } from '../../../../lib/providers';
 import axios from '../../../../lib/providers/quoters/helpers';
-import { AMOUNT, PORTION_BIPS, PORTION_RECIPIENT, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
+import {
+  AMOUNT,
+  FLAT_PORTION,
+  PORTION_BIPS,
+  PORTION_RECIPIENT,
+  SWAPPER,
+  TOKEN_IN,
+  TOKEN_OUT,
+} from '../../../constants';
 import {
   QUOTE_REQUEST_DL,
   QUOTE_REQUEST_DL_EXACT_OUT,
+  QUOTE_REQUEST_DL_EXACT_OUT_SEND_PORTION,
   QUOTE_REQUEST_DL_FE_SEND_PORTION,
 } from '../../../utils/fixtures';
 
@@ -167,10 +177,10 @@ describe('RfqQuoter test', () => {
       expect((quote as DutchQuote).portionRecipient).toEqual(portionResponse.portion?.recipient);
     });
 
-    it('returns EXACT_OUTPUT quote with portion', async () => {
+    it('returns EXACT_INPUT quote with portion', async () => {
       process.env.ENABLE_PORTION = 'true';
 
-      const quote = await quoter.quote(QUOTE_REQUEST_DL_EXACT_OUT);
+      const quote = await quoter.quote(QUOTE_REQUEST_DL_FE_SEND_PORTION);
       expect(quote).toMatchObject({
         chainId: 1,
         tokenIn: TOKEN_IN,
@@ -181,6 +191,78 @@ describe('RfqQuoter test', () => {
       expect(quote).toBeInstanceOf(DutchQuote);
       expect((quote as DutchQuote).portionBips).toEqual(portionResponse.portion?.bips);
       expect((quote as DutchQuote).portionRecipient).toEqual(portionResponse.portion?.recipient);
+
+      expect(
+        postSpy({
+          chainId: 1,
+          requestId: UUID,
+          quoteId: UUID,
+          tokenIn: TOKEN_IN,
+          amountIn: AMOUNT,
+          tokenOut: TOKEN_OUT,
+          amountOut: AMOUNT,
+          swapper: SWAPPER,
+          filler: SWAPPER,
+        })
+      ).toHaveBeenCalledWith(
+        'https://api.uniswap.org/quote',
+        {
+          tokenInChainId: 1,
+          tokenOutChainId: 1,
+          tokenIn: TOKEN_IN,
+          tokenOut: TOKEN_OUT,
+          amount: AMOUNT,
+          swapper: SWAPPER,
+          requestId: 'requestId',
+          type: 'EXACT_INPUT',
+          numOutputs: 2,
+        },
+        { headers: { 'x-api-key': 'test-api-key' } }
+      );
+    });
+
+    it('returns EXACT_OUTPUT quote with portion', async () => {
+      process.env.ENABLE_PORTION = 'true';
+
+      const quote = await quoter.quote(QUOTE_REQUEST_DL_EXACT_OUT_SEND_PORTION);
+      expect(quote).toMatchObject({
+        chainId: 1,
+        tokenIn: TOKEN_IN,
+        tokenOut: TOKEN_OUT,
+        amountInStart: BigNumber.from(AMOUNT),
+        amountOutStart: BigNumber.from(AMOUNT),
+      });
+      expect(quote).toBeInstanceOf(DutchQuote);
+      expect((quote as DutchQuote).portionBips).toEqual(portionResponse.portion?.bips);
+      expect((quote as DutchQuote).portionRecipient).toEqual(portionResponse.portion?.recipient);
+
+      expect(
+        postSpy({
+          chainId: 1,
+          requestId: UUID,
+          quoteId: UUID,
+          tokenIn: TOKEN_IN,
+          amountIn: AMOUNT,
+          tokenOut: TOKEN_OUT,
+          amountOut: AMOUNT,
+          swapper: SWAPPER,
+          filler: SWAPPER,
+        })
+      ).toHaveBeenCalledWith(
+        'https://api.uniswap.org/quote',
+        {
+          tokenInChainId: 1,
+          tokenOutChainId: 1,
+          tokenIn: TOKEN_IN,
+          tokenOut: TOKEN_OUT,
+          amount: BigNumber.from(AMOUNT).add(BigNumber.from(AMOUNT).mul(FLAT_PORTION.bips).div(BPS)).toString(),
+          swapper: SWAPPER,
+          requestId: 'requestId',
+          type: 'EXACT_OUTPUT',
+          numOutputs: 2,
+        },
+        { headers: { 'x-api-key': 'test-api-key' } }
+      );
     });
   });
 });
