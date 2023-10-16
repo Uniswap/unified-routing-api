@@ -65,8 +65,7 @@ export class RoutingApiQuoter implements Quoter {
       // from the re-instantiated classicRequest instance
       // This is to address the case where a dutch-only config quote request gets sent to URA,
       // and it will always go through DutchQuote.reparameterize(...)
-      request.info.portionBips = portion?.bips;
-      request.info.portionRecipient = portion?.recipient;
+      request.info.portion = portion;
 
       const req = this.buildRequest(request, portion, resolveTokenOut);
       const now = Date.now();

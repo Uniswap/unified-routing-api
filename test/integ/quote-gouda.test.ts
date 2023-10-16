@@ -656,6 +656,7 @@ describe('quoteUniswapX', function () {
                 status,
               } = response;
 
+              const quoteJSON = quote as DutchQuoteDataJSON;
               const order = new DutchOrder((quote as any).orderInfo, 1);
               expect(status).to.equal(200);
               // account for gas and slippage
@@ -697,6 +698,8 @@ describe('quoteUniswapX', function () {
                 }
               } else {
                 expect(order.info.outputs.length).to.equal(1);
+                expect(quoteJSON.portionBips).to.be.undefined;
+                expect(quoteJSON.portionAmount).to.be.undefined;
               }
 
               const {
@@ -727,25 +730,19 @@ describe('quoteUniswapX', function () {
                 }
 
                 if (sendPortionEnabled) {
-                  expect(quote as DutchQuoteDataJSON).not.to.be.undefined;
-                  expect((quote as DutchQuoteDataJSON).portionBips).not.to.be.undefined;
-                  expect((quote as DutchQuoteDataJSON).portionBips).to.be.equal(getPortionResponse.portion?.bips);
-                  expect((quote as DutchQuoteDataJSON).portionAmount).not.to.be.undefined;
+                  expect(quoteJSON).not.to.be.undefined;
+                  expect(quoteJSON.portionBips).not.to.be.undefined;
+                  expect(quoteJSON.portionBips).to.be.equal(getPortionResponse.portion?.bips);
+                  expect(quoteJSON.portionAmount).not.to.be.undefined;
                   const secondOutput = order.info.outputs[1];
-                  expect((quote as DutchQuoteDataJSON).portionAmount).to.be.equal(BigNumber.from(secondOutput.startAmount).toString());
+                  expect(quoteJSON.portionAmount).to.be.equal(BigNumber.from(secondOutput.startAmount).toString());
 
-                  const expectedPortionAmount = CurrencyAmount.fromRawAmount(
-                    tokenOut,
-                    (quote as DutchQuoteDataJSON).portionAmount!
-                  );
+                  const expectedPortionAmount = CurrencyAmount.fromRawAmount(tokenOut, quoteJSON.portionAmount!);
                   checkPortionRecipientToken(
                     tokenOutPortionRecipientBefore!,
                     tokenOutPortionRecipientAfter!,
                     expectedPortionAmount
                   );
-                } else {
-                  expect((quote as DutchQuoteDataJSON).portionBips).to.be.undefined;
-                  expect((quote as DutchQuoteDataJSON).portionAmount).to.be.undefined;
                 }
               } else {
                 // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
@@ -768,22 +765,16 @@ describe('quoteUniswapX', function () {
                 }
 
                 if (sendPortionEnabled) {
-                  expect((quote as DutchQuoteDataJSON).portionAmount).not.to.be.undefined;
-                  expect((quote as DutchQuoteDataJSON).portionBips).not.to.be.undefined;
-                  expect((quote as DutchQuoteDataJSON).portionBips).to.be.equal(getPortionResponse.portion?.bips);
+                  expect(quoteJSON.portionAmount).not.to.be.undefined;
+                  expect(quoteJSON.portionBips).not.to.be.undefined;
+                  expect(quoteJSON.portionBips).to.be.equal(getPortionResponse.portion?.bips);
 
-                  const expectedPortionAmount = CurrencyAmount.fromRawAmount(
-                    tokenOut,
-                    (quote as DutchQuoteDataJSON).portionAmount!
-                  );
+                  const expectedPortionAmount = CurrencyAmount.fromRawAmount(tokenOut, quoteJSON.portionAmount!);
                   checkPortionRecipientToken(
                     tokenOutPortionRecipientBefore!,
                     tokenOutPortionRecipientAfter!,
                     expectedPortionAmount
                   );
-                } else {
-                  expect((quote as DutchQuoteDataJSON).portionBips).to.be.undefined;
-                  expect((quote as DutchQuoteDataJSON).portionAmount).to.be.undefined;
                 }
               }
             });
@@ -834,6 +825,7 @@ describe('quoteUniswapX', function () {
                 data: { quote },
                 status,
               } = response;
+              const quoteJSON = quote as DutchQuoteDataJSON;
 
               const order = new DutchOrder((quote as any).orderInfo, 1);
               expect(status).to.equal(200);
@@ -841,6 +833,16 @@ describe('quoteUniswapX', function () {
               expect(order.info.swapper).to.equal(alice.address);
               // doesn't matter portion enabled or not, only one output order
               expect(order.info.outputs.length).to.equal(1);
+
+              if (sendPortionEnabled) {
+                expect(quoteJSON.portionAmount).not.to.be.undefined;
+                expect(quoteJSON.portionAmount).to.be.equal('0');
+                expect(quoteJSON.portionBips).not.to.be.undefined;
+                expect(quoteJSON.portionBips!).to.be.equal(0);
+              } else {
+                expect(quoteJSON.portionBips).to.be.undefined;
+                expect(quoteJSON.portionAmount).to.be.undefined;
+              }
 
               const {
                 tokenInBefore,
@@ -870,11 +872,6 @@ describe('quoteUniswapX', function () {
                 }
 
                 if (sendPortionEnabled) {
-                  expect((quote as DutchQuoteDataJSON).portionAmount).not.to.be.undefined;
-                  expect((quote as DutchQuoteDataJSON).portionAmount).to.be.equal('0');
-                  expect((quote as DutchQuoteDataJSON).portionBips).not.to.be.undefined;
-                  expect((quote as DutchQuoteDataJSON).portionBips!).to.be.equal(0);
-
                   const expectedPortionAmount = CurrencyAmount.fromRawAmount(
                     tokenOut,
                     (quote as DutchQuoteDataJSON).portionAmount!
@@ -884,9 +881,6 @@ describe('quoteUniswapX', function () {
                     tokenOutPortionRecipientAfter!,
                     expectedPortionAmount
                   );
-                } else {
-                  expect((quote as DutchQuoteDataJSON).portionBips).to.be.undefined;
-                  expect((quote as DutchQuoteDataJSON).portionAmount).to.be.undefined;
                 }
               } else {
                 // if the token out is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
@@ -909,11 +903,6 @@ describe('quoteUniswapX', function () {
                 }
 
                 if (sendPortionEnabled) {
-                  expect((quote as DutchQuoteDataJSON).portionAmount).not.to.be.undefined;
-                  expect((quote as DutchQuoteDataJSON).portionAmount).to.be.equal('0');
-                  expect((quote as DutchQuoteDataJSON).portionBips).not.to.be.undefined;
-                  expect((quote as DutchQuoteDataJSON).portionBips!).to.be.equal(0);
-
                   const expectedPortionAmount = CurrencyAmount.fromRawAmount(
                     tokenOut,
                     (quote as DutchQuoteDataJSON).portionAmount!
@@ -923,9 +912,6 @@ describe('quoteUniswapX', function () {
                     tokenOutPortionRecipientAfter!,
                     expectedPortionAmount
                   );
-                } else {
-                  expect((quote as DutchQuoteDataJSON).portionBips).to.be.undefined;
-                  expect((quote as DutchQuoteDataJSON).portionAmount).to.be.undefined;
                 }
               }
             });
