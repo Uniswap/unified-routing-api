@@ -216,7 +216,7 @@ describe('quoteUniswapX', function () {
       parseAmount('5000', UNI_MAINNET),
       parseAmount('4000', WETH9[1]),
       parseAmount('5000000', DAI_MAINNET),
-      parseAmount('18000', agEUR_MAINNET),
+      parseAmount('50000', agEUR_MAINNET),
       parseAmount('475000', XSGD_MAINNET),
     ]);
 
@@ -227,7 +227,7 @@ describe('quoteUniswapX', function () {
       parseAmount('5000', UNI_MAINNET),
       parseAmount('4000', WETH9[1]),
       parseAmount('5000000', DAI_MAINNET),
-      parseAmount('18000', agEUR_MAINNET),
+      parseAmount('50000', agEUR_MAINNET),
       parseAmount('475000', XSGD_MAINNET),
     ]);
 
