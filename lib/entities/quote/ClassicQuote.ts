@@ -31,6 +31,8 @@ export type TokenInRouteJSON = {
   chainId: number;
   symbol: string;
   decimals: string;
+  sellFeeBps?: string;
+  buyFeeBps?: string;
 };
 
 export type V3PoolInRouteJSON = {

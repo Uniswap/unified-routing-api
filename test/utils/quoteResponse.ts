@@ -18,6 +18,8 @@ type TokenInRoute = {
   chainId: number;
   symbol: string;
   decimals: string;
+  sellFeeBps?: string;
+  buyFeeBps?: string;
 };
 
 type V3PoolInRoute = {
