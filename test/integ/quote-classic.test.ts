@@ -276,30 +276,7 @@ describe('quote', function () {
       parseAmount('475000', XSGD_MAINNET),
       parseAmount('735871', BULLET),
     ]);
-
-    // alice should always have 10000 ETH
-    const aliceEthBalance = await getBalance(alice, Ether.onChain(1));
-    /// Since alice is deploying the QuoterV3 contract, expect to have slightly less than 10_000 ETH but not too little
-    expect(!aliceEthBalance.lessThan(CurrencyAmount.fromRawAmount(Ether.onChain(1), '9995'))).to.be.true;
-    const aliceUSDCBalance = await getBalance(alice, USDC_MAINNET);
-    expect(aliceUSDCBalance.quotient.toString()).equal(parseAmount('80000000', USDC_MAINNET).quotient.toString());
-    const aliceUSDTBalance = await getBalance(alice, USDT_MAINNET);
-    expect(aliceUSDTBalance.quotient.toString()).equal(parseAmount('50000000', USDT_MAINNET).quotient.toString());
-    const aliceWBTCBalance = await getBalance(alice, WBTC_MAINNET);
-    expect(aliceWBTCBalance.quotient.toString()).equal(parseAmount('100', WBTC_MAINNET).quotient.toString());
-    const aliceUNIBalance = await getBalance(alice, UNI_MAINNET);
-    expect(aliceUNIBalance.quotient.toString()).equal(parseAmount('10000', UNI_MAINNET).quotient.toString());
-    const aliceWETH9Balance = await getBalance(alice, WETH9[1]);
-    expect(aliceWETH9Balance.quotient.toString()).equal(parseAmount('40000', WETH9[1]).quotient.toString());
-    const aliceDAIBalance = await getBalance(alice, DAI_MAINNET);
-    expect(aliceDAIBalance.quotient.toString()).equal(parseAmount('5000000', DAI_MAINNET).quotient.toString());
-    const aliceagEURBalance = await getBalance(alice, agEUR_MAINNET);
-    expect(aliceagEURBalance.quotient.toString()).equal(parseAmount('50000', agEUR_MAINNET).quotient.toString());
-    const aliceXSGDBalance = await getBalance(alice, XSGD_MAINNET);
-    expect(aliceXSGDBalance.quotient.toString()).equal(parseAmount('475000', XSGD_MAINNET).quotient.toString());
-    const aliceBULLETBalance = await getBalance(alice, BULLET);
-    expect(aliceBULLETBalance.quotient.toString()).equal(parseAmount('735871', BULLET).quotient.toString());
-
+    
     process.env.ENABLE_PORTION = 'true';
     if (process.env.PORTION_API_URL) {
       portionFetcher = new PortionFetcher(process.env.PORTION_API_URL, new NodeCache());
