@@ -138,6 +138,8 @@ export const QUOTE_REQUEST_CLASSIC_FE_SEND_PORTION = makeClassicRequest({
 export const QUOTE_REQUEST_CLASSIC_FE_ENABLE_FEE_ON_TRANSFER = makeClassicRequest({
   configs: [
     {
+      protocols: ['v3'],
+      gasPriceWei: '12',
       routingType: RoutingType.CLASSIC,
       enableFeeOnTransferFeeFetching: true,
     },
