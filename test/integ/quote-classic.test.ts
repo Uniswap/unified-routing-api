@@ -276,7 +276,7 @@ describe('quote', function () {
       parseAmount('475000', XSGD_MAINNET),
       parseAmount('735871', BULLET),
     ]);
-    
+
     process.env.ENABLE_PORTION = 'true';
     if (process.env.PORTION_API_URL) {
       portionFetcher = new PortionFetcher(process.env.PORTION_API_URL, new NodeCache());
