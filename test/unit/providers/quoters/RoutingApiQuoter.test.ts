@@ -7,8 +7,10 @@ import axios from '../../../../lib/providers/quoters/helpers';
 import { PORTION_BIPS, PORTION_RECIPIENT } from '../../../constants';
 import {
   CLASSIC_QUOTE_DATA,
+  CLASSIC_QUOTE_DATA_WITH_FOX_TAX,
   CLASSIC_QUOTE_DATA_WITH_PORTION,
   QUOTE_REQUEST_CLASSIC,
+  QUOTE_REQUEST_CLASSIC_FE_ENABLE_FEE_ON_TRANSFER,
   QUOTE_REQUEST_CLASSIC_FE_SEND_PORTION,
 } from '../../../utils/fixtures';
 
@@ -149,6 +151,19 @@ describe('RoutingApiQuoter', () => {
 
       expect(classicQuote.toJSON().portionBips).toBeUndefined;
       expect(classicQuote.toJSON().portionRecipient).toBeUndefined;
+    });
+
+    it('quote with fee-on-transfer tax', async () => {
+      axiosMock.mockResolvedValue({ data: CLASSIC_QUOTE_DATA_WITH_FOX_TAX.quote });
+      const response = await routingApiQuoter.quote(QUOTE_REQUEST_CLASSIC_FE_ENABLE_FEE_ON_TRANSFER);
+      expect(response).toBeDefined();
+      expect(response).toBeInstanceOf(ClassicQuote);
+
+      const classicQuote = response as ClassicQuote;
+
+      // By strictly asserting the route equals the test setup route, which includes BULLET_WITH_TAX in both token out and pool reserve0,
+      // we effectively assert that RoutingApiQuoter.quote now returns the FOT tax in the response payload
+      expect(classicQuote.toJSON().route).toStrictEqual(CLASSIC_QUOTE_DATA_WITH_FOX_TAX.quote.route);
     });
   });
 

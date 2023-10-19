@@ -1,6 +1,7 @@
 import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
 import { BPS, NATIVE_ADDRESS, RoutingType } from '../../lib/constants';
 
+import { ChainId, WETH9 } from '@uniswap/sdk-core';
 import { BigNumber } from 'ethers';
 import {
   ClassicQuoteDataJSON,
@@ -30,6 +31,7 @@ import {
   TOKEN_OUT,
 } from '../constants';
 import { buildQuoteResponse } from './quoteResponse';
+import { BULLET_WHT_TAX } from './tokens';
 
 export const BASE_REQUEST_INFO_EXACT_IN = {
   tokenInChainId: CHAIN_IN_ID,
@@ -132,6 +134,14 @@ export const QUOTE_REQUEST_CLASSIC = makeClassicRequest({});
 export const QUOTE_REQUEST_CLASSIC_FE_SEND_PORTION = makeClassicRequest({
   sendPortionEnabled: true,
   portion: FLAT_PORTION,
+});
+export const QUOTE_REQUEST_CLASSIC_FE_ENABLE_FEE_ON_TRANSFER = makeClassicRequest({
+  configs: [
+    {
+      routingType: RoutingType.CLASSIC,
+      enableFeeOnTransferFeeFetching: true,
+    },
+  ],
 });
 
 export function makeDutchRequest(
@@ -267,30 +277,60 @@ export const CLASSIC_QUOTE_DATA = {
 };
 
 export const CLASSIC_QUOTE_DATA_WITH_PORTION = {
-  routing: RoutingType.CLASSIC,
+  ...CLASSIC_QUOTE_DATA,
   quote: {
-    requestId: 'requestId',
-    quoteId: '1',
-    amount: AMOUNT,
-    amountDecimals: '18',
-    quote: AMOUNT,
-    quoteDecimals: '18',
-    quoteGasAdjusted: AMOUNT,
-    quoteGasAdjustedDecimals: '18',
-    gasUseEstimate: '100',
-    gasUseEstimateQuote: '100',
-    gasUseEstimateQuoteDecimals: '18',
-    gasUseEstimateUSD: '100',
-    simulationStatus: 'start',
-    gasPriceWei: '10000',
-    blockNumber: '1234',
-    route: [],
-    routeString: 'USD-ETH',
-    permitNonce: '1',
-    tradeType: 'exactIn',
-    slippage: 0.5,
     portionBips: PORTION_BIPS,
     portionRecipient: PORTION_RECIPIENT,
+  },
+};
+
+export const CLASSIC_QUOTE_DATA_WITH_FOX_TAX = {
+  ...CLASSIC_QUOTE_DATA,
+  quote: {
+    route: [
+      [
+        {
+          type: 'v2-pool',
+          address: '0x0D0A1767da735F725f41c4315E072c63Dbc6ab3D',
+          tokenIn: {
+            chainId: ChainId.MAINNET,
+            decimals: WETH9[ChainId.MAINNET].decimals,
+            address: WETH9[ChainId.MAINNET].address,
+            symbol: WETH9[ChainId.MAINNET].symbol,
+          },
+          tokenOut: {
+            chainId: ChainId.MAINNET,
+            decimals: BULLET_WHT_TAX.decimals,
+            address: BULLET_WHT_TAX.address,
+            symbol: BULLET_WHT_TAX.symbol,
+            sellFeeBps: BULLET_WHT_TAX.sellFeeBps,
+            buyFeeBps: BULLET_WHT_TAX.buyFeeBps,
+          },
+          reserve0: {
+            token: {
+              chainId: ChainId.MAINNET,
+              decimals: BULLET_WHT_TAX.decimals,
+              address: BULLET_WHT_TAX.address,
+              symbol: BULLET_WHT_TAX.symbol,
+              sellFeeBps: BULLET_WHT_TAX.sellFeeBps,
+              buyFeeBps: BULLET_WHT_TAX.buyFeeBps,
+            },
+            quotient: '521639183129140',
+          },
+          reserve1: {
+            token: {
+              chainId: ChainId.MAINNET,
+              decimals: WETH9[ChainId.MAINNET].decimals,
+              address: WETH9[ChainId.MAINNET].address,
+              symbol: WETH9[ChainId.MAINNET].symbol,
+            },
+            quotient: '39448269845180653510',
+          },
+          amountIn: '10000000000000000000',
+          amountOut: '99977306742749',
+        },
+      ],
+    ],
   },
 };
 

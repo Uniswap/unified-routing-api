@@ -32,7 +32,7 @@ import {
   USDT_OPTIMISM,
   WRAPPED_NATIVE_CURRENCY,
 } from '@uniswap/smart-order-router';
-import { ethers } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import NodeCache from 'node-cache';
 
 export const getTokenListProvider = (id: ChainId) => {
@@ -112,6 +112,24 @@ export const EUROC_MAINNET = new Token(
 );
 
 export const XSGD_MAINNET = new Token(ChainId.MAINNET, '0x70e8dE73cE538DA2bEEd35d14187F6959a8ecA96', 6, 'XSGD', 'XSGD');
+
+export const BULLET = new Token(
+  ChainId.MAINNET,
+  '0x8ef32a03784c8Fd63bBf027251b9620865bD54B6',
+  8,
+  'BULLET',
+  'Bullet Game Betting Token'
+);
+export const BULLET_WHT_TAX = new Token(
+  ChainId.MAINNET,
+  '0x8ef32a03784c8Fd63bBf027251b9620865bD54B6',
+  8,
+  'BULLET',
+  'Bullet Game Betting Token',
+  false,
+  BigNumber.from(500),
+  BigNumber.from(500)
+);
 
 export const DAI_ON = (chainId: ChainId): Token => {
   switch (chainId) {

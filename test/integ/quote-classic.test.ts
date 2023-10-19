@@ -33,7 +33,7 @@ import _ from 'lodash';
 import NodeCache from 'node-cache';
 import { SUPPORTED_CHAINS } from '../../lib/config/chains';
 import { RoutingType } from '../../lib/constants';
-import { ClassicQuoteDataJSON } from '../../lib/entities/quote';
+import { ClassicQuoteDataJSON, V2PoolInRouteJSON } from '../../lib/entities/quote';
 import { QuoteRequestBodyJSON } from '../../lib/entities/request';
 import { Portion, PortionFetcher } from '../../lib/fetchers/PortionFetcher';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
@@ -43,6 +43,8 @@ import { resetAndFundAtBlock } from '../utils/forkAndFund';
 import { getBalance, getBalanceAndApprove } from '../utils/getBalanceAndApprove';
 import {
   agEUR_MAINNET,
+  BULLET,
+  BULLET_WHT_TAX,
   DAI_ON,
   getAmount,
   getAmountFromToken,
@@ -272,7 +274,31 @@ describe('quote', function () {
       parseAmount('5000000', DAI_MAINNET),
       parseAmount('50000', agEUR_MAINNET),
       parseAmount('475000', XSGD_MAINNET),
+      parseAmount('735871', BULLET),
     ]);
+
+    // alice should always have 10000 ETH
+    const aliceEthBalance = await getBalance(alice, Ether.onChain(1));
+    /// Since alice is deploying the QuoterV3 contract, expect to have slightly less than 10_000 ETH but not too little
+    expect(!aliceEthBalance.lessThan(CurrencyAmount.fromRawAmount(Ether.onChain(1), '9995'))).to.be.true;
+    const aliceUSDCBalance = await getBalance(alice, USDC_MAINNET);
+    expect(aliceUSDCBalance.quotient.toString()).equal(parseAmount('80000000', USDC_MAINNET).quotient.toString());
+    const aliceUSDTBalance = await getBalance(alice, USDT_MAINNET);
+    expect(aliceUSDTBalance.quotient.toString()).equal(parseAmount('50000000', USDT_MAINNET).quotient.toString());
+    const aliceWBTCBalance = await getBalance(alice, WBTC_MAINNET);
+    expect(aliceWBTCBalance.quotient.toString()).equal(parseAmount('100', WBTC_MAINNET).quotient.toString());
+    const aliceUNIBalance = await getBalance(alice, UNI_MAINNET);
+    expect(aliceUNIBalance.quotient.toString()).equal(parseAmount('10000', UNI_MAINNET).quotient.toString());
+    const aliceWETH9Balance = await getBalance(alice, WETH9[1]);
+    expect(aliceWETH9Balance.quotient.toString()).equal(parseAmount('40000', WETH9[1]).quotient.toString());
+    const aliceDAIBalance = await getBalance(alice, DAI_MAINNET);
+    expect(aliceDAIBalance.quotient.toString()).equal(parseAmount('5000000', DAI_MAINNET).quotient.toString());
+    const aliceagEURBalance = await getBalance(alice, agEUR_MAINNET);
+    expect(aliceagEURBalance.quotient.toString()).equal(parseAmount('50000', agEUR_MAINNET).quotient.toString());
+    const aliceXSGDBalance = await getBalance(alice, XSGD_MAINNET);
+    expect(aliceXSGDBalance.quotient.toString()).equal(parseAmount('475000', XSGD_MAINNET).quotient.toString());
+    const aliceBULLETBalance = await getBalance(alice, BULLET);
+    expect(aliceBULLETBalance.quotient.toString()).equal(parseAmount('735871', BULLET).quotient.toString());
 
     process.env.ENABLE_PORTION = 'true';
     if (process.env.PORTION_API_URL) {
@@ -1987,6 +2013,113 @@ describe('quote', function () {
                 });
               });
             });
+
+            // FOT swap only works for exact in
+            if (type === 'EXACT_INPUT') {
+              const tokenInAndTokenOut = [
+                [BULLET, WETH9[ChainId.MAINNET]!],
+                [WETH9[ChainId.MAINNET]!, BULLET],
+              ];
+
+              tokenInAndTokenOut.forEach(([tokenIn, tokenOut]) => {
+                // FOT integ-test at URA level doesn't need to be as complex as
+                // - at routing-api level (https://github.com/Uniswap/routing-api/blob/ab901a773db4ca31eef0ad731014fc6873c9c6aa/test/mocha/integ/quote.test.ts#L1064-L1242)
+                // - at sor level (https://github.com/Uniswap/smart-order-router/blob/9da29a7f1898e1c09aa1e286a4062919746f04e5/test/integ/routers/alpha-router/alpha-router.integration.test.ts#L2531-L2693)
+                // At URA level, the FOT integ-test just need to ensure after the pass-through flag enableFeeOnTransferFeeFetching gets to routing-api and SOR,
+                // FOT tax gets populated in the tokenIn/tokenOut/tokenInReserve/tokenOutReserve fields in the route as part of the quote response at URA level.
+                it(`fee-on-transfer ${tokenIn.symbol} -> ${tokenOut.symbol}`, async () => {
+                  // we want to swap the tokenIn/tokenOut order so that we can test both sellFeeBps and buyFeeBps for exactIn vs exactOut
+                  const originalAmount = tokenIn.equals(WETH9[ChainId.MAINNET]!) ? '10' : '2924';
+                  const amount = await getAmountFromToken(type, tokenIn, tokenOut, originalAmount);
+                  const simulateFromAddress = tokenIn.equals(WETH9[ChainId.MAINNET]!)
+                    ? '0x2fEb1512183545f48f6b9C5b4EbfCaF49CfCa6F3'
+                    : '0x171d311eAcd2206d21Cb462d661C33F0eddadC03';
+                  const quoteReq: QuoteRequestBodyJSON = {
+                    requestId: 'id',
+                    tokenIn: tokenIn.address,
+                    tokenInChainId: tokenIn.chainId,
+                    tokenOut: tokenOut.address,
+                    tokenOutChainId: tokenOut.chainId,
+                    amount: amount,
+                    type,
+                    // we have to use large slippage for FOT swap, because URA always forks at the latest block,
+                    // and the FOT swap can have large slippage, despite SOR already subtracted FOT tax
+                    slippageTolerance: LARGE_SLIPPAGE,
+                    configs: [
+                      {
+                        routingType: RoutingType.CLASSIC,
+                        recipient: alice.address,
+                        deadline: 360,
+                        simulateFromAddress: simulateFromAddress,
+                        // we already know that SOR only supports FOT in v2 as of now
+                        // so we can send v2 only to send some test runtime
+                        protocols: ['v2'],
+                        algorithm,
+                        enableUniversalRouter: true,
+                        enableFeeOnTransferFeeFetching: true,
+                      },
+                    ],
+                  };
+
+                  const response = await call(quoteReq);
+                  const { data, status } = response;
+                  const quoteJSON = data.quote as ClassicQuoteDataJSON;
+
+                  expect(status).to.equal(200);
+                  expect(quoteJSON.simulationError).to.equal(false);
+                  expect(quoteJSON.simulationStatus).to.equal('SUCCESS');
+                  expect(quoteJSON.methodParameters).to.not.be.undefined;
+
+                  for (const r of quoteJSON.route) {
+                    for (const pool of r) {
+                      expect(pool.type).equal('v2-pool');
+                      const v2Pool = pool as V2PoolInRouteJSON;
+
+                      if (v2Pool.tokenIn.address === BULLET_WHT_TAX.address) {
+                        expect(v2Pool.tokenIn.sellFeeBps).to.be.not.undefined;
+                        expect(v2Pool.tokenIn.sellFeeBps).to.be.equals(BULLET_WHT_TAX.sellFeeBps?.toString());
+                        expect(v2Pool.tokenIn.buyFeeBps).to.be.not.undefined;
+                        expect(v2Pool.tokenIn.buyFeeBps).to.be.equals(BULLET_WHT_TAX.buyFeeBps?.toString());
+                      }
+                      if (v2Pool.tokenOut.address === BULLET_WHT_TAX.address) {
+                        expect(v2Pool.tokenOut.sellFeeBps).to.be.not.undefined;
+                        expect(v2Pool.tokenOut.sellFeeBps).to.be.equals(BULLET_WHT_TAX.sellFeeBps?.toString());
+                        expect(v2Pool.tokenOut.buyFeeBps).to.be.not.undefined;
+                        expect(v2Pool.tokenOut.buyFeeBps).to.be.equals(BULLET_WHT_TAX.buyFeeBps?.toString());
+                      }
+                      if (v2Pool.reserve0.token.address === BULLET_WHT_TAX.address) {
+                        expect(v2Pool.reserve0.token.sellFeeBps).to.be.not.undefined;
+                        expect(v2Pool.reserve0.token.sellFeeBps).to.be.equals(BULLET_WHT_TAX.sellFeeBps?.toString());
+                        expect(v2Pool.reserve0.token.buyFeeBps).to.be.not.undefined;
+                        expect(v2Pool.reserve0.token.buyFeeBps).to.be.equals(BULLET_WHT_TAX.buyFeeBps?.toString());
+                      }
+                      if (v2Pool.reserve1.token.address === BULLET_WHT_TAX.address) {
+                        expect(v2Pool.reserve1.token.sellFeeBps).to.be.not.undefined;
+                        expect(v2Pool.reserve1.token.sellFeeBps).to.be.equals(BULLET_WHT_TAX.sellFeeBps?.toString());
+                        expect(v2Pool.reserve1.token.buyFeeBps).to.be.not.undefined;
+                        expect(v2Pool.reserve1.token.buyFeeBps).to.be.equals(BULLET_WHT_TAX.buyFeeBps?.toString());
+                      }
+                    }
+                  }
+
+                  // We don't have a bullet proof way to assert the fot-involved quote is post tax
+                  // so the best way is to execute the swap on hardhat mainnet fork,
+                  // and make sure the executed quote doesn't differ from callstatic simulated quote by over slippage tolerance
+                  const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+                    quoteJSON.methodParameters!,
+                    tokenIn,
+                    tokenOut
+                  );
+
+                  expect(tokenInBefore.subtract(tokenInAfter).toExact()).to.equal(originalAmount);
+                  checkQuoteToken(
+                    tokenOutBefore,
+                    tokenOutAfter,
+                    CurrencyAmount.fromRawAmount(tokenOut, quoteJSON.quote)
+                  );
+                });
+              });
+            }
           });
         }
 
