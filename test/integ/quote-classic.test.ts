@@ -44,7 +44,7 @@ import { getBalance, getBalanceAndApprove } from '../utils/getBalanceAndApprove'
 import {
   agEUR_MAINNET,
   BULLET,
-  BULLET_WHT_TAX,
+  BULLET_WHT_FOT_TAX,
   DAI_ON,
   getAmount,
   getAmountFromToken,
@@ -274,7 +274,7 @@ describe('quote', function () {
       parseAmount('5000000', DAI_MAINNET),
       parseAmount('50000', agEUR_MAINNET),
       parseAmount('475000', XSGD_MAINNET),
-      parseAmount('735871', BULLET),
+      parseAmount('700000', BULLET),
     ]);
 
     process.env.ENABLE_PORTION = 'true';
@@ -2052,29 +2052,21 @@ describe('quote', function () {
                       expect(pool.type).equal('v2-pool');
                       const v2Pool = pool as V2PoolInRouteJSON;
 
-                      if (v2Pool.tokenIn.address === BULLET_WHT_TAX.address) {
-                        expect(v2Pool.tokenIn.sellFeeBps).to.be.not.undefined;
-                        expect(v2Pool.tokenIn.sellFeeBps).to.be.equals(BULLET_WHT_TAX.sellFeeBps?.toString());
-                        expect(v2Pool.tokenIn.buyFeeBps).to.be.not.undefined;
-                        expect(v2Pool.tokenIn.buyFeeBps).to.be.equals(BULLET_WHT_TAX.buyFeeBps?.toString());
+                      if (v2Pool.tokenIn.address === BULLET_WHT_FOT_TAX.address) {
+                        expect(v2Pool.tokenIn.sellFeeBps).to.be.equals(BULLET_WHT_FOT_TAX.sellFeeBps?.toString());
+                        expect(v2Pool.tokenIn.buyFeeBps).to.be.equals(BULLET_WHT_FOT_TAX.buyFeeBps?.toString());
                       }
-                      if (v2Pool.tokenOut.address === BULLET_WHT_TAX.address) {
-                        expect(v2Pool.tokenOut.sellFeeBps).to.be.not.undefined;
-                        expect(v2Pool.tokenOut.sellFeeBps).to.be.equals(BULLET_WHT_TAX.sellFeeBps?.toString());
-                        expect(v2Pool.tokenOut.buyFeeBps).to.be.not.undefined;
-                        expect(v2Pool.tokenOut.buyFeeBps).to.be.equals(BULLET_WHT_TAX.buyFeeBps?.toString());
+                      if (v2Pool.tokenOut.address === BULLET_WHT_FOT_TAX.address) {
+                        expect(v2Pool.tokenOut.sellFeeBps).to.be.equals(BULLET_WHT_FOT_TAX.sellFeeBps?.toString());
+                        expect(v2Pool.tokenOut.buyFeeBps).to.be.equals(BULLET_WHT_FOT_TAX.buyFeeBps?.toString());
                       }
-                      if (v2Pool.reserve0.token.address === BULLET_WHT_TAX.address) {
-                        expect(v2Pool.reserve0.token.sellFeeBps).to.be.not.undefined;
-                        expect(v2Pool.reserve0.token.sellFeeBps).to.be.equals(BULLET_WHT_TAX.sellFeeBps?.toString());
-                        expect(v2Pool.reserve0.token.buyFeeBps).to.be.not.undefined;
-                        expect(v2Pool.reserve0.token.buyFeeBps).to.be.equals(BULLET_WHT_TAX.buyFeeBps?.toString());
+                      if (v2Pool.reserve0.token.address === BULLET_WHT_FOT_TAX.address) {
+                        expect(v2Pool.reserve0.token.sellFeeBps).to.be.equals(BULLET_WHT_FOT_TAX.sellFeeBps?.toString());
+                        expect(v2Pool.reserve0.token.buyFeeBps).to.be.equals(BULLET_WHT_FOT_TAX.buyFeeBps?.toString());
                       }
-                      if (v2Pool.reserve1.token.address === BULLET_WHT_TAX.address) {
-                        expect(v2Pool.reserve1.token.sellFeeBps).to.be.not.undefined;
-                        expect(v2Pool.reserve1.token.sellFeeBps).to.be.equals(BULLET_WHT_TAX.sellFeeBps?.toString());
-                        expect(v2Pool.reserve1.token.buyFeeBps).to.be.not.undefined;
-                        expect(v2Pool.reserve1.token.buyFeeBps).to.be.equals(BULLET_WHT_TAX.buyFeeBps?.toString());
+                      if (v2Pool.reserve1.token.address === BULLET_WHT_FOT_TAX.address) {
+                        expect(v2Pool.reserve1.token.sellFeeBps).to.be.equals(BULLET_WHT_FOT_TAX.sellFeeBps?.toString());
+                        expect(v2Pool.reserve1.token.buyFeeBps).to.be.equals(BULLET_WHT_FOT_TAX.buyFeeBps?.toString());
                       }
                     }
                   }

@@ -31,7 +31,7 @@ import {
   TOKEN_OUT,
 } from '../constants';
 import { buildQuoteResponse } from './quoteResponse';
-import { BULLET_WHT_TAX } from './tokens';
+import { BULLET_WHT_FOT_TAX } from './tokens';
 
 export const BASE_REQUEST_INFO_EXACT_IN = {
   tokenInChainId: CHAIN_IN_ID,
@@ -279,6 +279,7 @@ export const CLASSIC_QUOTE_DATA = {
 export const CLASSIC_QUOTE_DATA_WITH_PORTION = {
   ...CLASSIC_QUOTE_DATA,
   quote: {
+    ...CLASSIC_QUOTE_DATA.quote,
     portionBips: PORTION_BIPS,
     portionRecipient: PORTION_RECIPIENT,
   },
@@ -287,6 +288,7 @@ export const CLASSIC_QUOTE_DATA_WITH_PORTION = {
 export const CLASSIC_QUOTE_DATA_WITH_FOX_TAX = {
   ...CLASSIC_QUOTE_DATA,
   quote: {
+    ...CLASSIC_QUOTE_DATA.quote,
     route: [
       [
         {
@@ -300,20 +302,20 @@ export const CLASSIC_QUOTE_DATA_WITH_FOX_TAX = {
           },
           tokenOut: {
             chainId: ChainId.MAINNET,
-            decimals: BULLET_WHT_TAX.decimals,
-            address: BULLET_WHT_TAX.address,
-            symbol: BULLET_WHT_TAX.symbol,
-            sellFeeBps: BULLET_WHT_TAX.sellFeeBps,
-            buyFeeBps: BULLET_WHT_TAX.buyFeeBps,
+            decimals: BULLET_WHT_FOT_TAX.decimals,
+            address: BULLET_WHT_FOT_TAX.address,
+            symbol: BULLET_WHT_FOT_TAX.symbol,
+            sellFeeBps: BULLET_WHT_FOT_TAX.sellFeeBps,
+            buyFeeBps: BULLET_WHT_FOT_TAX.buyFeeBps,
           },
           reserve0: {
             token: {
               chainId: ChainId.MAINNET,
-              decimals: BULLET_WHT_TAX.decimals,
-              address: BULLET_WHT_TAX.address,
-              symbol: BULLET_WHT_TAX.symbol,
-              sellFeeBps: BULLET_WHT_TAX.sellFeeBps,
-              buyFeeBps: BULLET_WHT_TAX.buyFeeBps,
+              decimals: BULLET_WHT_FOT_TAX.decimals,
+              address: BULLET_WHT_FOT_TAX.address,
+              symbol: BULLET_WHT_FOT_TAX.symbol,
+              sellFeeBps: BULLET_WHT_FOT_TAX.sellFeeBps,
+              buyFeeBps: BULLET_WHT_FOT_TAX.buyFeeBps,
             },
             quotient: '521639183129140',
           },

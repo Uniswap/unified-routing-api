@@ -120,7 +120,7 @@ export const BULLET = new Token(
   'BULLET',
   'Bullet Game Betting Token'
 );
-export const BULLET_WHT_TAX = new Token(
+export const BULLET_WHT_FOT_TAX = new Token(
   ChainId.MAINNET,
   '0x8ef32a03784c8Fd63bBf027251b9620865bD54B6',
   8,
