@@ -70,7 +70,7 @@ describe('TokenFetcher Unit Tests', () => {
       const { input, output } = t;
 
       try {
-        const result = await new TokenFetcher().resolveTokenAddress(input.chainId, input.address);
+        const result = await new TokenFetcher().resolveTokenSymbolOrAddress(input.chainId, input.address);
         expect(_.isEqual(result, output)).toBe(true);
       } catch (e: any) {
         expect(e).toBeInstanceOf(t.errorType);

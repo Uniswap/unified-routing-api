@@ -1,9 +1,7 @@
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { default as bunyan, default as Logger } from 'bunyan';
 
-import DEFAULT_TOKEN_LIST from '@uniswap/default-token-list';
 import { ChainId } from '@uniswap/sdk-core';
-import { CachingTokenListProvider, NodeJSCache } from '@uniswap/smart-order-router';
 import { MetricsLogger } from 'aws-embedded-metrics';
 import NodeCache from 'node-cache';
 import { SUPPORTED_CHAINS } from '../../config/chains';
@@ -36,10 +34,6 @@ export interface ContainerInjected {
   permit2Fetcher: Permit2Fetcher;
   syntheticStatusProvider: SyntheticStatusProvider;
   rpcUrlMap: Map<ChainId, string>;
-}
-
-export interface RequestInjected extends ApiRInj {
-  tokenListProvider: CachingTokenListProvider;
 }
 
 export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void> {
@@ -91,7 +85,7 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
     context: Context,
     log: Logger,
     metrics: MetricsLogger
-  ): Promise<RequestInjected> {
+  ): Promise<ApiRInj> {
     const requestId = context.awsRequestId;
 
     log = log.child({
@@ -99,13 +93,6 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
       requestBody: requestBody,
       requestId,
     });
-
-    // TODO: add multiple providers for cross chain support
-    const tokenListProvider = new CachingTokenListProvider(
-      requestBody.tokenInChainId,
-      DEFAULT_TOKEN_LIST,
-      new NodeJSCache(new NodeCache())
-    );
 
     setGlobalForcePortion(
       process.env.FORCE_PORTION_STRING !== undefined &&
@@ -122,7 +109,6 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
       log,
       requestId,
       metrics,
-      tokenListProvider,
     };
   }
 }

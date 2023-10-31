@@ -392,7 +392,6 @@ describe('DutchQuote', () => {
       // portion is 12 bps
       const amountOut = AMOUNT;
       const dutchQuote = createDutchQuote({ amountOut }, 'EXACT_OUTPUT', '1', FLAT_PORTION, true);
-      console.log(dutchQuote.toJSON());
       // since we add the amount to RFQ request
       const amountOutWithPortion = dutchQuote.amountOutStart.add(dutchQuote.portionAmountOutStart);
       // RFQ returns same as mock dutch quote
@@ -411,7 +410,6 @@ describe('DutchQuote', () => {
 
       const quote = DutchQuote.fromResponseBody(dutchQuote.request, DL_QUOTE_JSON_RFQ, '1', FLAT_PORTION);
 
-      console.log(quote.toJSON().orderInfo.outputs);
       // expect the sum of outputs to be amountOutWithPortion,
       // but the first output to the swapper tob e amountOut, and the second output to be the portion to the recipient
       expect(quote.toJSON().orderInfo.outputs[0].startAmount).toEqual(amountOut);

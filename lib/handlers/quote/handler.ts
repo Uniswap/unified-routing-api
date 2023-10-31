@@ -5,7 +5,6 @@ import { Unit } from 'aws-embedded-metrics';
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { ethers } from 'ethers';
 
-import { CachingTokenListProvider } from '@uniswap/smart-order-router';
 import _ from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
 import { frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
@@ -30,7 +29,7 @@ import { emitUniswapXPairMetricIfTracking, QuoteType } from '../../util/metrics-
 import { timestampInMstoSeconds } from '../../util/time';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
-import { ContainerInjected, QuoterByRoutingType, RequestInjected } from './injector';
+import { ContainerInjected, QuoterByRoutingType } from './injector';
 import { PostQuoteRequestBodyJoi } from './schema';
 
 const DISABLE_DUTCH_LIMIT_REQUESTS = false;
@@ -53,12 +52,11 @@ export class QuoteHandler extends APIGLambdaHandler<
   QuoteResponseJSON
 > {
   public async handleRequest(
-    params: APIHandleRequestParams<ContainerInjected, RequestInjected, QuoteRequestBodyJSON, void>
+    params: APIHandleRequestParams<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>
   ): Promise<ErrorResponse | Response<QuoteResponseJSON>> {
     const {
       requestBody,
       containerInjected: { quoters, tokenFetcher, portionFetcher, permit2Fetcher, syntheticStatusProvider, rpcUrlMap },
-      requestInjected: { tokenListProvider },
     } = params;
 
     const startTime = Date.now();
@@ -74,8 +72,8 @@ export class QuoteHandler extends APIGLambdaHandler<
     };
 
     const beforeResolveTokens = Date.now();
-    const tokenInAddress = await tokenFetcher.resolveTokenAddress(request.tokenInChainId, request.tokenIn);
-    const tokenOutAddress = await tokenFetcher.resolveTokenAddress(request.tokenOutChainId, request.tokenOut);
+    const tokenInAddress = await tokenFetcher.resolveTokenSymbolOrAddress(request.tokenInChainId, request.tokenIn);
+    const tokenOutAddress = await tokenFetcher.resolveTokenSymbolOrAddress(request.tokenOutChainId, request.tokenOut);
     metrics.putMetric(
       `Latency-ResolveTokens-ChainId${requestBody.tokenInChainId}`,
       Date.now() - beforeResolveTokens,
@@ -105,7 +103,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     const { quoteInfo } = parsedRequests;
     let { quoteRequests } = parsedRequests;
 
-    const isDutchEligible = await this.isDutchEligible(requestBody, tokenListProvider);
+    const isDutchEligible = await this.isDutchEligible(requestBody, tokenFetcher);
     if (!isDutchEligible) {
       quoteRequests = removeDutchRequests(quoteRequests);
     }
@@ -170,13 +168,10 @@ export class QuoteHandler extends APIGLambdaHandler<
     };
   }
 
-  private async isDutchEligible(
-    requestBody: QuoteRequestBodyJSON,
-    tokenListProvider: CachingTokenListProvider
-  ): Promise<boolean> {
+  private async isDutchEligible(requestBody: QuoteRequestBodyJSON, tokenFetcher: TokenFetcher): Promise<boolean> {
     const [tokenIn, tokenOut] = await Promise.all([
-      tokenListProvider.getTokenByAddress(requestBody.tokenIn),
-      tokenListProvider.getTokenByAddress(requestBody.tokenOut),
+      tokenFetcher.getTokenByAddress(requestBody.tokenInChainId, requestBody.tokenIn),
+      tokenFetcher.getTokenByAddress(requestBody.tokenOutChainId, requestBody.tokenIn),
     ]);
 
     const tokenInNotValid = !tokenIn && requestBody.tokenIn !== NATIVE_ADDRESS;
@@ -237,7 +232,7 @@ export class QuoteHandler extends APIGLambdaHandler<
   private async getTokenSymbolOrAbbr(tokenFetcher: TokenFetcher, chainId: number, address: string): Promise<string> {
     let symbol = address.slice(0, 6);
     try {
-      symbol = (await tokenFetcher.resolveToken(chainId, symbol)).symbol ?? symbol;
+      symbol = (await tokenFetcher.getTokenByAddress(chainId, symbol))?.symbol ?? symbol;
     } catch {
       /* empty */
     }
