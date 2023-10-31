@@ -5,9 +5,10 @@ import { Unit } from 'aws-embedded-metrics';
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { ethers } from 'ethers';
 
+import { CachingTokenListProvider } from '@uniswap/smart-order-router';
 import _ from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
-import { frontendAndUraEnablePortion, RoutingType } from '../../constants';
+import { frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
 import {
   ClassicQuote,
   DutchQuote,
@@ -29,7 +30,7 @@ import { emitUniswapXPairMetricIfTracking, QuoteType } from '../../util/metrics-
 import { timestampInMstoSeconds } from '../../util/time';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
-import { ContainerInjected, QuoterByRoutingType } from './injector';
+import { ContainerInjected, QuoterByRoutingType, RequestInjected } from './injector';
 import { PostQuoteRequestBodyJoi } from './schema';
 
 const DISABLE_DUTCH_LIMIT_REQUESTS = false;
@@ -52,11 +53,12 @@ export class QuoteHandler extends APIGLambdaHandler<
   QuoteResponseJSON
 > {
   public async handleRequest(
-    params: APIHandleRequestParams<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>
+    params: APIHandleRequestParams<ContainerInjected, RequestInjected, QuoteRequestBodyJSON, void>
   ): Promise<ErrorResponse | Response<QuoteResponseJSON>> {
     const {
       requestBody,
       containerInjected: { quoters, tokenFetcher, portionFetcher, permit2Fetcher, syntheticStatusProvider, rpcUrlMap },
+      requestInjected: { tokenListProvider },
     } = params;
 
     const startTime = Date.now();
@@ -103,8 +105,8 @@ export class QuoteHandler extends APIGLambdaHandler<
     const { quoteInfo } = parsedRequests;
     let { quoteRequests } = parsedRequests;
 
-    if (DISABLE_DUTCH_LIMIT_REQUESTS && !requestBody.useUniswapX) {
-      log.info('Dutch Limit requests disabled, filtering out all Dutch Limit requests...');
+    const isDutchEligible = await this.isDutchEligible(requestBody, tokenListProvider);
+    if (!isDutchEligible) {
       quoteRequests = removeDutchRequests(quoteRequests);
     }
 
@@ -166,6 +168,33 @@ export class QuoteHandler extends APIGLambdaHandler<
         }
       ),
     };
+  }
+
+  private async isDutchEligible(
+    requestBody: QuoteRequestBodyJSON,
+    tokenListProvider: CachingTokenListProvider
+  ): Promise<boolean> {
+    const [tokenIn, tokenOut] = await Promise.all([
+      tokenListProvider.getTokenByAddress(requestBody.tokenIn),
+      tokenListProvider.getTokenByAddress(requestBody.tokenOut),
+    ]);
+
+    const tokenInNotValid = !tokenIn && requestBody.tokenIn !== NATIVE_ADDRESS;
+    const tokenOutNotValid = !tokenOut && requestBody.tokenOut !== NATIVE_ADDRESS;
+    if (tokenInNotValid || tokenOutNotValid) {
+      log.info(
+        { ...(tokenInNotValid && { tokenIn }), ...(tokenOutNotValid && { tokenOut }) },
+        'Token/tokens not on token list, filtering out all Dutch Limit requests...'
+      );
+      return false;
+    }
+
+    if (DISABLE_DUTCH_LIMIT_REQUESTS && !requestBody.useUniswapX) {
+      log.info('Dutch Limit requests disabled, filtering out all Dutch Limit requests...');
+      return false;
+    }
+
+    return true;
   }
 
   private async emitQuoteRequestedMetrics(
