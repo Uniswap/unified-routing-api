@@ -72,8 +72,8 @@ export class QuoteHandler extends APIGLambdaHandler<
     };
 
     const beforeResolveTokens = Date.now();
-    const tokenInAddress = await tokenFetcher.resolveTokenSymbolOrAddress(request.tokenInChainId, request.tokenIn);
-    const tokenOutAddress = await tokenFetcher.resolveTokenSymbolOrAddress(request.tokenOutChainId, request.tokenOut);
+    const tokenInAddress = await tokenFetcher.resolveTokenBySymbolOrAddress(request.tokenInChainId, request.tokenIn);
+    const tokenOutAddress = await tokenFetcher.resolveTokenBySymbolOrAddress(request.tokenOutChainId, request.tokenOut);
     metrics.putMetric(
       `Latency-ResolveTokens-ChainId${requestBody.tokenInChainId}`,
       Date.now() - beforeResolveTokens,

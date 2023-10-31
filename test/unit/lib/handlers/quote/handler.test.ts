@@ -161,17 +161,17 @@ describe('QuoteHandler', () => {
     };
     const TokenFetcherMock = (addresses: string[], isError = false): TokenFetcher => {
       const fetcher = {
-        resolveTokenSymbolOrAddress: jest.fn(),
+        resolveTokenBySymbolOrAddress: jest.fn(),
         getTokenByAddress: (_chainId: number, address: string) => [TOKEN_IN, TOKEN_OUT].includes(address),
       };
 
       if (isError) {
-        fetcher.resolveTokenSymbolOrAddress.mockRejectedValue(new Error('error'));
+        fetcher.resolveTokenBySymbolOrAddress.mockRejectedValue(new Error('error'));
         return fetcher as unknown as TokenFetcher;
       }
 
       for (const address of addresses) {
-        fetcher.resolveTokenSymbolOrAddress.mockResolvedValueOnce(address);
+        fetcher.resolveTokenBySymbolOrAddress.mockResolvedValueOnce(address);
       }
       return fetcher as unknown as TokenFetcher;
     };

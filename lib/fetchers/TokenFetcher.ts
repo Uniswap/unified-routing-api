@@ -38,7 +38,7 @@ export class TokenFetcher {
    * Gets the token address for the provided token symbol or address from the DEFAULT_TOKEN_LIST.
    * Throws an error if the token is not found.
    */
-  public resolveTokenSymbolOrAddress = async (chainId: ChainId, symbolOrAddress: string): Promise<string> => {
+  public resolveTokenBySymbolOrAddress = async (chainId: ChainId, symbolOrAddress: string): Promise<string> => {
     // check for native symbols first
     if (NATIVE_NAMES_BY_ID[chainId]!.includes(symbolOrAddress) || symbolOrAddress == NATIVE_ADDRESS) {
       return NATIVE_ADDRESS;
