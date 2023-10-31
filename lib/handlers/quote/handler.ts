@@ -171,14 +171,17 @@ export class QuoteHandler extends APIGLambdaHandler<
   private async isDutchEligible(requestBody: QuoteRequestBodyJSON, tokenFetcher: TokenFetcher): Promise<boolean> {
     const [tokenIn, tokenOut] = await Promise.all([
       tokenFetcher.getTokenByAddress(requestBody.tokenInChainId, requestBody.tokenIn),
-      tokenFetcher.getTokenByAddress(requestBody.tokenOutChainId, requestBody.tokenIn),
+      tokenFetcher.getTokenByAddress(requestBody.tokenOutChainId, requestBody.tokenOut),
     ]);
 
     const tokenInNotValid = !tokenIn && requestBody.tokenIn !== NATIVE_ADDRESS;
     const tokenOutNotValid = !tokenOut && requestBody.tokenOut !== NATIVE_ADDRESS;
     if (tokenInNotValid || tokenOutNotValid) {
       log.info(
-        { ...(tokenInNotValid && { tokenIn }), ...(tokenOutNotValid && { tokenOut }) },
+        {
+          ...(tokenInNotValid && { tokenIn: requestBody.tokenIn }),
+          ...(tokenOutNotValid && { tokenOut: requestBody.tokenOut }),
+        },
         'Token/tokens not on token list, filtering out all Dutch Limit requests...'
       );
       return false;

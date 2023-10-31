@@ -712,7 +712,7 @@ describe('QuoteHandler', () => {
       describe('removes ineligible dutch requests', () => {
         it('removes dutch request if token in is not eligible', async () => {
           const quoters = { [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER) };
-          const tokenFetcher = TokenFetcherMock([INELIGIBLE_TOKEN, TOKEN_OUT]);
+          const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
           const portionFetcher = PortionFetcherMock(GET_NO_PORTION_RESPONSE);
           const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
           const syntheticStatusProvider = SyntheticStatusProviderMock(false);
@@ -723,14 +723,14 @@ describe('QuoteHandler', () => {
             portionFetcher,
             permit2Fetcher,
             syntheticStatusProvider
-          ).handler(getEvent(DL_REQUEST_BODY), {} as unknown as Context);
+          ).handler(getEvent({ ...DL_REQUEST_BODY, tokenIn: INELIGIBLE_TOKEN }), {} as unknown as Context);
           const quoteJSON = JSON.parse(res.body);
           expect(quoteJSON.errorCode).toEqual(ErrorCode.QuoteError);
         });
 
         it('removes dutch request if token out is not eligible', async () => {
           const quoters = { [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER) };
-          const tokenFetcher = TokenFetcherMock([TOKEN_IN, INELIGIBLE_TOKEN]);
+          const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
           const portionFetcher = PortionFetcherMock(GET_NO_PORTION_RESPONSE);
           const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
           const syntheticStatusProvider = SyntheticStatusProviderMock(false);
@@ -741,7 +741,7 @@ describe('QuoteHandler', () => {
             portionFetcher,
             permit2Fetcher,
             syntheticStatusProvider
-          ).handler(getEvent(DL_REQUEST_BODY), {} as unknown as Context);
+          ).handler(getEvent({ ...DL_REQUEST_BODY, tokenOut: INELIGIBLE_TOKEN }), {} as unknown as Context);
           const quoteJSON = JSON.parse(res.body);
           expect(quoteJSON.errorCode).toEqual(ErrorCode.QuoteError);
         });
