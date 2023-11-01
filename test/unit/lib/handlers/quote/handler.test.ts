@@ -162,7 +162,7 @@ describe('QuoteHandler', () => {
     const TokenFetcherMock = (addresses: string[], isError = false): TokenFetcher => {
       const fetcher = {
         resolveTokenBySymbolOrAddress: jest.fn(),
-        getTokenByAddress: (_chainId: number, address: string) => [TOKEN_IN, TOKEN_OUT].includes(address),
+        getTokenBySymbolOrAddress: (_chainId: number, address: string) => [TOKEN_IN, TOKEN_OUT].includes(address),
       };
 
       if (isError) {
