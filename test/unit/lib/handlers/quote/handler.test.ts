@@ -40,9 +40,9 @@ import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, Quote } from '../../../
 import { QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index';
 import { Permit2Fetcher } from '../../../../../lib/fetchers/Permit2Fetcher';
 import {
-  GET_NO_PORTION_RESPONSE,
   GetPortionResponse,
-  PortionFetcher
+  GET_NO_PORTION_RESPONSE,
+  PortionFetcher,
 } from '../../../../../lib/fetchers/PortionFetcher';
 import { TokenFetcher } from '../../../../../lib/fetchers/TokenFetcher';
 import { ApiInjector, ApiRInj } from '../../../../../lib/handlers/base';
@@ -58,7 +58,7 @@ import { Quoter, SyntheticStatusProvider } from '../../../../../lib/providers';
 import { Erc20__factory } from '../../../../../lib/types/ext/factories/Erc20__factory';
 import { ErrorCode } from '../../../../../lib/util/errors';
 import { setGlobalLogger } from '../../../../../lib/util/log';
-import { PERMIT2_USED, PERMIT_DETAILS, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../../constants';
+import { INELIGIBLE_TOKEN, PERMIT2_USED, PERMIT_DETAILS, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../../constants';
 
 describe('QuoteHandler', () => {
   const OLD_ENV = process.env;
@@ -161,16 +161,17 @@ describe('QuoteHandler', () => {
     };
     const TokenFetcherMock = (addresses: string[], isError = false): TokenFetcher => {
       const fetcher = {
-        resolveTokenAddress: jest.fn(),
+        resolveTokenBySymbolOrAddress: jest.fn(),
+        getTokenByAddress: (_chainId: number, address: string) => [TOKEN_IN, TOKEN_OUT].includes(address),
       };
 
       if (isError) {
-        fetcher.resolveTokenAddress.mockRejectedValue(new Error('error'));
+        fetcher.resolveTokenBySymbolOrAddress.mockRejectedValue(new Error('error'));
         return fetcher as unknown as TokenFetcher;
       }
 
       for (const address of addresses) {
-        fetcher.resolveTokenAddress.mockResolvedValueOnce(address);
+        fetcher.resolveTokenBySymbolOrAddress.mockResolvedValueOnce(address);
       }
       return fetcher as unknown as TokenFetcher;
     };
@@ -705,6 +706,44 @@ describe('QuoteHandler', () => {
 
           const bodyJSON = JSON.parse(res.body);
           expect(bodyJSON.routing).toEqual(RoutingType.DUTCH_LIMIT);
+        });
+      });
+
+      describe('removes ineligible dutch requests', () => {
+        it('removes dutch request if token in is not eligible', async () => {
+          const quoters = { [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER) };
+          const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+          const portionFetcher = PortionFetcherMock(GET_NO_PORTION_RESPONSE);
+          const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+          const syntheticStatusProvider = SyntheticStatusProviderMock(false);
+
+          const res = await getQuoteHandler(
+            quoters,
+            tokenFetcher,
+            portionFetcher,
+            permit2Fetcher,
+            syntheticStatusProvider
+          ).handler(getEvent({ ...DL_REQUEST_BODY, tokenIn: INELIGIBLE_TOKEN }), {} as unknown as Context);
+          const quoteJSON = JSON.parse(res.body);
+          expect(quoteJSON.errorCode).toEqual(ErrorCode.QuoteError);
+        });
+
+        it('removes dutch request if token out is not eligible', async () => {
+          const quoters = { [RoutingType.DUTCH_LIMIT]: RfqQuoterMock(DL_QUOTE_EXACT_IN_BETTER) };
+          const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+          const portionFetcher = PortionFetcherMock(GET_NO_PORTION_RESPONSE);
+          const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+          const syntheticStatusProvider = SyntheticStatusProviderMock(false);
+
+          const res = await getQuoteHandler(
+            quoters,
+            tokenFetcher,
+            portionFetcher,
+            permit2Fetcher,
+            syntheticStatusProvider
+          ).handler(getEvent({ ...DL_REQUEST_BODY, tokenOut: INELIGIBLE_TOKEN }), {} as unknown as Context);
+          const quoteJSON = JSON.parse(res.body);
+          expect(quoteJSON.errorCode).toEqual(ErrorCode.QuoteError);
         });
       });
     });
