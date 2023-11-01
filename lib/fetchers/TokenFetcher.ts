@@ -58,12 +58,22 @@ export class TokenFetcher {
     }
   };
 
-  public getTokenByAddress = async (chainId: ChainId, address: string): Promise<Currency | undefined> => {
-    if (address == NATIVE_ADDRESS || address.toLowerCase() == 'eth') {
+  /**
+   * Gets the token currency object for the provided token symbol or address if found in the DEFAULT_TOKEN_LIST.
+   * Returns undefined if the token is not found.
+   */
+  public getTokenBySymbolOrAddress = async (
+    chainId: ChainId,
+    symbolOrAddress: string
+  ): Promise<Currency | undefined> => {
+    // check for native symbols first
+    if (NATIVE_NAMES_BY_ID[chainId]!.includes(symbolOrAddress) || symbolOrAddress == NATIVE_ADDRESS) {
       return Ether.onChain(chainId);
     }
 
     const tokenListProvider = this.getTokenListProvider(chainId);
-    return await tokenListProvider.getTokenByAddress(address);
+    const tokenAddress = await this.resolveTokenBySymbolOrAddress(chainId, symbolOrAddress);
+
+    return await tokenListProvider.getTokenByAddress(tokenAddress);
   };
 }

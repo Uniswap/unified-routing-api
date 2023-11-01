@@ -170,8 +170,8 @@ export class QuoteHandler extends APIGLambdaHandler<
 
   private async isDutchEligible(requestBody: QuoteRequestBodyJSON, tokenFetcher: TokenFetcher): Promise<boolean> {
     const [tokenIn, tokenOut] = await Promise.all([
-      tokenFetcher.getTokenByAddress(requestBody.tokenInChainId, requestBody.tokenIn),
-      tokenFetcher.getTokenByAddress(requestBody.tokenOutChainId, requestBody.tokenOut),
+      tokenFetcher.getTokenBySymbolOrAddress(requestBody.tokenInChainId, requestBody.tokenIn),
+      tokenFetcher.getTokenBySymbolOrAddress(requestBody.tokenOutChainId, requestBody.tokenOut),
     ]);
 
     const tokenInNotValid = !tokenIn && requestBody.tokenIn !== NATIVE_ADDRESS;
@@ -235,7 +235,7 @@ export class QuoteHandler extends APIGLambdaHandler<
   private async getTokenSymbolOrAbbr(tokenFetcher: TokenFetcher, chainId: number, address: string): Promise<string> {
     let symbol = address.slice(0, 6);
     try {
-      symbol = (await tokenFetcher.getTokenByAddress(chainId, symbol))?.symbol ?? symbol;
+      symbol = (await tokenFetcher.getTokenBySymbolOrAddress(chainId, symbol))?.symbol ?? symbol;
     } catch {
       /* empty */
     }
