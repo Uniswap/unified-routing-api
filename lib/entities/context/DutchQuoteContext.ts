@@ -34,7 +34,7 @@ const BPS = 10000;
 const RFQ_QUOTE_UPPER_BOUND_MULTIPLIER = 3;
 
 export type DutchQuoteContextProviders = {
-  rpcProvider: ethers.providers.JsonRpcProvider;
+  rpcProvider: ethers.providers.StaticJsonRpcProvider;
   syntheticStatusProvider: SyntheticStatusProvider;
 };
 
@@ -42,7 +42,7 @@ export type DutchQuoteContextProviders = {
 export class DutchQuoteContext implements QuoteContext {
   routingType: RoutingType.DUTCH_LIMIT;
   private log: Logger;
-  private rpcProvider: ethers.providers.JsonRpcProvider;
+  private rpcProvider: ethers.providers.StaticJsonRpcProvider;
   private syntheticStatusProvider: SyntheticStatusProvider;
 
   public requestKey: string;
