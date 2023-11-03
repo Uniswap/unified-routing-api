@@ -86,7 +86,7 @@ export class APIStack extends cdk.Stack {
       scope: 'REGIONAL',
       ipAddressVersion: 'IPV4',
       addresses: [
-        '142.154.213.230/32', // 2023-09-18 NYC Office Fiber Static IP 
+        '142.154.213.230/32', // 2023-09-18 NYC Office Fiber Static IP
       ],
     });
 
@@ -213,7 +213,11 @@ export class APIStack extends cdk.Stack {
         stage: props.stage,
         ...props.envVars,
       },
-      timeout: cdk.Duration.seconds(30),
+      // Our default axios timeout is 10 seconds so this lambda should have no reason
+      // to run any longer than the network request time + small time for processing
+      // the response (<1 second). This will help limit the number of concurrent
+      // lambdas running.
+      timeout: cdk.Duration.seconds(11),
       logRetention: aws_logs.RetentionDays.ONE_MONTH,
     });
 
