@@ -85,7 +85,7 @@ export class QuoteContextManager {
 
 export type QuoteContextProviders = {
   permit2Fetcher: Permit2Fetcher;
-  rpcProvider: ethers.providers.JsonRpcProvider;
+  rpcProvider: ethers.providers.StaticJsonRpcProvider;
   syntheticStatusProvider: SyntheticStatusProvider;
 };
 

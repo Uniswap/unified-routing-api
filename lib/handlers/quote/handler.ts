@@ -64,7 +64,7 @@ export class QuoteHandler extends APIGLambdaHandler<
       throw new ValidationError(`Cannot request quotes for tokens on different chains`);
     }
 
-    const provider = new ethers.providers.JsonRpcProvider(rpcUrlMap.get(requestBody.tokenInChainId));
+    const provider = new ethers.providers.StaticJsonRpcProvider(rpcUrlMap.get(requestBody.tokenInChainId));
 
     const request = {
       ...requestBody,
