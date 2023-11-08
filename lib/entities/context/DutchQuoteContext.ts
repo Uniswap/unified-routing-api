@@ -3,7 +3,12 @@ import { PERMIT2_ADDRESS } from '@uniswap/permit2-sdk';
 import { Protocol } from '@uniswap/router-sdk';
 import { ChainId, TradeType } from '@uniswap/sdk-core';
 
-import { CachingTokenListProvider, NodeJSCache, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
+import {
+  CachingTokenListProvider,
+  ID_TO_CHAIN_ID,
+  NodeJSCache,
+  WRAPPED_NATIVE_CURRENCY,
+} from '@uniswap/smart-order-router';
 import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
 import NodeCache from 'node-cache';
@@ -66,16 +71,43 @@ export class DutchQuoteContext implements QuoteContext {
     this.classicKey = classicRequest.key();
     this.log.info({ classicRequest: classicRequest.info }, 'Adding synthetic classic request');
 
-    return [this.request, classicRequest];
+    const result = [this.request, classicRequest];
+
+    const wrappedNativeAddress = WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(this.request.info.tokenOutChainId)].address;
+    if (this.request.info.tokenOut !== wrappedNativeAddress && this.request.info.tokenOut !== NATIVE_ADDRESS) {
+      this.needsRouteToNative = true;
+      const routeBackToNativeRequest = new ClassicRequest(
+        {
+          ...this.request.info,
+          type: TradeType.EXACT_OUTPUT,
+          tokenIn: this.request.info.tokenOut,
+          amount: ethers.utils.parseEther('1'),
+          tokenOut: wrappedNativeAddress,
+        },
+        {
+          protocols: [Protocol.MIXED, Protocol.V2, Protocol.V3],
+        }
+      );
+      this.routeToNativeKey = routeBackToNativeRequest.key();
+      result.push(routeBackToNativeRequest);
+
+      this.log.info(
+        { routeBackToNativeRequest: routeBackToNativeRequest.info },
+        'Adding synthetic back to native classic request'
+      );
+    }
+
+    return result;
   }
 
   async resolveHandler(dependencies: QuoteByKey): Promise<Quote | null> {
     const classicQuote = dependencies[this.classicKey] as ClassicQuote;
+    const routeBackToNative = dependencies[this.routeToNativeKey] as ClassicQuote;
     const rfqQuote = dependencies[this.requestKey] as DutchQuote;
 
     const [quote, syntheticQuote] = await Promise.all([
       this.getRfqQuote(rfqQuote, classicQuote),
-      this.getSyntheticQuote(classicQuote),
+      this.getSyntheticQuote(classicQuote, routeBackToNative),
     ]);
 
     // handle cases where we only either have RFQ or synthetic
