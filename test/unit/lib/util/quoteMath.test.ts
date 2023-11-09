@@ -1,5 +1,6 @@
 import { createClassicQuote } from '../../../utils/fixtures';
 import { getQuoteSizeEstimateUSD } from '../../../../lib/util/quoteMath';
+import { BigNumber as BN } from 'bignumber.js';
 
 describe('quoteMath', () => {
   describe('getQuoteSizeEstimateUSD', () => {
@@ -16,7 +17,7 @@ describe('quoteMath', () => {
        *               = (quote / gasUseEstimateQuote) * gasUseEstimateUSD
        *               = (1000000000000000000 / 100) * 100
       */
-      expect(getQuoteSizeEstimateUSD(quote)).toBe(1000000000000000000);
+      expect(getQuoteSizeEstimateUSD(quote)).toStrictEqual(new BN('1000000000000000000'));
     })
   })
 });

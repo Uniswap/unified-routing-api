@@ -112,10 +112,10 @@ describe('DutchQuote', () => {
     it.each([
       { title: 'overrides', largeTrade: true, },
       { title: 'does not override', largeTrade: false }
-    ])('$title auctionPeriodSec if order size is considered large: $largeTrade', async (largeTrade) => {
-      const classic = largeTrade ? CLASSIC_QUOTE_EXACT_IN_LARGE : CLASSIC_QUOTE_EXACT_IN_SMALL;
-      const reparamatrized = DutchQuote.reparameterize(DL_QUOTE_EXACT_IN_LARGE, classic);
-      if (largeTrade) {
+    ])('$title auctionPeriodSec if order size is considered large: $largeTrade', async (params) => {
+      const classic = params.largeTrade ? CLASSIC_QUOTE_EXACT_IN_LARGE : CLASSIC_QUOTE_EXACT_IN_SMALL;
+      const reparamatrized = DutchQuote.reparameterize(DL_QUOTE_EXACT_IN_LARGE, classic, {hasApprovedPermit2: true, largeTrade: params.largeTrade});
+      if (params.largeTrade) {
         expect(reparamatrized.auctionPeriodSecs).toEqual(120);
       } else {
         expect(reparamatrized.auctionPeriodSecs).toEqual(60);

@@ -13,7 +13,7 @@ import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
 import NodeCache from 'node-cache';
 import { QuoteByKey, QuoteContext } from '.';
-import { DEFAULT_ROUTING_API_DEADLINE, NATIVE_ADDRESS, RoutingType } from '../../constants';
+import { DEFAULT_ROUTING_API_DEADLINE, LARGE_TRADE_USD_THRESHOLD, NATIVE_ADDRESS, RoutingType } from '../../constants';
 import {
   ClassicQuote,
   ClassicQuoteDataJSON,
@@ -261,8 +261,8 @@ export class DutchQuoteContext implements QuoteContext {
       return false;
     }
     const quoteSizeEstimateUSD = getQuoteSizeEstimateUSD(classicQuote);
-    log.info({ quoteSizeEstimateUSD }, 'Quote size estimate in USD');
-    return quoteSizeEstimateUSD >= 10000;
+    log.info({ quoteSize: quoteSizeEstimateUSD.toString() }, 'Quote size estimate in USD');
+    return quoteSizeEstimateUSD.gte(LARGE_TRADE_USD_THRESHOLD);
   }
 
   rfqQuoteTooGood(quote: DutchQuote, classicQuote: ClassicQuote): boolean {

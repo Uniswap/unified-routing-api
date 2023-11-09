@@ -10,7 +10,6 @@ import {
   BPS,
   DEFAULT_START_TIME_BUFFER_SECS,
   frontendAndUraEnablePortion,
-  LARGE_TRADE_USD_THRESHOLD,
   NATIVE_ADDRESS,
   OPEN_QUOTE_START_TIME_BUFFER_SECS,
   RoutingType,
@@ -25,7 +24,6 @@ import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
 import { ClassicQuote } from './ClassicQuote';
 import { LogJSON } from './index';
-import { getQuoteSizeEstimateUSD } from '../../util/quoteMath';
 
 export type DutchQuoteDerived = {
   largeTrade: boolean;
@@ -208,7 +206,7 @@ export class DutchQuote implements IQuote {
       classic.getPortionBips(),
       classic.getPortionRecipient(),
       {
-        largeTrade: getQuoteSizeEstimateUSD(classic) >= LARGE_TRADE_USD_THRESHOLD,
+        largeTrade: options?.largeTrade ?? false,
       }
     );
   }
