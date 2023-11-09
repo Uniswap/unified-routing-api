@@ -16,7 +16,9 @@ export interface SyntheticStatusProvider {
 // TODO: add caching wrapper? Probably dont want to cache too aggressively
 // at risk of missing an important switch-off
 export class UPASyntheticStatusProvider implements SyntheticStatusProvider {
-  constructor(private upaUrl: string, private paramApiKey: string) {}
+  constructor(private upaUrl: string, private paramApiKey: string) {
+    // empty constructor
+  }
 
   async getStatus(quoteRequest: QuoteRequestInfo): Promise<SyntheticStatus> {
     const { tokenIn, tokenInChainId, tokenOut, tokenOutChainId, amount, type } = quoteRequest;
