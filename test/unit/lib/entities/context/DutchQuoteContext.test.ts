@@ -15,7 +15,6 @@ import {
   CHAIN_OUT_ID,
   ETH_IN,
   TOKEN_IN,
-  USDC_ADDRESS,
 } from '../../../../constants';
 import {
   BASE_REQUEST_INFO_EXACT_IN,
