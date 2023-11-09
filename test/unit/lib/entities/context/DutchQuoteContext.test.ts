@@ -9,6 +9,8 @@ import { Erc20__factory } from '../../../../../lib/types/ext/factories/Erc20__fa
 import {
   AMOUNT,
   AMOUNT_GAS_ADJUSTED,
+  AMOUNT_LARGE,
+  AMOUNT_LARGE_GAS_ADJUSTED,
   AMOUNT_UNDER_GAS_THRESHOLD,
   CHAIN_OUT_ID,
   ETH_IN,
@@ -185,6 +187,38 @@ describe('DutchQuoteContext', () => {
       expect(quote?.amountOut.toString()).toEqual('2');
     });
 
+    it('overrides auctionPeriodSec on mainnet', async () => {
+      const req = makeDutchRequest({ tokenInChainId: 1, tokenOutChainId: 1 }, { useSyntheticQuotes: true });
+      const context = new DutchQuoteContext(logger, req, makeProviders(false));
+      const rfqQuote = createDutchQuote({ amountOut: AMOUNT_LARGE, tokenIn: NATIVE_ADDRESS, tokenOut: NATIVE_ADDRESS, chainId: 1 }, 'EXACT_INPUT', '1');
+      const classicQuote = createClassicQuote(
+        { quote: AMOUNT_LARGE, quoteGasAdjusted: AMOUNT_LARGE_GAS_ADJUSTED },
+        { type: 'EXACT_INPUT', tokenInChainId: 1, tokenOutChainId: 1 }
+      );
+      const quote = await context.resolve({
+        [req.key()]: rfqQuote,
+        [context.classicKey]: classicQuote
+      });
+      expect(quote?.routingType).toEqual(RoutingType.DUTCH_LIMIT);
+      expect((quote?.toJSON() as DutchQuoteDataJSON).auctionPeriodSecs).toBe(120);
+    });
+
+    it('does not override auctionPeriodSec on non-mainnet chains', async () => {
+      const req = makeDutchRequest({ tokenInChainId: 137, tokenOutChainId: 137 }, { useSyntheticQuotes: true });
+      const context = new DutchQuoteContext(logger, req, makeProviders(false));
+      const rfqQuote = createDutchQuote({ amountOut: AMOUNT_LARGE, tokenIn: NATIVE_ADDRESS, tokenOut: NATIVE_ADDRESS, chainId: 137 }, 'EXACT_INPUT', '1');
+      const classicQuote = createClassicQuote(
+        { quote: AMOUNT_LARGE, quoteGasAdjusted: AMOUNT_LARGE_GAS_ADJUSTED },
+        { type: 'EXACT_INPUT', tokenInChainId: 137, tokenOutChainId: 137 }
+      );
+      const quote = await context.resolve({
+        [req.key()]: rfqQuote,
+        [context.classicKey]: classicQuote
+      });
+      expect(quote?.routingType).toEqual(RoutingType.DUTCH_LIMIT);
+      expect((quote?.toJSON() as DutchQuoteDataJSON).auctionPeriodSecs).toBe(60);
+    });
+
     it('uses synthetic if better with useSyntheticQuotes=true and switch=false', async () => {
       const request = makeDutchRequest({}, { useSyntheticQuotes: true });
       const context = new DutchQuoteContext(logger, request, makeProviders(false));
@@ -266,7 +300,7 @@ describe('DutchQuoteContext', () => {
       );
     });
 
-    it.only('does not use synthetic if better with useSyntheticQuotes=false and switch=false', async () => {
+    it('does not use synthetic if better with useSyntheticQuotes=false and switch=false', async () => {
       const request = makeDutchRequest({}, { useSyntheticQuotes: false });
       const context = new DutchQuoteContext(logger, request, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
@@ -579,6 +613,10 @@ describe('DutchQuoteContext', () => {
         ...rfqQuote,
         amountOutStart: expect.any(BigNumber),
         amountOutEnd: expect.any(BigNumber),
+        portionBips: 0,
+        derived: {
+          largeTrade: true,
+        }
       });
 
       expect({
@@ -589,6 +627,10 @@ describe('DutchQuoteContext', () => {
         ...rfqQuote,
         amountOutStart: expect.any(BigNumber),
         amountOutEnd: expect.any(BigNumber),
+        portionBips: 0,
+        derived: {
+          largeTrade: true,
+        }
       });
 
       // Expect adjustment to amount out because of ETH in
