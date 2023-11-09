@@ -22,6 +22,7 @@ import {
   CLASSIC_QUOTE_EXACT_IN_LARGE_WITH_PORTION,
   CLASSIC_QUOTE_EXACT_IN_NATIVE,
   CLASSIC_QUOTE_EXACT_IN_NATIVE_WITH_PORTION,
+  CLASSIC_QUOTE_EXACT_IN_SMALL,
   CLASSIC_QUOTE_EXACT_OUT_LARGE,
   createClassicQuote,
   createDutchQuote,
@@ -47,19 +48,6 @@ describe('DutchQuote', () => {
   });
 
   describe('Reparameterize', () => {
-    it.each([true, false])(
-      `Does not reparameterize if classic is not defined with portion flag %p`,
-      async (enablePortion) => {
-        const dutchLargeQuote = enablePortion ? DL_QUOTE_EXACT_IN_LARGE_WITH_PORTION : DL_QUOTE_EXACT_IN_LARGE;
-        const reparameterized = DutchQuote.reparameterize(dutchLargeQuote, undefined, undefined);
-        expect(reparameterized).toMatchObject(dutchLargeQuote);
-
-        if (enablePortion) {
-          expect(reparameterized.portionBips).toEqual(PORTION_BIPS);
-          expect(reparameterized.portionRecipient).toEqual(PORTION_RECIPIENT);
-        }
-      }
-    );
 
     it('slippage is in percent terms', async () => {
       const amountIn = BigNumber.from('1000000000');
@@ -119,6 +107,41 @@ describe('DutchQuote', () => {
 
       expect(amountInSlippageAdjusted.gte(amountInGasAdjusted)).toBeTruthy();
       expect(amountOutSlippageAdjusted.eq(amountOutGasAdjusted)).toBeTruthy();
+    });
+    
+    it.each([
+      { title: 'overrides', largeTrade: true, },
+      { title: 'does not override', largeTrade: false }
+    ])('$title auctionPeriodSec if order size is considered large: $largeTrade', async (largeTrade) => {
+      const classic = largeTrade ? CLASSIC_QUOTE_EXACT_IN_LARGE : CLASSIC_QUOTE_EXACT_IN_SMALL;
+      const reparamatrized = DutchQuote.reparameterize(DL_QUOTE_EXACT_IN_LARGE, classic);
+      if (largeTrade) {
+        expect(reparamatrized.auctionPeriodSecs).toEqual(120);
+      } else {
+        expect(reparamatrized.auctionPeriodSecs).toEqual(60);
+      }
+
+    });
+
+    it.each([true, false])(
+      `Does not reparameterize if classic is not defined with portion flag %p`,
+      async (enablePortion) => {
+        const dutchLargeQuote = enablePortion ? DL_QUOTE_EXACT_IN_LARGE_WITH_PORTION : DL_QUOTE_EXACT_IN_LARGE;
+        const reparameterized = DutchQuote.reparameterize(dutchLargeQuote, undefined, undefined);
+        expect(reparameterized).toMatchObject(dutchLargeQuote);
+
+        if (enablePortion) {
+          expect(reparameterized.portionBips).toEqual(PORTION_BIPS);
+          expect(reparameterized.portionRecipient).toEqual(PORTION_RECIPIENT);
+        }
+      }
+    );
+    
+    it('only override auctionPeriodSec on mainnet', async () => {
+      const classic = CLASSIC_QUOTE_EXACT_IN_LARGE;
+      const dutchRequest = createDutchQuote({ amountOut: AMOUNT_LARGE, chainId: 137 }, 'EXACT_INPUT', '1');
+      const reparamatrized = DutchQuote.reparameterize(dutchRequest, classic);
+      expect(reparamatrized.auctionPeriodSecs).toEqual(60);
     });
 
     it.each([true, false])('reparameterizes with classic quote for end with portion flag %p', async (enablePortion) => {
@@ -392,7 +415,6 @@ describe('DutchQuote', () => {
       // portion is 12 bps
       const amountOut = AMOUNT;
       const dutchQuote = createDutchQuote({ amountOut }, 'EXACT_OUTPUT', '1', FLAT_PORTION, true);
-      console.log(dutchQuote.toJSON());
       // since we add the amount to RFQ request
       const amountOutWithPortion = dutchQuote.amountOutStart.add(dutchQuote.portionAmountOutStart);
       // RFQ returns same as mock dutch quote
@@ -411,7 +433,6 @@ describe('DutchQuote', () => {
 
       const quote = DutchQuote.fromResponseBody(dutchQuote.request, DL_QUOTE_JSON_RFQ, '1', FLAT_PORTION);
 
-      console.log(quote.toJSON().orderInfo.outputs);
       // expect the sum of outputs to be amountOutWithPortion,
       // but the first output to the swapper tob e amountOut, and the second output to be the portion to the recipient
       expect(quote.toJSON().orderInfo.outputs[0].startAmount).toEqual(amountOut);

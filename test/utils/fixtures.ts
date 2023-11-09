@@ -62,7 +62,6 @@ export const QUOTE_REQUEST_BODY_MULTI: QuoteRequestBodyJSON = {
       routingType: RoutingType.DUTCH_LIMIT,
       swapper: SWAPPER,
       exclusivityOverrideBps: 12,
-      auctionPeriodSecs: 60,
       deadlineBufferSecs: 12,
     },
     {
@@ -147,7 +146,6 @@ export function makeDutchRequest(
         routingType: RoutingType.DUTCH_LIMIT,
         swapper: SWAPPER,
         exclusivityOverrideBps: 12,
-        auctionPeriodSecs: 60,
         deadlineBufferSecs: 12,
         ...configOverrides,
       },
@@ -450,6 +448,7 @@ export const CLASSIC_QUOTE_EXACT_IN_WORSE_WITH_PORTION = createClassicQuote(
   undefined,
   FLAT_PORTION
 );
+export const CLASSIC_QUOTE_EXACT_IN_SMALL = createClassicQuote({gasUseEstimateQuote: '1', quoteGasAdjusted: '10', gasUseEstimateUSD: '100' }, { type: 'EXACT_INPUT' });
 export const CLASSIC_QUOTE_EXACT_IN_LARGE = createClassicQuote({}, { type: 'EXACT_INPUT' });
 export const CLASSIC_QUOTE_EXACT_IN_LARGE_WITH_PORTION = createClassicQuote(
   {

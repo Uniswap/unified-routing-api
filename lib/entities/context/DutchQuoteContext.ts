@@ -26,6 +26,7 @@ import {
 import { SyntheticStatusProvider } from '../../providers';
 import { Erc20__factory } from '../../types/ext/factories/Erc20__factory';
 import { metrics } from '../../util/metrics';
+import { getQuoteSizeEstimateUSD } from '../../util/quoteMath';
 
 // if the gas is greater than this proportion of the whole trade size
 // then we will not route the order
@@ -161,9 +162,11 @@ export class DutchQuoteContext implements QuoteContext {
       return null;
     }
 
+    let isLargeTrade = false;
     // TODO: remove after reputation system is ready
     // drop Rfq quote if it's significantly better than classic - high chance MM will fade
     if (classicQuote) {
+      isLargeTrade = this.isLargeOrder(this.log, classicQuote);
       metrics.putMetric(`HasBothRfqAndClassicQuote`, 1);
 
       if (this.rfqQuoteTooGood(quote, classicQuote)) {
@@ -184,6 +187,7 @@ export class DutchQuoteContext implements QuoteContext {
 
     const reparameterized = DutchQuote.reparameterize(quote, classicQuote as ClassicQuote, {
       hasApprovedPermit2: await this.hasApprovedPermit2(quote.request),
+      largeTrade: isLargeTrade,
     });
     // if its invalid for some reason, i.e. too much decay then return null
     if (!reparameterized.validate()) return null;
@@ -248,6 +252,17 @@ export class DutchQuoteContext implements QuoteContext {
       return false;
     }
     return true;
+  }
+  
+  // large as defined by >= $10k USD
+  isLargeOrder(log: Logger, classicQuote: Quote): boolean {
+    // gasUseEstimateUSD on other chains seem to be unreliable
+    if (classicQuote.request.info.tokenInChainId !== ChainId.MAINNET || classicQuote.request.info.tokenOutChainId !== ChainId.MAINNET) {
+      return false;
+    }
+    const quoteSizeEstimateUSD = getQuoteSizeEstimateUSD(classicQuote);
+    log.info({ quoteSizeEstimateUSD }, 'Quote size estimate in USD');
+    return quoteSizeEstimateUSD >= 10000;
   }
 
   rfqQuoteTooGood(quote: DutchQuote, classicQuote: ClassicQuote): boolean {

@@ -10,6 +10,7 @@ import {
   BPS,
   DEFAULT_START_TIME_BUFFER_SECS,
   frontendAndUraEnablePortion,
+  LARGE_TRADE_USD_THRESHOLD,
   NATIVE_ADDRESS,
   OPEN_QUOTE_START_TIME_BUFFER_SECS,
   RoutingType,
@@ -24,6 +25,11 @@ import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
 import { ClassicQuote } from './ClassicQuote';
 import { LogJSON } from './index';
+import { getQuoteSizeEstimateUSD } from '../../util/quoteMath';
+
+export type DutchQuoteDerived = {
+  largeTrade: boolean;
+}
 
 export type DutchQuoteDataJSON = {
   orderInfo: DutchOrderInfoJSON;
@@ -55,6 +61,7 @@ export type DutchQuoteJSON = {
 
 export type ParameterizationOptions = {
   hasApprovedPermit2: boolean;
+  largeTrade: boolean;
 };
 
 type Amounts = {
@@ -69,6 +76,7 @@ export enum DutchQuoteType {
 
 export class DutchQuote implements IQuote {
   public readonly createdAt: string;
+  public derived: DutchQuoteDerived;
   public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
   // Add 1bps price improvmement to favor Dutch
   public static amountOutImprovementExactIn = BigNumber.from(10001);
@@ -198,7 +206,10 @@ export class DutchQuote implements IQuote {
       quote.filler,
       quote.nonce,
       classic.getPortionBips(),
-      classic.getPortionRecipient()
+      classic.getPortionRecipient(),
+      {
+        largeTrade: getQuoteSizeEstimateUSD(classic) >= LARGE_TRADE_USD_THRESHOLD,
+      }
     );
   }
 
@@ -219,10 +230,12 @@ export class DutchQuote implements IQuote {
     public readonly filler?: string,
     public readonly nonce?: string,
     public readonly portionBips?: number,
-    public readonly portionRecipient?: string
+    public readonly portionRecipient?: string,
+    derived?: DutchQuoteDerived
   ) {
     this.createdAtMs = createdAtMs || currentTimestampInMs();
     this.createdAt = timestampInMstoSeconds(parseInt(this.createdAtMs));
+    this.derived = derived || { largeTrade: false };
   }
 
   public toJSON(): DutchQuoteDataJSON {
@@ -367,7 +380,7 @@ export class DutchQuote implements IQuote {
 
     switch (this.chainId) {
       case 1:
-        return 60;
+        return this.derived.largeTrade ? 120 : 60;
       case 137:
         return 60;
       default:
