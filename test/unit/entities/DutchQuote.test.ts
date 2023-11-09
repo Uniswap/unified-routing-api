@@ -22,6 +22,7 @@ import {
   CLASSIC_QUOTE_EXACT_IN_LARGE_WITH_PORTION,
   CLASSIC_QUOTE_EXACT_IN_NATIVE,
   CLASSIC_QUOTE_EXACT_IN_NATIVE_WITH_PORTION,
+  CLASSIC_QUOTE_EXACT_IN_SMALL,
   CLASSIC_QUOTE_EXACT_OUT_LARGE,
   createClassicQuote,
   createDutchQuote,
@@ -47,19 +48,6 @@ describe('DutchQuote', () => {
   });
 
   describe('Reparameterize', () => {
-    it.each([true, false])(
-      `Does not reparameterize if classic is not defined with portion flag %p`,
-      async (enablePortion) => {
-        const dutchLargeQuote = enablePortion ? DL_QUOTE_EXACT_IN_LARGE_WITH_PORTION : DL_QUOTE_EXACT_IN_LARGE;
-        const reparameterized = DutchQuote.reparameterize(dutchLargeQuote, undefined, undefined);
-        expect(reparameterized).toMatchObject(dutchLargeQuote);
-
-        if (enablePortion) {
-          expect(reparameterized.portionBips).toEqual(PORTION_BIPS);
-          expect(reparameterized.portionRecipient).toEqual(PORTION_RECIPIENT);
-        }
-      }
-    );
 
     it('slippage is in percent terms', async () => {
       const amountIn = BigNumber.from('1000000000');
@@ -119,6 +107,41 @@ describe('DutchQuote', () => {
 
       expect(amountInSlippageAdjusted.gte(amountInGasAdjusted)).toBeTruthy();
       expect(amountOutSlippageAdjusted.eq(amountOutGasAdjusted)).toBeTruthy();
+    });
+    
+    it.each([
+      { title: 'overrides', largeTrade: true, },
+      { title: 'does not override', largeTrade: false }
+    ])('$title auctionPeriodSec if order size is considered large: $largeTrade', async (params) => {
+      const classic = params.largeTrade ? CLASSIC_QUOTE_EXACT_IN_LARGE : CLASSIC_QUOTE_EXACT_IN_SMALL;
+      const reparamatrized = DutchQuote.reparameterize(DL_QUOTE_EXACT_IN_LARGE, classic, {hasApprovedPermit2: true, largeTrade: params.largeTrade});
+      if (params.largeTrade) {
+        expect(reparamatrized.auctionPeriodSecs).toEqual(120);
+      } else {
+        expect(reparamatrized.auctionPeriodSecs).toEqual(60);
+      }
+
+    });
+
+    it.each([true, false])(
+      `Does not reparameterize if classic is not defined with portion flag %p`,
+      async (enablePortion) => {
+        const dutchLargeQuote = enablePortion ? DL_QUOTE_EXACT_IN_LARGE_WITH_PORTION : DL_QUOTE_EXACT_IN_LARGE;
+        const reparameterized = DutchQuote.reparameterize(dutchLargeQuote, undefined, undefined);
+        expect(reparameterized).toMatchObject(dutchLargeQuote);
+
+        if (enablePortion) {
+          expect(reparameterized.portionBips).toEqual(PORTION_BIPS);
+          expect(reparameterized.portionRecipient).toEqual(PORTION_RECIPIENT);
+        }
+      }
+    );
+    
+    it('only override auctionPeriodSec on mainnet', async () => {
+      const classic = CLASSIC_QUOTE_EXACT_IN_LARGE;
+      const dutchRequest = createDutchQuote({ amountOut: AMOUNT_LARGE, chainId: 137 }, 'EXACT_INPUT', '1');
+      const reparamatrized = DutchQuote.reparameterize(dutchRequest, classic);
+      expect(reparamatrized.auctionPeriodSecs).toEqual(60);
     });
 
     it.each([true, false])('reparameterizes with classic quote for end with portion flag %p', async (enablePortion) => {
