@@ -21,6 +21,7 @@ export const PostQuoteRequestBodyJoi = Joi.object({
     }),
   swapper: FieldValidator.address.optional(),
   useUniswapX: Joi.boolean().default(false).optional(),
+  intent: Joi.string().optional(),
 });
 
 export const PostQuoteResponseJoi = Joi.object({

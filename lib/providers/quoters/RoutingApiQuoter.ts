@@ -131,6 +131,7 @@ export class RoutingApiQuoter implements Quoter {
             portionBips: request.info.portion.bips,
             portionRecipient: request.info.portion.recipient,
           }),
+        ...(request.info.intent && { intent: request.info.intent }),
       })
     );
   }

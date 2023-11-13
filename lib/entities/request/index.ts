@@ -31,6 +31,7 @@ export interface QuoteRequestInfo {
   useUniswapX?: boolean;
   sendPortionEnabled?: boolean;
   portion?: Portion;
+  intent?: string;
 }
 
 export interface QuoteRequestBodyJSON extends Omit<QuoteRequestInfo, 'type' | 'amount'> {
@@ -64,6 +65,7 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON): {
     swapper: body.swapper,
     sendPortionEnabled: body.sendPortionEnabled,
     portion: body.portion,
+    intent: body.intent,
   };
 
   const requests = body.configs.flatMap((config) => {
