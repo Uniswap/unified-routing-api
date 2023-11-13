@@ -28,7 +28,7 @@ export class Permit2Fetcher {
     metrics.putMetric(`Permit2FetcherRequest`, 1);
     try {
       const rpcUrl = this.rpcUrlMap.get(chainId);
-      const rpcProvider = new ethers.providers.StaticJsonRpcProvider(rpcUrl);
+      const rpcProvider = new ethers.providers.StaticJsonRpcProvider(rpcUrl, chainId);
       allowance = await this.permit2.connect(rpcProvider).allowance(ownerAddress, tokenAddress, spenderAddress);
       metrics.putMetric(`Permit2FetcherSuccess`, 1);
     } catch (e) {
