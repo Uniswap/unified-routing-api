@@ -3,17 +3,12 @@ import { PERMIT2_ADDRESS } from '@uniswap/permit2-sdk';
 import { Protocol } from '@uniswap/router-sdk';
 import { ChainId, TradeType } from '@uniswap/sdk-core';
 
-import {
-  CachingTokenListProvider,
-  ID_TO_CHAIN_ID,
-  NodeJSCache,
-  WRAPPED_NATIVE_CURRENCY,
-} from '@uniswap/smart-order-router';
+import { CachingTokenListProvider, NodeJSCache, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
 import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
 import NodeCache from 'node-cache';
 import { QuoteByKey, QuoteContext } from '.';
-import { DEFAULT_ROUTING_API_DEADLINE, NATIVE_ADDRESS, RoutingType } from '../../constants';
+import { DEFAULT_ROUTING_API_DEADLINE, LARGE_TRADE_USD_THRESHOLD, NATIVE_ADDRESS, RoutingType } from '../../constants';
 import {
   ClassicQuote,
   ClassicQuoteDataJSON,
@@ -26,6 +21,7 @@ import {
 import { SyntheticStatusProvider } from '../../providers';
 import { Erc20__factory } from '../../types/ext/factories/Erc20__factory';
 import { metrics } from '../../util/metrics';
+import { getQuoteSizeEstimateUSD } from '../../util/quoteMath';
 
 // if the gas is greater than this proportion of the whole trade size
 // then we will not route the order
@@ -34,7 +30,7 @@ const BPS = 10000;
 const RFQ_QUOTE_UPPER_BOUND_MULTIPLIER = 3;
 
 export type DutchQuoteContextProviders = {
-  rpcProvider: ethers.providers.JsonRpcProvider;
+  rpcProvider: ethers.providers.StaticJsonRpcProvider;
   syntheticStatusProvider: SyntheticStatusProvider;
 };
 
@@ -42,7 +38,7 @@ export type DutchQuoteContextProviders = {
 export class DutchQuoteContext implements QuoteContext {
   routingType: RoutingType.DUTCH_LIMIT;
   private log: Logger;
-  private rpcProvider: ethers.providers.JsonRpcProvider;
+  private rpcProvider: ethers.providers.StaticJsonRpcProvider;
   private syntheticStatusProvider: SyntheticStatusProvider;
 
   public requestKey: string;
@@ -71,43 +67,16 @@ export class DutchQuoteContext implements QuoteContext {
     this.classicKey = classicRequest.key();
     this.log.info({ classicRequest: classicRequest.info }, 'Adding synthetic classic request');
 
-    const result = [this.request, classicRequest];
-
-    const wrappedNativeAddress = WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(this.request.info.tokenOutChainId)].address;
-    if (this.request.info.tokenOut !== wrappedNativeAddress && this.request.info.tokenOut !== NATIVE_ADDRESS) {
-      this.needsRouteToNative = true;
-      const routeBackToNativeRequest = new ClassicRequest(
-        {
-          ...this.request.info,
-          type: TradeType.EXACT_OUTPUT,
-          tokenIn: this.request.info.tokenOut,
-          amount: ethers.utils.parseEther('1'),
-          tokenOut: wrappedNativeAddress,
-        },
-        {
-          protocols: [Protocol.MIXED, Protocol.V2, Protocol.V3],
-        }
-      );
-      this.routeToNativeKey = routeBackToNativeRequest.key();
-      result.push(routeBackToNativeRequest);
-
-      this.log.info(
-        { routeBackToNativeRequest: routeBackToNativeRequest.info },
-        'Adding synthetic back to native classic request'
-      );
-    }
-
-    return result;
+    return [this.request, classicRequest];
   }
 
   async resolveHandler(dependencies: QuoteByKey): Promise<Quote | null> {
     const classicQuote = dependencies[this.classicKey] as ClassicQuote;
-    const routeBackToNative = dependencies[this.routeToNativeKey] as ClassicQuote;
     const rfqQuote = dependencies[this.requestKey] as DutchQuote;
 
     const [quote, syntheticQuote] = await Promise.all([
       this.getRfqQuote(rfqQuote, classicQuote),
-      this.getSyntheticQuote(classicQuote, routeBackToNative),
+      this.getSyntheticQuote(classicQuote),
     ]);
 
     // handle cases where we only either have RFQ or synthetic
@@ -161,9 +130,11 @@ export class DutchQuoteContext implements QuoteContext {
       return null;
     }
 
+    let isLargeTrade = false;
     // TODO: remove after reputation system is ready
     // drop Rfq quote if it's significantly better than classic - high chance MM will fade
     if (classicQuote) {
+      isLargeTrade = this.isLargeOrder(this.log, classicQuote);
       metrics.putMetric(`HasBothRfqAndClassicQuote`, 1);
 
       if (this.rfqQuoteTooGood(quote, classicQuote)) {
@@ -184,6 +155,7 @@ export class DutchQuoteContext implements QuoteContext {
 
     const reparameterized = DutchQuote.reparameterize(quote, classicQuote as ClassicQuote, {
       hasApprovedPermit2: await this.hasApprovedPermit2(quote.request),
+      largeTrade: isLargeTrade,
     });
     // if its invalid for some reason, i.e. too much decay then return null
     if (!reparameterized.validate()) return null;
@@ -248,6 +220,17 @@ export class DutchQuoteContext implements QuoteContext {
       return false;
     }
     return true;
+  }
+  
+  // large as defined by >= $10k USD
+  isLargeOrder(log: Logger, classicQuote: Quote): boolean {
+    // gasUseEstimateUSD on other chains seem to be unreliable
+    if (classicQuote.request.info.tokenInChainId !== ChainId.MAINNET || classicQuote.request.info.tokenOutChainId !== ChainId.MAINNET) {
+      return false;
+    }
+    const quoteSizeEstimateUSD = getQuoteSizeEstimateUSD(classicQuote);
+    log.info({ quoteSize: quoteSizeEstimateUSD.toString() }, 'Quote size estimate in USD');
+    return quoteSizeEstimateUSD.gte(LARGE_TRADE_USD_THRESHOLD);
   }
 
   rfqQuoteTooGood(quote: DutchQuote, classicQuote: ClassicQuote): boolean {

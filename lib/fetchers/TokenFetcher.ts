@@ -38,7 +38,7 @@ export class TokenFetcher {
    * Gets the token address for the provided token symbol or address from the DEFAULT_TOKEN_LIST.
    * Throws an error if the token is not found.
    */
-  public resolveTokenAddress = async (chainId: ChainId, symbolOrAddress: string): Promise<string> => {
+  public resolveTokenBySymbolOrAddress = async (chainId: ChainId, symbolOrAddress: string): Promise<string> => {
     // check for native symbols first
     if (NATIVE_NAMES_BY_ID[chainId]!.includes(symbolOrAddress) || symbolOrAddress == NATIVE_ADDRESS) {
       return NATIVE_ADDRESS;
@@ -58,22 +58,22 @@ export class TokenFetcher {
     }
   };
 
-  public resolveToken = async (chainId: ChainId, address: string): Promise<Currency> => {
-    if (address == NATIVE_ADDRESS || address.toLowerCase() == 'eth') {
+  /**
+   * Gets the token currency object for the provided token symbol or address if found in the DEFAULT_TOKEN_LIST.
+   * Returns undefined if the token is not found.
+   */
+  public getTokenBySymbolOrAddress = async (
+    chainId: ChainId,
+    symbolOrAddress: string
+  ): Promise<Currency | undefined> => {
+    // check for native symbols first
+    if (NATIVE_NAMES_BY_ID[chainId]!.includes(symbolOrAddress) || symbolOrAddress == NATIVE_ADDRESS) {
       return Ether.onChain(chainId);
     }
 
     const tokenListProvider = this.getTokenListProvider(chainId);
-    const token = await tokenListProvider.getTokenByAddress(address);
-    if (token === undefined) {
-      throw new ValidationError(`Could not find token with address ${address}`);
-    }
-    return token;
-  };
+    const tokenAddress = await this.resolveTokenBySymbolOrAddress(chainId, symbolOrAddress);
 
-  public resolveTokenBySymbolOrAddress = async (chainId: ChainId, symbolOrAddress: string): Promise<Currency> => {
-    // both calls are in-memory, no perf hit
-    const resolvedAddress = await this.resolveTokenAddress(chainId, symbolOrAddress);
-    return await this.resolveToken(chainId, resolvedAddress);
+    return await tokenListProvider.getTokenByAddress(tokenAddress);
   };
 }

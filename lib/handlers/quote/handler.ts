@@ -7,7 +7,7 @@ import { ethers } from 'ethers';
 
 import _ from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
-import { frontendAndUraEnablePortion, RoutingType } from '../../constants';
+import { frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
 import {
   ClassicQuote,
   DutchQuote,
@@ -64,7 +64,7 @@ export class QuoteHandler extends APIGLambdaHandler<
       throw new ValidationError(`Cannot request quotes for tokens on different chains`);
     }
 
-    const provider = new ethers.providers.JsonRpcProvider(rpcUrlMap.get(requestBody.tokenInChainId));
+    const provider = new ethers.providers.StaticJsonRpcProvider(rpcUrlMap.get(requestBody.tokenInChainId), requestBody.tokenInChainId); // specify chainId to avoid detecctNetwork() call on initialization
 
     const request = {
       ...requestBody,
@@ -72,8 +72,8 @@ export class QuoteHandler extends APIGLambdaHandler<
     };
 
     const beforeResolveTokens = Date.now();
-    const tokenInAddress = await tokenFetcher.resolveTokenAddress(request.tokenInChainId, request.tokenIn);
-    const tokenOutAddress = await tokenFetcher.resolveTokenAddress(request.tokenOutChainId, request.tokenOut);
+    const tokenInAddress = await tokenFetcher.resolveTokenBySymbolOrAddress(request.tokenInChainId, request.tokenIn);
+    const tokenOutAddress = await tokenFetcher.resolveTokenBySymbolOrAddress(request.tokenOutChainId, request.tokenOut);
     metrics.putMetric(
       `Latency-ResolveTokens-ChainId${requestBody.tokenInChainId}`,
       Date.now() - beforeResolveTokens,
@@ -103,8 +103,8 @@ export class QuoteHandler extends APIGLambdaHandler<
     const { quoteInfo } = parsedRequests;
     let { quoteRequests } = parsedRequests;
 
-    if (DISABLE_DUTCH_LIMIT_REQUESTS && !requestBody.useUniswapX) {
-      log.info('Dutch Limit requests disabled, filtering out all Dutch Limit requests...');
+    const isDutchEligible = await this.isDutchEligible(requestBody, tokenFetcher);
+    if (!isDutchEligible) {
       quoteRequests = removeDutchRequests(quoteRequests);
     }
 
@@ -168,6 +168,33 @@ export class QuoteHandler extends APIGLambdaHandler<
     };
   }
 
+  private async isDutchEligible(requestBody: QuoteRequestBodyJSON, tokenFetcher: TokenFetcher): Promise<boolean> {
+    const [tokenIn, tokenOut] = await Promise.all([
+      tokenFetcher.getTokenBySymbolOrAddress(requestBody.tokenInChainId, requestBody.tokenIn),
+      tokenFetcher.getTokenBySymbolOrAddress(requestBody.tokenOutChainId, requestBody.tokenOut),
+    ]);
+
+    const tokenInNotValid = !tokenIn && requestBody.tokenIn !== NATIVE_ADDRESS;
+    const tokenOutNotValid = !tokenOut && requestBody.tokenOut !== NATIVE_ADDRESS;
+    if (tokenInNotValid || tokenOutNotValid) {
+      log.info(
+        {
+          ...(tokenInNotValid && { tokenIn: requestBody.tokenIn }),
+          ...(tokenOutNotValid && { tokenOut: requestBody.tokenOut }),
+        },
+        'Token/tokens not on token list, filtering out all Dutch Limit requests...'
+      );
+      return false;
+    }
+
+    if (DISABLE_DUTCH_LIMIT_REQUESTS && !requestBody.useUniswapX) {
+      log.info('Dutch Limit requests disabled, filtering out all Dutch Limit requests...');
+      return false;
+    }
+
+    return true;
+  }
+
   private async emitQuoteRequestedMetrics(
     tokenFetcher: TokenFetcher,
     info: QuoteRequestInfo,
@@ -208,7 +235,7 @@ export class QuoteHandler extends APIGLambdaHandler<
   private async getTokenSymbolOrAbbr(tokenFetcher: TokenFetcher, chainId: number, address: string): Promise<string> {
     let symbol = address.slice(0, 6);
     try {
-      symbol = (await tokenFetcher.resolveToken(chainId, symbol)).symbol ?? symbol;
+      symbol = (await tokenFetcher.getTokenBySymbolOrAddress(chainId, symbol))?.symbol ?? symbol;
     } catch {
       /* empty */
     }

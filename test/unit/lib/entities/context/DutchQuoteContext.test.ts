@@ -9,11 +9,12 @@ import { Erc20__factory } from '../../../../../lib/types/ext/factories/Erc20__fa
 import {
   AMOUNT,
   AMOUNT_GAS_ADJUSTED,
+  AMOUNT_LARGE,
+  AMOUNT_LARGE_GAS_ADJUSTED,
   AMOUNT_UNDER_GAS_THRESHOLD,
   CHAIN_OUT_ID,
   ETH_IN,
   TOKEN_IN,
-  USDC_ADDRESS,
 } from '../../../../constants';
 import {
   BASE_REQUEST_INFO_EXACT_IN,
@@ -85,16 +86,12 @@ describe('DutchQuoteContext', () => {
       });
       const context = new DutchQuoteContext(logger, request, makeProviders(false));
       const deps = context.dependencies();
-      expect(deps.length).toEqual(3);
+      expect(deps.length).toEqual(2);
       // first is base
       expect(deps[0]).toEqual(request);
       // second is classic
       expect(deps[1].info).toEqual(request.info);
       expect(deps[1].routingType).toEqual(RoutingType.CLASSIC);
-      // third is route to eth
-      expect(deps[2].info.tokenIn).toEqual(request.info.tokenOut);
-      expect(deps[2].info.tokenOut).toEqual('0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2');
-      expect(deps[2].routingType).toEqual(RoutingType.CLASSIC);
     });
   });
 
@@ -185,6 +182,38 @@ describe('DutchQuoteContext', () => {
       expect(quote?.amountOut.toString()).toEqual('2');
     });
 
+    it('overrides auctionPeriodSec on mainnet', async () => {
+      const req = makeDutchRequest({ tokenInChainId: 1, tokenOutChainId: 1 }, { useSyntheticQuotes: true });
+      const context = new DutchQuoteContext(logger, req, makeProviders(false));
+      const rfqQuote = createDutchQuote({ amountOut: AMOUNT_LARGE, tokenIn: NATIVE_ADDRESS, tokenOut: NATIVE_ADDRESS, chainId: 1 }, 'EXACT_INPUT', '1');
+      const classicQuote = createClassicQuote(
+        { quote: AMOUNT_LARGE, quoteGasAdjusted: AMOUNT_LARGE_GAS_ADJUSTED },
+        { type: 'EXACT_INPUT', tokenInChainId: 1, tokenOutChainId: 1 }
+      );
+      const quote = await context.resolve({
+        [req.key()]: rfqQuote,
+        [context.classicKey]: classicQuote
+      });
+      expect(quote?.routingType).toEqual(RoutingType.DUTCH_LIMIT);
+      expect((quote?.toJSON() as DutchQuoteDataJSON).auctionPeriodSecs).toBe(120);
+    });
+
+    it('does not override auctionPeriodSec on non-mainnet chains', async () => {
+      const req = makeDutchRequest({ tokenInChainId: 137, tokenOutChainId: 137 }, { useSyntheticQuotes: true });
+      const context = new DutchQuoteContext(logger, req, makeProviders(false));
+      const rfqQuote = createDutchQuote({ amountOut: AMOUNT_LARGE, tokenIn: NATIVE_ADDRESS, tokenOut: NATIVE_ADDRESS, chainId: 137 }, 'EXACT_INPUT', '1');
+      const classicQuote = createClassicQuote(
+        { quote: AMOUNT_LARGE, quoteGasAdjusted: AMOUNT_LARGE_GAS_ADJUSTED },
+        { type: 'EXACT_INPUT', tokenInChainId: 137, tokenOutChainId: 137 }
+      );
+      const quote = await context.resolve({
+        [req.key()]: rfqQuote,
+        [context.classicKey]: classicQuote
+      });
+      expect(quote?.routingType).toEqual(RoutingType.DUTCH_LIMIT);
+      expect((quote?.toJSON() as DutchQuoteDataJSON).auctionPeriodSecs).toBe(60);
+    });
+
     it('uses synthetic if better with useSyntheticQuotes=true and switch=false', async () => {
       const request = makeDutchRequest({}, { useSyntheticQuotes: true });
       const context = new DutchQuoteContext(logger, request, makeProviders(false));
@@ -266,7 +295,7 @@ describe('DutchQuoteContext', () => {
       );
     });
 
-    it.only('does not use synthetic if better with useSyntheticQuotes=false and switch=false', async () => {
+    it('does not use synthetic if better with useSyntheticQuotes=false and switch=false', async () => {
       const request = makeDutchRequest({}, { useSyntheticQuotes: false });
       const context = new DutchQuoteContext(logger, request, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
@@ -579,6 +608,10 @@ describe('DutchQuoteContext', () => {
         ...rfqQuote,
         amountOutStart: expect.any(BigNumber),
         amountOutEnd: expect.any(BigNumber),
+        portionBips: 0,
+        derived: {
+          largeTrade: true,
+        }
       });
 
       expect({
@@ -589,6 +622,10 @@ describe('DutchQuoteContext', () => {
         ...rfqQuote,
         amountOutStart: expect.any(BigNumber),
         amountOutEnd: expect.any(BigNumber),
+        portionBips: 0,
+        derived: {
+          largeTrade: true,
+        }
       });
 
       // Expect adjustment to amount out because of ETH in
@@ -674,66 +711,6 @@ describe('DutchQuoteContext', () => {
   });
 
   describe('needsRouteToNative', () => {
-    it('if not native / not wrapped native tokenOut, needsRouteToNative is true and resolves to synthetic', async () => {
-      const request = makeDutchRequest(
-        {},
-        { useSyntheticQuotes: true },
-        { ...BASE_REQUEST_INFO_EXACT_IN, tokenOut: USDC_ADDRESS }
-      );
-      const context = new DutchQuoteContext(logger, request, makeProviders(false));
-      const filler = '0x1111111111111111111111111111111111111111';
-      const rfqQuote = createDutchQuoteWithRequest(
-        { amountOut: '1', filler, tokenOut: USDC_ADDRESS },
-        { type: 'EXACT_INPUT' }
-      );
-      expect(rfqQuote.filler).toEqual(filler);
-      const classicQuote = createClassicQuote(
-        { quote: '10000000000', quoteGasAdjusted: '9999000000' },
-        { type: 'EXACT_INPUT', tokenOut: USDC_ADDRESS }
-      );
-      context.dependencies();
-      expect(context.needsRouteToNative).toBe(true);
-      const quote = await context.resolve({
-        [context.requestKey]: rfqQuote,
-        [context.classicKey]: classicQuote,
-        [context.routeToNativeKey]: classicQuote,
-      });
-      expect(quote?.routingType).toEqual(RoutingType.DUTCH_LIMIT);
-      expect((quote?.toJSON() as DutchQuoteDataJSON).orderInfo.exclusiveFiller).toEqual(
-        '0x0000000000000000000000000000000000000000'
-      );
-      // Synthetic starts at quoteGasAdjusted + 1bp
-      expect(quote?.amountOut.toString()).toEqual(
-        BigNumber.from(9999000000).mul(DutchQuote.amountOutImprovementExactIn).div(10000).toString()
-      );
-    });
-
-    it('if not native / not wrapped native tokenOut, needsRouteToNative is true and quote is undefined when no routeToNative', async () => {
-      const request = makeDutchRequest(
-        {},
-        { useSyntheticQuotes: true },
-        { ...BASE_REQUEST_INFO_EXACT_IN, tokenOut: USDC_ADDRESS }
-      );
-      const context = new DutchQuoteContext(logger, request, makeProviders(false));
-      const filler = '0x1111111111111111111111111111111111111111';
-      const rfqQuote = createDutchQuoteWithRequest(
-        { amountOut: '1', filler, tokenOut: USDC_ADDRESS },
-        { type: 'EXACT_INPUT' }
-      );
-      expect(rfqQuote.filler).toEqual(filler);
-      const classicQuote = createClassicQuote(
-        { quote: '10000000000', quoteGasAdjusted: '9999000000' },
-        { type: 'EXACT_INPUT', tokenOut: USDC_ADDRESS }
-      );
-      context.dependencies();
-      expect(context.needsRouteToNative).toBe(true);
-      const quote = await context.resolve({
-        [context.requestKey]: rfqQuote,
-        [context.classicKey]: classicQuote,
-      });
-      expect(quote).toEqual(null);
-    });
-
     it('if native tokenOut, needsRouteToNative is false and resolves to synethtic quote', async () => {
       const request = makeDutchRequest(
         {},
