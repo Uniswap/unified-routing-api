@@ -1,4 +1,4 @@
-import { defaultRequestKey, QuoteRequest, QuoteRequestInfo } from '.';
+import { defaultRequestKey, QuoteRequest, QuoteRequestInfo, RequestSource } from '.';
 import {
   DEFAULT_EXCLUSIVITY_OVERRIDE_BPS,
   DEFAULT_SLIPPAGE_TOLERANCE,
@@ -53,7 +53,7 @@ export class DutchRequest implements QuoteRequest {
     );
   }
 
-  constructor(public readonly info: DutchQuoteRequestInfo, public readonly config: DutchConfig) {}
+  constructor(public readonly info: DutchQuoteRequestInfo, public readonly config: DutchConfig, public readonly source?: RequestSource) {}
 
   public toJSON(): DutchConfigJSON {
     return Object.assign({}, this.config, {

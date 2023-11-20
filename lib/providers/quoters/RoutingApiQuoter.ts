@@ -22,8 +22,11 @@ export class RoutingApiQuoter implements Quoter {
 
     metrics.putMetric(`RoutingApiQuoterRequest`, 1);
     try {
+      // jiejie: 在这个buildRequest里面就应该填上你的source type
       const req = this.buildRequest(request);
+      console.log(`jiejie5: 给RA的request张这个样子： ${req}`)
       const now = Date.now();
+      // jiejie: URA这个地方去call RA
       const response = await axios.get<ClassicQuoteDataJSON>(req, { headers: { 'x-api-key': this.routingApiKey } });
       const portionAdjustedResponse: AxiosResponse<ClassicQuoteDataJSON> = {
         ...response,
@@ -81,6 +84,7 @@ export class RoutingApiQuoter implements Quoter {
     }
   }
 
+  // jiejie: 这里叫做ClassicRequest说明URA就是RA的一个新的wrapper
   buildRequest(request: ClassicRequest): string {
     const tradeType = request.info.type === TradeType.EXACT_INPUT ? 'exactIn' : 'exactOut';
     const config = request.config;
@@ -90,12 +94,15 @@ export class RoutingApiQuoter implements Quoter {
       this.routingApiUrl +
       'quote?' +
       querystring.stringify({
+        // jiejie: 我这里可以加一个field，比如叫做source，内容为来源地址(enum类型)
         tokenInAddress: mapNative(request.info.tokenIn, request.info.tokenInChainId),
         tokenInChainId: request.info.tokenInChainId,
         tokenOutAddress: mapNative(request.info.tokenOut, request.info.tokenInChainId),
         tokenOutChainId: request.info.tokenOutChainId,
         amount: amount,
         type: tradeType,
+        // jiejie: 这个！
+        source: request.source,
         ...(config.protocols &&
           config.protocols.length && { protocols: config.protocols.map((p) => p.toLowerCase()).join(',') }),
         ...(config.gasPriceWei !== undefined && { gasPriceWei: config.gasPriceWei }),

@@ -18,6 +18,7 @@ export type RoutingConfig = DutchConfig | ClassicConfig;
 export type RoutingConfigJSON = DutchConfigJSON | ClassicConfigJSON;
 
 // shared info for all quote requests
+// jiejie: source信息可以塞到这个里面。放在这个基类里面就可以了
 export interface QuoteRequestInfo {
   requestId: string;
   tokenInChainId: number;
@@ -40,10 +41,19 @@ export interface QuoteRequestBodyJSON extends Omit<QuoteRequestInfo, 'type' | 'a
   configs: RoutingConfigJSON[];
 }
 
+export enum RequestSource {
+  IOS = 'iOS',
+  ANDROID = 'Android',
+  WEB = 'Web',
+  API = 'API',
+}
+
 export interface QuoteRequest {
   routingType: RoutingType;
   info: QuoteRequestInfo;
   config: RoutingConfig;
+  source?: RequestSource;
+
   toJSON(): RoutingConfigJSON;
   // return a key that uniquely identifies this request
   key(): string;

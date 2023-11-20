@@ -26,7 +26,7 @@ import {
   QUOTE_REQUEST_BODY_MULTI_SYNTHETIC,
   QUOTE_REQUEST_CLASSIC,
   QUOTE_REQUEST_DL,
-  QUOTE_REQUEST_MULTI,
+  QUOTE_REQUEST_MULTI
 } from '../../../../utils/fixtures';
 
 import { PermitDetails } from '@uniswap/permit2-sdk';
@@ -36,13 +36,13 @@ import { MetricsLogger } from 'aws-embedded-metrics';
 import { AxiosError } from 'axios';
 import NodeCache from 'node-cache';
 import { RoutingType } from '../../../../../lib/constants';
-import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, Quote } from '../../../../../lib/entities';
+import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, Quote, RequestSource } from '../../../../../lib/entities';
 import { QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index';
 import { Permit2Fetcher } from '../../../../../lib/fetchers/Permit2Fetcher';
 import {
-  GetPortionResponse,
   GET_NO_PORTION_RESPONSE,
-  PortionFetcher,
+  GetPortionResponse,
+  PortionFetcher
 } from '../../../../../lib/fetchers/PortionFetcher';
 import { TokenFetcher } from '../../../../../lib/fetchers/TokenFetcher';
 import { ApiInjector, ApiRInj } from '../../../../../lib/handlers/base';
@@ -51,7 +51,7 @@ import {
   getBestQuote,
   getQuotes,
   QuoteHandler,
-  removeDutchRequests,
+  removeDutchRequests
 } from '../../../../../lib/handlers/quote/handler';
 import { ContainerInjected, QuoterByRoutingType } from '../../../../../lib/handlers/quote/injector';
 import { Quoter, SyntheticStatusProvider } from '../../../../../lib/providers';
@@ -59,6 +59,7 @@ import { Erc20__factory } from '../../../../../lib/types/ext/factories/Erc20__fa
 import { ErrorCode } from '../../../../../lib/util/errors';
 import { setGlobalLogger } from '../../../../../lib/util/log';
 import { INELIGIBLE_TOKEN, PERMIT2_USED, PERMIT_DETAILS, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../../constants';
+import { APIGatewayProxyEventHeaders } from 'aws-lambda/trigger/api-gateway-proxy';
 
 describe('QuoteHandler', () => {
   const OLD_ENV = process.env;
@@ -203,9 +204,10 @@ describe('QuoteHandler', () => {
       provider.getStatus.mockResolvedValueOnce({ syntheticEnabled });
       return provider as unknown as SyntheticStatusProvider;
     };
-    const getEvent = (request: QuoteRequestBodyJSON): APIGatewayProxyEvent =>
+    const getEvent = (request: QuoteRequestBodyJSON, headers?: APIGatewayProxyEventHeaders): APIGatewayProxyEvent =>
       ({
         body: JSON.stringify(request),
+        ...(headers !== undefined && {headers: headers})
       } as APIGatewayProxyEvent);
 
     describe('handler test', () => {
@@ -226,6 +228,50 @@ describe('QuoteHandler', () => {
         const quoteJSON = JSON.parse(res.body).quote as ClassicQuoteDataJSON;
         expect(quoteJSON.quoteGasAdjusted).toBe(CLASSIC_QUOTE_EXACT_IN_WORSE.amountOutGasAdjusted.toString());
       });
+
+      it.only('check request source', async () => {
+
+        const quoteMock = jest.fn().mockResolvedValue(CLASSIC_QUOTE_EXACT_IN_WORSE)
+        const quoterMock: Quoter = { quote: quoteMock }
+        // const ClassicQuoterMock = (classicQuote: ClassicQuote): Quoter => {
+        //   return {
+        //     quote: jest.fn().mockResolvedValue(classicQuote),
+        //   };
+        // };
+
+        const quoters = { [RoutingType.CLASSIC]: quoterMock };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(GET_NO_PORTION_RESPONSE);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+        const syntheticStatusProvider = SyntheticStatusProviderMock(false);
+
+        const headers: APIGatewayProxyEventHeaders = {
+          'User-Agent': 'Mozilla/5.0 (Linux; Android 10; STK-LX1 \n' +
+            'Build/HONORSTK-LX1; wv) AppleWebKit/537.36 (KHTML, \n' +
+            'like Gecko) Version/4.0 Chrome/110.0.5481.153 Mobile \n' +
+            'Safari/537.36 musical_ly_2022803040 JsSdk/1.0 \n' +
+            'NetType/WIFI Channel/huaweiadsglobal_int \n' +
+            'AppName/musical_ly app_version/28.3.4 ByteLocale/en \n' +
+            'ByteFullLocale/en Region/IQ Spark/1.2.7-alpha.8 \n' +
+            'AppVersion/28.3.4 PIA/1.5.11 BytedanceWebview/d8a21c6',
+        }
+
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
+        const quoteJSON = JSON.parse(res.body).quote as ClassicQuoteDataJSON;
+        expect(quoteJSON.quoteGasAdjusted).toBe(CLASSIC_QUOTE_EXACT_IN_WORSE.amountOutGasAdjusted.toString());
+
+        const quoteCallParams = quoteMock.mock.lastCall[0]
+        // console.log(`jiejie6: ${JSON.stringify(quoteMock.mock.calls)}`)
+        // console.log(`jiejie6: ${JSON.stringify((quoteMock.mock.lastCall[0]))}`)
+        expect(quoteCallParams['source']).toBe(RequestSource.IOS)
+      });
+
 
       it('handles exactOut classic quotes', async () => {
         const request: QuoteRequestBodyJSON = {
