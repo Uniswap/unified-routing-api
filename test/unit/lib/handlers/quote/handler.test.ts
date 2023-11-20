@@ -233,11 +233,6 @@ describe('QuoteHandler', () => {
 
         const quoteMock = jest.fn().mockResolvedValue(CLASSIC_QUOTE_EXACT_IN_WORSE)
         const quoterMock: Quoter = { quote: quoteMock }
-        // const ClassicQuoterMock = (classicQuote: ClassicQuote): Quoter => {
-        //   return {
-        //     quote: jest.fn().mockResolvedValue(classicQuote),
-        //   };
-        // };
 
         const quoters = { [RoutingType.CLASSIC]: quoterMock };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
