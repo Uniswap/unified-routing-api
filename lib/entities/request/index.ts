@@ -42,10 +42,11 @@ export interface QuoteRequestBodyJSON extends Omit<QuoteRequestInfo, 'type' | 'a
 }
 
 export enum RequestSource {
-  IOS = 'iOS',
-  ANDROID = 'Android',
-  WEB = 'Web',
-  API = 'API',
+  UNKNOWN = 'Unknown',
+  UNISWAP_IOS = 'Uniswap-iOS',
+  UNISWAP_ANDROID = 'Uniswap-Android',
+  UNISWAP_WEB = 'Uniswap-Web',
+  EXTERNAL_API = 'External-API',
 }
 
 export interface QuoteRequest {

@@ -24,7 +24,7 @@ export class RoutingApiQuoter implements Quoter {
     try {
       // jiejie: 在这个buildRequest里面就应该填上你的source type
       const req = this.buildRequest(request);
-      console.log(`jiejie5: 给RA的request张这个样子： ${req}`)
+      console.log(`jiejie5: 给RA的request长这个样子： ${req}`)
       const now = Date.now();
       // jiejie: URA这个地方去call RA
       const response = await axios.get<ClassicQuoteDataJSON>(req, { headers: { 'x-api-key': this.routingApiKey } });
@@ -101,8 +101,6 @@ export class RoutingApiQuoter implements Quoter {
         tokenOutChainId: request.info.tokenOutChainId,
         amount: amount,
         type: tradeType,
-        // jiejie: 这个！
-        source: request.source,
         ...(config.protocols &&
           config.protocols.length && { protocols: config.protocols.map((p) => p.toLowerCase()).join(',') }),
         ...(config.gasPriceWei !== undefined && { gasPriceWei: config.gasPriceWei }),
@@ -139,6 +137,8 @@ export class RoutingApiQuoter implements Quoter {
             portionRecipient: request.info.portion.recipient,
           }),
         ...(request.info.intent && { intent: request.info.intent }),
+        // jiejie: 这个！
+        ...(request.source && {source: request.source}),
       })
     );
   }

@@ -32,9 +32,6 @@ import { ContainerInjected, QuoterByRoutingType } from './injector';
 import { PostQuoteRequestBodyJoi } from './schema';
 import { APIGatewayProxyEventHeaders } from 'aws-lambda/trigger/api-gateway-proxy';
 
-// @ts-ignore
-import { UAParser } from 'ua-parser-js';
-
 const DISABLE_DUTCH_LIMIT_REQUESTS = false;
 
 export interface SingleQuoteJSON {
@@ -189,25 +186,14 @@ export class QuoteHandler extends APIGLambdaHandler<
   }
 
   private getQuoteRequestSource(event: APIGatewayProxyEventHeaders): RequestSource {
-    const userAgent = event['User-Agent']
+    const userAgent = event['Request-Source']
     if (userAgent === undefined) {
-      return RequestSource.API
+      return RequestSource.UNKNOWN
     }
-
-    const parser = new UAParser(userAgent!)
-    console.log(parser.getResult())
-
-    if (parser.os)
-
-    if (userAgent === 'iOS') {
-      return RequestSource.IOS
-    } else if (userAgent === 'Android') {
-      return RequestSource.ANDROID
-    } else if (userAgent === 'Web') {
-      return RequestSource.WEB
-    } else {
-      return RequestSource.API
+    if (Object.values<string>(RequestSource).includes(userAgent)) {
+      return userAgent as RequestSource
     }
+    return RequestSource.UNKNOWN
   }
 
   private async isDutchEligible(requestBody: QuoteRequestBodyJSON, tokenFetcher: TokenFetcher): Promise<boolean> {

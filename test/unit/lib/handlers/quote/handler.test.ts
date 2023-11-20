@@ -245,33 +245,56 @@ describe('QuoteHandler', () => {
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
-        const headers: APIGatewayProxyEventHeaders = {
-          'User-Agent': 'Mozilla/5.0 (Linux; Android 10; STK-LX1 \n' +
-            'Build/HONORSTK-LX1; wv) AppleWebKit/537.36 (KHTML, \n' +
-            'like Gecko) Version/4.0 Chrome/110.0.5481.153 Mobile \n' +
-            'Safari/537.36 musical_ly_2022803040 JsSdk/1.0 \n' +
-            'NetType/WIFI Channel/huaweiadsglobal_int \n' +
-            'AppName/musical_ly app_version/28.3.4 ByteLocale/en \n' +
-            'ByteFullLocale/en Region/IQ Spark/1.2.7-alpha.8 \n' +
-            'AppVersion/28.3.4 PIA/1.5.11 BytedanceWebview/d8a21c6',
+        let headers: APIGatewayProxyEventHeaders = {
+          'Request-Source': 'Uniswap-Web',
         }
-
-        const res = await getQuoteHandler(
+        await getQuoteHandler(
           quoters,
           tokenFetcher,
           portionFetcher,
           permit2Fetcher,
           syntheticStatusProvider
         ).handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
-        const quoteJSON = JSON.parse(res.body).quote as ClassicQuoteDataJSON;
-        expect(quoteJSON.quoteGasAdjusted).toBe(CLASSIC_QUOTE_EXACT_IN_WORSE.amountOutGasAdjusted.toString());
+        let quoteCallParams = quoteMock.mock.lastCall[0]
+        expect(quoteCallParams['source']).toBe(RequestSource.UNISWAP_WEB)
 
-        const quoteCallParams = quoteMock.mock.lastCall[0]
-        // console.log(`jiejie6: ${JSON.stringify(quoteMock.mock.calls)}`)
-        // console.log(`jiejie6: ${JSON.stringify((quoteMock.mock.lastCall[0]))}`)
-        expect(quoteCallParams['source']).toBe(RequestSource.IOS)
+        headers = {
+          'Request-Source': 'Uniswap-iOS',
+        }
+        await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
+        quoteCallParams = quoteMock.mock.lastCall[0]
+        expect(quoteCallParams['source']).toBe(RequestSource.UNISWAP_IOS)
+
+        headers = {
+          'Request-Source': 'Dummy',
+        }
+        await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
+        quoteCallParams = quoteMock.mock.lastCall[0]
+        expect(quoteCallParams['source']).toBe(RequestSource.UNKNOWN)
+
+        headers = {}
+        await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
+        quoteCallParams = quoteMock.mock.lastCall[0]
+        expect(quoteCallParams['source']).toBe(RequestSource.UNKNOWN)
       });
-
 
       it('handles exactOut classic quotes', async () => {
         const request: QuoteRequestBodyJSON = {
