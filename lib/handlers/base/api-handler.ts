@@ -115,15 +115,9 @@ export abstract class APIGLambdaHandler<
 
         log.info({ event, context }, 'Request started.');
 
-        console.log(`jiejie: event.headers ${JSON.stringify(event.headers)}`)
-
-        // jiejie: request header的内容这里能读取吗？
-        // jiejie: event中是有header的可以读的
         let requestBody: ReqBody;
         let requestQueryParams: ReqQueryParams;
         try {
-          // jiejie: 这个parseAndValidateRequest我觉得就应该包含上header里面读出来的status
-          // jiejie: 我暂时先不去加任何header validation logic
           const requestValidation = await this.parseAndValidateRequest(event, log);
 
           if (requestValidation.state == 'invalid') {
@@ -172,8 +166,6 @@ export abstract class APIGLambdaHandler<
             requestQueryParams,
             containerInjected,
             requestInjected,
-            // jiejie: 上面的event参数就已经包含headers了，这里就别传requestSource了
-            // requestSource,
           });
 
           if (this.isError(handleRequestResult)) {

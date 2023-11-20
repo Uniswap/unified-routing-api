@@ -51,7 +51,6 @@ export class QuoteHandler extends APIGLambdaHandler<
   void,
   QuoteResponseJSON
 > {
-  // jiejie: handleRequest是QuoteHandler处理request的主入口
   public async handleRequest(
     params: APIHandleRequestParams<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>
   ): Promise<ErrorResponse | Response<QuoteResponseJSON>> {
@@ -71,11 +70,6 @@ export class QuoteHandler extends APIGLambdaHandler<
       ...requestBody,
       requestId: uuidv4(),
     };
-
-    // jiejie: 这里是可以读到headers的呀
-    // params.event.headers
-    // jiejie: 我可以在这里把headers parse成为source enum
-    console.log(`jiejie2: 这里要转换header为source enum ${JSON.stringify(params.event.headers)}`)
 
     const beforeResolveTokens = Date.now();
     const tokenInAddress = await tokenFetcher.resolveTokenBySymbolOrAddress(request.tokenInChainId, request.tokenIn);
@@ -127,14 +121,9 @@ export class QuoteHandler extends APIGLambdaHandler<
     const requestSource = this.getQuoteRequestSource(params.event.headers)
     for (const request of requests) {
       request.source = requestSource
-      console.log(`jiejie3: put source ${request.source}`)
     }
 
     const beforeGetQuotes = Date.now();
-
-    // jiejie: 这里要对外call了
-    // 确保你的source enum已经塞到QuoteRequest type中
-    console.log(`jiejie3: requests ${JSON.stringify(requests)}`)
 
     const quotes = await getQuotes(quoters, requests);
     metrics.putMetric(
@@ -387,8 +376,6 @@ export async function getQuotes(quoterByRoutingType: QuoterByRoutingType, reques
         return null;
       }
       const beforeQuote = Date.now();
-      // jiejie: 开始要对外call了
-      console.log(`jiejie4: 现在对外call request的source是 ${request.source}`)
       const res = await quoter.quote(request);
       metrics.putMetric(
         `Latency-Quote-${request.routingType}-ChainId${request.info.tokenInChainId}`,

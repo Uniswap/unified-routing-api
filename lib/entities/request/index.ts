@@ -18,7 +18,6 @@ export type RoutingConfig = DutchConfig | ClassicConfig;
 export type RoutingConfigJSON = DutchConfigJSON | ClassicConfigJSON;
 
 // shared info for all quote requests
-// jiejie: source信息可以塞到这个里面。放在这个基类里面就可以了
 export interface QuoteRequestInfo {
   requestId: string;
   tokenInChainId: number;
