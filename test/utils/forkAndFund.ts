@@ -73,6 +73,12 @@ export const fund = async (
       const whale = WHALES[i];
       const whaleAccount = ethers.provider.getSigner(whale);
       try {
+        // Send native ETH from hardhat alice test address, so that whale accounts have sufficient ETH to pay for gas
+        await alice.sendTransaction({
+          to: whale,
+          value: ethers.utils.parseEther('0.1'), // Sends exactly 0.1 ether
+        })
+
         const whaleToken: Erc20 = Erc20__factory.connect(currency.wrapped.address, whaleAccount);
 
         await whaleToken.transfer(alice.address, ethers.utils.parseUnits(amount, currency.decimals));
@@ -80,7 +86,9 @@ export const fund = async (
         break;
       } catch (err) {
         if (i == WHALES.length - 1) {
-          throw new Error(`Could not fund ${amount} ${currency.symbol} from any whales.`);
+          throw new Error(
+            `Could not fund ${amount} ${currency.symbol} from any whales. Original error ${JSON.stringify(err)}`
+          )
         }
       }
     }
