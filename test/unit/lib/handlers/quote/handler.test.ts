@@ -241,7 +241,7 @@ describe('QuoteHandler', () => {
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
         let headers: APIGatewayProxyEventHeaders = {
-          'Request-Source': 'uniswap-web',
+          'x-request-source': 'uniswap-web',
         }
         await getQuoteHandler(
           quoters,
@@ -251,10 +251,10 @@ describe('QuoteHandler', () => {
           syntheticStatusProvider
         ).handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
         let quoteCallParams = quoteMock.mock.lastCall[0]
-        expect(quoteCallParams['source']).toBe(RequestSource.UNISWAP_WEB)
+        expect(quoteCallParams.info.source).toBe(RequestSource.UNISWAP_WEB)
 
         headers = {
-          'Request-Source': 'uniswap-ios',
+          'x-request-source': 'uniswap-ios',
         }
         await getQuoteHandler(
           quoters,
@@ -264,10 +264,10 @@ describe('QuoteHandler', () => {
           syntheticStatusProvider
         ).handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
         quoteCallParams = quoteMock.mock.lastCall[0]
-        expect(quoteCallParams['source']).toBe(RequestSource.UNISWAP_IOS)
+        expect(quoteCallParams.info.source).toBe(RequestSource.UNISWAP_IOS)
 
         headers = {
-          'Request-Source': 'dummy',
+          'x-request-source': 'dummy',
         }
         await getQuoteHandler(
           quoters,
@@ -277,7 +277,7 @@ describe('QuoteHandler', () => {
           syntheticStatusProvider
         ).handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
         quoteCallParams = quoteMock.mock.lastCall[0]
-        expect(quoteCallParams['source']).toBe(RequestSource.UNKNOWN)
+        expect(quoteCallParams.info.source).toBe(RequestSource.UNKNOWN)
 
         headers = {}
         await getQuoteHandler(
@@ -288,7 +288,7 @@ describe('QuoteHandler', () => {
           syntheticStatusProvider
         ).handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
         quoteCallParams = quoteMock.mock.lastCall[0]
-        expect(quoteCallParams['source']).toBe(RequestSource.UNKNOWN)
+        expect(quoteCallParams.info.source).toBe(RequestSource.UNKNOWN)
       });
 
       it('handles exactOut classic quotes', async () => {

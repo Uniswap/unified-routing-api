@@ -32,6 +32,7 @@ export interface QuoteRequestInfo {
   sendPortionEnabled?: boolean;
   portion?: Portion;
   intent?: string;
+  source?: RequestSource;
 }
 
 export interface QuoteRequestBodyJSON extends Omit<QuoteRequestInfo, 'type' | 'amount'> {
@@ -52,7 +53,6 @@ export interface QuoteRequest {
   routingType: RoutingType;
   info: QuoteRequestInfo;
   config: RoutingConfig;
-  source?: RequestSource;
 
   toJSON(): RoutingConfigJSON;
   // return a key that uniquely identifies this request

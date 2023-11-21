@@ -120,7 +120,7 @@ export class QuoteHandler extends APIGLambdaHandler<
 
     const requestSource = this.getQuoteRequestSource(params.event.headers)
     for (const request of requests) {
-      request.source = requestSource
+      request.info.source = requestSource
     }
 
     const beforeGetQuotes = Date.now();
@@ -175,7 +175,7 @@ export class QuoteHandler extends APIGLambdaHandler<
   }
 
   private getQuoteRequestSource(event: APIGatewayProxyEventHeaders): RequestSource {
-    const userAgent = event['Request-Source']
+    const userAgent = event['x-request-source']
     if (userAgent === undefined) {
       return RequestSource.UNKNOWN
     }
