@@ -229,8 +229,7 @@ describe('QuoteHandler', () => {
         expect(quoteJSON.quoteGasAdjusted).toBe(CLASSIC_QUOTE_EXACT_IN_WORSE.amountOutGasAdjusted.toString());
       });
 
-      it.only('check request source', async () => {
-
+      it('check request source', async () => {
         const quoteMock = jest.fn().mockResolvedValue(CLASSIC_QUOTE_EXACT_IN_WORSE)
         const quoterMock: Quoter = { quote: quoteMock }
 

@@ -175,7 +175,7 @@ export class QuoteHandler extends APIGLambdaHandler<
   }
 
   private getQuoteRequestSource(event: APIGatewayProxyEventHeaders): RequestSource {
-    const userAgent = event['x-request-source']
+    const userAgent = event?.['x-request-source']
     if (userAgent === undefined) {
       return RequestSource.UNKNOWN
     }
