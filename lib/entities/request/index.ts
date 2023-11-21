@@ -41,11 +41,11 @@ export interface QuoteRequestBodyJSON extends Omit<QuoteRequestInfo, 'type' | 'a
 }
 
 export enum RequestSource {
-  UNKNOWN = 'Unknown',
-  UNISWAP_IOS = 'Uniswap-iOS',
-  UNISWAP_ANDROID = 'Uniswap-Android',
-  UNISWAP_WEB = 'Uniswap-Web',
-  EXTERNAL_API = 'External-API',
+  UNKNOWN = 'unknown',
+  UNISWAP_IOS = 'uniswap-ios',
+  UNISWAP_ANDROID = 'uniswap-android',
+  UNISWAP_WEB = 'uniswap-web',
+  EXTERNAL_API = 'external-api',
 }
 
 export interface QuoteRequest {

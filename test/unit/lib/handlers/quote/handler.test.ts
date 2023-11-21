@@ -241,7 +241,7 @@ describe('QuoteHandler', () => {
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
         let headers: APIGatewayProxyEventHeaders = {
-          'Request-Source': 'Uniswap-Web',
+          'Request-Source': 'uniswap-web',
         }
         await getQuoteHandler(
           quoters,
@@ -254,7 +254,7 @@ describe('QuoteHandler', () => {
         expect(quoteCallParams['source']).toBe(RequestSource.UNISWAP_WEB)
 
         headers = {
-          'Request-Source': 'Uniswap-iOS',
+          'Request-Source': 'uniswap-ios',
         }
         await getQuoteHandler(
           quoters,
@@ -267,7 +267,7 @@ describe('QuoteHandler', () => {
         expect(quoteCallParams['source']).toBe(RequestSource.UNISWAP_IOS)
 
         headers = {
-          'Request-Source': 'Dummy',
+          'Request-Source': 'dummy',
         }
         await getQuoteHandler(
           quoters,
