@@ -267,6 +267,32 @@ describe('QuoteHandler', () => {
         expect(quoteCallParams.info.source).toBe(RequestSource.UNISWAP_IOS)
 
         headers = {
+          'x-request-source': 'uniswap-android',
+        }
+        await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
+        quoteCallParams = quoteMock.mock.lastCall[0]
+        expect(quoteCallParams.info.source).toBe(RequestSource.UNISWAP_ANDROID)
+
+        headers = {
+          'x-request-source': 'external-api',
+        }
+        await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
+        quoteCallParams = quoteMock.mock.lastCall[0]
+        expect(quoteCallParams.info.source).toBe(RequestSource.EXTERNAL_API)
+
+        headers = {
           'x-request-source': 'dummy',
         }
         await getQuoteHandler(
