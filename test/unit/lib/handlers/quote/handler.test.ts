@@ -239,79 +239,51 @@ describe('QuoteHandler', () => {
         const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
         const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
-        let headers: APIGatewayProxyEventHeaders = {
-          'x-request-source': 'uniswap-web',
-        }
-        await getQuoteHandler(
+        const quoteHandler = getQuoteHandler(
           quoters,
           tokenFetcher,
           portionFetcher,
           permit2Fetcher,
           syntheticStatusProvider
-        ).handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
+        )
+
+        let headers: APIGatewayProxyEventHeaders = {
+          'x-request-source': 'uniswap-web',
+        }
+        await quoteHandler.handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
         let quoteCallParams = quoteMock.mock.lastCall[0]
         expect(quoteCallParams.info.source).toBe(RequestSource.UNISWAP_WEB)
 
         headers = {
           'x-request-source': 'uniswap-ios',
         }
-        await getQuoteHandler(
-          quoters,
-          tokenFetcher,
-          portionFetcher,
-          permit2Fetcher,
-          syntheticStatusProvider
-        ).handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
+        await quoteHandler.handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
         quoteCallParams = quoteMock.mock.lastCall[0]
         expect(quoteCallParams.info.source).toBe(RequestSource.UNISWAP_IOS)
 
         headers = {
           'x-request-source': 'uniswap-android',
         }
-        await getQuoteHandler(
-          quoters,
-          tokenFetcher,
-          portionFetcher,
-          permit2Fetcher,
-          syntheticStatusProvider
-        ).handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
+        await quoteHandler.handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
         quoteCallParams = quoteMock.mock.lastCall[0]
         expect(quoteCallParams.info.source).toBe(RequestSource.UNISWAP_ANDROID)
 
         headers = {
           'x-request-source': 'external-api',
         }
-        await getQuoteHandler(
-          quoters,
-          tokenFetcher,
-          portionFetcher,
-          permit2Fetcher,
-          syntheticStatusProvider
-        ).handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
+        await quoteHandler.handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
         quoteCallParams = quoteMock.mock.lastCall[0]
         expect(quoteCallParams.info.source).toBe(RequestSource.EXTERNAL_API)
 
         headers = {
           'x-request-source': 'dummy',
         }
-        await getQuoteHandler(
-          quoters,
-          tokenFetcher,
-          portionFetcher,
-          permit2Fetcher,
-          syntheticStatusProvider
-        ).handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
+        await quoteHandler.handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
         quoteCallParams = quoteMock.mock.lastCall[0]
         expect(quoteCallParams.info.source).toBe(RequestSource.UNKNOWN)
 
         headers = {}
-        await getQuoteHandler(
-          quoters,
-          tokenFetcher,
-          portionFetcher,
-          permit2Fetcher,
-          syntheticStatusProvider
-        ).handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
+        await quoteHandler.handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
         quoteCallParams = quoteMock.mock.lastCall[0]
         expect(quoteCallParams.info.source).toBe(RequestSource.UNKNOWN)
       });
