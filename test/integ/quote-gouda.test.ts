@@ -652,7 +652,7 @@ describe('quoteUniswapX', function () {
                     // only use non-synthetic quotes if it's ETH -> USDC
                     // otherwise use synthetic quotes
                     // fillers should be able to quote ETH -> USDC since this is the most popular pair
-                    useSyntheticQuotes: !(tokenIn.isNative && tokenOut.symbol === 'USDC'),
+                    useSyntheticQuotes: true,
                   },
                 ] as RoutingConfigJSON[],
               };
@@ -791,7 +791,7 @@ describe('quoteUniswapX', function () {
         GREENLIST_STABLE_TO_STABLE_PAIRS.forEach(([tokenIn, tokenOut]) => {
           sendPortionEnabledValues.forEach((sendPortionEnabled) => {
             it(`stable-to-stable ${tokenIn.symbol} -> ${tokenOut.symbol} carveout sendPortionEnabled = ${sendPortionEnabled}`, async () => {
-              const originalAmount = '100';
+              const originalAmount = '1000';
               const tokenInAddress = tokenIn.isNative ? NATIVE_ADDRESS : tokenIn.address;
               const tokenOutAddress = tokenOut.isNative ? NATIVE_ADDRESS : tokenOut.address;
               const amount = await getAmountFromToken(type, tokenIn.wrapped, tokenOut.wrapped, originalAmount);
