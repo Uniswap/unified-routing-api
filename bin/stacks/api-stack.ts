@@ -51,7 +51,7 @@ export class APIStack extends cdk.Stack {
     }
   ) {
     super(parent, name, props);
-    const { provisionedConcurrency, stage, chatbotSNSArn, internalApiKey } = props;
+    const { provisionedConcurrency, stage, chatbotSNSArn } = props;
 
     /*
      *  API Gateway Initialization
@@ -82,14 +82,6 @@ export class APIStack extends cdk.Stack {
       },
     });
 
-    const WAF_IPAllowlist = new aws_waf.CfnIPSet(this, 'IPAllowlist', {
-      scope: 'REGIONAL',
-      ipAddressVersion: 'IPV4',
-      addresses: [
-        '142.154.213.230/32', // 2023-09-18 NYC Office Fiber Static IP 
-      ],
-    });
-
     const ipThrottlingACL = new aws_waf.CfnWebACL(this, `${SERVICE_NAME}IPThrottlingACL`, {
       defaultAction: { allow: {} },
       scope: 'REGIONAL',
@@ -105,99 +97,7 @@ export class APIStack extends cdk.Stack {
         },
       },
       name: `${SERVICE_NAME}IPThrottling`,
-      rules: [
-        {
-          name: 'IPAllowRule',
-          priority: 10,
-          statement: {
-            ipSetReferenceStatement: {
-              arn: WAF_IPAllowlist.attrArn,
-            },
-          },
-          action: {
-            allow: {},
-          },
-          visibilityConfig: {
-            sampledRequestsEnabled: true,
-            cloudWatchMetricsEnabled: true,
-            metricName: `IPAllowRule`,
-          },
-        },
-        {
-          name: 'IPAllowRule_CloudFlare',
-          priority: 11,
-          statement: {
-            ipSetReferenceStatement: {
-              arn: WAF_IPAllowlist.attrArn,
-              ipSetForwardedIpConfig: {
-                fallbackBehavior: 'NO_MATCH',
-                headerName: 'True-Client-IP',
-                position: 'ANY',
-              },
-            },
-          },
-          action: {
-            allow: {},
-          },
-          visibilityConfig: {
-            sampledRequestsEnabled: true,
-            cloudWatchMetricsEnabled: true,
-            metricName: `IPAllowRuleCF`,
-          },
-        },
-        {
-          name: 'IPBlockRule_ExceptAPIKey',
-          priority: 20,
-          statement: {
-            rateBasedStatement: {
-              // Limit is per 5 mins, i.e. 200 requests every 5 mins
-              limit: props.throttlingOverride ? parseInt(props.throttlingOverride) : 200,
-              // API is of type EDGE so is fronted by Cloudfront as a proxy.
-              // Use the ip set in X-Forwarded-For by Cloudfront, not the regular IP
-              // which would just resolve to Cloudfronts IP.
-              aggregateKeyType: 'FORWARDED_IP',
-              forwardedIpConfig: {
-                headerName: 'X-Forwarded-For',
-                fallbackBehavior: 'MATCH',
-              },
-              scopeDownStatement: {
-                notStatement: {
-                  statement: {
-                    byteMatchStatement: {
-                      fieldToMatch: {
-                        singleHeader: {
-                          name: 'x-api-key',
-                        },
-                      },
-                      positionalConstraint: 'EXACTLY',
-                      searchString: internalApiKey,
-                      textTransformations: [
-                        {
-                          type: 'NONE',
-                          priority: 0,
-                        },
-                      ],
-                    },
-                  },
-                },
-              },
-            },
-          },
-          action: {
-            block: {
-              customResponse: {
-                responseCode: 429,
-                customResponseBodyKey: `${SERVICE_NAME}ThrottledResponseBody`,
-              },
-            },
-          },
-          visibilityConfig: {
-            sampledRequestsEnabled: true,
-            cloudWatchMetricsEnabled: true,
-            metricName: `${SERVICE_NAME}IPBasedThrottlingRule`,
-          },
-        },
-      ],
+      rules: [],
     });
 
     const region = cdk.Stack.of(this).region;
