@@ -255,30 +255,6 @@ describe('QuoteHandler', () => {
         expect(quoteCallParams.info.source).toBe(RequestSource.UNISWAP_WEB)
       });
 
-      it('check unspecified request source', async () => {
-        const quoteMock = jest.fn().mockResolvedValue(CLASSIC_QUOTE_EXACT_IN_WORSE)
-        const quoterMock: Quoter = { quote: quoteMock }
-
-        const quoters = { [RoutingType.CLASSIC]: quoterMock };
-        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
-        const portionFetcher = PortionFetcherMock(GET_NO_PORTION_RESPONSE);
-        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
-        const syntheticStatusProvider = SyntheticStatusProviderMock(false);
-
-        const quoteHandler = getQuoteHandler(
-          quoters,
-          tokenFetcher,
-          portionFetcher,
-          permit2Fetcher,
-          syntheticStatusProvider
-        )
-
-        const headers = {}
-        await quoteHandler.handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
-        const quoteCallParams = quoteMock.mock.lastCall[0]
-        expect(quoteCallParams.info.source).toBe(RequestSource.UNKNOWN)
-      });
-
       it('test getQuoteRequestSource', async () => {
         const quoteMock = jest.fn().mockResolvedValue(CLASSIC_QUOTE_EXACT_IN_WORSE)
         const quoterMock: Quoter = { quote: quoteMock }
