@@ -279,6 +279,53 @@ describe('QuoteHandler', () => {
         expect(quoteCallParams.info.source).toBe(RequestSource.UNKNOWN)
       });
 
+      it('test getQuoteRequestSource', async () => {
+        const quoteMock = jest.fn().mockResolvedValue(CLASSIC_QUOTE_EXACT_IN_WORSE)
+        const quoterMock: Quoter = { quote: quoteMock }
+
+        const quoters = { [RoutingType.CLASSIC]: quoterMock };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(GET_NO_PORTION_RESPONSE);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+        const syntheticStatusProvider = SyntheticStatusProviderMock(false);
+
+        const quoteHandler = getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        )
+
+        let headers: APIGatewayProxyEventHeaders = { 'x-request-source': 'uniswap-ios' }
+        let requestSource = quoteHandler.getQuoteRequestSource(headers)
+        expect(requestSource).toBe(RequestSource.UNISWAP_IOS)
+
+        headers = { 'x-request-source': 'uniswap-android' }
+        requestSource = quoteHandler.getQuoteRequestSource(headers)
+        expect(requestSource).toBe(RequestSource.UNISWAP_ANDROID)
+
+        headers = { 'x-request-source': 'uniswap-web' }
+        requestSource = quoteHandler.getQuoteRequestSource(headers)
+        expect(requestSource).toBe(RequestSource.UNISWAP_WEB)
+
+        headers = { 'x-request-source': 'external-api' }
+        requestSource = quoteHandler.getQuoteRequestSource(headers)
+        expect(requestSource).toBe(RequestSource.EXTERNAL_API)
+
+        headers = { 'x-request-source': 'lonely-planet' }
+        requestSource = quoteHandler.getQuoteRequestSource(headers)
+        expect(requestSource).toBe(RequestSource.UNKNOWN)
+
+        headers = { 'x-request-source': '' }
+        requestSource = quoteHandler.getQuoteRequestSource(headers)
+        expect(requestSource).toBe(RequestSource.UNKNOWN)
+
+        headers = {}
+        requestSource = quoteHandler.getQuoteRequestSource(headers)
+        expect(requestSource).toBe(RequestSource.UNKNOWN)
+      });
+
       it('handles exactOut classic quotes', async () => {
         const request: QuoteRequestBodyJSON = {
           ...BASE_REQUEST_INFO_EXACT_OUT,
