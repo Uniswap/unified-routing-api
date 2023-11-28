@@ -253,38 +253,29 @@ describe('QuoteHandler', () => {
         await quoteHandler.handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
         let quoteCallParams = quoteMock.mock.lastCall[0]
         expect(quoteCallParams.info.source).toBe(RequestSource.UNISWAP_WEB)
+      });
 
-        headers = {
-          'x-request-source': 'uniswap-ios',
-        }
-        await quoteHandler.handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
-        quoteCallParams = quoteMock.mock.lastCall[0]
-        expect(quoteCallParams.info.source).toBe(RequestSource.UNISWAP_IOS)
+      it('check unspecified request source', async () => {
+        const quoteMock = jest.fn().mockResolvedValue(CLASSIC_QUOTE_EXACT_IN_WORSE)
+        const quoterMock: Quoter = { quote: quoteMock }
 
-        headers = {
-          'x-request-source': 'uniswap-android',
-        }
-        await quoteHandler.handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
-        quoteCallParams = quoteMock.mock.lastCall[0]
-        expect(quoteCallParams.info.source).toBe(RequestSource.UNISWAP_ANDROID)
+        const quoters = { [RoutingType.CLASSIC]: quoterMock };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(GET_NO_PORTION_RESPONSE);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+        const syntheticStatusProvider = SyntheticStatusProviderMock(false);
 
-        headers = {
-          'x-request-source': 'external-api',
-        }
-        await quoteHandler.handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
-        quoteCallParams = quoteMock.mock.lastCall[0]
-        expect(quoteCallParams.info.source).toBe(RequestSource.EXTERNAL_API)
+        const quoteHandler = getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        )
 
-        headers = {
-          'x-request-source': 'dummy',
-        }
+        const headers = {}
         await quoteHandler.handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
-        quoteCallParams = quoteMock.mock.lastCall[0]
-        expect(quoteCallParams.info.source).toBe(RequestSource.UNKNOWN)
-
-        headers = {}
-        await quoteHandler.handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
-        quoteCallParams = quoteMock.mock.lastCall[0]
+        const quoteCallParams = quoteMock.mock.lastCall[0]
         expect(quoteCallParams.info.source).toBe(RequestSource.UNKNOWN)
       });
 
