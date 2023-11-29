@@ -182,6 +182,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     if (Object.values<string>(RequestSource).includes(requestSource)) {
       return requestSource as RequestSource
     }
+    log.info(`Unknown "x-request-source" header: ${requestSource}`);
     return RequestSource.UNKNOWN
   }
 
