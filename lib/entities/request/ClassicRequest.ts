@@ -64,6 +64,7 @@ export class ClassicRequest implements QuoteRequest {
       routingType: RoutingType.CLASSIC as RoutingType.CLASSIC,
       protocols: this.config.protocols?.map((p: Protocol) => p.toString()),
       ...(this.config.permitAmount !== undefined && { permitAmount: this.config.permitAmount.toString() }),
+      ...(this.info.source !== undefined && { source: this.info.source.toString() }),
     });
   }
 

@@ -32,6 +32,7 @@ export interface QuoteRequestInfo {
   sendPortionEnabled?: boolean;
   portion?: Portion;
   intent?: string;
+  source?: RequestSource;
 }
 
 export interface QuoteRequestBodyJSON extends Omit<QuoteRequestInfo, 'type' | 'amount'> {
@@ -40,10 +41,19 @@ export interface QuoteRequestBodyJSON extends Omit<QuoteRequestInfo, 'type' | 'a
   configs: RoutingConfigJSON[];
 }
 
+export enum RequestSource {
+  UNKNOWN = 'unknown',
+  UNISWAP_IOS = 'uniswap-ios',
+  UNISWAP_ANDROID = 'uniswap-android',
+  UNISWAP_WEB = 'uniswap-web',
+  EXTERNAL_API = 'external-api',
+}
+
 export interface QuoteRequest {
   routingType: RoutingType;
   info: QuoteRequestInfo;
   config: RoutingConfig;
+
   toJSON(): RoutingConfigJSON;
   // return a key that uniquely identifies this request
   key(): string;
