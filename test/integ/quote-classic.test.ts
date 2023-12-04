@@ -270,7 +270,7 @@ describe('quote', function () {
       parseAmount('50000000', USDT_MAINNET),
       parseAmount('100', WBTC_MAINNET),
       parseAmount('10000', UNI_MAINNET),
-      parseAmount('40000', WETH9[1]),
+      parseAmount('400', WETH9[1]),
       parseAmount('5000000', DAI_MAINNET),
       parseAmount('50000', agEUR_MAINNET),
       parseAmount('475000', XSGD_MAINNET),
