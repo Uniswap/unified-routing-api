@@ -95,7 +95,7 @@ export abstract class APIGLambdaHandler<
         headers: {
           ...response.headers,
           'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+          'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,x-request-source',
           'Access-Control-Allow-Credentials': true,
           'Content-Type': 'application/json',
         },
