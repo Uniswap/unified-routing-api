@@ -1954,21 +1954,7 @@
     "@uniswap/sdk-core" "^4.0.3"
     ethers "^5.7.0"
 
-"@uniswap/universal-router-sdk@^1.5.7":
-  version "1.5.7"
-  resolved "https://registry.npmjs.org/@uniswap/universal-router-sdk/-/universal-router-sdk-1.5.7.tgz"
-  integrity sha512-5T08dTZoAEN3W7fw467WoNwzfF8Ks5+t4/l0xVAhadUNq6UB/Ng9q5P70j+D+FVLwZbcbyv5zIkPtooADfjEKw==
-  dependencies:
-    "@uniswap/permit2-sdk" "^1.2.0"
-    "@uniswap/router-sdk" "^1.6.0"
-    "@uniswap/sdk-core" "^4.0.0"
-    "@uniswap/universal-router" "1.4.3"
-    "@uniswap/v2-sdk" "^3.2.0"
-    "@uniswap/v3-sdk" "^3.10.0"
-    bignumber.js "^9.0.2"
-    ethers "^5.3.1"
-
-"@uniswap/universal-router-sdk@^1.5.8":
+"@uniswap/universal-router-sdk@1.5.8", "@uniswap/universal-router-sdk@^1.5.8":
   version "1.5.8"
   resolved "https://registry.yarnpkg.com/@uniswap/universal-router-sdk/-/universal-router-sdk-1.5.8.tgz#16c62c3883e99073ba8b6e19188cf418b6551847"
   integrity sha512-9tDDBTXarpdRfJStF5mDCNmsQrCfiIT6HCQN1EPq0tAm2b+JzjRkUzsLpbNpVef066FETc3YjPH6JDPB3CMyyA==
