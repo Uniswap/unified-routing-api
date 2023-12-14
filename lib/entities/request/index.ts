@@ -1,5 +1,6 @@
 import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber } from 'ethers';
+import { Protocol } from '@uniswap/router-sdk';
 
 import { SUPPORTED_CHAINS } from '../../config/chains';
 import { DEFAULT_SLIPPAGE_TOLERANCE, RoutingType } from '../../constants';
@@ -7,6 +8,7 @@ import { ValidationError } from '../../util/errors';
 import { ClassicConfig, ClassicConfigJSON, ClassicRequest } from './ClassicRequest';
 import { DutchConfig, DutchConfigJSON, DutchRequest } from './DutchRequest';
 import { Portion } from '../../fetchers/PortionFetcher';
+import { RelayConfig, RelayConfigJSON } from './RelayRequest';
 
 export * from './ClassicRequest';
 export * from './DutchRequest';
@@ -14,8 +16,8 @@ export * from './DutchRequest';
 export type RequestByRoutingType = { [routingType in RoutingType]?: QuoteRequest };
 
 // config specific to the given routing type
-export type RoutingConfig = DutchConfig | ClassicConfig;
-export type RoutingConfigJSON = DutchConfigJSON | ClassicConfigJSON;
+export type RoutingConfig = DutchConfig | ClassicConfig | RelayConfig;
+export type RoutingConfigJSON = DutchConfigJSON | ClassicConfigJSON | RelayConfigJSON;
 
 // shared info for all quote requests
 export interface QuoteRequestInfo {
@@ -126,4 +128,17 @@ export function defaultRequestKey(request: QuoteRequest): string {
     amount: info.amount.toString(),
     type: info.type,
   });
+}
+
+export function parseProtocol(protocol: string): Protocol {
+  switch (protocol.toLowerCase()) {
+    case 'v2':
+      return Protocol.V2;
+    case 'v3':
+      return Protocol.V3;
+    case 'mixed':
+      return Protocol.MIXED;
+    default:
+      throw new Error(`Invalid protocol: ${protocol}`);
+  }
 }

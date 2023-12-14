@@ -39,6 +39,9 @@ export type LogJSON = {
   quoteGasAndPortionAdjustedDecimals?: string;
   portionAmountOutStart?: string;
   portionAmountOutEnd?: string;
+  gasToken?: string;
+  gasTokenAmount?: string;
+  gasTokenAmountDecimals?: string;
 };
 
 export interface IQuote {
