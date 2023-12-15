@@ -3,6 +3,7 @@ import Joi from 'joi';
 import { TradeType } from '@uniswap/sdk-core';
 import { Unit } from 'aws-embedded-metrics';
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
+import { APIGatewayProxyEventHeaders } from 'aws-lambda/trigger/api-gateway-proxy';
 import { ethers } from 'ethers';
 import { v4 as uuidv4 } from 'uuid';
 import { frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
@@ -18,7 +19,7 @@ import {
   QuoteRequest,
   QuoteRequestBodyJSON,
   QuoteRequestInfo,
-  RequestSource
+  RequestSource,
 } from '../../entities';
 import { TokenFetcher } from '../../fetchers/TokenFetcher';
 import { ErrorCode, NoQuotesAvailable, QuoteFetchError, ValidationError } from '../../util/errors';
@@ -30,7 +31,6 @@ import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
 import { ContainerInjected, QuoterByRoutingType } from './injector';
 import { PostQuoteRequestBodyJoi } from './schema';
-import { APIGatewayProxyEventHeaders } from 'aws-lambda/trigger/api-gateway-proxy';
 
 const DISABLE_DUTCH_LIMIT_REQUESTS = false;
 
@@ -64,7 +64,10 @@ export class QuoteHandler extends APIGLambdaHandler<
       throw new ValidationError(`Cannot request quotes for tokens on different chains`);
     }
 
-    const provider = new ethers.providers.StaticJsonRpcProvider(rpcUrlMap.get(requestBody.tokenInChainId), requestBody.tokenInChainId); // specify chainId to avoid detecctNetwork() call on initialization
+    const provider = new ethers.providers.StaticJsonRpcProvider(
+      rpcUrlMap.get(requestBody.tokenInChainId),
+      requestBody.tokenInChainId
+    ); // specify chainId to avoid detecctNetwork() call on initialization
 
     const request = {
       ...requestBody,
@@ -118,9 +121,9 @@ export class QuoteHandler extends APIGLambdaHandler<
     const requests = contextHandler.getRequests();
     log.info({ requests }, 'requests');
 
-    const requestSource = this.getQuoteRequestSource(params.event.headers)
+    const requestSource = this.getQuoteRequestSource(params.event.headers);
     for (const request of requests) {
-      request.info.source = requestSource
+      request.info.source = requestSource;
     }
 
     const beforeGetQuotes = Date.now();
@@ -175,15 +178,15 @@ export class QuoteHandler extends APIGLambdaHandler<
   }
 
   public getQuoteRequestSource(event: APIGatewayProxyEventHeaders): RequestSource {
-    const requestSource = event?.['x-request-source']?.toLowerCase()
+    const requestSource = event?.['x-request-source']?.toLowerCase();
     if (requestSource === undefined) {
-      return RequestSource.UNKNOWN
+      return RequestSource.UNKNOWN;
     }
     if (Object.values<string>(RequestSource).includes(requestSource)) {
-      return requestSource as RequestSource
+      return requestSource as RequestSource;
     }
     log.info(`Unknown "x-request-source" header: ${requestSource}`);
-    return RequestSource.UNKNOWN
+    return RequestSource.UNKNOWN;
   }
 
   private async isDutchEligible(requestBody: QuoteRequestBodyJSON, tokenFetcher: TokenFetcher): Promise<boolean> {
@@ -335,7 +338,6 @@ export class QuoteHandler extends APIGLambdaHandler<
     const responseBody = JSON.parse(response.body!);
     const rawBody = JSON.parse(event.body!);
 
-    log.info({ rawBody }, 'rawBody');
     if (statusCode != 200 && responseBody.errorCode == ErrorCode.ValidationError) {
       metrics.putMetric(`QuoteRequestValidationError`, 1);
       return;
