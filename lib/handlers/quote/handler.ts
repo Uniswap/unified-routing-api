@@ -105,6 +105,7 @@ export class QuoteHandler extends APIGLambdaHandler<
     const parsedRequests = parseQuoteRequests(requestWithTokenAddresses);
     const { quoteInfo } = parsedRequests;
     let { quoteRequests } = parsedRequests;
+    await this.emitQuoteRequestedMetrics(tokenFetcher, quoteInfo, quoteRequests, startTime);
 
     const isDutchEligible = await this.isDutchEligible(requestBody, tokenFetcher);
     if (!isDutchEligible) {
@@ -144,8 +145,6 @@ export class QuoteHandler extends APIGLambdaHandler<
       Unit.Milliseconds
     );
     log.info({ resolvedQuotes }, 'resolvedQuotes');
-
-    await this.emitQuoteRequestedMetrics(tokenFetcher, quoteInfo, quoteRequests, startTime);
 
     const uniswapXRequested = requests.filter((request) => request.routingType === RoutingType.DUTCH_LIMIT).length > 0;
     const resolvedValidQuotes = resolvedQuotes.filter((q) => q !== null) as Quote[];
@@ -330,7 +329,6 @@ export class QuoteHandler extends APIGLambdaHandler<
     metrics.putMetric(`QuoteResponseQuoteType-${bestQuoteType}`, 1, Unit.Count);
     metrics.putMetric(`QuoteResponseRoutingType-${bestQuote.routingType}ChainId${chainId.toString()}`, 1, Unit.Count);
     metrics.putMetric(`QuoteResponseQuoteType-${bestQuoteType}ChainId${chainId.toString()}`, 1, Unit.Count);
-    metrics.putMetric(`QuoteResponseChainId${chainId.toString()}`, 1, Unit.Count);
   }
 
   protected afterResponseHook(event: APIGatewayProxyEvent, _context: Context, response: APIGatewayProxyResult): void {
@@ -351,10 +349,27 @@ export class QuoteHandler extends APIGLambdaHandler<
       // no-op. If we can't get chainId still log the metric as chain 0
     }
 
-    const metricName = `QuoteResponseChainId${chainId.toString()}Status${((statusCode % 100) * 100)
-      .toString()
-      .replace(/0/g, 'X')}`;
-    metrics.putMetric(metricName, 1, Unit.Count);
+    // log the response count
+    metrics.putMetric(`QuoteResponseChainId${chainId.toString()}`, 1, Unit.Count);
+
+    switch (statusCode) {
+      case 200:
+      case 202:
+        metrics.putMetric(`QuoteResponseChainId${chainId.toString()}Status2XX`, 1, Unit.Count);
+        break;
+      case 400:
+      case 403:
+      case 404:
+      case 408:
+      case 409:
+      case 429:
+        metrics.putMetric(`QuoteResponseChainId${chainId.toString()}Status4XX`, 1, Unit.Count);
+        break;
+      case 500:
+      case 502:
+        metrics.putMetric(`QuoteResponseChainId${chainId.toString()}Status5XX`, 1, Unit.Count);
+        break;
+    }
   }
 
   protected requestBodySchema(): Joi.ObjectSchema | null {
