@@ -1,4 +1,5 @@
 import { ChainId } from '@uniswap/sdk-core';
+import { ID_TO_NETWORK_NAME } from '@uniswap/smart-order-router';
 import * as cdk from 'aws-cdk-lib';
 import * as aws_cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import { Construct } from 'constructs';
@@ -213,6 +214,47 @@ export class DashboardStack extends cdk.NestedStack {
               period: 300,
               title: '5XX/4XX Error Rates | 5min',
               setPeriodToTimeRange: true,
+              yAxis: {
+                left: {
+                  showUnits: false,
+                  label: '%',
+                },
+              },
+            },
+          },
+          {
+            type: 'metric',
+            height: 6,
+            width: 12,
+            y: 0,
+            x: 0,
+            properties: {
+              metrics: _.flatMap(
+                _.uniq([...SUPPORTED_CHAINS.CLASSIC, ...SUPPORTED_CHAINS.DUTCH_LIMIT]),
+                (chainId: ChainId) => [
+                  [
+                    {
+                      expression: `(c${chainId}r2xx/c${chainId}r) * 100`,
+                      label: `Success Rate on ${ID_TO_NETWORK_NAME(chainId)}`,
+                      id: `r2${chainId}`,
+                    },
+                  ],
+                  [
+                    'Uniswap',
+                    `QuoteRequestedChainId${chainId}`,
+                    'Service',
+                    METRIC_SERVICE_NAME,
+                    { id: `c${chainId}r`, visible: false },
+                  ],
+                  ['.', `QuoteResponseChainId${chainId}Status2XX`, '.', '.', { id: `c${chainId}r2xx`, visible: false }],
+                ]
+              ),
+              view: 'timeSeries',
+              stacked: false,
+              stat: 'Sum',
+              period: 300,
+              region,
+              title: 'Success Rates by Chain',
               yAxis: {
                 left: {
                   showUnits: false,
