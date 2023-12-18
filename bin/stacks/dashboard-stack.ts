@@ -226,8 +226,8 @@ export class DashboardStack extends cdk.NestedStack {
             type: 'metric',
             height: 6,
             width: 12,
-            y: 0,
-            x: 0,
+            y: 6,
+            x: 12,
             properties: {
               metrics: _.flatMap(
                 _.uniq([...SUPPORTED_CHAINS.CLASSIC, ...SUPPORTED_CHAINS.DUTCH_LIMIT]),
@@ -235,7 +235,7 @@ export class DashboardStack extends cdk.NestedStack {
                   [
                     {
                       expression: `(c${chainId}r2xx/c${chainId}r) * 100`,
-                      label: `Success Rate on ${ID_TO_NETWORK_NAME(chainId)}`,
+                      label: `${ID_TO_NETWORK_NAME(chainId)} - Success Rate`,
                       id: `r2${chainId}`,
                     },
                   ],
@@ -265,7 +265,7 @@ export class DashboardStack extends cdk.NestedStack {
           },
           {
             height: 6,
-            width: 24,
+            width: 12,
             y: 6,
             x: 0,
             type: 'metric',
@@ -280,6 +280,55 @@ export class DashboardStack extends cdk.NestedStack {
               region,
               period: 300,
               title: 'Latency | 5min',
+            },
+          },
+          {
+            type: 'metric',
+            height: 6,
+            width: 24,
+            y: 12,
+            x: 0,
+            properties: {
+              metrics: _.flatMap(
+                _.uniq([...SUPPORTED_CHAINS.CLASSIC, ...SUPPORTED_CHAINS.DUTCH_LIMIT]),
+                (chainId: ChainId) => [
+                  [
+                    {
+                      expression: `(c${chainId}r5xx/c${chainId}r) * 100`,
+                      label: `${ID_TO_NETWORK_NAME(chainId)} - 5XX Error Rate`,
+                      id: `r5${chainId}`,
+                    },
+                  ],
+                  [
+                    {
+                      expression: `(c${chainId}r4xx/c${chainId}r) * 100`,
+                      label: `${ID_TO_NETWORK_NAME(chainId)} - 4XX Error Rate`,
+                      id: `r4${chainId}`,
+                    },
+                  ],
+                  [
+                    'Uniswap',
+                    `QuoteRequestedChainId${chainId}`,
+                    'Service',
+                    METRIC_SERVICE_NAME,
+                    { id: `c${chainId}r`, visible: false },
+                  ],
+                  ['.', `QuoteResponseChainId${chainId}Status4XX`, '.', '.', { id: `c${chainId}r4xx`, visible: false }],
+                  ['.', `QuoteResponseChainId${chainId}Status5XX`, '.', '.', { id: `c${chainId}r5xx`, visible: false }],
+                ]
+              ),
+              view: 'timeSeries',
+              stacked: false,
+              stat: 'Sum',
+              period: 300,
+              region,
+              title: '5XX/4XX Error Rates by Chain',
+              yAxis: {
+                left: {
+                  showUnits: false,
+                  label: '%',
+                },
+              },
             },
           },
           {
@@ -485,49 +534,6 @@ export class DashboardStack extends cdk.NestedStack {
               period: 300,
               region,
               title: 'Quote Requests/Responses by Chain',
-            },
-          },
-          {
-            type: 'metric',
-            x: 0,
-            y: 25,
-            width: 24,
-            height: 6,
-            properties: {
-              metrics: _.flatMap(
-                _.uniq([...SUPPORTED_CHAINS.CLASSIC, ...SUPPORTED_CHAINS.DUTCH_LIMIT]),
-                (chainId: ChainId) => [
-                  [
-                    {
-                      expression: `(c${chainId}r5xx/c${chainId}r) * 100`,
-                      label: `5XXErrorRateChainId${chainId}`,
-                      id: `r5${chainId}`,
-                    },
-                  ],
-                  [
-                    {
-                      expression: `(c${chainId}r4xx/c${chainId}r) * 100`,
-                      label: `4XXErrorRateChainId${chainId}`,
-                      id: `r4${chainId}`,
-                    },
-                  ],
-                  [
-                    'Uniswap',
-                    `QuoteRequestedChainId${chainId}`,
-                    'Service',
-                    METRIC_SERVICE_NAME,
-                    { id: `c${chainId}r`, visible: false },
-                  ],
-                  ['.', `QuoteResponseChainId${chainId}Status4XX`, '.', '.', { id: `c${chainId}r4xx`, visible: false }],
-                  ['.', `QuoteResponseChainId${chainId}Status5XX`, '.', '.', { id: `c${chainId}r5xx`, visible: false }],
-                ]
-              ),
-              view: 'timeSeries',
-              stacked: false,
-              stat: 'Sum',
-              period: 300,
-              region,
-              title: '5XX/4XX Error Rates by Chain',
             },
           },
           {

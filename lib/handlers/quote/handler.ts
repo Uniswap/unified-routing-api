@@ -362,9 +362,11 @@ export class QuoteHandler extends APIGLambdaHandler<
       case 404:
       case 408:
       case 409:
+      case 429:
         metrics.putMetric(`QuoteResponseChainId${chainId.toString()}Status4XX`, 1, Unit.Count);
         break;
       case 500:
+      case 502:
         metrics.putMetric(`QuoteResponseChainId${chainId.toString()}Status5XX`, 1, Unit.Count);
         break;
     }
