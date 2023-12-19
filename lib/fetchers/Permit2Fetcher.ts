@@ -1,6 +1,6 @@
 import { PERMIT2_ADDRESS, PermitDetails } from '@uniswap/permit2-sdk';
 import { ChainId } from '@uniswap/sdk-core';
-import { ethers } from 'ethers';
+import { ethers, providers } from 'ethers';
 import PERMIT2_CONTRACT from '../abis/Permit2.json';
 import { log } from '../util/log';
 import { metrics } from '../util/metrics';
@@ -9,10 +9,10 @@ export class Permit2Fetcher {
   public readonly permit2Address: string;
   public readonly permit2Abi: ethers.ContractInterface;
   private readonly permit2: ethers.Contract;
-  private readonly rpcUrlMap: Map<ChainId, string>;
+  private readonly chainIdRpcMap: Map<ChainId, providers.StaticJsonRpcProvider>;
 
-  constructor(rpcUrlMap: Map<ChainId, string>) {
-    this.rpcUrlMap = rpcUrlMap;
+  constructor(chainIdRpcMap: Map<ChainId, providers.StaticJsonRpcProvider>) {
+    this.chainIdRpcMap = chainIdRpcMap;
     this.permit2Address = PERMIT2_ADDRESS;
     this.permit2Abi = PERMIT2_CONTRACT.abi;
     this.permit2 = new ethers.Contract(this.permit2Address, this.permit2Abi);
@@ -27,8 +27,8 @@ export class Permit2Fetcher {
     let allowance = undefined;
     metrics.putMetric(`Permit2FetcherRequest`, 1);
     try {
-      const rpcUrl = this.rpcUrlMap.get(chainId);
-      const rpcProvider = new ethers.providers.StaticJsonRpcProvider(rpcUrl, chainId);
+      const rpcProvider = this.chainIdRpcMap.get(chainId);
+      if (!rpcProvider) throw new Error(`No rpc provider found for chain: ${chainId}`);
       allowance = await this.permit2.connect(rpcProvider).allowance(ownerAddress, tokenAddress, spenderAddress);
       metrics.putMetric(`Permit2FetcherSuccess`, 1);
     } catch (e) {

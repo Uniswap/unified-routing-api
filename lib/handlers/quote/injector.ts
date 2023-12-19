@@ -3,6 +3,7 @@ import { default as bunyan, default as Logger } from 'bunyan';
 
 import { ChainId } from '@uniswap/sdk-core';
 import { MetricsLogger } from 'aws-embedded-metrics';
+import { providers } from 'ethers';
 import NodeCache from 'node-cache';
 import { SUPPORTED_CHAINS } from '../../config/chains';
 import { RoutingType } from '../../constants';
@@ -33,7 +34,7 @@ export interface ContainerInjected {
   portionFetcher: PortionFetcher;
   permit2Fetcher: Permit2Fetcher;
   syntheticStatusProvider: SyntheticStatusProvider;
-  rpcUrlMap: Map<ChainId, string>;
+  chainIdRpcMap: Map<ChainId, providers.StaticJsonRpcProvider>;
 }
 
 export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void> {
@@ -52,10 +53,11 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
     const serviceUrl = checkDefined(process.env.SERVICE_URL, 'SERVICE_URL is not defined');
     const portionApiUrl = checkDefined(process.env.PORTION_API_URL, 'PORTION_API_URL is not defined');
 
-    const rpcUrlMap = new Map<ChainId, string>();
+    const chainIdRpcMap = new Map<ChainId, providers.StaticJsonRpcProvider>();
     SUPPORTED_CHAINS[RoutingType.CLASSIC].forEach((chainId) => {
       const rpcUrl = checkDefined(process.env[`RPC_${chainId}`], `RPC_${chainId} is not defined`);
-      rpcUrlMap.set(chainId, rpcUrl);
+      const provider = new providers.StaticJsonRpcProvider(rpcUrl, chainId); // specify chainId to avoid detecctNetwork() call on initialization
+      chainIdRpcMap.set(chainId, provider);
     });
 
     // single cache acting as both positive cache and negative cache,
@@ -69,10 +71,10 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
         [RoutingType.DUTCH_LIMIT]: new RfqQuoter(paramApiUrl, serviceUrl, paramApiKey),
         [RoutingType.CLASSIC]: new RoutingApiQuoter(routingApiUrl, routingApiKey),
       },
-      rpcUrlMap,
+      chainIdRpcMap,
       tokenFetcher: tokenFetcher,
       portionFetcher: portionFetcher,
-      permit2Fetcher: new Permit2Fetcher(rpcUrlMap),
+      permit2Fetcher: new Permit2Fetcher(chainIdRpcMap),
       syntheticStatusProvider: new DisabledSyntheticStatusProvider(),
     };
   }

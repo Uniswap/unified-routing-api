@@ -4,7 +4,6 @@ import { TradeType } from '@uniswap/sdk-core';
 import { Unit } from 'aws-embedded-metrics';
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { APIGatewayProxyEventHeaders } from 'aws-lambda/trigger/api-gateway-proxy';
-import { ethers } from 'ethers';
 import { v4 as uuidv4 } from 'uuid';
 import { frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
 import {
@@ -56,7 +55,14 @@ export class QuoteHandler extends APIGLambdaHandler<
   ): Promise<ErrorResponse | Response<QuoteResponseJSON>> {
     const {
       requestBody,
-      containerInjected: { quoters, tokenFetcher, portionFetcher, permit2Fetcher, syntheticStatusProvider, rpcUrlMap },
+      containerInjected: {
+        quoters,
+        tokenFetcher,
+        portionFetcher,
+        permit2Fetcher,
+        syntheticStatusProvider,
+        chainIdRpcMap,
+      },
     } = params;
 
     const startTime = Date.now();
@@ -64,10 +70,8 @@ export class QuoteHandler extends APIGLambdaHandler<
       throw new ValidationError(`Cannot request quotes for tokens on different chains`);
     }
 
-    const provider = new ethers.providers.StaticJsonRpcProvider(
-      rpcUrlMap.get(requestBody.tokenInChainId),
-      requestBody.tokenInChainId
-    ); // specify chainId to avoid detecctNetwork() call on initialization
+    const provider = chainIdRpcMap.get(requestBody.tokenInChainId);
+    if (!provider) throw new Error(`No rpc provider found for chain: ${requestBody.tokenInChainId}`);
 
     const request = {
       ...requestBody,
