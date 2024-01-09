@@ -58,9 +58,10 @@ export class RelayQuoteContext implements QuoteContext {
 
   async resolveHandler(dependencies: QuoteByKey): Promise<Quote | null> {
     const classicQuote = dependencies[this.classicKey] as ClassicQuote;
+    const relayQuote = dependencies[this.requestKey] as RelayQuote;
 
     const [quote] = await Promise.all([
-      this.getRelayQuote(classicQuote),
+      this.getRelayQuote(relayQuote, classicQuote),
     ]);
 
     // handle cases where we only either have RFQ or synthetic
@@ -79,14 +80,16 @@ export class RelayQuoteContext implements QuoteContext {
     return quote;
   }
 
-  async getRelayQuote(classicQuote: ClassicQuote): Promise<RelayQuote | null> {
-    if (!classicQuote) return null;
+  async getRelayQuote(quote?: RelayQuote, classicQuote?: ClassicQuote): Promise<RelayQuote | null> {
+    if (!quote || !classicQuote) return null;
 
     // TODO: validate tokens, gas tokens, etc.
+    // add checks for too large price impact, etc.
 
-    const reparameterized = RelayQuote.reparameterize(classicQuote as ClassicQuote, {
+    const reparameterized = RelayQuote.reparameterize(quote, classicQuote, {
       hasApprovedPermit2: await this.hasApprovedPermit2(this.request)
     });
+
     // if its invalid for some reason, i.e. too much decay then return null
     if (!reparameterized.validate()) return null;
     return reparameterized;

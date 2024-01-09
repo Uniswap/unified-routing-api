@@ -5,20 +5,16 @@ import { BigNumber, ethers } from 'ethers';
 import { PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { IQuote } from '.';
-import { DutchRequest } from '..';
 import {
   BPS,
   DEFAULT_START_TIME_BUFFER_SECS,
-  frontendAndUraEnablePortion,
   NATIVE_ADDRESS,
-  OPEN_QUOTE_START_TIME_BUFFER_SECS,
   RoutingType,
   UNISWAPX_BASE_GAS,
   WETH_UNWRAP_GAS,
   WETH_WRAP_GAS,
   WETH_WRAP_GAS_ALREADY_APPROVED
 } from '../../constants';
-import { Portion } from '../../fetchers/PortionFetcher';
 import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
 import { ClassicQuote } from './ClassicQuote';
@@ -39,9 +35,6 @@ export type RelayQuoteDataJSON = {
   auctionPeriodSecs: number;
   deadlineBufferSecs: number;
   permitData: PermitTransferFromData;
-  portionBips?: number;
-  portionAmount?: string;
-  portionRecipient?: string;
 };
 
 export type RelayQuoteJSON = {
@@ -58,7 +51,6 @@ export type RelayQuoteJSON = {
 
 export type ParameterizationOptions = {
   hasApprovedPermit2: boolean;
-  largeTrade: boolean;
 };
 
 type Amounts = {
@@ -92,8 +84,6 @@ export class RelayQuote implements IQuote {
       request.config.swapper,
       NATIVE_ADDRESS, // synthetic quote has no filler
       generateRandomNonce(), // synthetic quote has no nonce
-      quote.getPortionBips(),
-      quote.getPortionRecipient()
     );
   }
 
@@ -112,8 +102,6 @@ export class RelayQuote implements IQuote {
     public readonly swapper: string,
     public readonly filler?: string,
     public readonly nonce?: string,
-    public readonly portionBips?: number,
-    public readonly portionRecipient?: string,
     derived?: RelayQuoteDerived
   ) {
     this.createdAtMs = createdAtMs || currentTimestampInMs();
@@ -131,12 +119,7 @@ export class RelayQuote implements IQuote {
       startTimeBufferSecs: this.startTimeBufferSecs,
       auctionPeriodSecs: this.auctionPeriodSecs,
       deadlineBufferSecs: this.deadlineBufferSecs,
-      permitData: this.getPermitData(),
-      // NOTE: important for URA to return 0 bps and amount, in case of no portion.
-      // this is FE requirement
-      portionBips: frontendAndUraEnablePortion(this.request.info.sendPortionEnabled) ? this.portionBips ?? 0 : undefined,
-      portionAmount: frontendAndUraEnablePortion(this.request.info.sendPortionEnabled) ? this.portionAmountOutStart.toString() ?? '0' : undefined,
-      portionRecipient: this.portionRecipient,
+      permitData: this.getPermitData()
     };
   }
 
@@ -155,41 +138,13 @@ export class RelayQuote implements IQuote {
         endAmount: this.amountInEnd,
       });
 
-    if (this.portionRecipient && this.portionBips && frontendAndUraEnablePortion(this.request.info.sendPortionEnabled)) {
-      if (this.request.info.type === TradeType.EXACT_INPUT) {
-        // Amount to swapper
-        builder.output({
-          token: this.tokenOut,
-          startAmount: this.amountOutStart.sub(this.portionAmountOutStart),
-          endAmount: this.amountOutEnd.sub(this.portionAmountOutEnd),
-          recipient: this.request.config.swapper,
-        });
-      } else if (this.request.info.type === TradeType.EXACT_OUTPUT) {
-        // Amount to swapper
-        builder.output({
-          token: this.tokenOut,
-          startAmount: this.amountOutStart,
-          endAmount: this.amountOutEnd,
-          recipient: this.request.config.swapper,
-        });
-      }
-
-      // Amount to portion recipient
-      builder.output({
-        token: this.tokenOut,
-        startAmount: this.portionAmountOutStart,
-        endAmount: this.portionAmountOutEnd,
-        recipient: this.portionRecipient,
-      });
-    } else {
-      // Amount to swapper
-      builder.output({
-        token: this.tokenOut,
-        startAmount: this.amountOutStart,
-        endAmount: this.amountOutEnd,
-        recipient: this.request.config.swapper,
-      });
-    }
+    // Amount to swapper
+    builder.output({
+            token: this.tokenOut,
+            startAmount: this.amountOutStart,
+            endAmount: this.amountOutEnd,
+            recipient: this.request.config.swapper,
+    });
     
     return builder.build();
   }
@@ -207,20 +162,53 @@ export class RelayQuote implements IQuote {
       endAmountIn: this.amountInEnd.toString(),
       endAmountOut: this.amountOutEnd.toString(),
       amountInGasAdjusted: this.amountInStart.toString(),
-      amountInGasAndPortionAdjusted: this.request.info.type === TradeType.EXACT_OUTPUT ? this.amountInGasAndPortionAdjusted.toString() : undefined,
       amountOutGasAdjusted: this.amountOutStart.toString(),
-      amountOutGasAndPortionAdjusted: this.request.info.type === TradeType.EXACT_INPUT ? this.amountOutGasAndPortionAdjusted.toString() : undefined,
       swapper: this.swapper,
       filler: this.filler,
       routing: RoutingType[this.routingType],
       slippage: parseFloat(this.request.info.slippageTolerance),
       createdAt: this.createdAt,
-      createdAtMs: this.createdAtMs,
-      portionBips: this.portionBips,
-      portionRecipient: this.portionRecipient,
-      portionAmountOutStart: this.portionAmountOutStart.toString(),
-      portionAmountOutEnd: this.portionAmountOutEnd.toString(),
+      createdAtMs: this.createdAtMs
     };
+  }
+
+    // reparameterize an RFQ quote with awareness of classic
+    public static reparameterize(
+      quote: RelayQuote,
+      classic: ClassicQuote,
+      options?: ParameterizationOptions
+    ): RelayQuote {
+      if (!classic) return quote;
+  
+      const { amountIn: amountInStart, amountOut: amountOutStart } = this.applyPreSwapGasAdjustment(
+        { amountIn: quote.amountInStart, amountOut: quote.amountOutStart },
+        classic,
+        options
+      );
+  
+      const classicAmounts = this.applyGasAdjustment(
+        { amountIn: classic.amountInGasAdjusted, amountOut: classic.amountOutGasAdjusted },
+        classic
+      );
+
+      const { amountIn: amountInEnd, amountOut: amountOutEnd } = this.applySlippage(classicAmounts, quote.request);
+  
+      return new RelayQuote(
+        quote.createdAtMs,
+        quote.request,
+        quote.chainId,
+        quote.requestId,
+        quote.quoteId,
+        quote.tokenIn,
+        quote.tokenOut,
+        amountInStart,
+        amountInEnd,
+        amountOutStart,
+        amountOutEnd,
+        quote.swapper,
+        quote.filler,
+        quote.nonce,
+      );
   }
 
   getPermitData(): PermitTransferFromData {
@@ -239,10 +227,6 @@ export class RelayQuote implements IQuote {
   public get startTimeBufferSecs(): number {
     if (this.request.config.startTimeBufferSecs !== undefined) {
       return this.request.config.startTimeBufferSecs;
-    }
-
-    if (this.isOpenQuote()) {
-      return OPEN_QUOTE_START_TIME_BUFFER_SECS;
     }
 
     return DEFAULT_START_TIME_BUFFER_SECS;
@@ -280,28 +264,6 @@ export class RelayQuote implements IQuote {
     }
   }
 
-  public get portionAmountOutStart(): BigNumber {
-    return this.amountOutStart.mul(this.portionBips ?? 0).div(BPS);
-  }
-
-  public get portionAmountOutEnd(): BigNumber {
-    return this.amountOutEnd.mul(this.portionBips ?? 0).div(BPS);
-  }
-
-  public get portionAmountInStart(): BigNumber {
-    // we have to multiply first, and then divide
-    // because BigNumber doesn't support decimals
-    return this.portionAmountOutStart.mul(this.amountInStart).div(this.amountOutStart.add(this.portionAmountOutStart));
-  }
-
-  public get amountInGasAndPortionAdjusted(): BigNumber {
-    return this.amountIn.add(this.portionAmountInStart);
-  }
-
-  public get amountOutGasAndPortionAdjusted(): BigNumber {
-    return this.amountOut.sub(this.portionAmountOutStart);
-  }
-
   validate(): boolean {
     if (this.amountOutStart.lt(this.amountOutEnd)) return false;
     if (this.amountInStart.gt(this.amountInEnd)) return false;
@@ -323,15 +285,6 @@ export class RelayQuote implements IQuote {
         amountIn: amountInStart.mul(BPS + parseSlippageToleranceBps(request.info.slippageTolerance)).div(BPS),
         amountOut: amountOutStart,
       };
-    }
-  }
-
-  static applyPriceImprovement(amounts: Amounts, type: TradeType): Amounts {
-    const { amountIn, amountOut } = amounts;
-    if (type === TradeType.EXACT_INPUT) {
-      return { amountIn, amountOut: amountOut.mul(RelayQuote.amountOutImprovementExactIn).div(BPS) };
-    } else {
-      return { amountIn: amountIn.mul(RelayQuote.amountInImprovementExactOut).div(BPS), amountOut };
     }
   }
 
