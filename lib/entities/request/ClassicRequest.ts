@@ -25,6 +25,7 @@ export interface ClassicConfig {
   unicornSecret?: string;
   quoteSpeed?: string;
   enableFeeOnTransferFeeFetching?: boolean;
+  gasToken?: string;
 }
 
 export interface ClassicConfigJSON extends Omit<ClassicConfig, 'protocols' | 'permitAmount'> {

@@ -1943,10 +1943,9 @@
   resolved "https://registry.npmjs.org/@uniswap/token-lists/-/token-lists-1.0.0-beta.33.tgz"
   integrity sha512-JQkXcpRI3jFG8y3/CGC4TS8NkDgcxXaOQuYW8Qdvd6DcDiIyg2vVYCG9igFEzF0G6UvxgHkBKC7cWCgzZNYvQg==
 
-"@uniswap/uniswapx-sdk@1.1.0":
-  version "1.1.0"
-  resolved "https://registry.npmjs.org/@uniswap/uniswapx-sdk/-/uniswapx-sdk-1.1.0.tgz"
-  integrity sha512-LIEaVnuqaGnm66Rt8s3XB8DzUo6gUNfI2HDarCXpS4e2wVb4FA2/hzsC41vbL4qR579cRCn/br4bNfNI6wvDWQ==
+"@uniswap/uniswapx-sdk@../gouda-sdk/uniswap-uniswapx-sdk-v2.0.0.tgz":
+  version "2.0.0"
+  resolved "../gouda-sdk/uniswap-uniswapx-sdk-v2.0.0.tgz#62440072aafe7b0f52c2a3b794373de9c4563bf3"
   dependencies:
     "@ethersproject/bytes" "^5.7.0"
     "@ethersproject/providers" "^5.7.0"

@@ -3,11 +3,13 @@ import { BigNumber } from 'ethers';
 import { DutchQuote, DutchQuoteDataJSON, QuoteRequest } from '..';
 import { RoutingType } from '../../constants';
 import { ClassicQuote, ClassicQuoteDataJSON } from './ClassicQuote';
+import {RelayQuote, RelayQuoteDataJSON} from "./RelayQuote";
 
+export * from './RelayQuote';
 export * from './ClassicQuote';
 export * from './DutchQuote';
 
-export type QuoteJSON = DutchQuoteDataJSON | ClassicQuoteDataJSON;
+export type QuoteJSON = DutchQuoteDataJSON | ClassicQuoteDataJSON | RelayQuoteDataJSON;
 
 export type LogJSON = {
   quoteId: string;
@@ -53,4 +55,4 @@ export interface IQuote {
   toLog(): LogJSON;
 }
 
-export type Quote = DutchQuote | ClassicQuote;
+export type Quote = DutchQuote | ClassicQuote | RelayQuote;
