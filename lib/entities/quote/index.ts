@@ -11,6 +11,7 @@ export * from './DutchQuote';
 
 export type QuoteJSON = DutchQuoteDataJSON | ClassicQuoteDataJSON | RelayQuoteDataJSON;
 
+// Superset of all possible log fields from the quote types
 export type LogJSON = {
   quoteId: string;
   requestId: string;

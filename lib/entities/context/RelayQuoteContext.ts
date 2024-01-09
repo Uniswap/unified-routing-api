@@ -6,7 +6,7 @@ import { WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
 import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
 import { QuoteByKey, QuoteContext } from '.';
-import { DEFAULT_ROUTING_API_DEADLINE, NATIVE_ADDRESS, RoutingType } from '../../constants';
+import { DEFAULT_ROUTING_API_DEADLINE, LARGE_TRADE_USD_THRESHOLD, NATIVE_ADDRESS, RoutingType } from '../../constants';
 import {
   ClassicQuote,
   ClassicRequest,
@@ -14,13 +14,12 @@ import {
   Quote,
   QuoteRequest,
 } from '..';
-import { SyntheticStatusProvider } from '../../providers';
 import { Erc20__factory } from '../../types/ext/factories/Erc20__factory';
 import { RelayRequest } from '../request/RelayRequest';
+import { getQuoteSizeEstimateUSD } from '../../util/quoteMath';
 
 export type RelayQuoteContextProviders = {
   rpcProvider: ethers.providers.StaticJsonRpcProvider;
-  syntheticStatusProvider: SyntheticStatusProvider;
 };
 
 // manages context around a single top level classic quote request
@@ -87,12 +86,24 @@ export class RelayQuoteContext implements QuoteContext {
     // add checks for too large price impact, etc.
 
     const reparameterized = RelayQuote.reparameterize(quote, classicQuote, {
-      hasApprovedPermit2: await this.hasApprovedPermit2(this.request)
+      hasApprovedPermit2: await this.hasApprovedPermit2(this.request),
+      largeTrade: this.isLargeOrder(this.log, classicQuote),
     });
 
     // if its invalid for some reason, i.e. too much decay then return null
     if (!reparameterized.validate()) return null;
     return reparameterized;
+  }
+
+  // TODO: might not need, keeping for now
+  isLargeOrder(log: Logger, classicQuote: Quote): boolean {
+    // gasUseEstimateUSD on other chains seem to be unreliable
+    if (classicQuote.request.info.tokenInChainId !== ChainId.MAINNET || classicQuote.request.info.tokenOutChainId !== ChainId.MAINNET) {
+      return false;
+    }
+    const quoteSizeEstimateUSD = getQuoteSizeEstimateUSD(classicQuote);
+    log.info({ quoteSize: quoteSizeEstimateUSD.toString() }, 'Quote size estimate in USD');
+    return quoteSizeEstimateUSD.gte(LARGE_TRADE_USD_THRESHOLD);
   }
 
   async hasApprovedPermit2(request: RelayRequest): Promise<boolean> {

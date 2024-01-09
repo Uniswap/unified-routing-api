@@ -51,6 +51,7 @@ export type RelayQuoteJSON = {
 
 export type ParameterizationOptions = {
   hasApprovedPermit2: boolean;
+  largeTrade: boolean;
 };
 
 type Amounts = {
