@@ -79,11 +79,11 @@ export class RelayQuote implements IQuote {
       uuidv4(), // synthetic quote doesn't receive a quoteId from RFQ api, so generate one
       request.info.tokenIn,
       quote.request.info.tokenOut,
-      startAmounts.amountIn, 
-      endAmounts.amountIn,
-      quote.amountOut, // classic quote has no gas adjustment
-      quote.amountOut, // classic quote has no gas adjustment
-      startAmounts.amountInGasToken,
+      quote.amountIn, // apply no gas adjustment
+      quote.amountIn, // apply no gas adjustment
+      quote.amountOut, // apply no gas adjustment
+      quote.amountOut, // apply no gas adjustment
+      quote.gasUseEstimateGasToken,
       endAmounts.amountInGasToken,
       request.config.swapper,
       NATIVE_ADDRESS, // synthetic quote has no filler
@@ -146,24 +146,6 @@ export class RelayQuote implements IQuote {
         startAmount: this.amountInStart,
         endAmount: this.amountInEnd,
       });
-
-
-    // Amount to swapper
-    builder.output({
-            token: this.tokenOut,
-            startAmount: this.amountOutStart,
-            endAmount: this.amountOutEnd,
-            recipient: this.request.config.swapper,
-    });
-    
-    
-    // Amount to swapper
-    builder.output({
-            token: this.tokenOut,
-            startAmount: this.amountOutStart,
-            endAmount: this.amountOutEnd,
-            recipient: this.request.config.swapper,
-    });
     
     return builder.build();
   }
@@ -183,7 +165,6 @@ export class RelayQuote implements IQuote {
       gasToken: this.request.config.gasToken, 
       amountInGasToken: this.amountInGasTokenStart.toString(),
       endAmountInGasToken: this.amountInGasTokenEnd.toString(),
-      amountInGasAdjusted: this.amountIn.toString(),
       swapper: this.swapper,
       filler: this.filler,
       routing: RoutingType[this.routingType],
@@ -243,9 +224,10 @@ export class RelayQuote implements IQuote {
     return this.amountOutStart;
   }
 
-  // The total amount of tokens that will be spent by the user, including gas tokens
+  // The total amount of tokens that will be spent by the user for the swap
+  // note that this does not include gas tokens since they are not guaranteed to be in the same token denomination
   public get amountIn(): BigNumber {
-    return this.amountInStart.add(this.amountInGasTokenStart);
+    return this.amountInStart;
   }
 
   // The number of seconds from now that order decay should begin
