@@ -1,4 +1,3 @@
-import { TradeType } from '@uniswap/sdk-core';
 import { RelayOrder, RelayOrderBuilder, RelayOrderInfoJSON } from '@uniswap/uniswapx-sdk';
 import { BigNumber, ethers } from 'ethers';
 
@@ -6,14 +5,10 @@ import { PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { IQuote } from '.';
 import {
-  BPS,
   DEFAULT_START_TIME_BUFFER_SECS,
   NATIVE_ADDRESS,
-  RoutingType,
-  UNISWAPX_BASE_GAS,
-  WETH_UNWRAP_GAS,
-  WETH_WRAP_GAS,
-  WETH_WRAP_GAS_ALREADY_APPROVED
+  RELAY_BASE_GAS,
+  RoutingType
 } from '../../constants';
 import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
@@ -45,6 +40,8 @@ export type RelayQuoteJSON = {
   amountIn: string;
   tokenOut: string;
   amountOut: string;
+  gasToken: string;
+  amountInGasToken: string;
   swapper: string;
   filler?: string;
 };
@@ -56,7 +53,7 @@ export type ParameterizationOptions = {
 
 type Amounts = {
   amountIn: BigNumber;
-  amountOut: BigNumber;
+  amountInGasToken: BigNumber;
 };
 
 export class RelayQuote implements IQuote {
@@ -66,7 +63,11 @@ export class RelayQuote implements IQuote {
 
   // build a relay quote from a classic quote
   public static fromClassicQuote(request: RelayRequest, quote: ClassicQuote): RelayQuote {
-    const startAmounts = this.applyPreSwapGasAdjustment({ amountIn: quote.amountInGasAdjusted, amountOut: quote.amountOutGasAdjusted }, quote);
+    // Relay quotes require a gas token estimation
+    if(!quote.gasUseEstimateGasToken) {
+      throw new Error('Classic quote must have gasUseEstimateGasToken');
+    }
+    const startAmounts = { amountIn: quote.amountIn, amountInGasToken: quote.gasUseEstimateGasToken };
     const gasAdjustedAmounts = this.applyGasAdjustment(startAmounts, quote);
     const endAmounts = this.applySlippage(gasAdjustedAmounts, request);
 
@@ -78,10 +79,12 @@ export class RelayQuote implements IQuote {
       uuidv4(), // synthetic quote doesn't receive a quoteId from RFQ api, so generate one
       request.info.tokenIn,
       quote.request.info.tokenOut,
-      startAmounts.amountIn,
+      startAmounts.amountIn, 
       endAmounts.amountIn,
-      startAmounts.amountOut,
-      endAmounts.amountOut,
+      quote.amountOut, // classic quote has no gas adjustment
+      quote.amountOut, // classic quote has no gas adjustment
+      startAmounts.amountInGasToken,
+      endAmounts.amountInGasToken,
       request.config.swapper,
       NATIVE_ADDRESS, // synthetic quote has no filler
       generateRandomNonce(), // synthetic quote has no nonce
@@ -96,10 +99,15 @@ export class RelayQuote implements IQuote {
     public readonly quoteId: string,
     public readonly tokenIn: string,
     public readonly tokenOut: string,
-    public readonly amountInStart: BigNumber,
+    // Used for swap related tokens
+    // these values should NOT be gas adjusted
+    public readonly amountInStart: BigNumber, 
     public readonly amountInEnd: BigNumber,
     public readonly amountOutStart: BigNumber,
     public readonly amountOutEnd: BigNumber,
+    // Used for gas token
+    public readonly amountInGasTokenStart: BigNumber,
+    public readonly amountInGasTokenEnd: BigNumber,
     public readonly swapper: string,
     public readonly filler?: string,
     public readonly nonce?: string,
@@ -139,6 +147,16 @@ export class RelayQuote implements IQuote {
         endAmount: this.amountInEnd,
       });
 
+
+    // Amount to swapper
+    builder.output({
+            token: this.tokenOut,
+            startAmount: this.amountOutStart,
+            endAmount: this.amountOutEnd,
+            recipient: this.request.config.swapper,
+    });
+    
+    
     // Amount to swapper
     builder.output({
             token: this.tokenOut,
@@ -157,13 +175,15 @@ export class RelayQuote implements IQuote {
       requestId: this.requestId,
       quoteId: this.quoteId,
       tokenIn: this.tokenIn,
-      tokenOut: this.tokenOut,
       amountIn: this.amountInStart.toString(),
-      amountOut: this.amountOutStart.toString(),
       endAmountIn: this.amountInEnd.toString(),
+      tokenOut: this.tokenOut,
+      amountOut: this.amountOutStart.toString(),
       endAmountOut: this.amountOutEnd.toString(),
-      amountInGasAdjusted: this.amountInStart.toString(),
-      amountOutGasAdjusted: this.amountOutStart.toString(),
+      gasToken: this.request.config.gasToken, 
+      amountInGasToken: this.amountInGasTokenStart.toString(),
+      endAmountInGasToken: this.amountInGasTokenEnd.toString(),
+      amountInGasAdjusted: this.amountIn.toString(),
       swapper: this.swapper,
       filler: this.filler,
       routing: RoutingType[this.routingType],
@@ -173,26 +193,26 @@ export class RelayQuote implements IQuote {
     };
   }
 
-    // reparameterize an RFQ quote with awareness of classic
-    public static reparameterize(
+  // reparameterize an RFQ quote with awareness of classic
+  public static reparameterize(
       quote: RelayQuote,
       classic: ClassicQuote,
       options?: ParameterizationOptions
     ): RelayQuote {
       if (!classic) return quote;
   
-      const { amountIn: amountInStart, amountOut: amountOutStart } = this.applyPreSwapGasAdjustment(
-        { amountIn: quote.amountInStart, amountOut: quote.amountOutStart },
+      const { amountIn: amountInStart, amountInGasToken: amountGasTokenStart } = this.applyPreSwapGasAdjustment(
+        { amountIn: quote.amountInStart, amountInGasToken: classic.gasUseEstimateGasToken },
         classic,
         options
       );
   
       const classicAmounts = this.applyGasAdjustment(
-        { amountIn: classic.amountInGasAdjusted, amountOut: classic.amountOutGasAdjusted },
+        { amountIn: classic.amountInGasAdjusted, amountInGasToken: classic.amountOutGasAdjusted },
         classic
       );
 
-      const { amountIn: amountInEnd, amountOut: amountOutEnd } = this.applySlippage(classicAmounts, quote.request);
+      const { amountIn: amountInEnd, amountInGasToken: amountGasTokenEnd } = this.applySlippage(classicAmounts, quote.request);
   
       return new RelayQuote(
         quote.createdAtMs,
@@ -204,8 +224,10 @@ export class RelayQuote implements IQuote {
         quote.tokenOut,
         amountInStart,
         amountInEnd,
-        amountOutStart,
-        amountOutEnd,
+        classic.amountOut,
+        classic.amountOut,
+        amountGasTokenStart,
+        amountGasTokenEnd,
         quote.swapper,
         quote.filler,
         quote.nonce,
@@ -216,12 +238,14 @@ export class RelayQuote implements IQuote {
     return this.toOrder().permitData();
   }
 
+  // The total amount of tokens that will be received by the user from the relayed swap
   public get amountOut(): BigNumber {
     return this.amountOutStart;
   }
 
+  // The total amount of tokens that will be spent by the user, including gas tokens
   public get amountIn(): BigNumber {
-    return this.amountInStart;
+    return this.amountInStart.add(this.amountInGasTokenStart);
   }
 
   // The number of seconds from now that order decay should begin
@@ -273,34 +297,9 @@ export class RelayQuote implements IQuote {
 
   // static helpers
 
+  // Slipapge is handled in the encoded call and not checked by the reactor
   static applySlippage(amounts: Amounts, request: RelayRequest): Amounts {
-    const { amountIn: amountInStart, amountOut: amountOutStart } = amounts;
-    const isExactIn = request.info.type === TradeType.EXACT_INPUT;
-    if (isExactIn) {
-      return {
-        amountIn: amountInStart,
-        amountOut: amountOutStart.mul(BPS - parseSlippageToleranceBps(request.info.slippageTolerance)).div(BPS),
-      };
-    } else {
-      return {
-        amountIn: amountInStart.mul(BPS + parseSlippageToleranceBps(request.info.slippageTolerance)).div(BPS),
-        amountOut: amountOutStart,
-      };
-    }
-  }
-
-  // Calculates the pre-swap gas adjustment for the given quote if processed through UniswapX
-  // pre-swap gas adjustments are paid directly by the user pre-swap
-  // and should be applied to startAmounts
-  // e.g. ETH wraps
-  static applyPreSwapGasAdjustment(
-    amounts: Amounts,
-    classicQuote: ClassicQuote,
-    options?: ParameterizationOptions
-  ): Amounts {
-    const gasAdjustment = RelayQuote.getPreSwapGasAdjustment(classicQuote, options);
-    if (gasAdjustment.eq(0)) return amounts;
-    return RelayQuote.getGasAdjustedAmounts(amounts, gasAdjustment, classicQuote);
+    return amounts;
   }
 
   // Calculates the gas adjustment for the given quote if processed through UniswapX
@@ -321,65 +320,17 @@ export class RelayQuote implements IQuote {
   // return the amounts, with the gasAdjustment value taken out
   // classicQuote used to get the gas price values in quote token
   static getGasAdjustedAmounts(amounts: Amounts, gasAdjustment: BigNumber, classicQuote: ClassicQuote): Amounts {
-    const { amountIn: startAmountIn, amountOut: startAmountOut } = amounts;
-    const info = classicQuote.request.info;
+    const { amountIn: startAmountIn, amountInGasToken: startAmountInGasToken } = amounts;
 
-    // get ratio of gas used to gas used with WETH wrap
-    const gasUseEstimate = BigNumber.from(classicQuote.toJSON().gasUseEstimate);
-    const originalGasQuote = BigNumber.from(classicQuote.toJSON().gasUseEstimateQuote);
-    const gasPriceWei = BigNumber.from(classicQuote.toJSON().gasPriceWei);
-
-    const originalGasNative = gasUseEstimate.mul(gasPriceWei);
-    const gasAdjustmentNative = gasAdjustment.mul(gasPriceWei);
-    // use the ratio of original gas in native and original gas in quote tokens
-    // to calculate the gas adjustment in quote tokens
-    const gasAdjustmentQuote = originalGasQuote.mul(gasAdjustmentNative).div(originalGasNative);
-
-    if (info.type === TradeType.EXACT_INPUT) {
-      const amountOut = gasAdjustmentQuote.gt(startAmountOut)
-        ? BigNumber.from(0)
-        : startAmountOut.sub(gasAdjustmentQuote);
-      return {
-        amountIn: startAmountIn,
-        amountOut: amountOut.lt(0) ? BigNumber.from(0) : amountOut,
-      };
-    } else {
-      return {
-        amountIn: startAmountIn.add(gasAdjustmentQuote),
-        amountOut: startAmountOut,
-      };
-    }
+    // TODO: naively for now just add 25% buffer
+    const endAmountInGasToken = startAmountInGasToken.add(gasAdjustment.mul(125).div(100));
+    return { amountIn: startAmountIn, amountInGasToken: endAmountInGasToken };
   }
 
-  // Returns the number of gas units extra paid by the user before the swap
-  static getPreSwapGasAdjustment(classicQuote: ClassicQuote, options?: ParameterizationOptions): BigNumber {
-    let result = BigNumber.from(0);
-
-    // uniswapx does not naturally support ETH input, but user still has to wrap it
-    // so should be considered in the quote pricing
-    if (classicQuote.request.info.tokenIn === NATIVE_ADDRESS) {
-      const wrapAdjustment = options?.hasApprovedPermit2 ? WETH_WRAP_GAS_ALREADY_APPROVED : WETH_WRAP_GAS;
-      result = result.add(wrapAdjustment);
-    }
-
-    return result;
-  }
-
-  // Returns the number of gas units extra required to execute this quote through UniswapX
+  // Returns the number of gas units extra required to execute this quote through the relayer
   static getGasAdjustment(classicQuote: ClassicQuote): BigNumber {
     let result = BigNumber.from(0);
 
-    // fill contract must unwrap WETH output tokens
-    if (classicQuote.request.info.tokenOut === NATIVE_ADDRESS) {
-      result = result.add(WETH_UNWRAP_GAS);
-    }
-
-    return result.add(UNISWAPX_BASE_GAS);
+    return result.add(RELAY_BASE_GAS);
   }
-}
-
-// parses a slippage tolerance as a percent string
-// and returns it as a number between 0 and 10000
-function parseSlippageToleranceBps(slippageTolerance: string): number {
-  return Math.round(parseFloat(slippageTolerance) * 100);
 }

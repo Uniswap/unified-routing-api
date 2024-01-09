@@ -60,6 +60,8 @@ export type ClassicQuoteDataJSON = {
   gasUseEstimate: string;
   gasUseEstimateQuote: string;
   gasUseEstimateQuoteDecimals: string;
+  gasUseEstimateGasToken?: string;
+  gasUseEstimateGasTokenDecimals?: string;
   gasUseEstimateUSD: string;
   simulationError?: boolean;
   simulationStatus: string;
@@ -191,6 +193,10 @@ export class ClassicQuote implements IQuote {
       // undefined will cause the request to fail due to BigNumber.from(undefined)
       ? BigNumber.from(this.quoteData.quoteGasAndPortionAdjusted ?? this.quoteData.quoteGasAdjusted)
       : BigNumber.from(this.quoteData.amount);
+  }
+
+  public get gasUseEstimateGasToken(): BigNumber | undefined {
+    return BigNumber.from(this.quoteData.gasUseEstimateGasToken);
   }
 
   public get gasPriceWei(): string {
