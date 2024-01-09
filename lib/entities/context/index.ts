@@ -8,6 +8,8 @@ import { SyntheticStatusProvider } from '../../providers';
 import { log } from '../../util/log';
 import { ClassicQuoteContext } from './ClassicQuoteContext';
 import { DutchQuoteContext } from './DutchQuoteContext';
+import { RelayQuoteContext } from './RelayQuoteContext';
+import { RelayRequest } from '../request/RelayRequest';
 
 export * from './ClassicQuoteContext';
 export * from './DutchQuoteContext';
@@ -96,6 +98,8 @@ export function parseQuoteContexts(requests: QuoteRequest[], providers: QuoteCon
         return new DutchQuoteContext(log, request as DutchRequest, providers);
       case RoutingType.CLASSIC:
         return new ClassicQuoteContext(log, request as ClassicRequest, providers);
+      case RoutingType.RELAY:
+        return new RelayQuoteContext(log, request as RelayRequest, providers);
       default:
         throw new Error(`Unsupported routing type: ${request.routingType}`);
     }

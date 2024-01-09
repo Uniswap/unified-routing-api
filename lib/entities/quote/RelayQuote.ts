@@ -46,11 +46,6 @@ export type RelayQuoteJSON = {
   filler?: string;
 };
 
-export type ParameterizationOptions = {
-  hasApprovedPermit2: boolean;
-  largeTrade: boolean;
-};
-
 type Amounts = {
   amountIn: BigNumber;
   amountInGasToken: BigNumber;
@@ -68,8 +63,7 @@ export class RelayQuote implements IQuote {
       throw new Error('Classic quote must have gasUseEstimateGasToken');
     }
     const startAmounts = { amountIn: quote.amountIn, amountInGasToken: quote.gasUseEstimateGasToken };
-    const gasAdjustedAmounts = this.applyGasAdjustment(startAmounts, quote);
-    const endAmounts = this.applySlippage(gasAdjustedAmounts, request);
+    const endAmounts = this.applyGasAdjustment(startAmounts, quote);
 
     return new RelayQuote(
       quote.createdAtMs,
@@ -83,7 +77,7 @@ export class RelayQuote implements IQuote {
       quote.amountIn, // apply no gas adjustment
       quote.amountOut, // apply no gas adjustment
       quote.amountOut, // apply no gas adjustment
-      quote.gasUseEstimateGasToken,
+      startAmounts.amountInGasToken,
       endAmounts.amountInGasToken,
       request.config.swapper,
       NATIVE_ADDRESS, // synthetic quote has no filler
@@ -177,23 +171,20 @@ export class RelayQuote implements IQuote {
   // reparameterize an RFQ quote with awareness of classic
   public static reparameterize(
       quote: RelayQuote,
-      classic: ClassicQuote,
-      options?: ParameterizationOptions
+      classic: ClassicQuote
     ): RelayQuote {
-      if (!classic) return quote;
+      if (!classic || !classic.gasUseEstimateGasToken) return quote;
+
+      // TODO: determine paramertization of amountInGasTokenStart and amountInGasTokenEnd
+      const amountsStart = {
+        amountIn: classic.amountIn,
+        amountInGasToken: classic.gasUseEstimateGasToken,
+      };
   
-      const { amountIn: amountInStart, amountInGasToken: amountGasTokenStart } = this.applyPreSwapGasAdjustment(
-        { amountIn: quote.amountInStart, amountInGasToken: classic.gasUseEstimateGasToken },
-        classic,
-        options
-      );
-  
-      const classicAmounts = this.applyGasAdjustment(
-        { amountIn: classic.amountInGasAdjusted, amountInGasToken: classic.amountOutGasAdjusted },
+      const amountsEnd = this.applyGasAdjustment(
+        { amountIn: classic.amountIn, amountInGasToken: classic.gasUseEstimateGasToken },
         classic
       );
-
-      const { amountIn: amountInEnd, amountInGasToken: amountGasTokenEnd } = this.applySlippage(classicAmounts, quote.request);
   
       return new RelayQuote(
         quote.createdAtMs,
@@ -203,12 +194,13 @@ export class RelayQuote implements IQuote {
         quote.quoteId,
         quote.tokenIn,
         quote.tokenOut,
-        amountInStart,
-        amountInEnd,
+        // We use the same classic amounts for start and end
+        classic.amountIn,
+        classic.amountIn,
         classic.amountOut,
         classic.amountOut,
-        amountGasTokenStart,
-        amountGasTokenEnd,
+        amountsStart.amountInGasToken,
+        amountsEnd.amountInGasToken,
         quote.swapper,
         quote.filler,
         quote.nonce,
@@ -278,11 +270,6 @@ export class RelayQuote implements IQuote {
   }
 
   // static helpers
-
-  // Slipapge is handled in the encoded call and not checked by the reactor
-  static applySlippage(amounts: Amounts, request: RelayRequest): Amounts {
-    return amounts;
-  }
 
   // Calculates the gas adjustment for the given quote if processed through UniswapX
   // Swap gas adjustments are paid by the filler in the process of filling a trade
