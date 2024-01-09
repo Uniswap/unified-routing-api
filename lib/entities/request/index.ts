@@ -8,7 +8,7 @@ import { ValidationError } from '../../util/errors';
 import { ClassicConfig, ClassicConfigJSON, ClassicRequest } from './ClassicRequest';
 import { DutchConfig, DutchConfigJSON, DutchRequest } from './DutchRequest';
 import { Portion } from '../../fetchers/PortionFetcher';
-import { RelayConfig, RelayConfigJSON } from './RelayRequest';
+import { RelayConfig, RelayConfigJSON, RelayRequest } from './RelayRequest';
 
 export * from './ClassicRequest';
 export * from './DutchRequest';
@@ -89,6 +89,12 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON): {
       info.tokenInChainId === info.tokenOutChainId
     ) {
       return DutchRequest.fromRequestBody(info, config as DutchConfigJSON);
+    } else if (
+      config.routingType == RoutingType.RELAY &&
+      SUPPORTED_CHAINS[RoutingType.RELAY].includes(info.tokenInChainId) &&
+      info.tokenInChainId === info.tokenOutChainId
+    ) {
+      return RelayRequest.fromRequestBody(info, config as RelayConfigJSON);
     }
     return [];
   });

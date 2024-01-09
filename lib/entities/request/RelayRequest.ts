@@ -21,7 +21,7 @@ export interface RelayQuoteRequestInfo extends QuoteRequestInfo {
 }
 
 export interface RelayConfigJSON {
-  routingType: RoutingType.DUTCH_LIMIT;
+  routingType: RoutingType.RELAY;
   gasToken: string;
   swapper?: string;
   startTimeBufferSecs?: number;
@@ -53,7 +53,7 @@ export class RelayRequest implements QuoteRequest {
 
   public toJSON(): RelayConfigJSON {
     return Object.assign({}, this.config, {
-      routingType: RoutingType.DUTCH_LIMIT as RoutingType.DUTCH_LIMIT,
+      routingType: RoutingType.RELAY as RoutingType.RELAY,
     });
   }
 
