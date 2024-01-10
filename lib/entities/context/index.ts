@@ -6,10 +6,10 @@ import { ClassicConfig, ClassicRequest, DutchRequest, Quote, QuoteRequest } from
 import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
 import { SyntheticStatusProvider } from '../../providers';
 import { log } from '../../util/log';
+import { RelayRequest } from '../request/RelayRequest';
 import { ClassicQuoteContext } from './ClassicQuoteContext';
 import { DutchQuoteContext } from './DutchQuoteContext';
 import { RelayQuoteContext } from './RelayQuoteContext';
-import { RelayRequest } from '../request/RelayRequest';
 
 export * from './ClassicQuoteContext';
 export * from './DutchQuoteContext';

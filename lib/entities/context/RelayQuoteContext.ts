@@ -6,17 +6,11 @@ import { WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-router';
 import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
 import { QuoteByKey, QuoteContext } from '.';
+import { ClassicQuote, ClassicRequest, Quote, QuoteRequest, RelayQuote } from '..';
 import { DEFAULT_ROUTING_API_DEADLINE, LARGE_TRADE_USD_THRESHOLD, NATIVE_ADDRESS, RoutingType } from '../../constants';
-import {
-  ClassicQuote,
-  ClassicRequest,
-  RelayQuote,
-  Quote,
-  QuoteRequest,
-} from '..';
 import { Erc20__factory } from '../../types/ext/factories/Erc20__factory';
-import { RelayRequest } from '../request/RelayRequest';
 import { getQuoteSizeEstimateUSD } from '../../util/quoteMath';
+import { RelayRequest } from '../request/RelayRequest';
 
 export type RelayQuoteContextProviders = {
   rpcProvider: ethers.providers.StaticJsonRpcProvider;
@@ -59,9 +53,7 @@ export class RelayQuoteContext implements QuoteContext {
     const classicQuote = dependencies[this.classicKey] as ClassicQuote;
     const relayQuote = dependencies[this.requestKey] as RelayQuote;
 
-    const [quote] = await Promise.all([
-      this.getRelayQuote(relayQuote, classicQuote),
-    ]);
+    const [quote] = await Promise.all([this.getRelayQuote(relayQuote, classicQuote)]);
 
     // handle cases where we only either have RFQ or synthetic
     if (!quote) {
@@ -93,7 +85,10 @@ export class RelayQuoteContext implements QuoteContext {
   // TODO: might not need, keeping for now
   isLargeOrder(log: Logger, classicQuote: Quote): boolean {
     // gasUseEstimateUSD on other chains seem to be unreliable
-    if (classicQuote.request.info.tokenInChainId !== ChainId.MAINNET || classicQuote.request.info.tokenOutChainId !== ChainId.MAINNET) {
+    if (
+      classicQuote.request.info.tokenInChainId !== ChainId.MAINNET ||
+      classicQuote.request.info.tokenOutChainId !== ChainId.MAINNET
+    ) {
       return false;
     }
     const quoteSizeEstimateUSD = getQuoteSizeEstimateUSD(classicQuote);

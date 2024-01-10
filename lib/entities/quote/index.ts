@@ -3,11 +3,11 @@ import { BigNumber } from 'ethers';
 import { DutchQuote, DutchQuoteDataJSON, QuoteRequest } from '..';
 import { RoutingType } from '../../constants';
 import { ClassicQuote, ClassicQuoteDataJSON } from './ClassicQuote';
-import {RelayQuote, RelayQuoteDataJSON} from "./RelayQuote";
+import { RelayQuote, RelayQuoteDataJSON } from './RelayQuote';
 
-export * from './RelayQuote';
 export * from './ClassicQuote';
 export * from './DutchQuote';
+export * from './RelayQuote';
 
 export type QuoteJSON = DutchQuoteDataJSON | ClassicQuoteDataJSON | RelayQuoteDataJSON;
 

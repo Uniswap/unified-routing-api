@@ -39,4 +39,3 @@ export function createPermitBatchData(tokens: string[], chainId: number, nonce: 
 
   return AllowanceTransfer.getPermitData(permit, PERMIT2_ADDRESS, chainId) as PermitSingleData;
 }
-

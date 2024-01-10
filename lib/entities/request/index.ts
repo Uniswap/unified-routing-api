@@ -1,13 +1,13 @@
+import { Protocol } from '@uniswap/router-sdk';
 import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber } from 'ethers';
-import { Protocol } from '@uniswap/router-sdk';
 
 import { SUPPORTED_CHAINS } from '../../config/chains';
 import { DEFAULT_SLIPPAGE_TOLERANCE, RoutingType } from '../../constants';
+import { Portion } from '../../fetchers/PortionFetcher';
 import { ValidationError } from '../../util/errors';
 import { ClassicConfig, ClassicConfigJSON, ClassicRequest } from './ClassicRequest';
 import { DutchConfig, DutchConfigJSON, DutchRequest } from './DutchRequest';
-import { Portion } from '../../fetchers/PortionFetcher';
 import { RelayConfig, RelayConfigJSON, RelayRequest } from './RelayRequest';
 
 export * from './ClassicRequest';

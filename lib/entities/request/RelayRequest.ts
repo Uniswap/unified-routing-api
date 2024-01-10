@@ -1,9 +1,5 @@
 import { defaultRequestKey, QuoteRequest, QuoteRequestInfo } from '.';
-import {
-  DEFAULT_SLIPPAGE_TOLERANCE,
-  NATIVE_ADDRESS,
-  RoutingType,
-} from '../../constants';
+import { DEFAULT_SLIPPAGE_TOLERANCE, NATIVE_ADDRESS, RoutingType } from '../../constants';
 
 export * from './ClassicRequest';
 export * from './RelayRequest';
@@ -29,7 +25,7 @@ export interface RelayConfigJSON {
   startTimeBufferSecs?: number;
   auctionPeriodSecs?: number;
   deadlineBufferSecs?: number;
-  amountInGasTokenStartOverride? : string;
+  amountInGasTokenStartOverride?: string;
 }
 
 export class RelayRequest implements QuoteRequest {

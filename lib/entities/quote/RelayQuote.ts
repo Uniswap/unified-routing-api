@@ -4,21 +4,16 @@ import { BigNumber, ethers } from 'ethers';
 import { PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { IQuote } from '.';
-import {
-  DEFAULT_START_TIME_BUFFER_SECS,
-  NATIVE_ADDRESS,
-  RELAY_BASE_GAS,
-  RoutingType
-} from '../../constants';
+import { DEFAULT_START_TIME_BUFFER_SECS, NATIVE_ADDRESS, RELAY_BASE_GAS, RoutingType } from '../../constants';
 import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
+import { RelayRequest } from '../request/RelayRequest';
 import { ClassicQuote } from './ClassicQuote';
 import { LogJSON } from './index';
-import { RelayRequest } from '../request/RelayRequest';
 
 export type RelayQuoteDerived = {
   largeTrade: boolean;
-}
+};
 
 export type RelayQuoteDataJSON = {
   orderInfo: RelayOrderInfoJSON;
@@ -59,10 +54,15 @@ export class RelayQuote implements IQuote {
   // build a relay quote from a classic quote
   public static fromClassicQuote(request: RelayRequest, quote: ClassicQuote): RelayQuote {
     // Relay quotes require a gas token estimation
-    if(!quote.gasUseEstimateGasToken) {
+    if (!quote.gasUseEstimateGasToken) {
       throw new Error('Classic quote must have gasUseEstimateGasToken');
     }
-    const startAmounts = { amountIn: quote.amountIn, amountInGasToken: (request.config.amountInGasTokenStartOverride ? BigNumber.from(request.config.amountInGasTokenStartOverride) : quote.gasUseEstimateGasToken) };
+    const startAmounts = {
+      amountIn: quote.amountIn,
+      amountInGasToken: request.config.amountInGasTokenStartOverride
+        ? BigNumber.from(request.config.amountInGasTokenStartOverride)
+        : quote.gasUseEstimateGasToken,
+    };
     const endAmounts = this.applyGasAdjustment(startAmounts, quote);
 
     return new RelayQuote(
@@ -81,7 +81,7 @@ export class RelayQuote implements IQuote {
       endAmounts.amountInGasToken,
       request.config.swapper,
       NATIVE_ADDRESS, // synthetic quote has no filler
-      generateRandomNonce(), // synthetic quote has no nonce
+      generateRandomNonce() // synthetic quote has no nonce
     );
   }
 
@@ -95,7 +95,7 @@ export class RelayQuote implements IQuote {
     public readonly tokenOut: string,
     // Used for swap related tokens
     // these values should NOT be gas adjusted
-    public readonly amountInStart: BigNumber, 
+    public readonly amountInStart: BigNumber,
     public readonly amountInEnd: BigNumber,
     public readonly amountOutStart: BigNumber,
     public readonly amountOutEnd: BigNumber,
@@ -122,7 +122,7 @@ export class RelayQuote implements IQuote {
       startTimeBufferSecs: this.startTimeBufferSecs,
       auctionPeriodSecs: this.auctionPeriodSecs,
       deadlineBufferSecs: this.deadlineBufferSecs,
-      permitData: this.getPermitData()
+      permitData: this.getPermitData(),
     };
   }
 
@@ -140,7 +140,7 @@ export class RelayQuote implements IQuote {
         startAmount: this.amountInStart,
         endAmount: this.amountInEnd,
       });
-    
+
     return builder.build();
   }
 
@@ -156,7 +156,7 @@ export class RelayQuote implements IQuote {
       tokenOut: this.tokenOut,
       amountOut: this.amountOutStart.toString(),
       endAmountOut: this.amountOutEnd.toString(),
-      gasToken: this.request.config.gasToken, 
+      gasToken: this.request.config.gasToken,
       amountInGasToken: this.amountInGasTokenStart.toString(),
       endAmountInGasToken: this.amountInGasTokenEnd.toString(),
       swapper: this.swapper,
@@ -164,7 +164,7 @@ export class RelayQuote implements IQuote {
       routing: RoutingType[this.routingType],
       slippage: parseFloat(this.request.info.slippageTolerance),
       createdAt: this.createdAt,
-      createdAtMs: this.createdAtMs
+      createdAtMs: this.createdAtMs,
     };
   }
 
