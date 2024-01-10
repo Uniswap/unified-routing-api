@@ -85,11 +85,9 @@ export class RelayQuoteContext implements QuoteContext {
     // TODO: validate tokens, gas tokens, etc.
     // add checks for too large price impact, etc.
 
-    const reparameterized = RelayQuote.reparameterize(quote, classicQuote);
-
     // if its invalid for some reason, i.e. too much decay then return null
-    if (!reparameterized.validate()) return null;
-    return reparameterized;
+    if (!quote.validate()) return null;
+    return quote;
   }
 
   // TODO: might not need, keeping for now

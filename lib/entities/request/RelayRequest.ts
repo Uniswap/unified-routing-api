@@ -14,6 +14,8 @@ export interface RelayConfig {
   startTimeBufferSecs?: number;
   auctionPeriodSecs?: number;
   deadlineBufferSecs?: number;
+  // Passed in by cients
+  amountInGasTokenStartOverride?: string;
 }
 
 export interface RelayQuoteRequestInfo extends QuoteRequestInfo {
@@ -27,6 +29,7 @@ export interface RelayConfigJSON {
   startTimeBufferSecs?: number;
   auctionPeriodSecs?: number;
   deadlineBufferSecs?: number;
+  amountInGasTokenStartOverride? : string;
 }
 
 export class RelayRequest implements QuoteRequest {
@@ -45,6 +48,7 @@ export class RelayRequest implements QuoteRequest {
         startTimeBufferSecs: body.startTimeBufferSecs,
         auctionPeriodSecs: body.auctionPeriodSecs,
         deadlineBufferSecs: body.deadlineBufferSecs,
+        amountInGasTokenStartOverride: body.amountInGasTokenStartOverride,
       }
     );
   }

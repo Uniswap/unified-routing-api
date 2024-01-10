@@ -62,7 +62,7 @@ export class RelayQuote implements IQuote {
     if(!quote.gasUseEstimateGasToken) {
       throw new Error('Classic quote must have gasUseEstimateGasToken');
     }
-    const startAmounts = { amountIn: quote.amountIn, amountInGasToken: quote.gasUseEstimateGasToken };
+    const startAmounts = { amountIn: quote.amountIn, amountInGasToken: (request.config.amountInGasTokenStartOverride ? BigNumber.from(request.config.amountInGasTokenStartOverride) : quote.gasUseEstimateGasToken) };
     const endAmounts = this.applyGasAdjustment(startAmounts, quote);
 
     return new RelayQuote(
@@ -166,45 +166,6 @@ export class RelayQuote implements IQuote {
       createdAt: this.createdAt,
       createdAtMs: this.createdAtMs
     };
-  }
-
-  // reparameterize an RFQ quote with awareness of classic
-  public static reparameterize(
-      quote: RelayQuote,
-      classic: ClassicQuote
-    ): RelayQuote {
-      if (!classic || !classic.gasUseEstimateGasToken) return quote;
-
-      // TODO: determine paramertization of amountInGasTokenStart and amountInGasTokenEnd
-      const amountsStart = {
-        amountIn: classic.amountIn,
-        amountInGasToken: classic.gasUseEstimateGasToken,
-      };
-  
-      const amountsEnd = this.applyGasAdjustment(
-        { amountIn: classic.amountIn, amountInGasToken: classic.gasUseEstimateGasToken },
-        classic
-      );
-  
-      return new RelayQuote(
-        quote.createdAtMs,
-        quote.request,
-        quote.chainId,
-        quote.requestId,
-        quote.quoteId,
-        quote.tokenIn,
-        quote.tokenOut,
-        // We use the same classic amounts for start and end
-        classic.amountIn,
-        classic.amountIn,
-        classic.amountOut,
-        classic.amountOut,
-        amountsStart.amountInGasToken,
-        amountsEnd.amountInGasToken,
-        quote.swapper,
-        quote.filler,
-        quote.nonce,
-      );
   }
 
   getPermitData(): PermitTransferFromData {
