@@ -12,7 +12,7 @@ import {
   parseQuoteRequests,
   QuoteRequestBodyJSON,
 } from '../../lib/entities';
-import { ClassicQuote, DutchQuote, Quote } from '../../lib/entities/quote';
+import { ClassicQuote, DutchQuote, Quote, RelayQuote, RelayQuoteJSON } from '../../lib/entities/quote';
 import { Portion } from '../../lib/fetchers/PortionFetcher';
 import {
   AMOUNT,
@@ -32,6 +32,7 @@ import {
 } from '../constants';
 import { buildQuoteResponse } from './quoteResponse';
 import { BULLET_WHT_FOT_TAX } from './tokens';
+import { RelayConfig, RelayRequest } from '../../lib/entities/request/RelayRequest';
 
 export const BASE_REQUEST_INFO_EXACT_IN = {
   tokenInChainId: CHAIN_IN_ID,
@@ -336,6 +337,58 @@ export const CLASSIC_QUOTE_DATA_WITH_FOX_TAX = {
   },
 };
 
+export function makeRelayRequest(overrides: Partial<QuoteRequestBodyJSON>, configOverrides?: Partial<RelayConfig>): RelayRequest {
+  const requestInfo = Object.assign({}, BASE_REQUEST_INFO_EXACT_IN, overrides);
+
+  return parseQuoteRequests({
+    ...requestInfo,
+    configs: [
+      {
+        routingType: RoutingType.RELAY,
+        swapper: SWAPPER,
+        auctionPeriodSecs: 60,
+        deadlineBufferSecs: 12,
+        gasToken: TOKEN_IN,
+        ...configOverrides
+      },
+    ],
+  }).quoteRequests[0] as RelayRequest;
+}
+
+export const QUOTE_REQUEST_RELAY = makeRelayRequest({});
+export const { quoteRequests: QUOTE_REQUEST_RELAY_MULTI } = parseQuoteRequests({
+  ...BASE_REQUEST_INFO_EXACT_IN,
+  configs: [
+    {
+      routingType: RoutingType.RELAY,
+      swapper: SWAPPER,
+      auctionPeriodSecs: 60,
+      deadlineBufferSecs: 12,
+      gasToken: TOKEN_IN,
+    },
+    {
+      routingType: RoutingType.CLASSIC,
+      protocols: ['v3', 'v2', 'mixed'],
+      gasPriceWei: '12',
+    },
+  ],
+});
+const RELAY_QUOTE_DATA = {
+  routing: RoutingType.RELAY,
+  quote: {
+    chainId: 1,
+    requestId: 'requestId',
+    quoteId: 'quoteId',
+    tokenIn: TOKEN_IN,
+    amountIn: AMOUNT,
+    tokenOut: TOKEN_OUT,
+    amountOut: AMOUNT,
+    gasToken: TOKEN_IN,
+    amountInGasToken: AMOUNT,
+    swapper: SWAPPER,
+  },
+};
+
 export function createDutchQuote(
   overrides: Partial<DutchQuoteJSON>,
   type: string,
@@ -595,3 +648,26 @@ export const CLASSIC_QUOTE_NO_ROUTE_TO_NATIVE = createRouteBackToNativeQuote(
   },
   'EXACT_OUTPUT'
 );
+
+export function createRelayQuote(
+  overrides: Partial<RelayQuoteJSON>,
+  type: string,
+  nonce?: string
+): RelayQuote {
+  return buildQuoteResponse(
+    Object.assign({}, RELAY_QUOTE_DATA, {
+      quote: { ...RELAY_QUOTE_DATA.quote, type: RoutingType.RELAY, ...overrides },
+    }),
+    makeRelayRequest({ type }),
+    nonce,
+  ) as RelayQuote;
+}
+
+export const RELAY_QUOTE_EXACT_IN_BETTER = createRelayQuote({ amountOut: AMOUNT_BETTER }, 'EXACT_INPUT');
+export const RELAY_QUOTE_NATIVE_EXACT_IN_BETTER = createRelayQuote(
+  { amountOut: AMOUNT_BETTER, tokenIn: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_OUT_ID)].address, gasToken: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_OUT_ID)].address },
+  'EXACT_INPUT'
+);
+export const RELAY_QUOTE_EXACT_IN_WORSE = createRelayQuote({ amountOut: AMOUNT }, 'EXACT_INPUT');
+export const RELAY_QUOTE_EXACT_OUT_BETTER = createRelayQuote({ amountIn: AMOUNT }, 'EXACT_OUTPUT');
+export const RELAY_QUOTE_EXACT_OUT_WORSE = createRelayQuote({ amountIn: AMOUNT_BETTER }, 'EXACT_OUTPUT');

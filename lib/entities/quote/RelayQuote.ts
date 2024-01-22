@@ -39,7 +39,6 @@ export type RelayQuoteJSON = {
   gasToken: string;
   amountInGasToken: string;
   swapper: string;
-  filler?: string;
 };
 
 type Amounts = {

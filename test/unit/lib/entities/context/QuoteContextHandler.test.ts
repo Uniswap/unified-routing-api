@@ -67,6 +67,9 @@ describe('QuoteContextManager', () => {
       expect(requests[0]).toMatchObject(QUOTE_REQUEST_CLASSIC);
     });
 
+    it('returns base request from single relay context', () => {
+    });
+
     it('returns dependency requests from a single context', () => {
       const context = new MockQuoteContext(QUOTE_REQUEST_DL);
       context.setDependencies([QUOTE_REQUEST_CLASSIC, QUOTE_REQUEST_DL_EXACT_OUT]);
