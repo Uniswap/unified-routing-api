@@ -1,4 +1,5 @@
 import { RelayOrder, RelayOrderBuilder, RelayOrderInfoJSON } from '@uniswap/uniswapx-sdk';
+import {UNIVERSAL_ROUTER_ADDRESS} from '@uniswap/universal-router-sdk';
 import { BigNumber, ethers } from 'ethers';
 
 import { PermitTransferFromData } from '@uniswap/permit2-sdk';
@@ -132,13 +133,24 @@ export class RelayQuote implements IQuote {
     const nonce = this.nonce ?? generateRandomNonce();
 
     const builder = orderBuilder
-      .deadline(decayStartTime + this.auctionPeriodSecs + this.deadlineBufferSecs)
       .swapper(ethers.utils.getAddress(this.request.config.swapper))
       .nonce(BigNumber.from(nonce))
+      .decayStartTime(decayStartTime)
+      .decayEndTime(decayStartTime + this.auctionPeriodSecs)
+      .deadline(decayStartTime + this.auctionPeriodSecs + this.deadlineBufferSecs)
+      // Add the swap input to UR
       .input({
         token: this.tokenIn,
         startAmount: this.amountInStart,
-        endAmount: this.amountInEnd,
+        maxAmount: this.amountInEnd,
+        recipient: UNIVERSAL_ROUTER_ADDRESS(this.chainId),
+      })
+      // Add the gas token input to the filler
+      .input({
+        token: this.request.config.gasToken,
+        startAmount: this.amountInGasTokenStart,
+        maxAmount: this.amountInGasTokenEnd,
+        recipient: ethers.constants.AddressZero, // sentinel value for the filler
       });
 
     return builder.build();
@@ -225,7 +237,9 @@ export class RelayQuote implements IQuote {
   }
 
   validate(): boolean {
-    if (this.amountOutStart.lt(this.amountOutEnd)) return false;
+    // Should be no decay in output amount
+    if (!this.amountOutStart.eq(this.amountOutEnd)) return false;
+    // Inputs must only decay upwards
     if (this.amountInStart.gt(this.amountInEnd)) return false;
     return true;
   }
@@ -241,7 +255,6 @@ export class RelayQuote implements IQuote {
     return RelayQuote.getGasAdjustedAmounts(
       amounts,
       // routing api gas adjustment is already applied
-      // apply both the uniswapx gas adjustment
       gasAdjustment,
       classicQuote
     );

@@ -55,9 +55,8 @@ export class RelayQuoteContext implements QuoteContext {
 
     const [quote] = await Promise.all([this.getRelayQuote(relayQuote, classicQuote)]);
 
-    // handle cases where we only either have RFQ or synthetic
     if (!quote) {
-      this.log.warn('No classic quote, cannot make Relay quote');
+      this.log.warn('No Relay quote');
       return null;
     }
 
@@ -114,5 +113,28 @@ export class RelayQuoteContext implements QuoteContext {
     }
     // TODO: Fix for exact output
     return permit2Allowance.gte(request.info.amount);
+  }
+
+  async gasTokenIsApprovedToPermit2(request: RelayRequest): Promise<boolean> {
+    // either swapper was not set or is zero address
+    if (!request.info.swapper || request.info.swapper == NATIVE_ADDRESS) return false;
+
+    const gasTokenAddress = request.config.gasToken;
+    if (!gasTokenAddress) return false;
+
+    const gasTokenContract = Erc20__factory.connect(gasTokenAddress, this.rpcProvider);
+    const permit2Allowance = await gasTokenContract.allowance(request.info.swapper, PERMIT2_ADDRESS);
+
+    // TODO: what value to put here?
+    return permit2Allowance.gte(request.info.amount);
+  }
+
+  async gasTokenSupports2612(request: RelayRequest): Promise<boolean> {
+    const gasTokenAddress = request.config.gasToken;
+    if (!gasTokenAddress) return false;
+
+    // TODO: filter a hardcoded list
+
+    return true;
   }
 }
