@@ -1,5 +1,5 @@
 import { RelayOrder, RelayOrderBuilder, RelayOrderInfoJSON } from '@uniswap/uniswapx-sdk';
-import {UNIVERSAL_ROUTER_ADDRESS} from '@uniswap/universal-router-sdk';
+import { UNIVERSAL_ROUTER_ADDRESS} from '@uniswap/universal-router-sdk';
 import { BigNumber, ethers } from 'ethers';
 
 import { PermitTransferFromData } from '@uniswap/permit2-sdk';
@@ -39,7 +39,6 @@ export type RelayQuoteJSON = {
   gasToken: string;
   amountInGasToken: string;
   swapper: string;
-  filler?: string;
 };
 
 type Amounts = {
@@ -127,6 +126,7 @@ export class RelayQuote implements IQuote {
     };
   }
 
+  // note: we don't add calldata to the quote here but rather build it client side via the SDK for security reasons
   public toOrder(): RelayOrder {
     const orderBuilder = new RelayOrderBuilder(this.chainId);
     const decayStartTime = Math.floor(Date.now() / 1000);
