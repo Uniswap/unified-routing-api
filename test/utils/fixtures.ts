@@ -92,7 +92,7 @@ export const QUOTE_REQUEST_BODY_MULTI_SYNTHETIC: QuoteRequestBodyJSON = {
   ],
 };
 
-export const DL_REQUEST_BODY = {
+export const DL_REQUEST_BODY: QuoteRequestBodyJSON = {
   ...BASE_REQUEST_INFO_EXACT_IN,
   configs: [
     {

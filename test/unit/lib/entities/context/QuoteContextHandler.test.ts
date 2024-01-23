@@ -19,6 +19,7 @@ import {
   QUOTE_REQUEST_DL_EXACT_OUT,
   QUOTE_REQUEST_DL_NATIVE_IN,
   QUOTE_REQUEST_DL_NATIVE_OUT,
+  QUOTE_REQUEST_RELAY,
 } from '../../../../utils/fixtures';
 
 class MockQuoteContext implements QuoteContext {
@@ -68,6 +69,11 @@ describe('QuoteContextManager', () => {
     });
 
     it('returns base request from single relay context', () => {
+      const context = new MockQuoteContext(QUOTE_REQUEST_RELAY);
+      const handler = new QuoteContextManager([context]);
+      const requests = handler.getRequests();
+      expect(requests.length).toEqual(1);
+      expect(requests[0]).toMatchObject(QUOTE_REQUEST_RELAY);
     });
 
     it('returns dependency requests from a single context', () => {

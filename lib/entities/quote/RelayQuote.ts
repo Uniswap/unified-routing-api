@@ -51,6 +51,27 @@ export class RelayQuote implements IQuote {
   public derived: RelayQuoteDerived;
   public routingType: RoutingType.RELAY = RoutingType.RELAY;
 
+  public static fromResponseBody(request: RelayRequest, body: RelayQuoteJSON): RelayQuote {
+    return new RelayQuote(
+      currentTimestampInMs(),
+      request,
+      request.info.tokenInChainId,
+      request.info.requestId,
+      uuidv4(), // synthetic quote doesn't receive a quoteId from RFQ api, so generate one
+      request.info.tokenIn,
+      body.tokenOut,
+      BigNumber.from(body.amountIn), // apply no gas adjustment
+      BigNumber.from(body.amountIn), // apply no gas adjustment
+      BigNumber.from(body.amountOut), // apply no gas adjustment
+      BigNumber.from(body.amountOut), // apply no gas adjustment
+      BigNumber.from(body.amountInGasToken),
+      BigNumber.from(body.amountInGasToken),
+      request.config.swapper,
+      NATIVE_ADDRESS, // synthetic quote has no filler
+      generateRandomNonce() // synthetic quote has no nonce
+    );
+  }
+
   // build a relay quote from a classic quote
   public static fromClassicQuote(request: RelayRequest, quote: ClassicQuote): RelayQuote {
     // Relay quotes require a gas token estimation
@@ -262,7 +283,7 @@ export class RelayQuote implements IQuote {
 
   // return the amounts, with the gasAdjustment value taken out
   // classicQuote used to get the gas price values in quote token
-  static getGasAdjustedAmounts(amounts: Amounts, gasAdjustment: BigNumber, classicQuote: ClassicQuote): Amounts {
+  static getGasAdjustedAmounts(amounts: Amounts, gasAdjustment: BigNumber, _classicQuote: ClassicQuote): Amounts {
     const { amountIn: startAmountIn, amountInGasToken: startAmountInGasToken } = amounts;
 
     // TODO: naively for now just add 25% buffer
@@ -271,7 +292,7 @@ export class RelayQuote implements IQuote {
   }
 
   // Returns the number of gas units extra required to execute this quote through the relayer
-  static getGasAdjustment(classicQuote: ClassicQuote): BigNumber {
+  static getGasAdjustment(_classicQuote: ClassicQuote): BigNumber {
     let result = BigNumber.from(0);
 
     return result.add(RELAY_BASE_GAS);

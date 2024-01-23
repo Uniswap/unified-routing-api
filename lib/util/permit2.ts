@@ -1,4 +1,4 @@
-import { AllowanceTransfer, MaxAllowanceTransferAmount, PERMIT2_ADDRESS, PermitSingleData } from '@uniswap/permit2-sdk';
+import { AllowanceTransfer, MaxAllowanceTransferAmount, PERMIT2_ADDRESS, PermitBatchData, PermitSingleData } from '@uniswap/permit2-sdk';
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import ms from 'ms';
 
@@ -25,17 +25,17 @@ export function createPermitData(tokenAddress: string, chainId: number, nonce: s
   return AllowanceTransfer.getPermitData(permit, PERMIT2_ADDRESS, chainId) as PermitSingleData;
 }
 
-export function createPermitBatchData(tokens: string[], chainId: number, nonce: string): PermitSingleData {
+export function createPermitBatchData(tokenAddresses: string[], chainId: number, nonce: string): PermitBatchData {
   const permit = {
-    details: {
-      token: tokenAddress,
+    details: tokenAddresses.map((token) => ({
+      token: token,
       amount: PERMIT_AMOUNT.toString(),
       expiration: toDeadline(PERMIT_EXPIRATION).toString(),
       nonce: nonce,
-    },
+    })),
     spender: UNIVERSAL_ROUTER_ADDRESS(chainId),
     sigDeadline: toDeadline(PERMIT_SIG_EXPIRATION).toString(),
   };
 
-  return AllowanceTransfer.getPermitData(permit, PERMIT2_ADDRESS, chainId) as PermitSingleData;
+  return AllowanceTransfer.getPermitData(permit, PERMIT2_ADDRESS, chainId) as PermitBatchData;
 }

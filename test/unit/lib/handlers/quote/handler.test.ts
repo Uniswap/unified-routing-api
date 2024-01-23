@@ -378,7 +378,7 @@ describe('QuoteHandler', () => {
       });
 
       it('handles exactOut DL quotes', async () => {
-        const request = {
+        const request: QuoteRequestBodyJSON = {
           ...BASE_REQUEST_INFO_EXACT_OUT,
           configs: [
             {
