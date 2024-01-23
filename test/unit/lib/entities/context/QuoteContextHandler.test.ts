@@ -20,6 +20,8 @@ import {
   QUOTE_REQUEST_DL_NATIVE_IN,
   QUOTE_REQUEST_DL_NATIVE_OUT,
   QUOTE_REQUEST_RELAY,
+  QUOTE_REQUEST_RELAY_EXACT_OUT,
+  RELAY_QUOTE_EXACT_IN_BETTER,
 } from '../../../../utils/fixtures';
 
 class MockQuoteContext implements QuoteContext {
@@ -87,19 +89,33 @@ describe('QuoteContextManager', () => {
       expect(requests[2]).toMatchObject(QUOTE_REQUEST_DL_EXACT_OUT);
     });
 
+    it('returns dependency requests from a single context - relay', () => {
+      const context = new MockQuoteContext(QUOTE_REQUEST_RELAY);
+      context.setDependencies([QUOTE_REQUEST_CLASSIC]);
+      const handler = new QuoteContextManager([context]);
+      const requests = handler.getRequests();
+      expect(requests.length).toEqual(2);
+      expect(requests[0]).toMatchObject(QUOTE_REQUEST_RELAY);
+      expect(requests[1]).toMatchObject(QUOTE_REQUEST_CLASSIC);
+    });
+
     it('returns dependency requests from multiple contexts in the correct order', () => {
       const context1 = new MockQuoteContext(QUOTE_REQUEST_DL);
       context1.setDependencies([QUOTE_REQUEST_DL_EXACT_OUT]);
       const context2 = new MockQuoteContext(QUOTE_REQUEST_CLASSIC);
       context2.setDependencies([QUOTE_REQUEST_DL_NATIVE_IN]);
-      const handler = new QuoteContextManager([context1, context2]);
+      const context3 = new MockQuoteContext(QUOTE_REQUEST_RELAY);
+      context3.setDependencies([QUOTE_REQUEST_RELAY_EXACT_OUT]);
+      const handler = new QuoteContextManager([context1, context2, context3]);
       const requests = handler.getRequests();
-      expect(requests.length).toEqual(4);
+      expect(requests.length).toEqual(6);
       // user defined requests go first
       expect(requests[0]).toMatchObject(QUOTE_REQUEST_DL);
       expect(requests[1]).toMatchObject(QUOTE_REQUEST_CLASSIC);
-      expect(requests[2]).toMatchObject(QUOTE_REQUEST_DL_EXACT_OUT);
-      expect(requests[3]).toMatchObject(QUOTE_REQUEST_DL_NATIVE_IN);
+      expect(requests[2]).toMatchObject(QUOTE_REQUEST_RELAY);
+      expect(requests[3]).toMatchObject(QUOTE_REQUEST_DL_EXACT_OUT);
+      expect(requests[4]).toMatchObject(QUOTE_REQUEST_DL_NATIVE_IN);
+      expect(requests[5]).toMatchObject(QUOTE_REQUEST_RELAY_EXACT_OUT);
     });
 
     it('deduplicates quote requests on info / type', () => {
@@ -107,12 +123,15 @@ describe('QuoteContextManager', () => {
       context1.setDependencies([QUOTE_REQUEST_DL_EXACT_OUT]);
       const context2 = new MockQuoteContext(QUOTE_REQUEST_CLASSIC);
       context2.setDependencies([QUOTE_REQUEST_DL_EXACT_OUT, QUOTE_REQUEST_DL_EXACT_OUT]);
-      const handler = new QuoteContextManager([context1, context2]);
+      const context3 = new MockQuoteContext(QUOTE_REQUEST_RELAY);
+      context3.setDependencies([QUOTE_REQUEST_CLASSIC]);
+      const handler = new QuoteContextManager([context1, context2, context3]);
       const requests = handler.getRequests();
-      expect(requests.length).toEqual(3);
+      expect(requests.length).toEqual(4);
       expect(requests[0]).toMatchObject(QUOTE_REQUEST_DL);
       expect(requests[1]).toMatchObject(QUOTE_REQUEST_CLASSIC);
-      expect(requests[2]).toMatchObject(QUOTE_REQUEST_DL_EXACT_OUT);
+      expect(requests[2]).toMatchObject(QUOTE_REQUEST_RELAY);
+      expect(requests[3]).toMatchObject(QUOTE_REQUEST_DL_EXACT_OUT);
     });
 
     it('deduplicates even with differing configs', () => {
@@ -245,11 +264,14 @@ describe('QuoteContextManager', () => {
     it('passes matching dependencies', async () => {
       const context = new MockQuoteContext(QUOTE_REQUEST_DL);
       context.setDependencies([CLASSIC_QUOTE_EXACT_IN_BETTER.request]);
-      const handler = new QuoteContextManager([context]);
-      await handler.resolveQuotes([DL_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_IN_BETTER]);
+      const context2 = new MockQuoteContext(QUOTE_REQUEST_RELAY);
+      context2.setDependencies([RELAY_QUOTE_EXACT_IN_BETTER.request]);
+      const handler = new QuoteContextManager([context, context2]);
+      await handler.resolveQuotes([DL_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_IN_BETTER, RELAY_QUOTE_EXACT_IN_BETTER]);
       expect(context._quoteDependencies).toEqual({
         [DL_QUOTE_EXACT_IN_BETTER.request.key()]: DL_QUOTE_EXACT_IN_BETTER,
         [CLASSIC_QUOTE_EXACT_IN_BETTER.request.key()]: CLASSIC_QUOTE_EXACT_IN_BETTER,
+        [RELAY_QUOTE_EXACT_IN_BETTER.request.key()]: RELAY_QUOTE_EXACT_IN_BETTER,
       });
     });
 

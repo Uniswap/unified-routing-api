@@ -356,6 +356,7 @@ export function makeRelayRequest(overrides: Partial<QuoteRequestBodyJSON>, confi
 }
 
 export const QUOTE_REQUEST_RELAY = makeRelayRequest({});
+export const QUOTE_REQUEST_RELAY_EXACT_OUT = makeRelayRequest({ type: 'EXACT_OUTPUT' });
 export const { quoteRequests: QUOTE_REQUEST_RELAY_MULTI } = parseQuoteRequests({
   ...BASE_REQUEST_INFO_EXACT_IN,
   configs: [
