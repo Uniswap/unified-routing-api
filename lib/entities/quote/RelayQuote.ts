@@ -2,7 +2,7 @@ import { RelayOrder, RelayOrderBuilder, RelayOrderInfoJSON } from '@uniswap/unis
 import { UNIVERSAL_ROUTER_ADDRESS} from '@uniswap/universal-router-sdk';
 import { BigNumber, ethers } from 'ethers';
 
-import { PermitTransferFromData } from '@uniswap/permit2-sdk';
+import { PermitBatchTransferFromData } from '@uniswap/permit2-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { IQuote } from '.';
 import { DEFAULT_START_TIME_BUFFER_SECS, NATIVE_ADDRESS, RELAY_BASE_GAS, RoutingType } from '../../constants';
@@ -25,7 +25,7 @@ export type RelayQuoteDataJSON = {
   startTimeBufferSecs: number;
   auctionPeriodSecs: number;
   deadlineBufferSecs: number;
-  permitData: PermitTransferFromData;
+  permitData: PermitBatchTransferFromData;
 };
 
 export type RelayQuoteJSON = {
@@ -201,7 +201,7 @@ export class RelayQuote implements IQuote {
     };
   }
 
-  getPermitData(): PermitTransferFromData {
+  getPermitData(): PermitBatchTransferFromData {
     return this.toOrder().permitData();
   }
 

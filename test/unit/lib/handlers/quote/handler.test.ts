@@ -26,17 +26,23 @@ import {
   QUOTE_REQUEST_BODY_MULTI_SYNTHETIC,
   QUOTE_REQUEST_CLASSIC,
   QUOTE_REQUEST_DL,
-  QUOTE_REQUEST_MULTI
+  QUOTE_REQUEST_MULTI,
+  RELAY_QUOTE_EXACT_IN_BETTER,
+  RELAY_QUOTE_EXACT_OUT_BETTER,
+  RELAY_QUOTE_NATIVE_EXACT_IN_BETTER,
+  RELAY_REQUEST_BODY,
+  RELAY_REQUEST_BODY_EXACT_OUT,
+  RELAY_REQUEST_WITH_CLASSIC_BODY
 } from '../../../../utils/fixtures';
 
 import { PermitDetails } from '@uniswap/permit2-sdk';
-import { DutchOrderInfoJSON } from '@uniswap/uniswapx-sdk';
+import { DutchOrderInfoJSON, RelayOrderInfoJSON } from '@uniswap/uniswapx-sdk';
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { MetricsLogger } from 'aws-embedded-metrics';
 import { AxiosError } from 'axios';
 import NodeCache from 'node-cache';
 import { RoutingType } from '../../../../../lib/constants';
-import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, Quote, RequestSource } from '../../../../../lib/entities';
+import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, Quote, RelayQuote, RequestSource } from '../../../../../lib/entities';
 import { QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index';
 import { Permit2Fetcher } from '../../../../../lib/fetchers/Permit2Fetcher';
 import {
@@ -60,6 +66,7 @@ import { ErrorCode } from '../../../../../lib/util/errors';
 import { setGlobalLogger } from '../../../../../lib/util/log';
 import { INELIGIBLE_TOKEN, PERMIT2_USED, PERMIT_DETAILS, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../../constants';
 import { APIGatewayProxyEventHeaders } from 'aws-lambda/trigger/api-gateway-proxy';
+import { BigNumber } from 'ethers';
 
 describe('QuoteHandler', () => {
   const OLD_ENV = process.env;
@@ -152,6 +159,12 @@ describe('QuoteHandler', () => {
     const RfqQuoterErrorMock = (axiosError: AxiosError): Quoter => {
       return {
         quote: jest.fn().mockReturnValue(Promise.reject(axiosError)),
+      };
+    };
+
+    const RelayQuoterMock = (relayQuote: RelayQuote): Quoter => {
+      return {
+        quote: jest.fn().mockResolvedValue(relayQuote),
       };
     };
 
@@ -438,6 +451,76 @@ describe('QuoteHandler', () => {
         expect(quoteJSON.outputs[0].endAmount).toBe(slippageAdjustedAmountOut.toString());
       });
 
+      it('handles exactIn relay quotes', async () => {
+        const quoters = { 
+          [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
+          [RoutingType.RELAY]: RelayQuoterMock(RELAY_QUOTE_NATIVE_EXACT_IN_BETTER),
+        };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(GET_NO_PORTION_RESPONSE);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+        const syntheticStatusProvider = SyntheticStatusProviderMock(false);
+
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(RELAY_REQUEST_BODY), {} as unknown as Context);
+        const quoteJSON = JSON.parse(res.body).quote.orderInfo as RelayOrderInfoJSON;
+        expect(quoteJSON.inputs[0].startAmount).toBe(RELAY_QUOTE_EXACT_IN_BETTER.amountIn.toString());
+      });
+
+      it('returns relay quote if both relay and classic are requested', async () => {
+        const quoters = { 
+          [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
+          [RoutingType.RELAY]: RelayQuoterMock(RELAY_QUOTE_NATIVE_EXACT_IN_BETTER),
+        };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(GET_NO_PORTION_RESPONSE);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+        const syntheticStatusProvider = SyntheticStatusProviderMock(false);
+
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(RELAY_REQUEST_WITH_CLASSIC_BODY), {} as unknown as Context);
+        const quoteJSON = JSON.parse(res.body).quote.orderInfo as RelayOrderInfoJSON;
+        // Expect relay to always be preferred over classic if requested together
+        expect(JSON.parse(res.body).routing).toEqual(RoutingType.RELAY);
+        expect(quoteJSON.inputs[0].startAmount).toBe(RELAY_QUOTE_EXACT_IN_BETTER.amountIn.toString());
+
+        const allQuotes = JSON.parse(res.body).allQuotes;
+        expect(allQuotes.length).toEqual(2);
+        expect(allQuotes[0].routing).toEqual(RoutingType.RELAY);
+        expect(allQuotes[1].routing).toEqual(RoutingType.CLASSIC);
+      });
+
+      it('handles exactOut relay quotes', async () => {
+        const quoters = { 
+          [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_OUT_WORSE),
+          [RoutingType.RELAY]: RelayQuoterMock(RELAY_QUOTE_EXACT_OUT_BETTER),
+        };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(GET_NO_PORTION_RESPONSE);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+        const syntheticStatusProvider = SyntheticStatusProviderMock(false);
+
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(RELAY_REQUEST_BODY_EXACT_OUT), {} as unknown as Context);
+        const quoteJSON = JSON.parse(res.body).quote.orderInfo as RelayOrderInfoJSON;
+        expect(quoteJSON.inputs[0].startAmount).toBe(RELAY_QUOTE_EXACT_OUT_BETTER.amountIn.toString());
+      });
+
       it('returns allQuotes', async () => {
         const quoters = {
           [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
@@ -530,6 +613,33 @@ describe('QuoteHandler', () => {
         expect(permitData.values.permitted.token).toBe(quote.input.token);
         expect(permitData.values.witness.inputToken).toBe(quote.input.token);
         expect(permitData.values.witness.outputs[0].token).toBe(quote.outputs[0].token);
+        expect(permit2Fetcher.fetchAllowance).not.toHaveBeenCalled();
+      });
+
+      it('always returns correct permit for relay', async () => {
+        const quoters = {
+          [RoutingType.RELAY]: RelayQuoterMock(RELAY_QUOTE_EXACT_IN_BETTER),
+        };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(GET_NO_PORTION_RESPONSE);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+        const syntheticStatusProvider = SyntheticStatusProviderMock(false);
+
+        const response = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(RELAY_REQUEST_WITH_CLASSIC_BODY), {} as unknown as Context);
+
+        const responseBody = JSON.parse(response.body);
+        const permitData = responseBody.quote.permitData;
+        const quote = responseBody.quote.orderInfo as RelayOrderInfoJSON;
+        expect(permitData.values.permitted[0].token).toBe(quote.inputs[0].token);
+        expect(permitData.values.permitted[1].token).toBe(quote.inputs[1].token);
+        expect(BigNumber.from(permitData.values.witness.startAmounts[0]).eq(quote.inputs[0].startAmount)).toBe(true);
+        expect(BigNumber.from(permitData.values.witness.startAmounts[1]).eq(quote.inputs[1].startAmount)).toBe(true);
         expect(permit2Fetcher.fetchAllowance).not.toHaveBeenCalled();
       });
 

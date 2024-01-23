@@ -92,15 +92,45 @@ export const QUOTE_REQUEST_BODY_MULTI_SYNTHETIC: QuoteRequestBodyJSON = {
   ],
 };
 
-export const DL_REQUEST_BODY: QuoteRequestBodyJSON = {
+export const RELAY_REQUEST_BODY: QuoteRequestBodyJSON = {
   ...BASE_REQUEST_INFO_EXACT_IN,
   configs: [
     {
-      routingType: RoutingType.DUTCH_LIMIT,
+      routingType: RoutingType.RELAY,
       swapper: SWAPPER,
-      exclusivityOverrideBps: 12,
       auctionPeriodSecs: 60,
       deadlineBufferSecs: 12,
+      gasToken: TOKEN_IN,
+    },
+  ],
+};
+
+export const RELAY_REQUEST_BODY_EXACT_OUT: QuoteRequestBodyJSON = {
+  ...BASE_REQUEST_INFO_EXACT_OUT,
+  configs: [
+    {
+      routingType: RoutingType.RELAY,
+      swapper: SWAPPER,
+      auctionPeriodSecs: 60,
+      deadlineBufferSecs: 12,
+      gasToken: TOKEN_IN,
+    },
+  ],
+};
+
+export const RELAY_REQUEST_WITH_CLASSIC_BODY: QuoteRequestBodyJSON = {
+  ...BASE_REQUEST_INFO_EXACT_IN,
+  configs: [
+    {
+      routingType: RoutingType.RELAY,
+      swapper: SWAPPER,
+      auctionPeriodSecs: 60,
+      deadlineBufferSecs: 12,
+      gasToken: TOKEN_IN,
+    },
+    {
+      routingType: RoutingType.CLASSIC,
+      protocols: ['V3', 'V2', 'MIXED'],
     },
   ],
 };
@@ -111,6 +141,19 @@ export const CLASSIC_REQUEST_BODY: QuoteRequestBodyJSON = {
     {
       routingType: RoutingType.CLASSIC,
       protocols: ['V3', 'V2', 'MIXED'],
+    },
+  ],
+};
+
+export const DL_REQUEST_BODY: QuoteRequestBodyJSON = {
+  ...BASE_REQUEST_INFO_EXACT_IN,
+  configs: [
+    {
+      routingType: RoutingType.DUTCH_LIMIT,
+      swapper: SWAPPER,
+      exclusivityOverrideBps: 12,
+      auctionPeriodSecs: 60,
+      deadlineBufferSecs: 12,
     },
   ],
 };

@@ -38,7 +38,7 @@ export class FieldValidator {
 
   public static readonly tradeType = Joi.string().valid('EXACT_INPUT', 'EXACT_OUTPUT');
 
-  public static readonly routingType = Joi.string().valid('CLASSIC', 'DUTCH_LIMIT').messages({
+  public static readonly routingType = Joi.string().valid('CLASSIC', 'DUTCH_LIMIT', 'RELAY').messages({
     'any.only': 'Invalid routingType',
   });
 
@@ -105,5 +105,16 @@ export class FieldValidator {
     deadlineBufferSecs: FieldValidator.positiveNumber.optional(),
     slippageTolerance: FieldValidator.slippageTolerance.optional(),
     useSyntheticQuotes: Joi.boolean().optional(),
+  });
+
+  public static readonly relayConfig = Joi.object({
+    routingType: FieldValidator.routingType.required(),
+    gasToken: FieldValidator.address.required(),
+    swapper: FieldValidator.address.optional(),
+    startTimeBufferSecs: FieldValidator.positiveNumber.optional(),
+    auctionPeriodSecs: FieldValidator.positiveNumber.optional(),
+    deadlineBufferSecs: FieldValidator.positiveNumber.optional(),
+    slippageTolerance: FieldValidator.slippageTolerance.optional(),
+    amountInGasTokenStartOverride: FieldValidator.amount.optional(),
   });
 }
