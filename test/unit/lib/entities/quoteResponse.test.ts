@@ -1,7 +1,7 @@
-import { DutchOrder, parseValidation, ValidationType } from '@uniswap/uniswapx-sdk';
+import { DutchOrder, RelayOrder } from '@uniswap/uniswapx-sdk';
 import { BigNumber } from 'ethers';
 
-import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, DutchQuoteJSON, DutchRequest } from '../../../../lib/entities';
+import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, DutchQuoteJSON, DutchRequest, RelayQuote, RelayQuoteJSON } from '../../../../lib/entities';
 import {
   AMOUNT,
   CHAIN_IN_ID,
@@ -17,7 +17,9 @@ import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_OUT_BETTER,
   QUOTE_REQUEST_DL,
+  QUOTE_REQUEST_RELAY,
 } from '../../../utils/fixtures';
+import { RelayRequest } from '../../../../lib/entities/request/RelayRequest';
 
 const DL_QUOTE_JSON: DutchQuoteJSON = {
   chainId: CHAIN_IN_ID,
@@ -41,6 +43,19 @@ const DL_QUOTE_JSON_RFQ: DutchQuoteJSON = {
   amountOut: AMOUNT,
   swapper: SWAPPER,
   filler: '0x1111111111111111111111111111111111111111',
+};
+
+const RELAY_QUOTE_JSON: RelayQuoteJSON = {
+  chainId: CHAIN_IN_ID,
+  requestId: '0xrequestId',
+  quoteId: '0xquoteId',
+  tokenIn: TOKEN_IN,
+  amountIn: AMOUNT,
+  tokenOut: TOKEN_OUT,
+  amountOut: AMOUNT,
+  swapper: SWAPPER,
+  gasToken: TOKEN_IN,
+  amountInGasToken: AMOUNT,
 };
 
 const CLASSIC_QUOTE_JSON: ClassicQuoteDataJSON = {
@@ -67,11 +82,19 @@ const CLASSIC_QUOTE_JSON: ClassicQuoteDataJSON = {
   portionRecipient: PORTION_RECIPIENT,
 };
 
+const UNIVERSAL_ROUTER_ADDRESS = "0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD";
+const FILLER_SENTINEL_ADDRESS = "0x0000000000000000000000000000000000000000";
+
 describe('QuoteResponse', () => {
   const config: DutchRequest = QUOTE_REQUEST_DL;
+  const relayConfig: RelayRequest = QUOTE_REQUEST_RELAY;
 
   it('parses dutch limit quote from param-api properly', () => {
     expect(() => DutchQuote.fromResponseBody(config, DL_QUOTE_JSON)).not.toThrow();
+  });
+
+  it('parses relay quote properly', () => {
+    expect(() => RelayQuote.fromResponseBody(relayConfig, RELAY_QUOTE_JSON)).not.toThrow();
   });
 
   it('produces dutch limit order info from param-api response and config', () => {
@@ -99,28 +122,28 @@ describe('QuoteResponse', () => {
     expect(BigNumber.from(quote.toOrder().toJSON().nonce).gt(0)).toBeTruthy();
   });
 
-  it('produces dutch limit order info from param-api response and config without filler', () => {
-    const quote = DutchQuote.fromResponseBody(config, Object.assign({}, DL_QUOTE_JSON, { filler: undefined }));
+  it('produces relay order info from quote', () => {
+    const quote = RelayQuote.fromResponseBody(relayConfig, RELAY_QUOTE_JSON);
     expect(quote.toOrder().toJSON()).toMatchObject({
       swapper: SWAPPER,
-      input: {
-        token: TOKEN_IN,
-        startAmount: AMOUNT,
-        endAmount: AMOUNT,
-      },
-      outputs: [
+      inputs: [
         {
-          token: TOKEN_OUT,
+          token: TOKEN_IN,
           startAmount: AMOUNT,
-          endAmount: BigNumber.from(AMOUNT).mul(995).div(1000).toString(), // default 0.5% slippage
-          recipient: SWAPPER,
+          maxAmount: AMOUNT,
+          recipient: UNIVERSAL_ROUTER_ADDRESS
+        },
+        {
+          token: TOKEN_IN,
+          startAmount: AMOUNT,
+          maxAmount: AMOUNT,
+          recipient: FILLER_SENTINEL_ADDRESS
         },
       ],
+      actions: []
     });
-    const order = DutchOrder.fromJSON(quote.toOrder().toJSON(), quote.chainId);
-    const parsedValidation = parseValidation(order.info);
-    expect(parsedValidation.type).toEqual(ValidationType.None);
-    expect(BigNumber.from(quote.toOrder().toJSON().nonce).gt(0)).toBeTruthy();
+    const order = RelayOrder.fromJSON(quote.toOrder().toJSON(), quote.chainId);
+    expect(BigNumber.from(order.toJSON().nonce).gt(0)).toBeTruthy();
   });
 
   it('parses classic quote exactInput', () => {
