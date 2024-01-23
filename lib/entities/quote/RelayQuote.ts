@@ -1,5 +1,5 @@
 import { RelayOrder, RelayOrderBuilder, RelayOrderInfoJSON } from '@uniswap/uniswapx-sdk';
-import {UNIVERSAL_ROUTER_ADDRESS} from '@uniswap/universal-router-sdk';
+import { UNIVERSAL_ROUTER_ADDRESS} from '@uniswap/universal-router-sdk';
 import { BigNumber, ethers } from 'ethers';
 
 import { PermitTransferFromData } from '@uniswap/permit2-sdk';
@@ -126,6 +126,7 @@ export class RelayQuote implements IQuote {
     };
   }
 
+  // note: calldata must be built by the caller and added to the built order
   public toOrder(): RelayOrder {
     const orderBuilder = new RelayOrderBuilder(this.chainId);
     const decayStartTime = Math.floor(Date.now() / 1000);
