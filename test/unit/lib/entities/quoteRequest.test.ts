@@ -7,6 +7,7 @@ import {
   parseQuoteRequests,
   QuoteRequestBodyJSON,
 } from '../../../../lib/entities';
+import { RelayConfigJSON, RelayRequest } from '../../../../lib/entities/request/RelayRequest';
 import { ValidationError } from '../../../../lib/util/errors';
 import { AMOUNT, CHAIN_IN_ID, CHAIN_OUT_ID, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
 
@@ -17,6 +18,14 @@ const MOCK_DL_CONFIG_JSON: DutchConfigJSON = {
   auctionPeriodSecs: 60,
   deadlineBufferSecs: 12,
   useSyntheticQuotes: true,
+};
+
+const MOCK_RELAY_CONFIG_JSON: RelayConfigJSON = {
+  routingType: RoutingType.RELAY,
+  swapper: SWAPPER,
+  auctionPeriodSecs: 60,
+  deadlineBufferSecs: 12,
+  gasToken: TOKEN_IN
 };
 
 const CLASSIC_CONFIG_JSON: ClassicConfigJSON = {
@@ -46,7 +55,7 @@ const EXACT_INPUT_MOCK_REQUEST_JSON: QuoteRequestBodyJSON = {
   amount: AMOUNT,
   type: 'EXACT_INPUT',
   swapper: SWAPPER,
-  configs: [MOCK_DL_CONFIG_JSON, CLASSIC_CONFIG_JSON],
+  configs: [MOCK_DL_CONFIG_JSON, MOCK_RELAY_CONFIG_JSON, CLASSIC_CONFIG_JSON],
 };
 
 const EXACT_OUTPUT_MOCK_REQUEST_JSON: QuoteRequestBodyJSON = {
@@ -58,7 +67,7 @@ const EXACT_OUTPUT_MOCK_REQUEST_JSON: QuoteRequestBodyJSON = {
   amount: AMOUNT,
   type: 'EXACT_OUTPUT',
   swapper: SWAPPER,
-  configs: [MOCK_DL_CONFIG_JSON, CLASSIC_CONFIG_JSON],
+  configs: [MOCK_DL_CONFIG_JSON, MOCK_RELAY_CONFIG_JSON, CLASSIC_CONFIG_JSON],
 };
 
 describe('QuoteRequest', () => {
@@ -80,9 +89,25 @@ describe('QuoteRequest', () => {
         expect(config.toJSON()).toEqual(MOCK_DL_CONFIG_JSON);
       });
 
+      it('parses exactInput relay order config properly', () => {
+        const { quoteRequests: requests } = parseQuoteRequests(request);
+        const info = requests[1].info;
+
+        const config = RelayRequest.fromRequestBody(info, MOCK_RELAY_CONFIG_JSON);
+        expect(config.toJSON()).toEqual(MOCK_RELAY_CONFIG_JSON);
+      });
+
+      it('parses exactOutput relay order config properly', () => {
+        const { quoteRequests: requests } = parseQuoteRequests(request);
+        const info = requests[1].info;
+
+        const config = RelayRequest.fromRequestBody(info, MOCK_RELAY_CONFIG_JSON);
+        expect(config.toJSON()).toEqual(MOCK_RELAY_CONFIG_JSON);
+      });
+
       it('parses basic classic quote order config properly', () => {
         const { quoteRequests: requests } = parseQuoteRequests(request);
-        const info = requests[0].info;
+        const info = requests[2].info;
         const config = ClassicRequest.fromRequestBody(info, CLASSIC_CONFIG_JSON);
 
         expect(config.toJSON()).toEqual(CLASSIC_CONFIG_JSON);
@@ -110,9 +135,17 @@ describe('QuoteRequest', () => {
         expect(config.info.swapper).toEqual(SWAPPER);
       });
 
+      it('includes swapper in info for relay', () => {
+        const { quoteRequests: requests } = parseQuoteRequests(request);
+        const info = requests[1].info;
+        const config = RelayRequest.fromRequestBody(info, MOCK_RELAY_CONFIG_JSON);
+
+        expect(config.info.swapper).toEqual(SWAPPER);
+      });
+
       it('includes swapper in info for classic', () => {
         const { quoteRequests: requests } = parseQuoteRequests(request);
-        const info = requests[0].info;
+        const info = requests[2].info;
         const config = ClassicRequest.fromRequestBody(info, CLASSIC_CONFIG_JSON);
 
         expect(config.info.swapper).toEqual(SWAPPER);
