@@ -11,6 +11,7 @@ import { ClassicQuoteContext } from './ClassicQuoteContext';
 import { DutchQuoteContext } from './DutchQuoteContext';
 import { RelayQuoteContext } from './RelayQuoteContext';
 
+export * from './RelayQuoteContext';
 export * from './ClassicQuoteContext';
 export * from './DutchQuoteContext';
 

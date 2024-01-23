@@ -63,7 +63,7 @@ export class RelayQuoteContext implements QuoteContext {
     return quote;
   }
 
-  // return either the rfq quote or a synthetic quote from the classic dependency
+  // return either the relay quote or a constructed relay quote from  classic dependency
   async resolve(dependencies: QuoteByKey): Promise<Quote | null> {
     const quote = await this.resolveHandler(dependencies);
     if (!quote || (quote as RelayQuote).amountOutEnd.eq(0)) return null;
@@ -71,7 +71,13 @@ export class RelayQuoteContext implements QuoteContext {
   }
 
   async getRelayQuote(quote?: RelayQuote, classicQuote?: ClassicQuote): Promise<RelayQuote | null> {
-    if (!quote || !classicQuote) return null;
+    // No relay quote or classic quote
+    if (!quote && !classicQuote) return null;
+    if( !quote && classicQuote ) {
+      quote = RelayQuote.fromClassicQuote(this.request, classicQuote);
+    }
+    
+    if(!quote) return null;
 
     // TODO: validate tokens, gas tokens, etc.
     // add checks for too large price impact, etc.
