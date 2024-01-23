@@ -126,7 +126,7 @@ export class RelayQuote implements IQuote {
     };
   }
 
-  // note: we don't add calldata to the quote here but rather build it client side via the SDK for security reasons
+  // note: calldata must be built by the caller and added to the built order
   public toOrder(): RelayOrder {
     const orderBuilder = new RelayOrderBuilder(this.chainId);
     const decayStartTime = Math.floor(Date.now() / 1000);
