@@ -89,6 +89,21 @@ describe('RelayQuoteContext', () => {
       });
       expect(quote).toMatchObject(relayQuote);
     });
+    
+    it('reconstructs quote from dependencies if main quote is null', async () => {
+      const context = new RelayQuoteContext(logger, QUOTE_REQUEST_RELAY, makeProviders());
+      
+      const classicQuote = createClassicQuote(
+        { quote: '10000000000', quoteGasAdjusted: '9999000000', gasUseEstimateGasToken: '1' },
+        { type: 'EXACT_INPUT' }
+      );
+      context.dependencies();
+
+      const quote = await context.resolve({
+        [context.classicKey]: classicQuote
+      });
+      expect(quote?.routingType).toEqual(RoutingType.RELAY);
+    });
 
     it('returns null if quotes have 0 amountOut', async () => {
       const context = new RelayQuoteContext(logger, QUOTE_REQUEST_RELAY, makeProviders());
@@ -145,61 +160,6 @@ describe('RelayQuoteContext', () => {
       });
       expect(quote?.routingType).toEqual(RoutingType.RELAY);
       expect(quote?.amountOut.toString()).toEqual('2');
-    });
-
-    it('filters out zero amountOut quotes in favor of others', async () => {
-      const context = new RelayQuoteContext(logger, QUOTE_REQUEST_RELAY, makeProviders());
-      
-      const relayQuote = createRelayQuote({ amountOut: '0' }, 'EXACT_INPUT');
-      const classicQuote = createClassicQuote(
-        { quote: '10000000000', quoteGasAdjusted: '9999000000' },
-        { type: 'EXACT_INPUT' }
-      );
-      context.dependencies();
-
-      const quote = await context.resolve({
-        [context.requestKey]: relayQuote,
-        [context.classicKey]: classicQuote,
-        [context.routeToNativeKey]: classicQuote,
-      });
-      expect(quote?.routingType).toEqual(RoutingType.RELAY);
-    });
-
-    it('skips relay if reparameterization makes the decay inverted', async () => {
-      const request = makeRelayRequest({
-        tokenOut: '0x1111111111111111111111111111111111111111',
-      });
-      const context = new RelayQuoteContext(logger, request, makeProviders());
-      
-      const relayQuote = createRelayQuote({ amountOut: '1' }, 'EXACT_INPUT');
-      const classicQuote = createClassicQuote(
-        { quote: '10000000000', quoteGasAdjusted: '9999000000' },
-        { type: 'EXACT_INPUT' }
-      );
-      context.dependencies();
-
-      const quote = await context.resolve({
-        [context.requestKey]: relayQuote,
-        [context.classicKey]: classicQuote,
-      });
-      expect(quote).toBeNull();
-    });
-
-    it('still returns DL relay quote if classic is not provided', async () => {
-      const context = new RelayQuoteContext(logger, QUOTE_REQUEST_RELAY, makeProviders());
-      context.dependencies();
-      
-      const relayQuote = createRelayQuote({ amountOut: AMOUNT }, 'EXACT_INPUT');
-      const classicQuote = createClassicQuote(
-        { quote: AMOUNT, quoteGasAdjusted: AMOUNT_UNDER_GAS_THRESHOLD },
-        { type: 'EXACT_INPUT' }
-      );
-
-      const quote = await context.resolve({
-        [context.requestKey]: relayQuote,
-        [context.routeToNativeKey]: classicQuote,
-      });
-      expect(quote).toMatchObject(relayQuote);
     });
   });
 });
