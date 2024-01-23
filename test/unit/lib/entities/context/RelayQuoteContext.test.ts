@@ -5,7 +5,6 @@ import { RelayQuoteContext } from '../../../../../lib/entities';
 import { Erc20__factory } from '../../../../../lib/types/ext/factories/Erc20__factory';
 import {
   AMOUNT,
-  AMOUNT_UNDER_GAS_THRESHOLD,
 } from '../../../../constants';
 import {
   createClassicQuote,
@@ -89,7 +88,7 @@ describe('RelayQuoteContext', () => {
       });
       expect(quote).toMatchObject(relayQuote);
     });
-    
+
     it('reconstructs quote from dependencies if main quote is null', async () => {
       const context = new RelayQuoteContext(logger, QUOTE_REQUEST_RELAY, makeProviders());
       
