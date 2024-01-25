@@ -5,7 +5,7 @@ import { BigNumber, ethers } from 'ethers';
 import { PermitBatchTransferFromData } from '@uniswap/permit2-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { IQuote } from '.';
-import { DEFAULT_START_TIME_BUFFER_SECS, NATIVE_ADDRESS, RELAY_BASE_GAS, RoutingType } from '../../constants';
+import { DEFAULT_START_TIME_BUFFER_SECS, RELAY_BASE_GAS, RoutingType } from '../../constants';
 import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
 import { RelayRequest } from '../request/RelayRequest';
@@ -39,6 +39,8 @@ export type RelayQuoteJSON = {
   gasToken: string;
   amountInGasToken: string;
   swapper: string;
+  classicAmountInGasAndPortionAdjusted: string;
+  classicAmountOutGasAndPortionAdjusted: string;
 };
 
 type Amounts = {
@@ -101,7 +103,8 @@ export class RelayQuote implements IQuote {
       startAmounts.amountInGasToken,
       endAmounts.amountInGasToken,
       request.config.swapper,
-      NATIVE_ADDRESS, // synthetic quote has no filler
+      quote.amountInGasAndPortionAdjusted,
+      quote.amountOutGasAndPortionAdjusted,
       generateRandomNonce() // synthetic quote has no nonce
     );
   }
@@ -124,7 +127,9 @@ export class RelayQuote implements IQuote {
     public readonly amountInGasTokenStart: BigNumber,
     public readonly amountInGasTokenEnd: BigNumber,
     public readonly swapper: string,
-    public readonly filler?: string,
+    // Used to compare X quotes vs Relay quotes
+    public readonly classicAmountInGasAndPortionAdjusted: BigNumber,
+    public readonly classicAmountOutGasAndPortionAdjusted: BigNumber,
     public readonly nonce?: string,
     derived?: RelayQuoteDerived
   ) {
@@ -193,7 +198,6 @@ export class RelayQuote implements IQuote {
       amountInGasToken: this.amountInGasTokenStart.toString(),
       endAmountInGasToken: this.amountInGasTokenEnd.toString(),
       swapper: this.swapper,
-      filler: this.filler,
       routing: RoutingType[this.routingType],
       slippage: parseFloat(this.request.info.slippageTolerance),
       createdAt: this.createdAt,
