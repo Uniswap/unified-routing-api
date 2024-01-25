@@ -4,15 +4,8 @@ import * as _ from 'lodash';
 import { it } from '@jest/globals';
 import { DEFAULT_START_TIME_BUFFER_SECS } from '../../../lib/constants';
 import { RelayQuote, RelayQuoteJSON } from '../../../lib/entities';
-import {
-  AMOUNT,
-  RELAY_PERMIT,
-} from '../../constants';
-import {
-  createClassicQuote,
-  createRelayQuote,
-  createRelayQuoteWithRequest,
-} from '../../utils/fixtures';
+import { AMOUNT, RELAY_PERMIT } from '../../constants';
+import { createClassicQuote, createRelayQuote, createRelayQuoteWithRequest } from '../../utils/fixtures';
 
 describe('RelayQuote', () => {
   // silent logger in tests
@@ -60,10 +53,7 @@ describe('RelayQuote', () => {
       jest.useFakeTimers({
         now: 0,
       });
-      const quote = createRelayQuote(
-        {},
-        'EXACT_INPUT'
-      ) as any;
+      const quote = createRelayQuote({}, 'EXACT_INPUT') as any;
       quote.nonce = 1;
       const dlQuote = quote as RelayQuote;
       const result = dlQuote.getPermitData();
@@ -75,11 +65,7 @@ describe('RelayQuote', () => {
 
   describe('toJSON', () => {
     it('Succeeds', () => {
-      const quote = createRelayQuote(
-        { amountOut: '10000' },
-        'EXACT_INPUT',
-        '1',
-      ) as any;
+      const quote = createRelayQuote({ amountOut: '10000' }, 'EXACT_INPUT', '1') as any;
       const result = quote.toJSON();
       // TODO
       expect(result).toMatchObject({});
@@ -119,7 +105,7 @@ describe('RelayQuote', () => {
         swapper: relayQuote.swapper,
         classicAmountInGasAndPortionAdjusted: relayQuote.classicAmountInGasAndPortionAdjusted.toString(),
         classicAmountOutGasAndPortionAdjusted: relayQuote.classicAmountOutGasAndPortionAdjusted.toString(),
-      }
+      };
       const quote = RelayQuote.fromResponseBody(relayQuote.request, RELAY_QUOTE_JSON);
       // nonce will be different so we can't compare the whole object
       expect(quote.toJSON().orderHash).toEqual(relayQuote.toJSON().orderHash);

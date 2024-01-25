@@ -1,4 +1,10 @@
-import { AllowanceTransfer, MaxAllowanceTransferAmount, PERMIT2_ADDRESS, PermitBatchData, PermitSingleData } from '@uniswap/permit2-sdk';
+import {
+  AllowanceTransfer,
+  MaxAllowanceTransferAmount,
+  PERMIT2_ADDRESS,
+  PermitBatchData,
+  PermitSingleData,
+} from '@uniswap/permit2-sdk';
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import ms from 'ms';
 

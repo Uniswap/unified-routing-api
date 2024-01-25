@@ -3,9 +3,7 @@ import Logger from 'bunyan';
 import { NATIVE_ADDRESS, RoutingType } from '../../../../../lib/constants';
 import { RelayQuoteContext } from '../../../../../lib/entities';
 import { Erc20__factory } from '../../../../../lib/types/ext/factories/Erc20__factory';
-import {
-  AMOUNT,
-} from '../../../../constants';
+import { AMOUNT } from '../../../../constants';
 import {
   createClassicQuote,
   createRelayQuote,
@@ -81,7 +79,7 @@ describe('RelayQuoteContext', () => {
 
     it('returns main quote if others are null', async () => {
       const context = new RelayQuoteContext(logger, QUOTE_REQUEST_RELAY, makeProviders());
-      
+
       const relayQuote = createRelayQuote({ amountOut: AMOUNT }, 'EXACT_INPUT');
       const quote = await context.resolve({
         [QUOTE_REQUEST_RELAY.key()]: relayQuote,
@@ -91,7 +89,7 @@ describe('RelayQuoteContext', () => {
 
     it('reconstructs quote from dependencies if main quote is null', async () => {
       const context = new RelayQuoteContext(logger, QUOTE_REQUEST_RELAY, makeProviders());
-      
+
       const classicQuote = createClassicQuote(
         { quote: '10000000000', quoteGasAdjusted: '9999000000', gasUseEstimateGasToken: '1' },
         { type: 'EXACT_INPUT' }
@@ -99,14 +97,14 @@ describe('RelayQuoteContext', () => {
       context.dependencies();
 
       const quote = await context.resolve({
-        [context.classicKey]: classicQuote
+        [context.classicKey]: classicQuote,
       });
       expect(quote?.routingType).toEqual(RoutingType.RELAY);
     });
 
     it('returns null if quotes have 0 amountOut', async () => {
       const context = new RelayQuoteContext(logger, QUOTE_REQUEST_RELAY, makeProviders());
-      
+
       const relayQuote = createRelayQuote({ amountOut: '0' }, 'EXACT_INPUT');
       expect(
         await context.resolve({

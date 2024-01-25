@@ -34,23 +34,32 @@ import {
   RELAY_QUOTE_NATIVE_EXACT_IN_BETTER,
   RELAY_REQUEST_BODY,
   RELAY_REQUEST_BODY_EXACT_OUT,
-  RELAY_REQUEST_WITH_CLASSIC_BODY
+  RELAY_REQUEST_WITH_CLASSIC_BODY,
 } from '../../../../utils/fixtures';
 
 import { PermitDetails } from '@uniswap/permit2-sdk';
 import { DutchOrderInfoJSON, RelayOrderInfoJSON } from '@uniswap/uniswapx-sdk';
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { MetricsLogger } from 'aws-embedded-metrics';
+import { APIGatewayProxyEventHeaders } from 'aws-lambda/trigger/api-gateway-proxy';
 import { AxiosError } from 'axios';
+import { BigNumber } from 'ethers';
 import NodeCache from 'node-cache';
 import { RoutingType } from '../../../../../lib/constants';
-import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, Quote, RelayQuote, RequestSource } from '../../../../../lib/entities';
+import {
+  ClassicQuote,
+  ClassicQuoteDataJSON,
+  DutchQuote,
+  Quote,
+  RelayQuote,
+  RequestSource,
+} from '../../../../../lib/entities';
 import { QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index';
 import { Permit2Fetcher } from '../../../../../lib/fetchers/Permit2Fetcher';
 import {
-  GET_NO_PORTION_RESPONSE,
   GetPortionResponse,
-  PortionFetcher
+  GET_NO_PORTION_RESPONSE,
+  PortionFetcher,
 } from '../../../../../lib/fetchers/PortionFetcher';
 import { TokenFetcher } from '../../../../../lib/fetchers/TokenFetcher';
 import { ApiInjector, ApiRInj } from '../../../../../lib/handlers/base';
@@ -59,7 +68,7 @@ import {
   getBestQuote,
   getQuotes,
   QuoteHandler,
-  removeDutchRequests
+  removeDutchRequests,
 } from '../../../../../lib/handlers/quote/handler';
 import { ContainerInjected, QuoterByRoutingType } from '../../../../../lib/handlers/quote/injector';
 import { Quoter, SyntheticStatusProvider } from '../../../../../lib/providers';
@@ -67,8 +76,6 @@ import { Erc20__factory } from '../../../../../lib/types/ext/factories/Erc20__fa
 import { ErrorCode } from '../../../../../lib/util/errors';
 import { setGlobalLogger } from '../../../../../lib/util/log';
 import { INELIGIBLE_TOKEN, PERMIT2_USED, PERMIT_DETAILS, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../../constants';
-import { APIGatewayProxyEventHeaders } from 'aws-lambda/trigger/api-gateway-proxy';
-import { BigNumber } from 'ethers';
 
 describe('QuoteHandler', () => {
   const OLD_ENV = process.env;
@@ -222,7 +229,7 @@ describe('QuoteHandler', () => {
     const getEvent = (request: QuoteRequestBodyJSON, headers?: APIGatewayProxyEventHeaders): APIGatewayProxyEvent =>
       ({
         body: JSON.stringify(request),
-        ...(headers !== undefined && {headers: headers})
+        ...(headers !== undefined && { headers: headers }),
       } as APIGatewayProxyEvent);
 
     describe('handler test', () => {
@@ -245,8 +252,8 @@ describe('QuoteHandler', () => {
       });
 
       it('check request source', async () => {
-        const quoteMock = jest.fn().mockResolvedValue(CLASSIC_QUOTE_EXACT_IN_WORSE)
-        const quoterMock: Quoter = { quote: quoteMock }
+        const quoteMock = jest.fn().mockResolvedValue(CLASSIC_QUOTE_EXACT_IN_WORSE);
+        const quoterMock: Quoter = { quote: quoteMock };
 
         const quoters = { [RoutingType.CLASSIC]: quoterMock };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
@@ -260,20 +267,20 @@ describe('QuoteHandler', () => {
           portionFetcher,
           permit2Fetcher,
           syntheticStatusProvider
-        )
+        );
 
-        let headers: APIGatewayProxyEventHeaders = {
+        const headers: APIGatewayProxyEventHeaders = {
           'x-request-source': 'uniswap-web',
-        }
+        };
         await quoteHandler.handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
-        let quoteCallParams = quoteMock.mock.lastCall[0]
-        expect(quoteCallParams.info.source).toBe(RequestSource.UNISWAP_WEB)
+        const quoteCallParams = quoteMock.mock.lastCall[0];
+        expect(quoteCallParams.info.source).toBe(RequestSource.UNISWAP_WEB);
       });
 
       describe('handler getQuoteRequestSource', () => {
         it('test getQuoteRequestSource', async () => {
-          const quoteMock = jest.fn().mockResolvedValue(CLASSIC_QUOTE_EXACT_IN_WORSE)
-          const quoterMock: Quoter = { quote: quoteMock }
+          const quoteMock = jest.fn().mockResolvedValue(CLASSIC_QUOTE_EXACT_IN_WORSE);
+          const quoterMock: Quoter = { quote: quoteMock };
 
           const quoters = { [RoutingType.CLASSIC]: quoterMock };
           const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
@@ -287,40 +294,40 @@ describe('QuoteHandler', () => {
             portionFetcher,
             permit2Fetcher,
             syntheticStatusProvider
-          )
+          );
 
-          let headers: APIGatewayProxyEventHeaders = { 'x-request-source': 'uniswap-ios' }
-          let requestSource = quoteHandler.getQuoteRequestSource(headers)
-          expect(requestSource).toBe(RequestSource.UNISWAP_IOS)
+          let headers: APIGatewayProxyEventHeaders = { 'x-request-source': 'uniswap-ios' };
+          let requestSource = quoteHandler.getQuoteRequestSource(headers);
+          expect(requestSource).toBe(RequestSource.UNISWAP_IOS);
 
-          headers = { 'x-request-source': 'uniswap-android' }
-          requestSource = quoteHandler.getQuoteRequestSource(headers)
-          expect(requestSource).toBe(RequestSource.UNISWAP_ANDROID)
+          headers = { 'x-request-source': 'uniswap-android' };
+          requestSource = quoteHandler.getQuoteRequestSource(headers);
+          expect(requestSource).toBe(RequestSource.UNISWAP_ANDROID);
 
-          headers = { 'x-request-source': 'uniswap-web' }
-          requestSource = quoteHandler.getQuoteRequestSource(headers)
-          expect(requestSource).toBe(RequestSource.UNISWAP_WEB)
+          headers = { 'x-request-source': 'uniswap-web' };
+          requestSource = quoteHandler.getQuoteRequestSource(headers);
+          expect(requestSource).toBe(RequestSource.UNISWAP_WEB);
 
-          headers = { 'x-request-source': 'external-api' }
-          requestSource = quoteHandler.getQuoteRequestSource(headers)
-          expect(requestSource).toBe(RequestSource.EXTERNAL_API)
+          headers = { 'x-request-source': 'external-api' };
+          requestSource = quoteHandler.getQuoteRequestSource(headers);
+          expect(requestSource).toBe(RequestSource.EXTERNAL_API);
 
-          headers = { 'x-request-source': 'lonely-planet' }
-          requestSource = quoteHandler.getQuoteRequestSource(headers)
-          expect(requestSource).toBe(RequestSource.UNKNOWN)
+          headers = { 'x-request-source': 'lonely-planet' };
+          requestSource = quoteHandler.getQuoteRequestSource(headers);
+          expect(requestSource).toBe(RequestSource.UNKNOWN);
 
-          headers = { 'x-request-source': '' }
-          requestSource = quoteHandler.getQuoteRequestSource(headers)
-          expect(requestSource).toBe(RequestSource.UNKNOWN)
+          headers = { 'x-request-source': '' };
+          requestSource = quoteHandler.getQuoteRequestSource(headers);
+          expect(requestSource).toBe(RequestSource.UNKNOWN);
 
-          headers = {}
-          requestSource = quoteHandler.getQuoteRequestSource(headers)
-          expect(requestSource).toBe(RequestSource.UNKNOWN)
+          headers = {};
+          requestSource = quoteHandler.getQuoteRequestSource(headers);
+          expect(requestSource).toBe(RequestSource.UNKNOWN);
         });
 
         it('test getQuoteRequestSource input case insensitiveness', async () => {
-          const quoteMock = jest.fn().mockResolvedValue(CLASSIC_QUOTE_EXACT_IN_WORSE)
-          const quoterMock: Quoter = { quote: quoteMock }
+          const quoteMock = jest.fn().mockResolvedValue(CLASSIC_QUOTE_EXACT_IN_WORSE);
+          const quoterMock: Quoter = { quote: quoteMock };
 
           const quoters = { [RoutingType.CLASSIC]: quoterMock };
           const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
@@ -334,15 +341,15 @@ describe('QuoteHandler', () => {
             portionFetcher,
             permit2Fetcher,
             syntheticStatusProvider
-          )
+          );
 
-          let headers: APIGatewayProxyEventHeaders = { 'x-request-source': 'Uniswap-iOS' }
-          let requestSource = quoteHandler.getQuoteRequestSource(headers)
-          expect(requestSource).toBe(RequestSource.UNISWAP_IOS)
+          let headers: APIGatewayProxyEventHeaders = { 'x-request-source': 'Uniswap-iOS' };
+          let requestSource = quoteHandler.getQuoteRequestSource(headers);
+          expect(requestSource).toBe(RequestSource.UNISWAP_IOS);
 
-          headers = { 'x-request-source': 'UNISWAP-ANDROID' }
-          requestSource = quoteHandler.getQuoteRequestSource(headers)
-          expect(requestSource).toBe(RequestSource.UNISWAP_ANDROID)
+          headers = { 'x-request-source': 'UNISWAP-ANDROID' };
+          requestSource = quoteHandler.getQuoteRequestSource(headers);
+          expect(requestSource).toBe(RequestSource.UNISWAP_ANDROID);
         });
       });
 
@@ -454,7 +461,7 @@ describe('QuoteHandler', () => {
       });
 
       it('handles exactIn relay quotes', async () => {
-        const quoters = { 
+        const quoters = {
           [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
           [RoutingType.RELAY]: RelayQuoterMock(RELAY_QUOTE_NATIVE_EXACT_IN_BETTER),
         };
@@ -475,7 +482,7 @@ describe('QuoteHandler', () => {
       });
 
       it('returns relay quote if both relay and classic are requested', async () => {
-        const quoters = { 
+        const quoters = {
           [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
           [RoutingType.RELAY]: RelayQuoterMock(RELAY_QUOTE_NATIVE_EXACT_IN_BETTER),
         };
@@ -503,7 +510,7 @@ describe('QuoteHandler', () => {
       });
 
       it('handles exactOut relay quotes', async () => {
-        const quoters = { 
+        const quoters = {
           [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_OUT_WORSE),
           [RoutingType.RELAY]: RelayQuoterMock(RELAY_QUOTE_EXACT_OUT_BETTER),
         };
@@ -1228,13 +1235,14 @@ describe('QuoteHandler', () => {
       expect(compareQuotes(RELAY_QUOTE_EXACT_OUT_BETTER, RELAY_QUOTE_EXACT_OUT_WORSE, TradeType.EXACT_OUTPUT)).toBe(
         true
       );
-    })
+    });
 
     it('returns false if lhs is a worse relay quote than rhs', () => {
       expect(compareQuotes(RELAY_QUOTE_EXACT_IN_WORSE, RELAY_QUOTE_EXACT_IN_BETTER, TradeType.EXACT_INPUT)).toBe(false);
-      expect(compareQuotes(RELAY_QUOTE_EXACT_OUT_WORSE, RELAY_QUOTE_EXACT_OUT_BETTER, TradeType.EXACT_OUTPUT)).toBe(false);
+      expect(compareQuotes(RELAY_QUOTE_EXACT_OUT_WORSE, RELAY_QUOTE_EXACT_OUT_BETTER, TradeType.EXACT_OUTPUT)).toBe(
+        false
+      );
     });
-
 
     it('returns true if lhs is a better mixed type', () => {
       expect(compareQuotes(DL_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_IN_WORSE, TradeType.EXACT_INPUT)).toBe(true);
@@ -1243,7 +1251,9 @@ describe('QuoteHandler', () => {
         true
       );
       expect(compareQuotes(RELAY_QUOTE_EXACT_IN_BETTER, DL_QUOTE_EXACT_IN_WORSE, TradeType.EXACT_INPUT)).toBe(true);
-      expect(compareQuotes(RELAY_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_IN_WORSE, TradeType.EXACT_INPUT)).toBe(true);
+      expect(compareQuotes(RELAY_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_IN_WORSE, TradeType.EXACT_INPUT)).toBe(
+        true
+      );
       expect(compareQuotes(RELAY_QUOTE_EXACT_OUT_BETTER, DL_QUOTE_EXACT_OUT_WORSE, TradeType.EXACT_OUTPUT)).toBe(true);
     });
 

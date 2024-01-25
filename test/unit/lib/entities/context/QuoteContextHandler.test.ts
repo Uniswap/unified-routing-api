@@ -267,7 +267,11 @@ describe('QuoteContextManager', () => {
       const context2 = new MockQuoteContext(QUOTE_REQUEST_RELAY);
       context2.setDependencies([RELAY_QUOTE_EXACT_IN_BETTER.request]);
       const handler = new QuoteContextManager([context, context2]);
-      await handler.resolveQuotes([DL_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_IN_BETTER, RELAY_QUOTE_EXACT_IN_BETTER]);
+      await handler.resolveQuotes([
+        DL_QUOTE_EXACT_IN_BETTER,
+        CLASSIC_QUOTE_EXACT_IN_BETTER,
+        RELAY_QUOTE_EXACT_IN_BETTER,
+      ]);
       expect(context._quoteDependencies).toEqual({
         [DL_QUOTE_EXACT_IN_BETTER.request.key()]: DL_QUOTE_EXACT_IN_BETTER,
         [CLASSIC_QUOTE_EXACT_IN_BETTER.request.key()]: CLASSIC_QUOTE_EXACT_IN_BETTER,

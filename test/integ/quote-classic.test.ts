@@ -2061,11 +2061,15 @@ describe('quote', function () {
                         expect(v2Pool.tokenOut.buyFeeBps).to.be.equals(BULLET_WHT_FOT_TAX.buyFeeBps?.toString());
                       }
                       if (v2Pool.reserve0.token.address === BULLET_WHT_FOT_TAX.address) {
-                        expect(v2Pool.reserve0.token.sellFeeBps).to.be.equals(BULLET_WHT_FOT_TAX.sellFeeBps?.toString());
+                        expect(v2Pool.reserve0.token.sellFeeBps).to.be.equals(
+                          BULLET_WHT_FOT_TAX.sellFeeBps?.toString()
+                        );
                         expect(v2Pool.reserve0.token.buyFeeBps).to.be.equals(BULLET_WHT_FOT_TAX.buyFeeBps?.toString());
                       }
                       if (v2Pool.reserve1.token.address === BULLET_WHT_FOT_TAX.address) {
-                        expect(v2Pool.reserve1.token.sellFeeBps).to.be.equals(BULLET_WHT_FOT_TAX.sellFeeBps?.toString());
+                        expect(v2Pool.reserve1.token.sellFeeBps).to.be.equals(
+                          BULLET_WHT_FOT_TAX.sellFeeBps?.toString()
+                        );
                         expect(v2Pool.reserve1.token.buyFeeBps).to.be.equals(BULLET_WHT_FOT_TAX.buyFeeBps?.toString());
                       }
                     }

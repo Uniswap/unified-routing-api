@@ -11,8 +11,8 @@ import {
   RelayQuote,
   RelayQuoteJSON,
 } from '../../lib/entities';
-import { Portion } from '../../lib/fetchers/PortionFetcher';
 import { RelayRequest } from '../../lib/entities/request/RelayRequest';
+import { Portion } from '../../lib/fetchers/PortionFetcher';
 
 type ReceivedQuoteData = DutchQuoteJSON | ClassicQuoteDataJSON;
 

@@ -25,7 +25,7 @@ const MOCK_RELAY_CONFIG_JSON: RelayConfigJSON = {
   swapper: SWAPPER,
   auctionPeriodSecs: 60,
   deadlineBufferSecs: 12,
-  gasToken: TOKEN_IN
+  gasToken: TOKEN_IN,
 };
 
 const CLASSIC_CONFIG_JSON: ClassicConfigJSON = {

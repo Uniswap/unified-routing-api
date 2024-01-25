@@ -73,11 +73,11 @@ export class RelayQuoteContext implements QuoteContext {
   async getRelayQuote(quote?: RelayQuote, classicQuote?: ClassicQuote): Promise<RelayQuote | null> {
     // No relay quote or classic quote
     if (!quote && !classicQuote) return null;
-    if( !quote && classicQuote ) {
+    if (!quote && classicQuote) {
       quote = RelayQuote.fromClassicQuote(this.request, classicQuote);
     }
-    
-    if(!quote) return null;
+
+    if (!quote) return null;
 
     // TODO: validate tokens, gas tokens, etc.
     // add checks for too large price impact, etc.

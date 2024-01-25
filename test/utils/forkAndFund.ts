@@ -77,7 +77,7 @@ export const fund = async (
         await alice.sendTransaction({
           to: whale,
           value: ethers.utils.parseEther('0.1'), // Sends exactly 0.1 ether
-        })
+        });
 
         const whaleToken: Erc20 = Erc20__factory.connect(currency.wrapped.address, whaleAccount);
 
@@ -88,7 +88,7 @@ export const fund = async (
         if (i == WHALES.length - 1) {
           throw new Error(
             `Could not fund ${amount} ${currency.symbol} from any whales. Original error ${JSON.stringify(err)}`
-          )
+          );
         }
       }
     }

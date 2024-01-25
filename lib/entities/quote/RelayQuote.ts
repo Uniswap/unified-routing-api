@@ -1,5 +1,5 @@
 import { RelayOrder, RelayOrderBuilder, RelayOrderInfoJSON } from '@uniswap/uniswapx-sdk';
-import { UNIVERSAL_ROUTER_ADDRESS} from '@uniswap/universal-router-sdk';
+import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { BigNumber, ethers } from 'ethers';
 
 import { PermitBatchTransferFromData } from '@uniswap/permit2-sdk';
@@ -298,7 +298,7 @@ export class RelayQuote implements IQuote {
 
   // Returns the number of gas units extra required to execute this quote through the relayer
   static getGasAdjustment(_classicQuote: ClassicQuote): BigNumber {
-    let result = BigNumber.from(0);
+    const result = BigNumber.from(0);
 
     return result.add(RELAY_BASE_GAS);
   }

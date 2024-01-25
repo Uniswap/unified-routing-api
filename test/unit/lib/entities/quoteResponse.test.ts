@@ -1,7 +1,16 @@
 import { DutchOrder, RelayOrder } from '@uniswap/uniswapx-sdk';
 import { BigNumber } from 'ethers';
 
-import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, DutchQuoteJSON, DutchRequest, RelayQuote, RelayQuoteJSON } from '../../../../lib/entities';
+import {
+  ClassicQuote,
+  ClassicQuoteDataJSON,
+  DutchQuote,
+  DutchQuoteJSON,
+  DutchRequest,
+  RelayQuote,
+  RelayQuoteJSON,
+} from '../../../../lib/entities';
+import { RelayRequest } from '../../../../lib/entities/request/RelayRequest';
 import {
   AMOUNT,
   CHAIN_IN_ID,
@@ -19,7 +28,6 @@ import {
   QUOTE_REQUEST_DL,
   QUOTE_REQUEST_RELAY,
 } from '../../../utils/fixtures';
-import { RelayRequest } from '../../../../lib/entities/request/RelayRequest';
 
 const DL_QUOTE_JSON: DutchQuoteJSON = {
   chainId: CHAIN_IN_ID,
@@ -84,8 +92,8 @@ const CLASSIC_QUOTE_JSON: ClassicQuoteDataJSON = {
   portionRecipient: PORTION_RECIPIENT,
 };
 
-const UNIVERSAL_ROUTER_ADDRESS = "0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD";
-const FILLER_SENTINEL_ADDRESS = "0x0000000000000000000000000000000000000000";
+const UNIVERSAL_ROUTER_ADDRESS = '0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD';
+const FILLER_SENTINEL_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 describe('QuoteResponse', () => {
   const config: DutchRequest = QUOTE_REQUEST_DL;
@@ -133,16 +141,16 @@ describe('QuoteResponse', () => {
           token: TOKEN_IN,
           startAmount: AMOUNT,
           maxAmount: AMOUNT,
-          recipient: UNIVERSAL_ROUTER_ADDRESS
+          recipient: UNIVERSAL_ROUTER_ADDRESS,
         },
         {
           token: TOKEN_IN,
           startAmount: AMOUNT,
           maxAmount: AMOUNT,
-          recipient: FILLER_SENTINEL_ADDRESS
+          recipient: FILLER_SENTINEL_ADDRESS,
         },
       ],
-      actions: []
+      actions: [],
     });
     const order = RelayOrder.fromJSON(quote.toOrder().toJSON(), quote.chainId);
     expect(BigNumber.from(order.toJSON().nonce).gt(0)).toBeTruthy();
