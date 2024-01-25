@@ -28,7 +28,9 @@ import {
   QUOTE_REQUEST_DL,
   QUOTE_REQUEST_MULTI,
   RELAY_QUOTE_EXACT_IN_BETTER,
+  RELAY_QUOTE_EXACT_IN_WORSE,
   RELAY_QUOTE_EXACT_OUT_BETTER,
+  RELAY_QUOTE_EXACT_OUT_WORSE,
   RELAY_QUOTE_NATIVE_EXACT_IN_BETTER,
   RELAY_REQUEST_BODY,
   RELAY_REQUEST_BODY_EXACT_OUT,
@@ -792,6 +794,28 @@ describe('QuoteHandler', () => {
         expect(quote.encodedOrder).not.toBe(null);
       });
 
+      it('always returns encodedOrder in quote for relay', async () => {
+        const quoters = {
+          [RoutingType.RELAY]: RelayQuoterMock(RELAY_QUOTE_EXACT_IN_BETTER),
+        };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(GET_NO_PORTION_RESPONSE);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+        const syntheticStatusProvider = SyntheticStatusProviderMock(false);
+
+        const response = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(RELAY_REQUEST_WITH_CLASSIC_BODY), {} as unknown as Context);
+
+        const responseBody = JSON.parse(response.body);
+        const quote = responseBody.quote;
+        expect(quote.encodedOrder).not.toBe(null);
+      });
+
       it('returns 500 when quoters 429 and there are no valid DL quotes', async () => {
         const message = 'Request failed with status code 429';
         const axiosResponse = {
@@ -1035,6 +1059,26 @@ describe('QuoteHandler', () => {
         expect(res.state).toBe('valid');
       });
 
+      it('Succeeds - Relay Quote', async () => {
+        const quoters = { [RoutingType.RELAY]: RelayQuoterMock(RELAY_QUOTE_EXACT_IN_BETTER) };
+        const event = {
+          body: JSON.stringify(RELAY_REQUEST_BODY),
+        } as APIGatewayProxyEvent;
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(GET_NO_PORTION_RESPONSE);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+        const syntheticStatusProvider = SyntheticStatusProviderMock(false);
+
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).parseAndValidateRequest(event, logger as unknown as Logger);
+        expect(res.state).toBe('valid');
+      });
+
       it('Succeeds - Bad swapper address', async () => {
         const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE) };
         const event = {
@@ -1177,12 +1221,30 @@ describe('QuoteHandler', () => {
       ).toBe(false);
     });
 
+    // TODO: test comparisons of RELAY vs. classic
+
+    it('returns true if lhs is a better relay quote than rhs', () => {
+      expect(compareQuotes(RELAY_QUOTE_EXACT_IN_BETTER, RELAY_QUOTE_EXACT_IN_WORSE, TradeType.EXACT_INPUT)).toBe(true);
+      expect(compareQuotes(RELAY_QUOTE_EXACT_OUT_BETTER, RELAY_QUOTE_EXACT_OUT_WORSE, TradeType.EXACT_OUTPUT)).toBe(
+        true
+      );
+    })
+
+    it('returns false if lhs is a worse relay quote than rhs', () => {
+      expect(compareQuotes(RELAY_QUOTE_EXACT_IN_WORSE, RELAY_QUOTE_EXACT_IN_BETTER, TradeType.EXACT_INPUT)).toBe(false);
+      expect(compareQuotes(RELAY_QUOTE_EXACT_OUT_WORSE, RELAY_QUOTE_EXACT_OUT_BETTER, TradeType.EXACT_OUTPUT)).toBe(false);
+    });
+
+
     it('returns true if lhs is a better mixed type', () => {
       expect(compareQuotes(DL_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_IN_WORSE, TradeType.EXACT_INPUT)).toBe(true);
       expect(compareQuotes(CLASSIC_QUOTE_EXACT_IN_BETTER, DL_QUOTE_EXACT_IN_WORSE, TradeType.EXACT_INPUT)).toBe(true);
       expect(compareQuotes(DL_QUOTE_EXACT_OUT_BETTER, CLASSIC_QUOTE_EXACT_OUT_WORSE, TradeType.EXACT_OUTPUT)).toBe(
         true
       );
+      expect(compareQuotes(RELAY_QUOTE_EXACT_IN_BETTER, DL_QUOTE_EXACT_IN_WORSE, TradeType.EXACT_INPUT)).toBe(true);
+      expect(compareQuotes(RELAY_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_IN_WORSE, TradeType.EXACT_INPUT)).toBe(true);
+      expect(compareQuotes(RELAY_QUOTE_EXACT_OUT_BETTER, DL_QUOTE_EXACT_OUT_WORSE, TradeType.EXACT_OUTPUT)).toBe(true);
     });
 
     it('returns true if lhs is a better mixed type with portion', () => {
