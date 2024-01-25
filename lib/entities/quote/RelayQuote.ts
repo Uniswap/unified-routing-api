@@ -69,8 +69,9 @@ export class RelayQuote implements IQuote {
       BigNumber.from(body.amountInGasToken),
       BigNumber.from(body.amountInGasToken),
       request.config.swapper,
-      NATIVE_ADDRESS, // synthetic quote has no filler
-      generateRandomNonce() // synthetic quote has no nonce
+      BigNumber.from(body.classicAmountInGasAndPortionAdjusted),
+      BigNumber.from(body.classicAmountOutGasAndPortionAdjusted),
+      generateRandomNonce()
     );
   }
 

@@ -6,6 +6,7 @@ import { getAddress } from 'ethers/lib/utils';
 import { BPS, RoutingType } from '../lib/constants';
 import { Portion, PortionType } from '../lib/fetchers/PortionFetcher';
 import { agEUR_MAINNET, DAI_ON, USDC_ON, USDT_ON, XSGD_MAINNET } from './utils/tokens';
+import { REACTOR_ADDRESS_MAPPING } from '@uniswap/uniswapx-sdk';
 
 export const CHAIN_IN_ID = 1;
 export const CHAIN_OUT_ID = 1;
@@ -353,6 +354,123 @@ export const DUTCH_LIMIT_ORDER_JSON_WITH_PORTION = {
   slippageTolerance: '0.5',
   orderHash: '0xc5230345d78a3758d321d54bf5b710778de69cc8004f4623d7316400a70956dd',
 };
+
+export const RELAY_PERMIT = {
+  "domain": {
+    "name": "Permit2",
+    "chainId": 1,
+    "verifyingContract": "0x000000000022d473030f116ddee9f6b43ac78ba3"
+  },
+  "types": {
+    "PermitBatchWitnessTransferFrom": [
+      {
+        "name": "permitted",
+        "type": "TokenPermissions[]"
+      },
+      {
+        "name": "spender",
+        "type": "address"
+      },
+      {
+        "name": "nonce",
+        "type": "uint256"
+      },
+      {
+        "name": "deadline",
+        "type": "uint256"
+      },
+      {
+        "name": "witness",
+        "type": "RelayOrder"
+      }
+    ],
+    "TokenPermissions": [
+      {
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "RelayOrder": [
+      {
+        "name": "reactor",
+        "type": "address"
+      },
+      {
+        "name": "swapper",
+        "type": "address"
+      },
+      {
+        "name": "startAmounts",
+        "type": "uint256[]"
+      },
+      {
+        "name": "recipients",
+        "type": "address[]"
+      },
+      {
+        "name": "decayStartTime",
+        "type": "uint256"
+      },
+      {
+        "name": "decayEndTime",
+        "type": "uint256"
+      },
+      {
+        "name": "actions",
+        "type": "bytes[]"
+      }
+    ]
+  },
+  "values": {
+    "permitted": [
+      {
+        "token": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
+        "amount": {
+          "type": "BigNumber",
+          "hex": "0x0de0b6b3a7640000"
+        }
+      },
+      {
+        "token": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
+        "amount": {
+          "type": "BigNumber",
+          "hex": "0x0de0b6b3a7640000"
+        }
+      }
+    ],
+    "spender": REACTOR_ADDRESS_MAPPING[ChainId.MAINNET]['Relay'],
+    "nonce": {
+      "type": "BigNumber",
+      "hex": "0x01"
+    },
+    "deadline": 72,
+    "witness": {
+      "reactor": REACTOR_ADDRESS_MAPPING[ChainId.MAINNET]['Relay'],
+      "swapper": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+      "decayStartTime": 0,
+      "decayEndTime": 60,
+      "startAmounts": [
+        {
+          "type": "BigNumber",
+          "hex": "0x0de0b6b3a7640000"
+        },
+        {
+          "type": "BigNumber",
+          "hex": "0x0de0b6b3a7640000"
+        }
+      ],
+      "recipients": [
+        "0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD",
+        "0x0000000000000000000000000000000000000000"
+      ],
+      "actions": []
+    }
+  }
+}
 
 export const GREENLIST_TOKEN_PAIRS: Array<[Currency, Currency]> = [
   [Ether.onChain(ChainId.MAINNET), USDC_ON(ChainId.MAINNET)],

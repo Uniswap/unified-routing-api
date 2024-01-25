@@ -430,6 +430,8 @@ const RELAY_QUOTE_DATA = {
     gasToken: TOKEN_IN,
     amountInGasToken: AMOUNT,
     swapper: SWAPPER,
+    classicAmountInGasAndPortionAdjusted: AMOUNT,
+    classicAmountOutGasAndPortionAdjusted: AMOUNT,
   },
 };
 
@@ -705,6 +707,19 @@ export function createRelayQuote(
     makeRelayRequest({ type }),
     nonce,
   ) as RelayQuote;
+}
+
+export function createRelayQuoteWithRequest(
+  overrides: Partial<RelayQuoteJSON>,
+  requestOverrides: Partial<QuoteRequestBodyJSON>,
+  configOverrides?: Partial<RelayConfig>
+): DutchQuote {
+  return buildQuoteResponse(
+    Object.assign({}, RELAY_QUOTE_DATA, {
+      quote: { ...RELAY_QUOTE_DATA.quote, type: RoutingType.RELAY, ...overrides },
+    }),
+    makeRelayRequest({ ...requestOverrides }, configOverrides)
+  ) as DutchQuote;
 }
 
 export const RELAY_QUOTE_EXACT_IN_BETTER = createRelayQuote({ amountOut: AMOUNT_BETTER }, 'EXACT_INPUT');

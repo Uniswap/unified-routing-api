@@ -56,6 +56,8 @@ const RELAY_QUOTE_JSON: RelayQuoteJSON = {
   swapper: SWAPPER,
   gasToken: TOKEN_IN,
   amountInGasToken: AMOUNT,
+  classicAmountInGasAndPortionAdjusted: AMOUNT,
+  classicAmountOutGasAndPortionAdjusted: AMOUNT,
 };
 
 const CLASSIC_QUOTE_JSON: ClassicQuoteDataJSON = {
