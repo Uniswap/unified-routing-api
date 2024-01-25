@@ -724,15 +724,16 @@ export function createRelayQuoteWithRequest(
   ) as DutchQuote;
 }
 
-export const RELAY_QUOTE_EXACT_IN_BETTER = createRelayQuote({ amountOut: AMOUNT_BETTER }, 'EXACT_INPUT');
+export const RELAY_QUOTE_EXACT_IN_BETTER = createRelayQuote({ amountOut: AMOUNT_BETTER, classicAmountOutGasAndPortionAdjusted: AMOUNT_BETTER }, 'EXACT_INPUT');
 export const RELAY_QUOTE_NATIVE_EXACT_IN_BETTER = createRelayQuote(
   {
     amountOut: AMOUNT_BETTER,
     tokenIn: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_OUT_ID)].address,
     gasToken: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_OUT_ID)].address,
+    classicAmountOutGasAndPortionAdjusted: AMOUNT_BETTER,
   },
   'EXACT_INPUT'
 );
-export const RELAY_QUOTE_EXACT_IN_WORSE = createRelayQuote({ amountOut: AMOUNT }, 'EXACT_INPUT');
-export const RELAY_QUOTE_EXACT_OUT_BETTER = createRelayQuote({ amountIn: AMOUNT }, 'EXACT_OUTPUT');
-export const RELAY_QUOTE_EXACT_OUT_WORSE = createRelayQuote({ amountIn: AMOUNT_BETTER }, 'EXACT_OUTPUT');
+export const RELAY_QUOTE_EXACT_IN_WORSE = createRelayQuote({ amountOut: AMOUNT, classicAmountOutGasAndPortionAdjusted: AMOUNT }, 'EXACT_INPUT');
+export const RELAY_QUOTE_EXACT_OUT_BETTER = createRelayQuote({ amountIn: AMOUNT, classicAmountInGasAndPortionAdjusted: AMOUNT }, 'EXACT_OUTPUT');
+export const RELAY_QUOTE_EXACT_OUT_WORSE = createRelayQuote({ amountIn: AMOUNT_BETTER, classicAmountInGasAndPortionAdjusted: AMOUNT_BETTER }, 'EXACT_OUTPUT');

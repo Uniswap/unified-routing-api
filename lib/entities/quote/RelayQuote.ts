@@ -5,7 +5,7 @@ import { BigNumber, ethers } from 'ethers';
 import { PermitBatchTransferFromData } from '@uniswap/permit2-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { IQuote } from '.';
-import { DEFAULT_START_TIME_BUFFER_SECS, RELAY_BASE_GAS, RoutingType } from '../../constants';
+import { BPS, DEFAULT_START_TIME_BUFFER_SECS, RELAY_BASE_GAS, RoutingType } from '../../constants';
 import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
 import { RelayRequest } from '../request/RelayRequest';
@@ -52,6 +52,9 @@ export class RelayQuote implements IQuote {
   public readonly createdAt: string;
   public derived: RelayQuoteDerived;
   public routingType: RoutingType.RELAY = RoutingType.RELAY;
+  // Add 1bps price improvmement to favor Relay over classic
+  public static amountOutImprovementExactIn = BigNumber.from(10001);
+  public static amountInImprovementExactOut = BigNumber.from(9999);
 
   public static fromResponseBody(request: RelayRequest, body: RelayQuoteJSON): RelayQuote {
     return new RelayQuote(
@@ -219,6 +222,16 @@ export class RelayQuote implements IQuote {
   // note that this does not include gas tokens since they are not guaranteed to be in the same token denomination
   public get amountIn(): BigNumber {
     return this.amountInStart;
+  }
+
+  // We always prefer RELAY over CLASSIC quotes, so for comparison purposes we need to adjust the amountIn and amountOut
+  // we also use these values when comparing against UniswapX so we get UniswapX > Relay > Classic
+  public get amountInGasAndPortionAdjustedOverClassic(): BigNumber {
+    return this.classicAmountInGasAndPortionAdjusted.mul(RelayQuote.amountInImprovementExactOut).div(BPS);
+  }
+
+  public get amountOutGasAndPortionAdjustedOverClassic(): BigNumber {
+    return this.classicAmountOutGasAndPortionAdjusted.mul(RelayQuote.amountOutImprovementExactIn).div(BPS);
   }
 
   // The number of seconds from now that order decay should begin

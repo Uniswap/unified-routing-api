@@ -449,8 +449,8 @@ const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
     } else if (quote.routingType === RoutingType.DUTCH_LIMIT) {
       return (quote as DutchQuote).amountOutGasAndPortionAdjusted;
     } else if (quote.routingType === RoutingType.RELAY) {
-      return (quote as RelayQuote).amountOut;
-    }
+      return (quote as RelayQuote).amountOutGasAndPortionAdjustedOverClassic;
+    } 
     throw new Error(`Invalid routing type: ${quote}`);
   } else {
     if (quote.routingType === RoutingType.CLASSIC) {
@@ -458,7 +458,7 @@ const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
     } else if (quote.routingType === RoutingType.DUTCH_LIMIT) {
       return (quote as DutchQuote).amountInGasAndPortionAdjusted;
     } else if (quote.routingType === RoutingType.RELAY) {
-      return (quote as RelayQuote).amountIn;
+      return (quote as RelayQuote).amountInGasAndPortionAdjustedOverClassic;
     }
     throw new Error(`Invalid routing type: ${quote}`);
   }
