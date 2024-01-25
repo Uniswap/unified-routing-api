@@ -8,6 +8,7 @@ import {
   DL_CONFIG,
   TOKEN_IN,
   TOKEN_OUT,
+  RELAY_CONFIG
 } from '../../../../constants';
 
 const DL_CONFIG_JSON = {
@@ -20,6 +21,11 @@ const CLASSIC_CONFIG_JSON = {
   routingType: 'CLASSIC',
 };
 
+const RELAY_CONFIG_JSON = {
+  ...RELAY_CONFIG,
+  routingType: 'RELAY',
+}
+
 const BASE_REQUEST_BODY = {
   tokenInChainId: CHAIN_IN_ID,
   tokenOutChainId: CHAIN_OUT_ID,
@@ -27,7 +33,7 @@ const BASE_REQUEST_BODY = {
   tokenOut: TOKEN_OUT,
   amount: AMOUNT,
   type: 'EXACT_INPUT',
-  configs: [DL_CONFIG_JSON, CLASSIC_CONFIG_JSON],
+  configs: [DL_CONFIG_JSON, RELAY_CONFIG_JSON, CLASSIC_CONFIG_JSON],
 };
 
 describe('Post quote request validation', () => {
@@ -74,6 +80,19 @@ describe('Post quote request validation', () => {
       const { error } = FieldValidator.classicConfig.validate(CLASSIC_CONFIG_JSON);
       expect(error).toBeUndefined();
     });
+
+    it('should validate relay config', () => {
+      const { error } = FieldValidator.relayConfig.validate(RELAY_CONFIG_JSON);
+      expect(error).toBeUndefined();
+    });
+
+    it('should reject invalid gasToken', () => {
+      const { error } = FieldValidator.relayConfig.validate({
+        ...RELAY_CONFIG_JSON,
+        gasToken: '0x',
+      });
+      expect(error).toBeDefined();
+    })
 
     it('should reject invalid routingType', () => {
       const { error } = FieldValidator.classicConfig.validate({

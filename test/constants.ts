@@ -7,6 +7,7 @@ import { getAddress } from 'ethers/lib/utils';
 import { BPS, RoutingType } from '../lib/constants';
 import { Portion, PortionType } from '../lib/fetchers/PortionFetcher';
 import { agEUR_MAINNET, DAI_ON, USDC_ON, USDT_ON, XSGD_MAINNET } from './utils/tokens';
+import { RelayConfig } from '../lib/entities/request/RelayRequest';
 
 export const CHAIN_IN_ID = 1;
 export const CHAIN_OUT_ID = 1;
@@ -46,6 +47,12 @@ export const CLASSIC_CONFIG = {
   routingType: RoutingType.CLASSIC,
   protocols: ['V2', 'V3', 'MIXED'],
 };
+
+export const RELAY_CONFIG: RelayConfig = {
+  swapper: SWAPPER,
+  auctionPeriodSecs: 60,
+  gasToken: TOKEN_IN
+}
 
 export const PERMIT2_USED = {
   domain: { name: 'Permit2', chainId: 1, verifyingContract: '0x000000000022D473030F116dDEE9F6B43aC78BA3' },
