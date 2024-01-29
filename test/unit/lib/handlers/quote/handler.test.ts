@@ -45,7 +45,7 @@ import { APIGatewayProxyEventHeaders } from 'aws-lambda/trigger/api-gateway-prox
 import { AxiosError } from 'axios';
 import { BigNumber } from 'ethers';
 import NodeCache from 'node-cache';
-import { BPS, RoutingType } from '../../../../../lib/constants';
+import { RoutingType } from '../../../../../lib/constants';
 import {
   ClassicQuote,
   ClassicQuoteDataJSON,
@@ -1244,23 +1244,27 @@ describe('QuoteHandler', () => {
 
     it('returns true if lhs is a better relay quote than rhs classic', () => {
       expect(compareQuotes(RELAY_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_IN_BETTER, TradeType.EXACT_INPUT)).toBe(true);
-      // expect to be 1 bp better
+      // expect to be the same
       expect(RELAY_QUOTE_EXACT_IN_BETTER.amountOutGasAndPortionAdjustedOverClassic.eq(
-        CLASSIC_QUOTE_EXACT_IN_BETTER.amountOutGasAndPortionAdjusted.mul(RelayQuote.amountOutImprovementExactIn).div(BPS)
+        CLASSIC_QUOTE_EXACT_IN_BETTER.amountOutGasAndPortionAdjusted
       )).toBe(true);
       
       expect(compareQuotes(RELAY_QUOTE_EXACT_OUT_BETTER, CLASSIC_QUOTE_EXACT_OUT_BETTER, TradeType.EXACT_OUTPUT)).toBe(
         true
       );
       expect(RELAY_QUOTE_EXACT_OUT_BETTER.amountInGasAndPortionAdjustedOverClassic.eq(
-        CLASSIC_QUOTE_EXACT_OUT_BETTER.amountInGasAndPortionAdjusted.mul(RelayQuote.amountInImprovementExactOut).div(BPS)
+        CLASSIC_QUOTE_EXACT_OUT_BETTER.amountInGasAndPortionAdjusted
       )).toBe(true);
     })
 
-    // TODO: jank because both dutch and relay are 1 bp better than classic
     it('returns true if lhs is a better dutch quote than rhs relay', () => {
-      expect(compareQuotes(DL_QUOTE_EXACT_IN_BETTER, RELAY_QUOTE_EXACT_IN_BETTER, TradeType.EXACT_INPUT)).toBe(true);
-      expect(compareQuotes(DL_QUOTE_EXACT_OUT_BETTER, RELAY_QUOTE_EXACT_OUT_BETTER, TradeType.EXACT_OUTPUT)).toBe(true);
+      expect(compareQuotes(DL_QUOTE_EXACT_IN_BETTER, RELAY_QUOTE_EXACT_IN_WORSE, TradeType.EXACT_INPUT)).toBe(true);
+      expect(compareQuotes(DL_QUOTE_EXACT_OUT_BETTER, RELAY_QUOTE_EXACT_OUT_WORSE, TradeType.EXACT_OUTPUT)).toBe(true);
+    })
+
+    it('returns true if lhs is a better relay quote than rhs dutch', () => {
+      expect(compareQuotes(RELAY_QUOTE_EXACT_IN_BETTER, DL_QUOTE_EXACT_IN_WORSE, TradeType.EXACT_INPUT)).toBe(true);
+      expect(compareQuotes(RELAY_QUOTE_EXACT_OUT_BETTER, DL_QUOTE_EXACT_OUT_WORSE, TradeType.EXACT_OUTPUT)).toBe(true);
     })
 
     it('returns true if lhs is a better mixed type', () => {

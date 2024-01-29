@@ -432,14 +432,28 @@ export async function getBestQuote(quotes: Quote[], uniswapXRequested?: boolean)
   }, null);
 }
 
-// compares two quotes of any type and returns the best one based on tradeType
-export function compareQuotes(lhs: Quote, rhs: Quote, tradeType: TradeType): boolean {
-  if (tradeType === TradeType.EXACT_INPUT) {
-    return getQuotedAmount(lhs, tradeType).gt(getQuotedAmount(rhs, tradeType));
-  } else {
-    // EXACT_OUTPUT
-    return getQuotedAmount(lhs, tradeType).lt(getQuotedAmount(rhs, tradeType));
+export const QuoteComparator = {
+  relayAndClassic(lhs: Quote, rhs: Quote): boolean {
+    return (
+      lhs.routingType === RoutingType.RELAY && rhs.routingType === RoutingType.CLASSIC ||
+        rhs.routingType === RoutingType.RELAY && lhs.routingType === RoutingType.CLASSIC
+    )
   }
+}
+
+// True if lhs is better than rhs
+export const compareQuotes = (lhs: Quote, rhs: Quote, tradeType: TradeType): boolean => {
+    if(QuoteComparator.relayAndClassic(lhs, rhs)){
+      return lhs.routingType === RoutingType.RELAY;
+    }
+
+    // Default comparison if no overrides apply
+    if (tradeType === TradeType.EXACT_INPUT) {
+      return getQuotedAmount(lhs, tradeType).gt(getQuotedAmount(rhs, tradeType));
+    } else {
+      // EXACT_OUTPUT
+      return getQuotedAmount(lhs, tradeType).lt(getQuotedAmount(rhs, tradeType));
+    };
 }
 
 const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
