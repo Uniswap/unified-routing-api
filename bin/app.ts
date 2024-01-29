@@ -111,7 +111,7 @@ export class APIPipeline extends Stack {
 
     const jsonRpcProvidersSecret = sm.Secret.fromSecretAttributes(this, 'RPCProviderUrls', {
       // Infura RPC urls
-      secretCompleteArn: 'arn:aws:secretsmanager:us-east-2:644039819003:secret:gouda-service-rpc-urls-3-SFaiCq',
+      secretCompleteArn: 'arn:aws:secretsmanager:us-east-2:644039819003:secret:prod/URA/rpc-urls/v1-sRkBDE',
     });
 
     const jsonRpcProviders = {} as { [chainKey: string]: string };
