@@ -291,6 +291,10 @@ describe('QuoteHandler', () => {
           requestSource = quoteHandler.getQuoteRequestSource(headers);
           expect(requestSource).toBe(RequestSource.EXTERNAL_API);
 
+          headers = { 'x-request-source': 'external-api:mobile' };
+          requestSource = quoteHandler.getQuoteRequestSource(headers);
+          expect(requestSource).toBe(RequestSource.EXTERNAL_API_MOBILE);
+
           headers = { 'x-request-source': 'lonely-planet' };
           requestSource = quoteHandler.getQuoteRequestSource(headers);
           expect(requestSource).toBe(RequestSource.UNKNOWN);
