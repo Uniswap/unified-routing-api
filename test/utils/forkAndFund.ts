@@ -23,6 +23,7 @@ const WHALES = [
   '0xa116f421ff82A9704428259fd8CC63347127B777',
   '0xd0C6f16CC58f1b23c51d1529B95fec2740218F0a',
   '0x171d311eAcd2206d21Cb462d661C33F0eddadC03',
+  '0x4Fa745FCCC04555F2AFA8874cd23961636CdF982',
 ];
 
 const { ethers } = hre;
@@ -77,7 +78,7 @@ export const fund = async (
         await alice.sendTransaction({
           to: whale,
           value: ethers.utils.parseEther('0.1'), // Sends exactly 0.1 ether
-        })
+        });
 
         const whaleToken: Erc20 = Erc20__factory.connect(currency.wrapped.address, whaleAccount);
 
@@ -88,7 +89,7 @@ export const fund = async (
         if (i == WHALES.length - 1) {
           throw new Error(
             `Could not fund ${amount} ${currency.symbol} from any whales. Original error ${JSON.stringify(err)}`
-          )
+          );
         }
       }
     }
