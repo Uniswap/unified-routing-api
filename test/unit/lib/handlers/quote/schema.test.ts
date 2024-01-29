@@ -6,9 +6,9 @@ import {
   CHAIN_OUT_ID,
   CLASSIC_CONFIG,
   DL_CONFIG,
+  RELAY_CONFIG,
   TOKEN_IN,
   TOKEN_OUT,
-  RELAY_CONFIG
 } from '../../../../constants';
 
 const DL_CONFIG_JSON = {
@@ -24,7 +24,7 @@ const CLASSIC_CONFIG_JSON = {
 const RELAY_CONFIG_JSON = {
   ...RELAY_CONFIG,
   routingType: 'RELAY',
-}
+};
 
 const BASE_REQUEST_BODY = {
   tokenInChainId: CHAIN_IN_ID,
@@ -92,7 +92,7 @@ describe('Post quote request validation', () => {
         gasToken: '0x',
       });
       expect(error).toBeDefined();
-    })
+    });
 
     it('should reject invalid routingType', () => {
       const { error } = FieldValidator.classicConfig.validate({
