@@ -435,17 +435,24 @@ export async function getBestQuote(quotes: Quote[], uniswapXRequested?: boolean)
 export const QuoteComparisonOverrides = {
   relayAndClassic(lhs: Quote, rhs: Quote): boolean {
     return (
-      (lhs.routingType === RoutingType.RELAY && rhs.routingType === RoutingType.CLASSIC) ||
-      (rhs.routingType === RoutingType.RELAY && lhs.routingType === RoutingType.CLASSIC)
+      (lhs.routingType === RoutingType.CLASSIC && rhs.routingType === RoutingType.RELAY) ||
+      (rhs.routingType === RoutingType.CLASSIC && lhs.routingType === RoutingType.RELAY)
     );
-  }
+  },
+
+  breakTie(lhs: Quote, rhs: Quote): boolean {
+    // Prefer classic over relay if requested together
+    if(QuoteComparisonOverrides.relayAndClassic(lhs, rhs)) return lhs.routingType === RoutingType.CLASSIC;
+    // Otherwise, we default to keeping rhs in the case of a tie
+    return false;
+  },
 };
 
 // Compare quotes, returning true if lhs is better than rhs
 // Applies any overrides before the default comparision logic using quoted amount
 export const compareQuotes = (lhs: Quote, rhs: Quote, tradeType: TradeType): boolean => {
-  if (QuoteComparisonOverrides.relayAndClassic(lhs, rhs)) {
-    return lhs.routingType === RoutingType.RELAY;
+  if(getQuotedAmount(lhs, tradeType).eq(getQuotedAmount(rhs, tradeType))) {
+    return QuoteComparisonOverrides.breakTie(lhs, rhs);
   }
 
   // Default comparison if no overrides apply
@@ -464,7 +471,7 @@ const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
     } else if (quote.routingType === RoutingType.DUTCH_LIMIT) {
       return (quote as DutchQuote).amountOutGasAndPortionAdjusted;
     } else if (quote.routingType === RoutingType.RELAY) {
-      return (quote as RelayQuote).amountOutGasAndPortionAdjustedOverClassic;
+      return (quote as RelayQuote).amountOutGasAndPortionAdjustedClassic;
     }
     throw new Error(`Invalid routing type: ${quote}`);
   } else {
@@ -473,7 +480,7 @@ const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
     } else if (quote.routingType === RoutingType.DUTCH_LIMIT) {
       return (quote as DutchQuote).amountInGasAndPortionAdjusted;
     } else if (quote.routingType === RoutingType.RELAY) {
-      return (quote as RelayQuote).amountInGasAndPortionAdjustedOverClassic;
+      return (quote as RelayQuote).amountInGasAndPortionAdjustedClassic;
     }
     throw new Error(`Invalid routing type: ${quote}`);
   }

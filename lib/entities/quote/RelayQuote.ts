@@ -222,11 +222,11 @@ export class RelayQuote implements IQuote {
   }
 
   // Values used only for comparing relay quotes vs. other types of quotes
-  public get amountInGasAndPortionAdjustedOverClassic(): BigNumber {
+  public get amountInGasAndPortionAdjustedClassic(): BigNumber {
     return this.classicAmountInGasAndPortionAdjusted;
   }
 
-  public get amountOutGasAndPortionAdjustedOverClassic(): BigNumber {
+  public get amountOutGasAndPortionAdjustedClassic(): BigNumber {
     return this.classicAmountOutGasAndPortionAdjusted;
   }
 

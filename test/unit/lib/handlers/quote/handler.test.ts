@@ -1242,22 +1242,23 @@ describe('QuoteHandler', () => {
       );
     });
 
-    it('returns true if lhs is a better relay quote than rhs classic', () => {
-      expect(compareQuotes(RELAY_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_IN_BETTER, TradeType.EXACT_INPUT)).toBe(
+    it('returns true if lhs is a classic quote than rhs relay', () => {
+      expect(compareQuotes(CLASSIC_QUOTE_EXACT_IN_BETTER, RELAY_QUOTE_EXACT_IN_BETTER, TradeType.EXACT_INPUT)).toBe(
         true
       );
       // expect to be the same
       expect(
-        RELAY_QUOTE_EXACT_IN_BETTER.amountOutGasAndPortionAdjustedOverClassic.eq(
+        RELAY_QUOTE_EXACT_IN_BETTER.amountOutGasAndPortionAdjustedClassic.eq(
           CLASSIC_QUOTE_EXACT_IN_BETTER.amountOutGasAndPortionAdjusted
         )
       ).toBe(true);
 
-      expect(compareQuotes(RELAY_QUOTE_EXACT_OUT_BETTER, CLASSIC_QUOTE_EXACT_OUT_BETTER, TradeType.EXACT_OUTPUT)).toBe(
+      expect(compareQuotes(CLASSIC_QUOTE_EXACT_OUT_BETTER, RELAY_QUOTE_EXACT_OUT_BETTER, TradeType.EXACT_OUTPUT)).toBe(
         true
       );
+      // expect to be the same
       expect(
-        RELAY_QUOTE_EXACT_OUT_BETTER.amountInGasAndPortionAdjustedOverClassic.eq(
+        RELAY_QUOTE_EXACT_OUT_BETTER.amountInGasAndPortionAdjustedClassic.eq(
           CLASSIC_QUOTE_EXACT_OUT_BETTER.amountInGasAndPortionAdjusted
         )
       ).toBe(true);
