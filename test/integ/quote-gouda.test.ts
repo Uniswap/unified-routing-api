@@ -1,6 +1,5 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { ZERO } from '@uniswap/router-sdk';
-import { Currency, CurrencyAmount, Ether, Fraction, Percent, WETH9 } from '@uniswap/sdk-core';
+import { CurrencyAmount, Ether, WETH9 } from '@uniswap/sdk-core';
 import {
   DAI_MAINNET,
   ID_TO_NETWORK_NAME,
@@ -11,215 +10,51 @@ import {
   WBTC_MAINNET,
 } from '@uniswap/smart-order-router';
 import { DutchOrder } from '@uniswap/uniswapx-sdk';
-import { PERMIT2_ADDRESS } from '@uniswap/universal-router-sdk';
-import { fail } from 'assert';
-import axiosStatic, { AxiosRequestConfig, AxiosResponse } from 'axios';
-import axiosRetry from 'axios-retry';
+import { AxiosResponse } from 'axios';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import chaiSubset from 'chai-subset';
 import { BigNumber } from 'ethers';
-import hre from 'hardhat';
-import _ from 'lodash';
-import NodeCache from 'node-cache';
 import qs from 'qs';
 import { BPS, NATIVE_ADDRESS, RoutingType } from '../../lib/constants';
-import { ClassicQuoteDataJSON, DutchQuoteDataJSON, QuoteRequestBodyJSON, RoutingConfigJSON } from '../../lib/entities';
-import { Portion, PortionFetcher } from '../../lib/fetchers/PortionFetcher';
+import { DutchQuoteDataJSON, QuoteRequestBodyJSON, RoutingConfigJSON } from '../../lib/entities';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
-import { ExclusiveDutchOrderReactor__factory } from '../../lib/types/ext';
 import { GREENLIST_STABLE_TO_STABLE_PAIRS, GREENLIST_TOKEN_PAIRS } from '../constants';
-import { fund, resetAndFundAtBlock } from '../utils/forkAndFund';
-import { getBalance, getBalanceAndApprove } from '../utils/getBalanceAndApprove';
+import { fund } from '../utils/forkAndFund';
 import { RoutingApiQuoteResponse } from '../utils/quoteResponse';
 import { agEUR_MAINNET, getAmount, getAmountFromToken, XSGD_MAINNET } from '../utils/tokens';
-
-const { ethers } = hre;
+import {
+  axiosHelper,
+  BaseIntegrationTestSuite,
+  call,
+  callAndExpectFail,
+  checkPortionRecipientToken,
+  checkQuoteToken,
+} from './base.test';
 
 chai.use(chaiAsPromised);
 chai.use(chaiSubset);
 
 const NO_LIQ_TOKEN = '0x69b148395Ce0015C13e36BFfBAd63f49EF874E03';
 
-if (!process.env.UNISWAP_API || !process.env.ARCHIVE_NODE_RPC || !process.env.ROUTING_API) {
-  throw new Error('Must set [UNISWAP_API, ARCHIVE_NODE_RPC, ROUTING_API] env variables for integ tests. See README');
-}
-
-if (!process.env.URA_INTERNAL_API_KEY) {
-  console.log('URA_INTERNAL_API_KEY env variable is not set. This is recommended for integ tests.');
-}
-
-if (!process.env.PORTION_API_URL) {
-  throw new Error('Must set PORTION_API_URL env variables for integ tests. See README');
-}
-
-const API = `${process.env.UNISWAP_API!}quote`;
 const ROUTING_API = `${process.env.ROUTING_API!}/quote`;
-
 const SLIPPAGE = '5';
 
-const axios = axiosStatic.create();
-axios.defaults.timeout = 20000;
-const axiosConfig: AxiosRequestConfig<any> = {
-  headers: {
-    ...(process.env.URA_INTERNAL_API_KEY && { 'x-api-key': process.env.URA_INTERNAL_API_KEY }),
-    ...(process.env.FORCE_PORTION_SECRET && { 'X-UNISWAP-FORCE-PORTION-SECRET': process.env.FORCE_PORTION_SECRET }),
-  },
-};
-
-axiosRetry(axios, {
-  retries: 10,
-  retryCondition: (err) => err.response?.status == 429,
-  retryDelay: axiosRetry.exponentialDelay,
-});
-
-const callAndExpectFail = async (quoteReq: Partial<QuoteRequestBodyJSON>, resp: { status: number; data: any }) => {
-  try {
-    await axios.post<QuoteResponseJSON>(`${API}`, quoteReq);
-    fail();
-  } catch (err: any) {
-    expect(_.pick(err.response, ['status', 'data'])).to.containSubset(resp);
-  }
-};
-
-const call = async (
-  quoteReq: Partial<QuoteRequestBodyJSON>,
-  config = axiosConfig
-): Promise<AxiosResponse<QuoteResponseJSON>> => {
-  return await axios.post<QuoteResponseJSON>(`${API}`, quoteReq, config);
-};
-
-const checkQuoteToken = (
-  before: CurrencyAmount<Currency>,
-  after: CurrencyAmount<Currency>,
-  tokensQuoted: CurrencyAmount<Currency>
-) => {
-  // Check which is bigger to support EXACT_INPUT and EXACT_OUTPUT
-  const tokensSwapped = after.greaterThan(before) ? after.subtract(before) : before.subtract(after);
-
-  const tokensDiff = tokensQuoted.greaterThan(tokensSwapped)
-    ? tokensQuoted.subtract(tokensSwapped)
-    : tokensSwapped.subtract(tokensQuoted);
-  const percentDiff = tokensDiff.asFraction.divide(tokensQuoted.asFraction);
-  expect(percentDiff.lessThan(new Fraction(parseInt(SLIPPAGE), 100))).to.be.true;
-};
-
-const checkPortionRecipientToken = (
-  before: CurrencyAmount<Currency>,
-  after: CurrencyAmount<Currency>,
-  expectedPortionAmountReceived: CurrencyAmount<Currency>
-) => {
-  const actualPortionAmountReceived = after.subtract(before);
-
-  const tokensDiff = expectedPortionAmountReceived.greaterThan(actualPortionAmountReceived)
-    ? expectedPortionAmountReceived.subtract(actualPortionAmountReceived)
-    : actualPortionAmountReceived.subtract(expectedPortionAmountReceived);
-  // There will be a slight difference between expected and actual due to slippage during the hardhat fork swap.
-  const percentDiff = tokensDiff.equalTo(ZERO)
-    ? new Percent(ZERO)
-    : tokensDiff.asFraction.divide(expectedPortionAmountReceived.asFraction);
-  expect(percentDiff.lessThan(new Fraction(parseInt(SLIPPAGE), 100))).to.be.true;
-};
-
 describe('quoteUniswapX', function () {
+  let baseTest: BaseIntegrationTestSuite;
+
   // Help with test flakiness by retrying.
   this.retries(2);
-
-  this.timeout('500s');
+  this.timeout(40000);
 
   let alice: SignerWithAddress;
   let filler: SignerWithAddress;
-  let block: number;
-  let portionFetcher: PortionFetcher;
-
-  const executeSwap = async (
-    order: DutchOrder,
-    currencyIn: Currency,
-    currencyOut: Currency,
-    portion?: Portion
-  ): Promise<{
-    tokenInAfter: CurrencyAmount<Currency>;
-    tokenInBefore: CurrencyAmount<Currency>;
-    tokenOutAfter: CurrencyAmount<Currency>;
-    tokenOutBefore: CurrencyAmount<Currency>;
-    tokenOutPortionRecipientAfter: CurrencyAmount<Currency>;
-    tokenOutPortionRecipientBefore: CurrencyAmount<Currency>;
-  }> => {
-    const reactor = ExclusiveDutchOrderReactor__factory.connect(order.info.reactor, filler);
-    const portionRecipientSigner = portion?.recipient ? await ethers.getSigner(portion?.recipient) : undefined;
-
-    // Approve Permit2 for Alice
-    // Note we pass in currency.wrapped, since Gouda does not support native ETH in
-    const tokenInBefore = await getBalanceAndApprove(alice, PERMIT2_ADDRESS, currencyIn.wrapped);
-    const tokenOutBefore = await getBalance(alice, currencyOut);
-    const tokenOutPortionRecipientBefore = portionRecipientSigner
-      ? await getBalance(portionRecipientSigner, currencyOut)
-      : CurrencyAmount.fromRawAmount(currencyOut, '0');
-
-    // Directly approve reactor for filler funds
-    await getBalanceAndApprove(filler, order.info.reactor, currencyOut);
-
-    const { domain, types, values } = order.permitData();
-    const signature = await alice._signTypedData(domain, types, values);
-
-    const transactionResponse = await reactor.execute({ order: order.serialize(), sig: signature });
-    await transactionResponse.wait();
-
-    const tokenInAfter = await getBalance(alice, currencyIn.wrapped);
-    const tokenOutAfter = await getBalance(alice, currencyOut);
-    const tokenOutPortionRecipientAfter = portionRecipientSigner
-      ? await getBalance(portionRecipientSigner, currencyOut)
-      : CurrencyAmount.fromRawAmount(currencyOut, '0');
-
-    return {
-      tokenInAfter,
-      tokenInBefore,
-      tokenOutAfter,
-      tokenOutBefore,
-      tokenOutPortionRecipientAfter,
-      tokenOutPortionRecipientBefore,
-    };
-  };
 
   before(async function () {
-    this.timeout(40000);
-    [alice, filler] = await ethers.getSigners();
+    baseTest = new BaseIntegrationTestSuite();
+    [alice, filler] = await baseTest.before();
 
-    // Make a dummy call to the API to get a block number to fork from.
-    const quoteReq: QuoteRequestBodyJSON = {
-      requestId: 'id',
-      useUniswapX: true,
-      tokenIn: 'USDC',
-      tokenInChainId: 1,
-      tokenOut: 'USDT',
-      tokenOutChainId: 1,
-      amount: await getAmount(1, 'EXACT_INPUT', 'USDC', 'USDT', '100'),
-      type: 'EXACT_INPUT',
-      configs: [
-        {
-          routingType: RoutingType.CLASSIC,
-        },
-      ],
-    };
-
-    const {
-      data: { quote },
-    } = await call(quoteReq);
-    const { blockNumber } = quote as ClassicQuoteDataJSON;
-
-    block = parseInt(blockNumber) - 10;
-
-    alice = await resetAndFundAtBlock(alice, block, [
-      parseAmount('8000000', USDC_MAINNET),
-      parseAmount('5000000', USDT_MAINNET),
-      parseAmount('10', WBTC_MAINNET),
-      parseAmount('5000', UNI_MAINNET),
-      parseAmount('4000', WETH9[1]),
-      parseAmount('5000000', DAI_MAINNET),
-      parseAmount('50000', agEUR_MAINNET),
-      parseAmount('475000', XSGD_MAINNET),
-    ]);
-
+    // Apply needed dutch setup
     filler = await fund(filler, [
       parseAmount('8000000', USDC_MAINNET),
       parseAmount('5000000', USDT_MAINNET),
@@ -230,11 +65,6 @@ describe('quoteUniswapX', function () {
       parseAmount('50000', agEUR_MAINNET),
       parseAmount('475000', XSGD_MAINNET),
     ]);
-
-    process.env.ENABLE_PORTION = 'true';
-    if (process.env.PORTION_API_URL) {
-      portionFetcher = new PortionFetcher(process.env.PORTION_API_URL, new NodeCache());
-    }
   });
 
   // size filter may not apply for exact output
@@ -339,7 +169,9 @@ describe('quoteUniswapX', function () {
           expect(parseInt(order.info.input.startAmount.toString())).to.be.greaterThan(9000000000);
           expect(parseInt(order.info.input.startAmount.toString())).to.be.lessThan(11000000000);
 
-          const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+          const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeDutchSwap(
+            alice,
+            filler,
             order,
             USDC_MAINNET,
             USDT_MAINNET
@@ -402,7 +234,9 @@ describe('quoteUniswapX', function () {
           expect(parseInt(order.info.input.startAmount.toString())).to.be.greaterThan(9000000000);
           expect(parseInt(order.info.input.startAmount.toString())).to.be.lessThan(11000000000);
 
-          const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+          const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeDutchSwap(
+            alice,
+            filler,
             order,
             USDC_MAINNET,
             USDT_MAINNET
@@ -455,7 +289,7 @@ describe('quoteUniswapX', function () {
             status,
           } = response;
 
-          const routingResponse = await axios.get<RoutingApiQuoteResponse>(
+          const routingResponse = await axiosHelper.get<RoutingApiQuoteResponse>(
             `${ROUTING_API}?${qs.stringify({
               tokenInAddress: USDC_MAINNET.address,
               tokenOutAddress: UNI_MAINNET.address,
@@ -498,7 +332,9 @@ describe('quoteUniswapX', function () {
             );
           }
 
-          const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+          const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeDutchSwap(
+            alice,
+            filler,
             order,
             USDC_MAINNET,
             UNI_MAINNET
@@ -551,7 +387,7 @@ describe('quoteUniswapX', function () {
             status,
           } = response;
 
-          const routingResponse = await axios.get<RoutingApiQuoteResponse>(
+          const routingResponse = await axiosHelper.get<RoutingApiQuoteResponse>(
             `${ROUTING_API}?${qs.stringify({
               tokenInAddress: 'ETH', // Routing API doesn't support 0x0 as native
               tokenOutAddress: UNI_MAINNET.address,
@@ -574,7 +410,9 @@ describe('quoteUniswapX', function () {
           expect(order.info.swapper).to.equal(alice.address);
           expect(order.info.outputs.length).to.equal(1);
 
-          const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+          const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeDutchSwap(
+            alice,
+            filler,
             order,
             Ether.onChain(1),
             UNI_MAINNET
@@ -625,7 +463,7 @@ describe('quoteUniswapX', function () {
               const tokenInAddress = tokenIn.isNative ? NATIVE_ADDRESS : tokenIn.address;
               const tokenOutAddress = tokenOut.isNative ? NATIVE_ADDRESS : tokenOut.address;
               const amount = await getAmountFromToken(type, tokenIn.wrapped, tokenOut.wrapped, originalAmount);
-              const getPortionResponse = await portionFetcher.getPortion(
+              const getPortionResponse = await baseTest.portionFetcher.getPortion(
                 tokenIn.chainId,
                 tokenInAddress,
                 tokenOut.chainId,
@@ -716,7 +554,7 @@ describe('quoteUniswapX', function () {
                 tokenOutAfter,
                 tokenOutPortionRecipientBefore,
                 tokenOutPortionRecipientAfter,
-              } = await executeSwap(order, tokenIn, tokenOut, getPortionResponse.portion);
+              } = await baseTest.executeDutchSwap(alice, filler, order, tokenIn, tokenOut, getPortionResponse.portion);
 
               if (type == 'EXACT_INPUT') {
                 // if the token in is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
@@ -795,7 +633,7 @@ describe('quoteUniswapX', function () {
               const tokenInAddress = tokenIn.isNative ? NATIVE_ADDRESS : tokenIn.address;
               const tokenOutAddress = tokenOut.isNative ? NATIVE_ADDRESS : tokenOut.address;
               const amount = await getAmountFromToken(type, tokenIn.wrapped, tokenOut.wrapped, originalAmount);
-              const getPortionResponse = await portionFetcher.getPortion(
+              const getPortionResponse = await baseTest.portionFetcher.getPortion(
                 tokenIn.chainId,
                 tokenInAddress,
                 tokenOut.chainId,
@@ -858,7 +696,7 @@ describe('quoteUniswapX', function () {
                 tokenOutAfter,
                 tokenOutPortionRecipientBefore,
                 tokenOutPortionRecipientAfter,
-              } = await executeSwap(order, tokenIn, tokenOut, getPortionResponse.portion);
+              } = await baseTest.executeDutchSwap(alice, filler, order, tokenIn, tokenOut, getPortionResponse.portion);
 
               if (type == 'EXACT_INPUT') {
                 // if the token in is native token, the difference will be slightly larger due to gas. We have no way to know precise gas costs in terms of GWEI * gas units.
