@@ -43,7 +43,7 @@ import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { MetricsLogger } from 'aws-embedded-metrics';
 import { APIGatewayProxyEventHeaders } from 'aws-lambda/trigger/api-gateway-proxy';
 import { AxiosError } from 'axios';
-import { BigNumber } from 'ethers';
+import { BigNumber, providers } from 'ethers';
 import NodeCache from 'node-cache';
 import { RoutingType } from '../../../../../lib/constants';
 import {
@@ -130,9 +130,9 @@ describe('QuoteHandler', () => {
       new Promise((resolve) =>
         resolve({
           getContainerInjected: (): ContainerInjected => {
-            const rpcUrlMap = new Map<ChainId, string>();
+            const chainIdRpcMap = new Map<ChainId, providers.StaticJsonRpcProvider>();
             for (const chain of Object.values(ChainId)) {
-              rpcUrlMap.set(chain as ChainId, 'url');
+              chainIdRpcMap.set(chain as ChainId, new providers.StaticJsonRpcProvider());
             }
             return {
               quoters: quoters,
@@ -140,7 +140,7 @@ describe('QuoteHandler', () => {
               portionFetcher: portionFetcher,
               permit2Fetcher: permit2Fetcher,
               syntheticStatusProvider,
-              rpcUrlMap,
+              chainIdRpcMap,
             };
           },
           getRequestInjected: () => requestInjectedMock,
@@ -311,6 +311,10 @@ describe('QuoteHandler', () => {
           headers = { 'x-request-source': 'external-api' };
           requestSource = quoteHandler.getQuoteRequestSource(headers);
           expect(requestSource).toBe(RequestSource.EXTERNAL_API);
+
+          headers = { 'x-request-source': 'external-api:mobile' };
+          requestSource = quoteHandler.getQuoteRequestSource(headers);
+          expect(requestSource).toBe(RequestSource.EXTERNAL_API_MOBILE);
 
           headers = { 'x-request-source': 'lonely-planet' };
           requestSource = quoteHandler.getQuoteRequestSource(headers);

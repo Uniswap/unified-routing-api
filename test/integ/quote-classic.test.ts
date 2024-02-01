@@ -1,7 +1,6 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { AllowanceTransfer, PermitSingle } from '@uniswap/permit2-sdk';
-import { ZERO } from '@uniswap/router-sdk';
-import { ChainId, Currency, CurrencyAmount, Ether, Fraction, Percent, Token, WETH9 } from '@uniswap/sdk-core';
+import { ChainId, CurrencyAmount, Ether, Fraction, Token, WETH9 } from '@uniswap/sdk-core';
 import {
   CEUR_CELO,
   CEUR_CELO_ALFAJORES,
@@ -9,40 +8,30 @@ import {
   CUSD_CELO_ALFAJORES,
   DAI_MAINNET,
   ID_TO_NETWORK_NAME,
-  MethodParameters,
   NATIVE_CURRENCY,
   parseAmount,
   SWAP_ROUTER_02_ADDRESSES,
   USDC_MAINNET,
   USDT_MAINNET,
-  WBTC_MAINNET,
 } from '@uniswap/smart-order-router';
 import {
   PERMIT2_ADDRESS,
   UNIVERSAL_ROUTER_ADDRESS as UNIVERSAL_ROUTER_ADDRESS_BY_CHAIN,
 } from '@uniswap/universal-router-sdk';
 import { fail } from 'assert';
-import axiosStatic, { AxiosRequestConfig, AxiosResponse } from 'axios';
-import axiosRetry from 'axios-retry';
+import { AxiosResponse } from 'axios';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import chaiSubset from 'chai-subset';
-import { BigNumber, providers, Wallet } from 'ethers';
-import hre from 'hardhat';
+import { BigNumber, Wallet } from 'ethers';
 import _ from 'lodash';
-import NodeCache from 'node-cache';
 import { SUPPORTED_CHAINS } from '../../lib/config/chains';
 import { RoutingType } from '../../lib/constants';
 import { ClassicQuoteDataJSON, V2PoolInRouteJSON } from '../../lib/entities/quote';
 import { QuoteRequestBodyJSON } from '../../lib/entities/request';
-import { Portion, PortionFetcher } from '../../lib/fetchers/PortionFetcher';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
-import { Permit2__factory } from '../../lib/types/ext';
 import { FLAT_PORTION, GREENLIST_STABLE_TO_STABLE_PAIRS, GREENLIST_TOKEN_PAIRS } from '../constants';
-import { resetAndFundAtBlock } from '../utils/forkAndFund';
-import { getBalance, getBalanceAndApprove } from '../utils/getBalanceAndApprove';
 import {
-  agEUR_MAINNET,
   BULLET,
   BULLET_WHT_FOT_TAX,
   DAI_ON,
@@ -51,236 +40,38 @@ import {
   UNI_MAINNET,
   USDC_ON,
   WNATIVE_ON,
-  XSGD_MAINNET,
 } from '../utils/tokens';
-
-const { ethers } = hre;
+import {
+  BaseIntegrationTestSuite,
+  call,
+  callAndExpectFail,
+  checkPortionRecipientToken,
+  checkQuoteToken,
+  isTesterPKEnvironmentSet,
+} from './base.test';
 
 chai.use(chaiAsPromised);
 chai.use(chaiSubset);
 
 const UNIVERSAL_ROUTER_ADDRESS = UNIVERSAL_ROUTER_ADDRESS_BY_CHAIN(1);
 
-if (!process.env.UNISWAP_API || !process.env.ARCHIVE_NODE_RPC) {
-  throw new Error('Must set UNISWAP_API and ARCHIVE_NODE_RPC env variables for integ tests. See README');
-}
-
-if (!process.env.URA_INTERNAL_API_KEY) {
-  console.log('URA_INTERNAL_API_KEY env variable is not set. This is recommended for integ tests.');
-}
-
-if (!process.env.PORTION_API_URL) {
-  throw new Error('Must set PORTION_API_URL env variables for integ tests. See README');
-}
-
-const API = `${process.env.UNISWAP_API!}quote`;
-
 const SLIPPAGE = '5';
 const LARGE_SLIPPAGE = '10';
 
-const axios = axiosStatic.create();
-const axiosConfig: AxiosRequestConfig<any> = {
-  headers: {
-    ...(process.env.URA_INTERNAL_API_KEY && { 'x-api-key': process.env.URA_INTERNAL_API_KEY }),
-    ...(process.env.FORCE_PORTION_SECRET && { 'X-UNISWAP-FORCE-PORTION-SECRET': process.env.FORCE_PORTION_SECRET }),
-  },
-};
-
-axiosRetry(axios, {
-  retries: 10,
-  retryCondition: (err) => err.response?.status == 429,
-  retryDelay: axiosRetry.exponentialDelay,
-});
-
-const callAndExpectFail = async (quoteReq: Partial<QuoteRequestBodyJSON>, resp: { status: number; data: any }) => {
-  try {
-    await axios.post<QuoteResponseJSON>(`${API}`, quoteReq);
-    fail();
-  } catch (err: any) {
-    expect(_.pick(err.response, ['status', 'data'])).to.containSubset(resp);
-  }
-};
-
-const call = async (
-  quoteReq: Partial<QuoteRequestBodyJSON>,
-  config = axiosConfig
-): Promise<AxiosResponse<QuoteResponseJSON>> => {
-  return await axios.post<QuoteResponseJSON>(`${API}`, quoteReq, config);
-};
-
-const checkQuoteToken = (
-  before: CurrencyAmount<Currency>,
-  after: CurrencyAmount<Currency>,
-  tokensQuoted: CurrencyAmount<Currency>
-) => {
-  // Check which is bigger to support EXACT_INPUT and EXACT_OUTPUT
-  const tokensSwapped = after.greaterThan(before) ? after.subtract(before) : before.subtract(after);
-
-  const tokensDiff = tokensQuoted.greaterThan(tokensSwapped)
-    ? tokensQuoted.subtract(tokensSwapped)
-    : tokensSwapped.subtract(tokensQuoted);
-  const percentDiff = tokensDiff.asFraction.divide(tokensQuoted.asFraction);
-  expect(
-    percentDiff.lessThan(new Fraction(parseInt(SLIPPAGE), 100)),
-    `expected tokensQuoted ${tokensQuoted.toExact()} actual tokens swapped ${tokensSwapped.toExact()}`
-  ).to.be.true;
-};
-
-const checkPortionRecipientToken = (
-  before: CurrencyAmount<Currency>,
-  after: CurrencyAmount<Currency>,
-  expectedPortionAmountReceived: CurrencyAmount<Currency>
-) => {
-  const actualPortionAmountReceived = after.subtract(before);
-
-  const tokensDiff = expectedPortionAmountReceived.greaterThan(actualPortionAmountReceived)
-    ? expectedPortionAmountReceived.subtract(actualPortionAmountReceived)
-    : actualPortionAmountReceived.subtract(expectedPortionAmountReceived);
-  // There will be a slight difference between expected and actual due to slippage during the hardhat fork swap.
-  const percentDiff = tokensDiff.equalTo(ZERO)
-    ? new Percent(ZERO)
-    : tokensDiff.asFraction.divide(expectedPortionAmountReceived.asFraction);
-  expect(percentDiff.lessThan(new Fraction(parseInt(SLIPPAGE), 100))).to.be.true;
-};
-
-let warnedTesterPK = false;
-const isTesterPKEnvironmentSet = (): boolean => {
-  const isSet = !!process.env.TESTER_PK;
-  if (!isSet && !warnedTesterPK) {
-    console.log('Skipping tests requiring real PK since env variables for TESTER_PK is not set.');
-    warnedTesterPK = true;
-  }
-  return isSet;
-};
-
-const MAX_UINT160 = '0xffffffffffffffffffffffffffffffffffffffff';
-
 describe('quote', function () {
-  // Help with test flakiness by retrying.
-  this.retries(3);
-
-  this.timeout('500s');
+  let baseTest: BaseIntegrationTestSuite;
 
   let alice: SignerWithAddress;
-  let block: number;
-  let curNonce = 0;
-  let portionFetcher: PortionFetcher;
-  const nextPermitNonce: () => string = () => {
-    const nonce = curNonce.toString();
-    curNonce = curNonce + 1;
-    return nonce;
-  };
 
-  const executeSwap = async (
-    methodParameters: MethodParameters,
-    currencyIn: Currency,
-    currencyOut: Currency,
-    permit?: boolean,
-    chainId = ChainId.MAINNET,
-    portion?: Portion
-  ): Promise<{
-    tokenInAfter: CurrencyAmount<Currency>;
-    tokenInBefore: CurrencyAmount<Currency>;
-    tokenOutAfter: CurrencyAmount<Currency>;
-    tokenOutBefore: CurrencyAmount<Currency>;
-    tokenOutPortionRecipientBefore?: CurrencyAmount<Currency>;
-    tokenOutPortionRecipientAfter?: CurrencyAmount<Currency>;
-  }> => {
-    const permit2 = Permit2__factory.connect(PERMIT2_ADDRESS, alice);
-    const portionRecipientSigner = portion?.recipient ? await ethers.getSigner(portion?.recipient) : undefined;
-
-    // Approve Permit2
-    const tokenInBefore = await getBalanceAndApprove(alice, PERMIT2_ADDRESS, currencyIn);
-    const tokenOutBefore = await getBalance(alice, currencyOut);
-    const tokenOutPortionRecipientBefore = portionRecipientSigner
-      ? await getBalance(portionRecipientSigner, currencyOut)
-      : undefined;
-
-    // Approve SwapRouter02 in case we request calldata for it instead of Universal Router
-    await getBalanceAndApprove(alice, SWAP_ROUTER_02_ADDRESSES(chainId), currencyIn);
-
-    // If not using permit do a regular approval allowing narwhal max balance.
-    if (!permit) {
-      const approveNarwhal = await permit2.approve(
-        currencyIn.wrapped.address,
-        UNIVERSAL_ROUTER_ADDRESS,
-        MAX_UINT160,
-        100000000000000
-      );
-      await approveNarwhal.wait();
-    }
-
-    const transaction = {
-      data: methodParameters.calldata,
-      to: methodParameters.to,
-      value: BigNumber.from(methodParameters.value),
-      from: alice.address,
-      gasPrice: BigNumber.from(2000000000000),
-      type: 1,
-    };
-
-    const transactionResponse: providers.TransactionResponse = await alice.sendTransaction(transaction);
-    await transactionResponse.wait();
-
-    const tokenInAfter = await getBalance(alice, currencyIn);
-    const tokenOutAfter = await getBalance(alice, currencyOut);
-    const tokenOutPortionRecipientAfter = portionRecipientSigner
-      ? await getBalance(portionRecipientSigner, currencyOut)
-      : undefined;
-
-    return {
-      tokenInAfter,
-      tokenInBefore,
-      tokenOutAfter,
-      tokenOutBefore,
-      tokenOutPortionRecipientBefore,
-      tokenOutPortionRecipientAfter,
-    };
-  };
+  this.timeout(40000);
 
   before(async function () {
-    this.timeout(40000);
-    [alice] = await ethers.getSigners();
+    baseTest = new BaseIntegrationTestSuite();
+    [alice,] = await baseTest.before();
+    // Do any custom setup here for this test suite
 
-    // Make a dummy call to the API to get a block number to fork from.
-    const quoteReq: QuoteRequestBodyJSON = {
-      requestId: 'id',
-      tokenIn: 'USDC',
-      tokenInChainId: 1,
-      tokenOut: 'USDT',
-      tokenOutChainId: 1,
-      amount: await getAmount(1, 'EXACT_INPUT', 'USDC', 'USDT', '100'),
-      type: 'EXACT_INPUT',
-      configs: [
-        {
-          routingType: RoutingType.CLASSIC,
-        },
-      ],
-    };
-
-    const {
-      data: { quote },
-    } = await call(quoteReq);
-    const { blockNumber } = quote as ClassicQuoteDataJSON;
-
-    block = parseInt(blockNumber) - 10;
-
-    alice = await resetAndFundAtBlock(alice, block, [
-      parseAmount('80000000', USDC_MAINNET),
-      parseAmount('50000000', USDT_MAINNET),
-      parseAmount('100', WBTC_MAINNET),
-      parseAmount('10000', UNI_MAINNET),
-      parseAmount('400', WETH9[1]),
-      parseAmount('5000000', DAI_MAINNET),
-      parseAmount('50000', agEUR_MAINNET),
-      parseAmount('475000', XSGD_MAINNET),
-      parseAmount('700000', BULLET),
-    ]);
-
-    process.env.ENABLE_PORTION = 'true';
-    if (process.env.PORTION_API_URL) {
-      portionFetcher = new PortionFetcher(process.env.PORTION_API_URL, new NodeCache());
-    }
+    // Help with test flakiness by retrying.
+    this.retries(3);
   });
 
   for (const algorithm of ['alpha']) {
@@ -329,7 +120,8 @@ describe('quote', function () {
             expect(methodParameters).to.not.be.undefined;
             expect(methodParameters?.to).to.equal(UNIVERSAL_ROUTER_ADDRESS);
 
-            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+              alice,
               methodParameters!,
               USDC_MAINNET,
               USDT_MAINNET
@@ -385,7 +177,8 @@ describe('quote', function () {
             expect(methodParameters).to.not.be.undefined;
             expect(methodParameters?.to).to.equal(SWAP_ROUTER_02_ADDRESSES(ChainId.MAINNET));
 
-            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+              alice,
               methodParameters!,
               USDC_MAINNET,
               USDT_MAINNET
@@ -403,7 +196,7 @@ describe('quote', function () {
           it(`erc20 -> erc20 with permit`, async () => {
             const amount = await getAmount(1, type, 'USDC', 'USDT', '10');
 
-            const nonce = nextPermitNonce();
+            const nonce = baseTest.nextPermitNonce();
 
             const permit: PermitSingle = {
               details: {
@@ -466,7 +259,8 @@ describe('quote', function () {
             expect(methodParameters).to.not.be.undefined;
             expect(methodParameters?.to).to.equal(UNIVERSAL_ROUTER_ADDRESS);
 
-            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+              alice,
               methodParameters!,
               USDC_MAINNET,
               USDT_MAINNET,
@@ -513,7 +307,8 @@ describe('quote', function () {
             expect(status).to.equal(200);
             expect(methodParameters).to.not.be.undefined;
 
-            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+              alice,
               methodParameters!,
               USDC_MAINNET,
               Ether.onChain(1)
@@ -578,7 +373,8 @@ describe('quote', function () {
             const amountOut = BigNumber.from(quoteJSON.quote);
             expect(amountOut.eq(amountOutEdgesTotal));
 
-            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+              alice,
               quoteJSON.methodParameters!,
               USDC_MAINNET,
               Ether.onChain(1)
@@ -598,7 +394,7 @@ describe('quote', function () {
           });
 
           it(`erc20 -> eth large trade with permit`, async () => {
-            const nonce = nextPermitNonce();
+            const nonce = baseTest.nextPermitNonce();
 
             const amount =
               type == 'EXACT_INPUT'
@@ -654,7 +450,8 @@ describe('quote', function () {
             expect(quoteJSON.methodParameters).to.not.be.undefined;
             expect(quoteJSON.route).to.not.be.undefined;
 
-            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+              alice,
               quoteJSON.methodParameters!,
               USDC_MAINNET,
               Ether.onChain(1),
@@ -705,7 +502,8 @@ describe('quote', function () {
             expect(status).to.equal(200);
             expect(quoteJSON.methodParameters).to.not.be.undefined;
 
-            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+              alice,
               quoteJSON.methodParameters!,
               Ether.onChain(1),
               UNI_MAINNET
@@ -758,7 +556,8 @@ describe('quote', function () {
             expect(quoteJSON.methodParameters).to.not.be.undefined;
             expect(quoteJSON.methodParameters?.to).to.equal(SWAP_ROUTER_02_ADDRESSES(ChainId.MAINNET));
 
-            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+              alice,
               quoteJSON.methodParameters!,
               Ether.onChain(1),
               UNI_MAINNET
@@ -806,7 +605,8 @@ describe('quote', function () {
             expect(status).to.equal(200);
             expect(quoteJSON.methodParameters).to.not.be.undefined;
 
-            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+              alice,
               quoteJSON.methodParameters!,
               WETH9[1]!,
               DAI_MAINNET
@@ -853,7 +653,8 @@ describe('quote', function () {
             expect(status).to.equal(200);
             expect(quoteJSON.methodParameters).to.not.be.undefined;
 
-            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+              alice,
               quoteJSON.methodParameters!,
               USDC_MAINNET,
               WETH9[1]!
@@ -917,7 +718,8 @@ describe('quote', function () {
                 }
               }
 
-              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+                alice,
                 methodParameters!,
                 USDC_MAINNET,
                 USDT_MAINNET!
@@ -981,7 +783,8 @@ describe('quote', function () {
                 }
               }
 
-              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+                alice,
                 methodParameters!,
                 USDC_MAINNET,
                 USDT_MAINNET!
@@ -1053,7 +856,8 @@ describe('quote', function () {
 
               expect(hasV3Pool && hasV2Pool).to.be.true;
 
-              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+                alice,
                 methodParameters!,
                 USDC_MAINNET,
                 USDT_MAINNET!
@@ -1238,7 +1042,8 @@ describe('quote', function () {
 
               expect(methodParameters).to.not.be.undefined;
 
-              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+                alice,
                 methodParameters!,
                 USDC_MAINNET,
                 USDT_MAINNET
@@ -1296,7 +1101,8 @@ describe('quote', function () {
               expect(methodParameters).to.not.be.undefined;
               expect(methodParameters!.to).to.equal(SWAP_ROUTER_02_ADDRESSES(ChainId.MAINNET));
 
-              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+                alice,
                 methodParameters!,
                 USDC_MAINNET,
                 USDT_MAINNET
@@ -1419,7 +1225,8 @@ describe('quote', function () {
               expect(simulationError).to.equal(false);
               expect(methodParameters).to.not.be.undefined;
 
-              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+                alice,
                 methodParameters!,
                 USDC_MAINNET,
                 Ether.onChain(1)
@@ -1486,7 +1293,8 @@ describe('quote', function () {
               const amountOut = BigNumber.from(quote.quote);
               expect(amountOut.eq(amountOutEdgesTotal));
 
-              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+                alice,
                 quote.methodParameters!,
                 USDC_MAINNET,
                 Ether.onChain(1)
@@ -1537,7 +1345,8 @@ describe('quote', function () {
               expect(quote.simulationError).to.equal(false);
               expect(quote.methodParameters).to.not.be.undefined;
 
-              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+                alice,
                 quote.methodParameters!,
                 Ether.onChain(1),
                 UNI_MAINNET
@@ -1587,7 +1396,8 @@ describe('quote', function () {
               expect(quote.simulationError).to.equal(false);
               expect(quote.methodParameters).to.not.be.undefined;
 
-              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+                alice,
                 quote.methodParameters!,
                 Ether.onChain(1),
                 UNI_MAINNET
@@ -1632,7 +1442,8 @@ describe('quote', function () {
               expect(quote.simulationError).to.equal(false);
               expect(quote.methodParameters).to.not.be.undefined;
 
-              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+                alice,
                 quote.methodParameters!,
                 WETH9[1]!,
                 DAI_MAINNET
@@ -1676,7 +1487,8 @@ describe('quote', function () {
               expect(quote.simulationError).to.equal(false);
               expect(quote.methodParameters).to.not.be.undefined;
 
-              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+                alice,
                 quote.methodParameters!,
                 USDC_MAINNET,
                 WETH9[1]!
@@ -1701,7 +1513,7 @@ describe('quote', function () {
                   const tokenInAddress = tokenIn.isNative ? tokenInSymbol : tokenIn.address;
                   const tokenOutAddress = tokenOut.isNative ? tokenOutSymbol : tokenOut.address;
                   const amount = await getAmountFromToken(type, tokenIn.wrapped, tokenOut.wrapped, originalAmount);
-                  const getPortionResponse = await portionFetcher.getPortion(
+                  const getPortionResponse = await baseTest.portionFetcher.getPortion(
                     tokenIn.chainId,
                     tokenInAddress,
                     tokenOut.chainId,
@@ -1781,7 +1593,8 @@ describe('quote', function () {
                     tokenOutAfter,
                     tokenOutPortionRecipientBefore,
                     tokenOutPortionRecipientAfter,
-                  } = await executeSwap(
+                  } = await baseTest.executeSwap(
+                    alice,
                     quoteJSON.methodParameters!,
                     tokenIn,
                     tokenOut!,
@@ -1854,7 +1667,7 @@ describe('quote', function () {
                   const tokenInAddress = tokenIn.isNative ? tokenInSymbol : tokenIn.address;
                   const tokenOutAddress = tokenOut.isNative ? tokenOutSymbol : tokenOut.address;
                   const amount = await getAmountFromToken(type, tokenIn.wrapped, tokenOut.wrapped, originalAmount);
-                  const getPortionResponse = await portionFetcher.getPortion(
+                  const getPortionResponse = await baseTest.portionFetcher.getPortion(
                     tokenIn.chainId,
                     tokenInAddress,
                     tokenOut.chainId,
@@ -1926,7 +1739,8 @@ describe('quote', function () {
                     tokenOutAfter,
                     tokenOutPortionRecipientBefore,
                     tokenOutPortionRecipientAfter,
-                  } = await executeSwap(
+                  } = await baseTest.executeSwap(
+                    alice,
                     quoteJSON.methodParameters!,
                     tokenIn,
                     tokenOut!,
@@ -2078,7 +1892,8 @@ describe('quote', function () {
                   // We don't have a bullet proof way to assert the fot-involved quote is post tax
                   // so the best way is to execute the swap on hardhat mainnet fork,
                   // and make sure the executed quote doesn't differ from callstatic simulated quote by over slippage tolerance
-                  const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await executeSwap(
+                  const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+                    alice,
                     quoteJSON.methodParameters!,
                     tokenIn,
                     tokenOut

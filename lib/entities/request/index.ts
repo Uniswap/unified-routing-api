@@ -49,6 +49,7 @@ export enum RequestSource {
   UNISWAP_ANDROID = 'uniswap-android',
   UNISWAP_WEB = 'uniswap-web',
   EXTERNAL_API = 'external-api',
+  EXTERNAL_API_MOBILE = 'external-api:mobile',
 }
 
 export interface QuoteRequest {
