@@ -265,9 +265,7 @@ export class BaseIntegrationTestSuite {
   };
 
   before = async () => {
-    let alice: SignerWithAddress;
-    let filler: SignerWithAddress;
-    [alice, filler] = await ethers.getSigners();
+    const [alice, filler] = await ethers.getSigners();
 
     // Make a dummy call to the API to get a block number to fork from.
     const quoteReq: QuoteRequestBodyJSON = {
@@ -292,7 +290,7 @@ export class BaseIntegrationTestSuite {
 
     this.block = parseInt(blockNumber) - 10;
 
-    alice = await resetAndFundAtBlock(alice, this.block, [
+    await resetAndFundAtBlock(alice, this.block, [
       parseAmount('80000000', USDC_MAINNET),
       parseAmount('50000000', USDT_MAINNET),
       parseAmount('100', WBTC_MAINNET),
