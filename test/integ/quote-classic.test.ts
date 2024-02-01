@@ -21,6 +21,7 @@ import {
 import { fail } from 'assert';
 import { AxiosResponse } from 'axios';
 import { expect } from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 import chaiSubset from 'chai-subset';
 import { BigNumber, Wallet } from 'ethers';
 import _ from 'lodash';
@@ -40,8 +41,14 @@ import {
   USDC_ON,
   WNATIVE_ON,
 } from '../utils/tokens';
-import { BaseIntegrationTestSuite, call, callAndExpectFail, checkPortionRecipientToken, checkQuoteToken, isTesterPKEnvironmentSet } from './base.test';
-import chaiAsPromised from 'chai-as-promised';
+import {
+  BaseIntegrationTestSuite,
+  call,
+  callAndExpectFail,
+  checkPortionRecipientToken,
+  checkQuoteToken,
+  isTesterPKEnvironmentSet,
+} from './base.test';
 
 chai.use(chaiAsPromised);
 chai.use(chaiSubset);
@@ -113,7 +120,8 @@ describe('quote', function () {
             expect(methodParameters).to.not.be.undefined;
             expect(methodParameters?.to).to.equal(UNIVERSAL_ROUTER_ADDRESS);
 
-            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(alice, 
+            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+              alice,
               methodParameters!,
               USDC_MAINNET,
               USDT_MAINNET
@@ -169,7 +177,8 @@ describe('quote', function () {
             expect(methodParameters).to.not.be.undefined;
             expect(methodParameters?.to).to.equal(SWAP_ROUTER_02_ADDRESSES(ChainId.MAINNET));
 
-            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(alice, 
+            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+              alice,
               methodParameters!,
               USDC_MAINNET,
               USDT_MAINNET
@@ -250,7 +259,8 @@ describe('quote', function () {
             expect(methodParameters).to.not.be.undefined;
             expect(methodParameters?.to).to.equal(UNIVERSAL_ROUTER_ADDRESS);
 
-            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(alice, 
+            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+              alice,
               methodParameters!,
               USDC_MAINNET,
               USDT_MAINNET,
@@ -297,7 +307,8 @@ describe('quote', function () {
             expect(status).to.equal(200);
             expect(methodParameters).to.not.be.undefined;
 
-            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(alice, 
+            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+              alice,
               methodParameters!,
               USDC_MAINNET,
               Ether.onChain(1)
@@ -362,7 +373,8 @@ describe('quote', function () {
             const amountOut = BigNumber.from(quoteJSON.quote);
             expect(amountOut.eq(amountOutEdgesTotal));
 
-            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(alice, 
+            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+              alice,
               quoteJSON.methodParameters!,
               USDC_MAINNET,
               Ether.onChain(1)
@@ -438,7 +450,8 @@ describe('quote', function () {
             expect(quoteJSON.methodParameters).to.not.be.undefined;
             expect(quoteJSON.route).to.not.be.undefined;
 
-            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(alice, 
+            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+              alice,
               quoteJSON.methodParameters!,
               USDC_MAINNET,
               Ether.onChain(1),
@@ -489,7 +502,8 @@ describe('quote', function () {
             expect(status).to.equal(200);
             expect(quoteJSON.methodParameters).to.not.be.undefined;
 
-            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(alice, 
+            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+              alice,
               quoteJSON.methodParameters!,
               Ether.onChain(1),
               UNI_MAINNET
@@ -542,7 +556,8 @@ describe('quote', function () {
             expect(quoteJSON.methodParameters).to.not.be.undefined;
             expect(quoteJSON.methodParameters?.to).to.equal(SWAP_ROUTER_02_ADDRESSES(ChainId.MAINNET));
 
-            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(alice, 
+            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+              alice,
               quoteJSON.methodParameters!,
               Ether.onChain(1),
               UNI_MAINNET
@@ -590,7 +605,8 @@ describe('quote', function () {
             expect(status).to.equal(200);
             expect(quoteJSON.methodParameters).to.not.be.undefined;
 
-            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(alice, 
+            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+              alice,
               quoteJSON.methodParameters!,
               WETH9[1]!,
               DAI_MAINNET
@@ -637,7 +653,8 @@ describe('quote', function () {
             expect(status).to.equal(200);
             expect(quoteJSON.methodParameters).to.not.be.undefined;
 
-            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(alice, 
+            const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+              alice,
               quoteJSON.methodParameters!,
               USDC_MAINNET,
               WETH9[1]!
@@ -701,7 +718,8 @@ describe('quote', function () {
                 }
               }
 
-              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(alice, 
+              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+                alice,
                 methodParameters!,
                 USDC_MAINNET,
                 USDT_MAINNET!
@@ -765,7 +783,8 @@ describe('quote', function () {
                 }
               }
 
-              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(alice, 
+              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+                alice,
                 methodParameters!,
                 USDC_MAINNET,
                 USDT_MAINNET!
@@ -837,7 +856,8 @@ describe('quote', function () {
 
               expect(hasV3Pool && hasV2Pool).to.be.true;
 
-              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(alice, 
+              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+                alice,
                 methodParameters!,
                 USDC_MAINNET,
                 USDT_MAINNET!
@@ -1022,7 +1042,8 @@ describe('quote', function () {
 
               expect(methodParameters).to.not.be.undefined;
 
-              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(alice, 
+              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+                alice,
                 methodParameters!,
                 USDC_MAINNET,
                 USDT_MAINNET
@@ -1080,7 +1101,8 @@ describe('quote', function () {
               expect(methodParameters).to.not.be.undefined;
               expect(methodParameters!.to).to.equal(SWAP_ROUTER_02_ADDRESSES(ChainId.MAINNET));
 
-              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(alice, 
+              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+                alice,
                 methodParameters!,
                 USDC_MAINNET,
                 USDT_MAINNET
@@ -1203,7 +1225,8 @@ describe('quote', function () {
               expect(simulationError).to.equal(false);
               expect(methodParameters).to.not.be.undefined;
 
-              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(alice, 
+              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+                alice,
                 methodParameters!,
                 USDC_MAINNET,
                 Ether.onChain(1)
@@ -1270,7 +1293,8 @@ describe('quote', function () {
               const amountOut = BigNumber.from(quote.quote);
               expect(amountOut.eq(amountOutEdgesTotal));
 
-              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(alice, 
+              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+                alice,
                 quote.methodParameters!,
                 USDC_MAINNET,
                 Ether.onChain(1)
@@ -1321,7 +1345,8 @@ describe('quote', function () {
               expect(quote.simulationError).to.equal(false);
               expect(quote.methodParameters).to.not.be.undefined;
 
-              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(alice, 
+              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+                alice,
                 quote.methodParameters!,
                 Ether.onChain(1),
                 UNI_MAINNET
@@ -1371,7 +1396,8 @@ describe('quote', function () {
               expect(quote.simulationError).to.equal(false);
               expect(quote.methodParameters).to.not.be.undefined;
 
-              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(alice, 
+              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+                alice,
                 quote.methodParameters!,
                 Ether.onChain(1),
                 UNI_MAINNET
@@ -1416,7 +1442,8 @@ describe('quote', function () {
               expect(quote.simulationError).to.equal(false);
               expect(quote.methodParameters).to.not.be.undefined;
 
-              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(alice, 
+              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+                alice,
                 quote.methodParameters!,
                 WETH9[1]!,
                 DAI_MAINNET
@@ -1460,7 +1487,8 @@ describe('quote', function () {
               expect(quote.simulationError).to.equal(false);
               expect(quote.methodParameters).to.not.be.undefined;
 
-              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(alice, 
+              const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+                alice,
                 quote.methodParameters!,
                 USDC_MAINNET,
                 WETH9[1]!
@@ -1565,7 +1593,8 @@ describe('quote', function () {
                     tokenOutAfter,
                     tokenOutPortionRecipientBefore,
                     tokenOutPortionRecipientAfter,
-                  } = await baseTest.executeSwap(alice, 
+                  } = await baseTest.executeSwap(
+                    alice,
                     quoteJSON.methodParameters!,
                     tokenIn,
                     tokenOut!,
@@ -1710,7 +1739,8 @@ describe('quote', function () {
                     tokenOutAfter,
                     tokenOutPortionRecipientBefore,
                     tokenOutPortionRecipientAfter,
-                  } = await baseTest.executeSwap(alice, 
+                  } = await baseTest.executeSwap(
+                    alice,
                     quoteJSON.methodParameters!,
                     tokenIn,
                     tokenOut!,
@@ -1845,11 +1875,15 @@ describe('quote', function () {
                         expect(v2Pool.tokenOut.buyFeeBps).to.be.equals(BULLET_WHT_FOT_TAX.buyFeeBps?.toString());
                       }
                       if (v2Pool.reserve0.token.address === BULLET_WHT_FOT_TAX.address) {
-                        expect(v2Pool.reserve0.token.sellFeeBps).to.be.equals(BULLET_WHT_FOT_TAX.sellFeeBps?.toString());
+                        expect(v2Pool.reserve0.token.sellFeeBps).to.be.equals(
+                          BULLET_WHT_FOT_TAX.sellFeeBps?.toString()
+                        );
                         expect(v2Pool.reserve0.token.buyFeeBps).to.be.equals(BULLET_WHT_FOT_TAX.buyFeeBps?.toString());
                       }
                       if (v2Pool.reserve1.token.address === BULLET_WHT_FOT_TAX.address) {
-                        expect(v2Pool.reserve1.token.sellFeeBps).to.be.equals(BULLET_WHT_FOT_TAX.sellFeeBps?.toString());
+                        expect(v2Pool.reserve1.token.sellFeeBps).to.be.equals(
+                          BULLET_WHT_FOT_TAX.sellFeeBps?.toString()
+                        );
                         expect(v2Pool.reserve1.token.buyFeeBps).to.be.equals(BULLET_WHT_FOT_TAX.buyFeeBps?.toString());
                       }
                     }
@@ -1858,7 +1892,8 @@ describe('quote', function () {
                   // We don't have a bullet proof way to assert the fot-involved quote is post tax
                   // so the best way is to execute the swap on hardhat mainnet fork,
                   // and make sure the executed quote doesn't differ from callstatic simulated quote by over slippage tolerance
-                  const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(alice, 
+                  const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeSwap(
+                    alice,
                     quoteJSON.methodParameters!,
                     tokenIn,
                     tokenOut

@@ -12,6 +12,8 @@ import {
 import { DutchOrder } from '@uniswap/uniswapx-sdk';
 import { AxiosResponse } from 'axios';
 import { expect } from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+import chaiSubset from 'chai-subset';
 import { BigNumber } from 'ethers';
 import qs from 'qs';
 import { BPS, NATIVE_ADDRESS, RoutingType } from '../../lib/constants';
@@ -21,9 +23,14 @@ import { GREENLIST_STABLE_TO_STABLE_PAIRS, GREENLIST_TOKEN_PAIRS } from '../cons
 import { fund } from '../utils/forkAndFund';
 import { RoutingApiQuoteResponse } from '../utils/quoteResponse';
 import { agEUR_MAINNET, getAmount, getAmountFromToken, XSGD_MAINNET } from '../utils/tokens';
-import { BaseIntegrationTestSuite, axiosHelper, call, callAndExpectFail, checkPortionRecipientToken, checkQuoteToken } from './base.test';
-import chaiAsPromised from 'chai-as-promised';
-import chaiSubset from 'chai-subset';
+import {
+  axiosHelper,
+  BaseIntegrationTestSuite,
+  call,
+  callAndExpectFail,
+  checkPortionRecipientToken,
+  checkQuoteToken,
+} from './base.test';
 
 chai.use(chaiAsPromised);
 chai.use(chaiSubset);
@@ -35,7 +42,7 @@ const SLIPPAGE = '5';
 
 describe('quoteUniswapX', function () {
   let baseTest: BaseIntegrationTestSuite;
-  
+
   // Help with test flakiness by retrying.
   this.retries(2);
   this.timeout(40000);
@@ -162,7 +169,9 @@ describe('quoteUniswapX', function () {
           expect(parseInt(order.info.input.startAmount.toString())).to.be.greaterThan(9000000000);
           expect(parseInt(order.info.input.startAmount.toString())).to.be.lessThan(11000000000);
 
-          const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeDutchSwap(alice, filler, 
+          const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeDutchSwap(
+            alice,
+            filler,
             order,
             USDC_MAINNET,
             USDT_MAINNET
@@ -225,7 +234,9 @@ describe('quoteUniswapX', function () {
           expect(parseInt(order.info.input.startAmount.toString())).to.be.greaterThan(9000000000);
           expect(parseInt(order.info.input.startAmount.toString())).to.be.lessThan(11000000000);
 
-          const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeDutchSwap(alice, filler, 
+          const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeDutchSwap(
+            alice,
+            filler,
             order,
             USDC_MAINNET,
             USDT_MAINNET
@@ -321,7 +332,9 @@ describe('quoteUniswapX', function () {
             );
           }
 
-          const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeDutchSwap(alice, filler, 
+          const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeDutchSwap(
+            alice,
+            filler,
             order,
             USDC_MAINNET,
             UNI_MAINNET
@@ -397,7 +410,9 @@ describe('quoteUniswapX', function () {
           expect(order.info.swapper).to.equal(alice.address);
           expect(order.info.outputs.length).to.equal(1);
 
-          const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeDutchSwap(alice, filler, 
+          const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeDutchSwap(
+            alice,
+            filler,
             order,
             Ether.onChain(1),
             UNI_MAINNET

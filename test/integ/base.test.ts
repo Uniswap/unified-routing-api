@@ -11,6 +11,7 @@ import {
   WBTC_MAINNET,
   WETH9,
 } from '@uniswap/smart-order-router';
+import { DutchOrder } from '@uniswap/uniswapx-sdk';
 import {
   PERMIT2_ADDRESS,
   UNIVERSAL_ROUTER_ADDRESS as UNIVERSAL_ROUTER_ADDRESS_BY_CHAIN,
@@ -31,14 +32,7 @@ import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { ExclusiveDutchOrderReactor__factory, Permit2__factory } from '../../lib/types/ext';
 import { resetAndFundAtBlock } from '../utils/forkAndFund';
 import { getBalance, getBalanceAndApprove } from '../utils/getBalanceAndApprove';
-import {
-  agEUR_MAINNET,
-  BULLET,
-  getAmount,
-  UNI_MAINNET,
-  XSGD_MAINNET,
-} from '../utils/tokens';
-import { DutchOrder } from '@uniswap/uniswapx-sdk';
+import { agEUR_MAINNET, BULLET, getAmount, UNI_MAINNET, XSGD_MAINNET } from '../utils/tokens';
 
 const { ethers } = hre;
 
@@ -74,7 +68,10 @@ axiosRetry(axiosHelper, {
   retryDelay: axiosRetry.exponentialDelay,
 });
 
-export const callAndExpectFail = async (quoteReq: Partial<QuoteRequestBodyJSON>, resp: { status: number; data: any }) => {
+export const callAndExpectFail = async (
+  quoteReq: Partial<QuoteRequestBodyJSON>,
+  resp: { status: number; data: any }
+) => {
   try {
     await axiosHelper.post<QuoteResponseJSON>(`${API}`, quoteReq);
     fail();
@@ -138,180 +135,180 @@ export const isTesterPKEnvironmentSet = (): boolean => {
 const MAX_UINT160 = '0xffffffffffffffffffffffffffffffffffffffff';
 
 export class BaseIntegrationTestSuite {
-    block: number;
-    curNonce = 0;
-    portionFetcher: PortionFetcher;
+  block: number;
+  curNonce = 0;
+  portionFetcher: PortionFetcher;
 
-    nextPermitNonce: () => string = () => {
-      const nonce = this.curNonce.toString();
-      this.curNonce = this.curNonce + 1;
-      return nonce;
-    };
+  nextPermitNonce: () => string = () => {
+    const nonce = this.curNonce.toString();
+    this.curNonce = this.curNonce + 1;
+    return nonce;
+  };
 
   executeSwap = async (
-      swapper: SignerWithAddress,
-      methodParameters: MethodParameters,
-      currencyIn: Currency,
-      currencyOut: Currency,
-      permit?: boolean,
-      chainId = ChainId.MAINNET,
-      portion?: Portion
-    ): Promise<{
-      tokenInAfter: CurrencyAmount<Currency>;
-      tokenInBefore: CurrencyAmount<Currency>;
-      tokenOutAfter: CurrencyAmount<Currency>;
-      tokenOutBefore: CurrencyAmount<Currency>;
-      tokenOutPortionRecipientBefore?: CurrencyAmount<Currency>;
-      tokenOutPortionRecipientAfter?: CurrencyAmount<Currency>;
-    }> => {
-      const permit2 = Permit2__factory.connect(PERMIT2_ADDRESS, swapper);
-      const portionRecipientSigner = portion?.recipient ? await ethers.getSigner(portion?.recipient) : undefined;
+    swapper: SignerWithAddress,
+    methodParameters: MethodParameters,
+    currencyIn: Currency,
+    currencyOut: Currency,
+    permit?: boolean,
+    chainId = ChainId.MAINNET,
+    portion?: Portion
+  ): Promise<{
+    tokenInAfter: CurrencyAmount<Currency>;
+    tokenInBefore: CurrencyAmount<Currency>;
+    tokenOutAfter: CurrencyAmount<Currency>;
+    tokenOutBefore: CurrencyAmount<Currency>;
+    tokenOutPortionRecipientBefore?: CurrencyAmount<Currency>;
+    tokenOutPortionRecipientAfter?: CurrencyAmount<Currency>;
+  }> => {
+    const permit2 = Permit2__factory.connect(PERMIT2_ADDRESS, swapper);
+    const portionRecipientSigner = portion?.recipient ? await ethers.getSigner(portion?.recipient) : undefined;
 
-      // Approve Permit2
-      const tokenInBefore = await getBalanceAndApprove(swapper, PERMIT2_ADDRESS, currencyIn);
-      const tokenOutBefore = await getBalance(swapper, currencyOut);
-      const tokenOutPortionRecipientBefore = portionRecipientSigner
-        ? await getBalance(portionRecipientSigner, currencyOut)
-        : undefined;
+    // Approve Permit2
+    const tokenInBefore = await getBalanceAndApprove(swapper, PERMIT2_ADDRESS, currencyIn);
+    const tokenOutBefore = await getBalance(swapper, currencyOut);
+    const tokenOutPortionRecipientBefore = portionRecipientSigner
+      ? await getBalance(portionRecipientSigner, currencyOut)
+      : undefined;
 
-      // Approve SwapRouter02 in case we request calldata for it instead of Universal Router
-      await getBalanceAndApprove(swapper, SWAP_ROUTER_02_ADDRESSES(chainId), currencyIn);
+    // Approve SwapRouter02 in case we request calldata for it instead of Universal Router
+    await getBalanceAndApprove(swapper, SWAP_ROUTER_02_ADDRESSES(chainId), currencyIn);
 
-      // If not using permit do a regular approval allowing narwhal max balance.
-      if (!permit) {
-        const approveNarwhal = await permit2.approve(
-          currencyIn.wrapped.address,
-          UNIVERSAL_ROUTER_ADDRESS,
-          MAX_UINT160,
-          100000000000000
-        );
-        await approveNarwhal.wait();
-      }
+    // If not using permit do a regular approval allowing narwhal max balance.
+    if (!permit) {
+      const approveNarwhal = await permit2.approve(
+        currencyIn.wrapped.address,
+        UNIVERSAL_ROUTER_ADDRESS,
+        MAX_UINT160,
+        100000000000000
+      );
+      await approveNarwhal.wait();
+    }
 
-      const transaction = {
-        data: methodParameters.calldata,
-        to: methodParameters.to,
-        value: BigNumber.from(methodParameters.value),
-        from: swapper.address,
-        gasPrice: BigNumber.from(2000000000000),
-        type: 1,
-      };
-
-      const transactionResponse: providers.TransactionResponse = await swapper.sendTransaction(transaction);
-      await transactionResponse.wait();
-
-      const tokenInAfter = await getBalance(swapper, currencyIn);
-      const tokenOutAfter = await getBalance(swapper, currencyOut);
-      const tokenOutPortionRecipientAfter = portionRecipientSigner
-        ? await getBalance(portionRecipientSigner, currencyOut)
-        : undefined;
-
-      return {
-        tokenInAfter,
-        tokenInBefore,
-        tokenOutAfter,
-        tokenOutBefore,
-        tokenOutPortionRecipientBefore,
-        tokenOutPortionRecipientAfter,
-      };
+    const transaction = {
+      data: methodParameters.calldata,
+      to: methodParameters.to,
+      value: BigNumber.from(methodParameters.value),
+      from: swapper.address,
+      gasPrice: BigNumber.from(2000000000000),
+      type: 1,
     };
-  
+
+    const transactionResponse: providers.TransactionResponse = await swapper.sendTransaction(transaction);
+    await transactionResponse.wait();
+
+    const tokenInAfter = await getBalance(swapper, currencyIn);
+    const tokenOutAfter = await getBalance(swapper, currencyOut);
+    const tokenOutPortionRecipientAfter = portionRecipientSigner
+      ? await getBalance(portionRecipientSigner, currencyOut)
+      : undefined;
+
+    return {
+      tokenInAfter,
+      tokenInBefore,
+      tokenOutAfter,
+      tokenOutBefore,
+      tokenOutPortionRecipientBefore,
+      tokenOutPortionRecipientAfter,
+    };
+  };
+
   executeDutchSwap = async (
-      swapper: SignerWithAddress,
-      filler: SignerWithAddress,
-      order: DutchOrder,
-      currencyIn: Currency,
-      currencyOut: Currency,
-      portion?: Portion
-    ): Promise<{
-      tokenInAfter: CurrencyAmount<Currency>;
-      tokenInBefore: CurrencyAmount<Currency>;
-      tokenOutAfter: CurrencyAmount<Currency>;
-      tokenOutBefore: CurrencyAmount<Currency>;
-      tokenOutPortionRecipientAfter: CurrencyAmount<Currency>;
-      tokenOutPortionRecipientBefore: CurrencyAmount<Currency>;
-    }> => {
-      const reactor = ExclusiveDutchOrderReactor__factory.connect(order.info.reactor, filler);
-      const portionRecipientSigner = portion?.recipient ? await ethers.getSigner(portion?.recipient) : undefined;
-  
-      // Approve Permit2 for swapper
-      // Note we pass in currency.wrapped, since Gouda does not support native ETH in
-      const tokenInBefore = await getBalanceAndApprove(swapper, PERMIT2_ADDRESS, currencyIn.wrapped);
-      const tokenOutBefore = await getBalance(swapper, currencyOut);
-      const tokenOutPortionRecipientBefore = portionRecipientSigner
-        ? await getBalance(portionRecipientSigner, currencyOut)
-        : CurrencyAmount.fromRawAmount(currencyOut, '0');
-  
-      // Directly approve reactor for filler funds
-      await getBalanceAndApprove(filler, order.info.reactor, currencyOut);
-  
-      const { domain, types, values } = order.permitData();
-      const signature = await swapper._signTypedData(domain, types, values);
-  
-      const transactionResponse = await reactor.execute({ order: order.serialize(), sig: signature });
-      await transactionResponse.wait();
-  
-      const tokenInAfter = await getBalance(swapper, currencyIn.wrapped);
-      const tokenOutAfter = await getBalance(swapper, currencyOut);
-      const tokenOutPortionRecipientAfter = portionRecipientSigner
-        ? await getBalance(portionRecipientSigner, currencyOut)
-        : CurrencyAmount.fromRawAmount(currencyOut, '0');
-  
-      return {
-        tokenInAfter,
-        tokenInBefore,
-        tokenOutAfter,
-        tokenOutBefore,
-        tokenOutPortionRecipientAfter,
-        tokenOutPortionRecipientBefore,
-      };
+    swapper: SignerWithAddress,
+    filler: SignerWithAddress,
+    order: DutchOrder,
+    currencyIn: Currency,
+    currencyOut: Currency,
+    portion?: Portion
+  ): Promise<{
+    tokenInAfter: CurrencyAmount<Currency>;
+    tokenInBefore: CurrencyAmount<Currency>;
+    tokenOutAfter: CurrencyAmount<Currency>;
+    tokenOutBefore: CurrencyAmount<Currency>;
+    tokenOutPortionRecipientAfter: CurrencyAmount<Currency>;
+    tokenOutPortionRecipientBefore: CurrencyAmount<Currency>;
+  }> => {
+    const reactor = ExclusiveDutchOrderReactor__factory.connect(order.info.reactor, filler);
+    const portionRecipientSigner = portion?.recipient ? await ethers.getSigner(portion?.recipient) : undefined;
+
+    // Approve Permit2 for swapper
+    // Note we pass in currency.wrapped, since Gouda does not support native ETH in
+    const tokenInBefore = await getBalanceAndApprove(swapper, PERMIT2_ADDRESS, currencyIn.wrapped);
+    const tokenOutBefore = await getBalance(swapper, currencyOut);
+    const tokenOutPortionRecipientBefore = portionRecipientSigner
+      ? await getBalance(portionRecipientSigner, currencyOut)
+      : CurrencyAmount.fromRawAmount(currencyOut, '0');
+
+    // Directly approve reactor for filler funds
+    await getBalanceAndApprove(filler, order.info.reactor, currencyOut);
+
+    const { domain, types, values } = order.permitData();
+    const signature = await swapper._signTypedData(domain, types, values);
+
+    const transactionResponse = await reactor.execute({ order: order.serialize(), sig: signature });
+    await transactionResponse.wait();
+
+    const tokenInAfter = await getBalance(swapper, currencyIn.wrapped);
+    const tokenOutAfter = await getBalance(swapper, currencyOut);
+    const tokenOutPortionRecipientAfter = portionRecipientSigner
+      ? await getBalance(portionRecipientSigner, currencyOut)
+      : CurrencyAmount.fromRawAmount(currencyOut, '0');
+
+    return {
+      tokenInAfter,
+      tokenInBefore,
+      tokenOutAfter,
+      tokenOutBefore,
+      tokenOutPortionRecipientAfter,
+      tokenOutPortionRecipientBefore,
     };
+  };
 
   before = async () => {
-      let alice: SignerWithAddress;
-      let filler: SignerWithAddress;
-      [alice, filler] = await ethers.getSigners();
+    let alice: SignerWithAddress;
+    let filler: SignerWithAddress;
+    [alice, filler] = await ethers.getSigners();
 
-      // Make a dummy call to the API to get a block number to fork from.
-      const quoteReq: QuoteRequestBodyJSON = {
-        requestId: 'id',
-        tokenIn: 'USDC',
-        tokenInChainId: 1,
-        tokenOut: 'USDT',
-        tokenOutChainId: 1,
-        amount: await getAmount(1, 'EXACT_INPUT', 'USDC', 'USDT', '100'),
-        type: 'EXACT_INPUT',
-        configs: [
-          {
-            routingType: RoutingType.CLASSIC,
-          },
-        ],
-      };
-
-      const {
-        data: { quote },
-      } = await call(quoteReq);
-      const { blockNumber } = quote as ClassicQuoteDataJSON;
-
-      this.block = parseInt(blockNumber) - 10;
-
-      alice = await resetAndFundAtBlock(alice, this.block, [
-        parseAmount('80000000', USDC_MAINNET),
-        parseAmount('50000000', USDT_MAINNET),
-        parseAmount('100', WBTC_MAINNET),
-        parseAmount('10000', UNI_MAINNET),
-        parseAmount('400', WETH9[1]),
-        parseAmount('5000000', DAI_MAINNET),
-        parseAmount('50000', agEUR_MAINNET),
-        parseAmount('475000', XSGD_MAINNET),
-        parseAmount('700000', BULLET),
-      ]);
-
-      process.env.ENABLE_PORTION = 'true';
-      if (process.env.PORTION_API_URL) {
-        this.portionFetcher = new PortionFetcher(process.env.PORTION_API_URL, new NodeCache());
-      }
-
-      return [alice, filler];
+    // Make a dummy call to the API to get a block number to fork from.
+    const quoteReq: QuoteRequestBodyJSON = {
+      requestId: 'id',
+      tokenIn: 'USDC',
+      tokenInChainId: 1,
+      tokenOut: 'USDT',
+      tokenOutChainId: 1,
+      amount: await getAmount(1, 'EXACT_INPUT', 'USDC', 'USDT', '100'),
+      type: 'EXACT_INPUT',
+      configs: [
+        {
+          routingType: RoutingType.CLASSIC,
+        },
+      ],
     };
-};
+
+    const {
+      data: { quote },
+    } = await call(quoteReq);
+    const { blockNumber } = quote as ClassicQuoteDataJSON;
+
+    this.block = parseInt(blockNumber) - 10;
+
+    alice = await resetAndFundAtBlock(alice, this.block, [
+      parseAmount('80000000', USDC_MAINNET),
+      parseAmount('50000000', USDT_MAINNET),
+      parseAmount('100', WBTC_MAINNET),
+      parseAmount('10000', UNI_MAINNET),
+      parseAmount('400', WETH9[1]),
+      parseAmount('5000000', DAI_MAINNET),
+      parseAmount('50000', agEUR_MAINNET),
+      parseAmount('475000', XSGD_MAINNET),
+      parseAmount('700000', BULLET),
+    ]);
+
+    process.env.ENABLE_PORTION = 'true';
+    if (process.env.PORTION_API_URL) {
+      this.portionFetcher = new PortionFetcher(process.env.PORTION_API_URL, new NodeCache());
+    }
+
+    return [alice, filler];
+  };
+}
