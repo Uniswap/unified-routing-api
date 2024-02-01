@@ -18,9 +18,7 @@ import {
 import { fail } from 'assert';
 import axiosStatic, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import axiosRetry from 'axios-retry';
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-import chaiSubset from 'chai-subset';
+import { expect } from 'chai';
 import { BigNumber, providers } from 'ethers';
 import hre from 'hardhat';
 import _ from 'lodash';
@@ -43,9 +41,6 @@ import {
 import { DutchOrder } from '@uniswap/uniswapx-sdk';
 
 const { ethers } = hre;
-
-chai.use(chaiAsPromised);
-chai.use(chaiSubset);
 
 const UNIVERSAL_ROUTER_ADDRESS = UNIVERSAL_ROUTER_ADDRESS_BY_CHAIN(1);
 

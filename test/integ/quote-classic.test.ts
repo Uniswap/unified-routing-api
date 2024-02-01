@@ -20,8 +20,7 @@ import {
 } from '@uniswap/universal-router-sdk';
 import { fail } from 'assert';
 import { AxiosResponse } from 'axios';
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import { expect } from 'chai';
 import chaiSubset from 'chai-subset';
 import { BigNumber, Wallet } from 'ethers';
 import _ from 'lodash';
@@ -29,7 +28,6 @@ import { SUPPORTED_CHAINS } from '../../lib/config/chains';
 import { RoutingType } from '../../lib/constants';
 import { ClassicQuoteDataJSON, V2PoolInRouteJSON } from '../../lib/entities/quote';
 import { QuoteRequestBodyJSON } from '../../lib/entities/request';
-import { PortionFetcher } from '../../lib/fetchers/PortionFetcher';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { FLAT_PORTION, GREENLIST_STABLE_TO_STABLE_PAIRS, GREENLIST_TOKEN_PAIRS } from '../constants';
 import {
@@ -43,6 +41,10 @@ import {
   WNATIVE_ON,
 } from '../utils/tokens';
 import { BaseIntegrationTestSuite, call, callAndExpectFail, checkPortionRecipientToken, checkQuoteToken, isTesterPKEnvironmentSet } from './base.test';
+import chaiAsPromised from 'chai-as-promised';
+
+chai.use(chaiAsPromised);
+chai.use(chaiSubset);
 
 const UNIVERSAL_ROUTER_ADDRESS = UNIVERSAL_ROUTER_ADDRESS_BY_CHAIN(1);
 

@@ -22,6 +22,11 @@ import { fund } from '../utils/forkAndFund';
 import { RoutingApiQuoteResponse } from '../utils/quoteResponse';
 import { agEUR_MAINNET, getAmount, getAmountFromToken, XSGD_MAINNET } from '../utils/tokens';
 import { BaseIntegrationTestSuite, axiosHelper, call, callAndExpectFail, checkPortionRecipientToken, checkQuoteToken } from './base.test';
+import chaiAsPromised from 'chai-as-promised';
+import chaiSubset from 'chai-subset';
+
+chai.use(chaiAsPromised);
+chai.use(chaiSubset);
 
 const NO_LIQ_TOKEN = '0x69b148395Ce0015C13e36BFfBAd63f49EF874E03';
 
