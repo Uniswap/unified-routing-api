@@ -11,7 +11,7 @@ import {
 } from '@uniswap/smart-order-router';
 import { DutchOrder } from '@uniswap/uniswapx-sdk';
 import { AxiosResponse } from 'axios';
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import chaiSubset from 'chai-subset';
 import { BigNumber } from 'ethers';

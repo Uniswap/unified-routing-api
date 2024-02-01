@@ -20,7 +20,7 @@ import {
 } from '@uniswap/universal-router-sdk';
 import { fail } from 'assert';
 import { AxiosResponse } from 'axios';
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import chaiSubset from 'chai-subset';
 import { BigNumber, Wallet } from 'ethers';
@@ -66,8 +66,8 @@ describe('quote', function () {
   this.timeout(40000);
 
   before(async function () {
-    this.baseTest = new BaseIntegrationTestSuite();
-    alice = await this.baseTest.before();
+    baseTest = new BaseIntegrationTestSuite();
+    [alice,] = await baseTest.before();
     // Do any custom setup here for this test suite
 
     // Help with test flakiness by retrying.
