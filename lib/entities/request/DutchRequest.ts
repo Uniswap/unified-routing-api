@@ -6,9 +6,6 @@ import {
   RoutingType,
 } from '../../constants';
 
-export * from './ClassicRequest';
-export * from './DutchRequest';
-
 export interface DutchConfig {
   swapper: string;
   exclusivityOverrideBps: number;
