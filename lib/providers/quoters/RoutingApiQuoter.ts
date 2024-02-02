@@ -5,7 +5,6 @@ import querystring from 'querystring';
 
 import { frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { ClassicQuote, ClassicQuoteDataJSON, ClassicRequest, Quote } from '../../entities';
-import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import axios from './helpers';
 import { Quoter, QuoterType } from './index';
@@ -57,7 +56,6 @@ export class RoutingApiQuoter implements Quoter {
       } else {
         metrics.putMetric(`RoutingApiQuote5xxErr`, 1);
       }
-      log.error(e, 'RoutingApiQuoterErr');
       metrics.putMetric(`RoutingApiQuoterErr`, 1);
 
       // We want to ensure that we throw all non-404 errors

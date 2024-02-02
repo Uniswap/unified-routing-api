@@ -48,7 +48,6 @@ describe('DutchQuote', () => {
   });
 
   describe('Reparameterize', () => {
-
     it('slippage is in percent terms', async () => {
       const amountIn = BigNumber.from('1000000000');
       const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchQuote.applySlippage(
@@ -108,19 +107,21 @@ describe('DutchQuote', () => {
       expect(amountInSlippageAdjusted.gte(amountInGasAdjusted)).toBeTruthy();
       expect(amountOutSlippageAdjusted.eq(amountOutGasAdjusted)).toBeTruthy();
     });
-    
+
     it.each([
-      { title: 'overrides', largeTrade: true, },
-      { title: 'does not override', largeTrade: false }
+      { title: 'overrides', largeTrade: true },
+      { title: 'does not override', largeTrade: false },
     ])('$title auctionPeriodSec if order size is considered large: $largeTrade', async (params) => {
       const classic = params.largeTrade ? CLASSIC_QUOTE_EXACT_IN_LARGE : CLASSIC_QUOTE_EXACT_IN_SMALL;
-      const reparamatrized = DutchQuote.reparameterize(DL_QUOTE_EXACT_IN_LARGE, classic, {hasApprovedPermit2: true, largeTrade: params.largeTrade});
+      const reparamatrized = DutchQuote.reparameterize(DL_QUOTE_EXACT_IN_LARGE, classic, {
+        hasApprovedPermit2: true,
+        largeTrade: params.largeTrade,
+      });
       if (params.largeTrade) {
         expect(reparamatrized.auctionPeriodSecs).toEqual(120);
       } else {
         expect(reparamatrized.auctionPeriodSecs).toEqual(60);
       }
-
     });
 
     it.each([true, false])(
@@ -136,7 +137,7 @@ describe('DutchQuote', () => {
         }
       }
     );
-    
+
     it('only override auctionPeriodSec on mainnet', async () => {
       const classic = CLASSIC_QUOTE_EXACT_IN_LARGE;
       const dutchRequest = createDutchQuote({ amountOut: AMOUNT_LARGE, chainId: 137 }, 'EXACT_INPUT', '1');

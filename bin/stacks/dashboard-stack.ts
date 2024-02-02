@@ -1,4 +1,5 @@
 import { ChainId } from '@uniswap/sdk-core';
+import { ID_TO_NETWORK_NAME } from '@uniswap/smart-order-router';
 import * as cdk from 'aws-cdk-lib';
 import * as aws_cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import { Construct } from 'constructs';
@@ -222,8 +223,49 @@ export class DashboardStack extends cdk.NestedStack {
             },
           },
           {
+            type: 'metric',
             height: 6,
-            width: 24,
+            width: 12,
+            y: 6,
+            x: 12,
+            properties: {
+              metrics: _.flatMap(
+                _.uniq([...SUPPORTED_CHAINS.CLASSIC, ...SUPPORTED_CHAINS.DUTCH_LIMIT]),
+                (chainId: ChainId) => [
+                  [
+                    {
+                      expression: `(c${chainId}r2xx/c${chainId}r) * 100`,
+                      label: `${ID_TO_NETWORK_NAME(chainId)} - Success Rate`,
+                      id: `r2${chainId}`,
+                    },
+                  ],
+                  [
+                    'Uniswap',
+                    `QuoteRequestedChainId${chainId}`,
+                    'Service',
+                    METRIC_SERVICE_NAME,
+                    { id: `c${chainId}r`, visible: false },
+                  ],
+                  ['.', `QuoteResponseChainId${chainId}Status2XX`, '.', '.', { id: `c${chainId}r2xx`, visible: false }],
+                ]
+              ),
+              view: 'timeSeries',
+              stacked: false,
+              stat: 'Sum',
+              period: 300,
+              region,
+              title: 'Success Rates by Chain',
+              yAxis: {
+                left: {
+                  showUnits: false,
+                  label: '%',
+                },
+              },
+            },
+          },
+          {
+            height: 6,
+            width: 12,
             y: 6,
             x: 0,
             type: 'metric',
@@ -242,10 +284,59 @@ export class DashboardStack extends cdk.NestedStack {
           },
           {
             type: 'metric',
-            x: 0,
-            y: 6,
-            width: 7,
             height: 6,
+            width: 24,
+            y: 12,
+            x: 0,
+            properties: {
+              metrics: _.flatMap(
+                _.uniq([...SUPPORTED_CHAINS.CLASSIC, ...SUPPORTED_CHAINS.DUTCH_LIMIT]),
+                (chainId: ChainId) => [
+                  [
+                    {
+                      expression: `(c${chainId}r5xx/c${chainId}r) * 100`,
+                      label: `${ID_TO_NETWORK_NAME(chainId)} - 5XX Error Rate`,
+                      id: `r5${chainId}`,
+                    },
+                  ],
+                  [
+                    {
+                      expression: `(c${chainId}r4xx/c${chainId}r) * 100`,
+                      label: `${ID_TO_NETWORK_NAME(chainId)} - 4XX Error Rate`,
+                      id: `r4${chainId}`,
+                    },
+                  ],
+                  [
+                    'Uniswap',
+                    `QuoteRequestedChainId${chainId}`,
+                    'Service',
+                    METRIC_SERVICE_NAME,
+                    { id: `c${chainId}r`, visible: false },
+                  ],
+                  ['.', `QuoteResponseChainId${chainId}Status4XX`, '.', '.', { id: `c${chainId}r4xx`, visible: false }],
+                  ['.', `QuoteResponseChainId${chainId}Status5XX`, '.', '.', { id: `c${chainId}r5xx`, visible: false }],
+                ]
+              ),
+              view: 'timeSeries',
+              stacked: false,
+              stat: 'Sum',
+              period: 300,
+              region,
+              title: '5XX/4XX Error Rates by Chain',
+              yAxis: {
+                left: {
+                  showUnits: false,
+                  label: '%',
+                },
+              },
+            },
+          },
+          {
+            type: 'metric',
+            height: 6,
+            width: 7,
+            y: 18,
+            x: 0,
             properties: {
               metrics: [
                 ['Uniswap', 'QuoteResponseQuoteType-SYNTHETIC', 'Service', METRIC_SERVICE_NAME],
@@ -261,10 +352,10 @@ export class DashboardStack extends cdk.NestedStack {
           },
           {
             type: 'metric',
-            x: 7,
-            y: 6,
-            width: 17,
             height: 6,
+            width: 17,
+            y: 18,
+            x: 7,
             properties: {
               metrics: [
                 ['Uniswap', 'QuoteResponseQuoteType-SYNTHETIC', 'Service', METRIC_SERVICE_NAME],
@@ -287,10 +378,10 @@ export class DashboardStack extends cdk.NestedStack {
           },
           {
             type: 'metric',
-            x: 0,
-            y: 6,
-            width: 7,
             height: 6,
+            width: 7,
+            y: 24,
+            x: 0,
             properties: {
               metrics: [
                 ['Uniswap', 'UniswapXQuoteResponseQuoteType-SYNTHETIC', 'Service', METRIC_SERVICE_NAME],
@@ -306,10 +397,10 @@ export class DashboardStack extends cdk.NestedStack {
           },
           {
             type: 'metric',
-            x: 7,
-            y: 6,
-            width: 17,
             height: 6,
+            width: 17,
+            y: 24,
+            x: 7,
             properties: {
               metrics: [
                 ['Uniswap', 'UniswapXQuoteResponseQuoteType-SYNTHETIC', 'Service', METRIC_SERVICE_NAME],
@@ -332,10 +423,10 @@ export class DashboardStack extends cdk.NestedStack {
           },
           {
             type: 'metric',
-            x: 0,
-            y: 12,
-            width: 12,
             height: 7,
+            width: 12,
+            y: 30,
+            x: 0,
             properties: {
               view: 'timeSeries',
               stacked: false,
@@ -355,10 +446,10 @@ export class DashboardStack extends cdk.NestedStack {
           },
           {
             type: 'metric',
-            x: 12,
-            y: 12,
-            width: 12,
             height: 7,
+            width: 12,
+            y: 30,
+            x: 12,
             properties: {
               view: 'timeSeries',
               stacked: false,
@@ -378,10 +469,10 @@ export class DashboardStack extends cdk.NestedStack {
           },
           {
             type: 'metric',
-            x: 0,
-            y: 12,
-            width: 12,
             height: 7,
+            width: 12,
+            y: 37,
+            x: 0,
             properties: {
               view: 'timeSeries',
               stacked: false,
@@ -401,10 +492,10 @@ export class DashboardStack extends cdk.NestedStack {
           },
           {
             type: 'metric',
-            x: 12,
-            y: 12,
-            width: 12,
             height: 7,
+            width: 12,
+            y: 37,
+            x: 12,
             properties: {
               view: 'timeSeries',
               stacked: false,
@@ -424,10 +515,10 @@ export class DashboardStack extends cdk.NestedStack {
           },
           {
             type: 'metric',
-            x: 0,
-            y: 19,
-            width: 24,
             height: 6,
+            width: 24,
+            y: 44,
+            x: 0,
             properties: {
               metrics: _.flatMap(
                 _.uniq([...SUPPORTED_CHAINS.CLASSIC, ...SUPPORTED_CHAINS.DUTCH_LIMIT]),
@@ -447,53 +538,10 @@ export class DashboardStack extends cdk.NestedStack {
           },
           {
             type: 'metric',
-            x: 0,
-            y: 25,
-            width: 24,
-            height: 6,
-            properties: {
-              metrics: _.flatMap(
-                _.uniq([...SUPPORTED_CHAINS.CLASSIC, ...SUPPORTED_CHAINS.DUTCH_LIMIT]),
-                (chainId: ChainId) => [
-                  [
-                    {
-                      expression: `(c${chainId}r5xx/c${chainId}r) * 100`,
-                      label: `5XXErrorRateChainId${chainId}`,
-                      id: `r5${chainId}`,
-                    },
-                  ],
-                  [
-                    {
-                      expression: `(c${chainId}r4xx/c${chainId}r) * 100`,
-                      label: `4XXErrorRateChainId${chainId}`,
-                      id: `r4${chainId}`,
-                    },
-                  ],
-                  [
-                    'Uniswap',
-                    `QuoteRequestedChainId${chainId}`,
-                    'Service',
-                    METRIC_SERVICE_NAME,
-                    { id: `c${chainId}r`, visible: false },
-                  ],
-                  ['.', `QuoteResponseChainId${chainId}Status4XX`, '.', '.', { id: `c${chainId}r4xx`, visible: false }],
-                  ['.', `QuoteResponseChainId${chainId}Status5XX`, '.', '.', { id: `c${chainId}r5xx`, visible: false }],
-                ]
-              ),
-              view: 'timeSeries',
-              stacked: false,
-              stat: 'Sum',
-              period: 300,
-              region,
-              title: '5XX/4XX Error Rates by Chain',
-            },
-          },
-          {
-            type: 'metric',
-            x: 0,
-            y: 55,
-            width: 24,
             height: 5,
+            width: 24,
+            y: 61,
+            x: 0,
             properties: {
               view: 'timeSeries',
               stacked: false,
@@ -509,10 +557,10 @@ export class DashboardStack extends cdk.NestedStack {
           },
           {
             type: 'metric',
-            x: 0,
-            y: 31,
-            width: 12,
             height: 6,
+            width: 12,
+            y: 50,
+            x: 0,
             properties: {
               metrics: [
                 [{ expression: '(m3/m1)*100', label: 'RoutingAPIRequest4xxErrorRate', id: 'e1' }],
@@ -520,10 +568,10 @@ export class DashboardStack extends cdk.NestedStack {
                 [{ expression: '(m6/m1)*100', label: 'RoutingAPIRequest5xxErrorRate', id: 'e3' }],
                 ['Uniswap', 'RoutingApiQuoterRequest', 'Service', METRIC_SERVICE_NAME, { id: 'm1', visible: false }],
                 ['.', 'RoutingApiQuoterSuccess', '.', '.', { id: 'm2', visible: false }],
-                ['.', 'RoutingApiQuoter4xxErr', '.', '.', { id: 'm3', visible: false }],
-                ['.', 'RfqQuoterErrRfq', '.', '.', { id: 'm4', visible: false }],
+                ['.', 'RoutingApiQuote4xxErr', '.', '.', { id: 'm3', visible: false }],
+                ['.', 'RfqQuoterRfqErr', '.', '.', { id: 'm4', visible: false }],
                 ['.', 'RfqQuoterRequest', '.', '.', { id: 'm5', visible: false }],
-                ['.', 'RoutingApiQuoter5xxErr', '.', '.', { id: 'm6', visible: false }],
+                ['.', 'RoutingApiQuote5xxErr', '.', '.', { id: 'm6', visible: false }],
               ],
               view: 'timeSeries',
               stacked: false,
@@ -535,16 +583,16 @@ export class DashboardStack extends cdk.NestedStack {
           },
           {
             type: 'metric',
-            x: 12,
-            y: 31,
-            width: 12,
             height: 6,
+            width: 12,
+            y: 50,
+            x: 12,
             properties: {
               metrics: [
                 ['Uniswap', 'RoutingApiQuoterRequest', 'Service', METRIC_SERVICE_NAME, { id: 'm1' }],
                 ['.', 'RoutingApiQuoterSuccess', '.', '.', { id: 'm2' }],
                 ['.', 'RoutingApiQuoterErr', '.', '.', { id: 'm3' }],
-                ['.', 'RfqQuoterErrRfq', '.', '.', { id: 'm4' }],
+                ['.', 'RfqQuoterRfqErr', '.', '.', { id: 'm4' }],
                 ['.', 'RfqQuoterRequest', '.', '.', { id: 'm5' }],
               ],
               view: 'timeSeries',
@@ -557,10 +605,10 @@ export class DashboardStack extends cdk.NestedStack {
           },
           {
             type: 'metric',
-            x: 0,
-            y: 50,
-            width: 24,
             height: 5,
+            width: 24,
+            y: 56,
+            x: 0,
             properties: {
               metrics: [
                 ['Uniswap', 'RfqQuoterLatency', 'Service', METRIC_SERVICE_NAME],

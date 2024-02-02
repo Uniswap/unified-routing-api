@@ -492,7 +492,10 @@ export const CLASSIC_QUOTE_EXACT_IN_WORSE_WITH_PORTION = createClassicQuote(
   undefined,
   FLAT_PORTION
 );
-export const CLASSIC_QUOTE_EXACT_IN_SMALL = createClassicQuote({gasUseEstimateQuote: '1', quoteGasAdjusted: '10', gasUseEstimateUSD: '100' }, { type: 'EXACT_INPUT' });
+export const CLASSIC_QUOTE_EXACT_IN_SMALL = createClassicQuote(
+  { gasUseEstimateQuote: '1', quoteGasAdjusted: '10', gasUseEstimateUSD: '100' },
+  { type: 'EXACT_INPUT' }
+);
 export const CLASSIC_QUOTE_EXACT_IN_LARGE = createClassicQuote({}, { type: 'EXACT_INPUT' });
 export const CLASSIC_QUOTE_EXACT_IN_LARGE_WITH_PORTION = createClassicQuote(
   {

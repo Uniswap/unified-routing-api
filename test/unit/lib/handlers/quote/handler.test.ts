@@ -26,23 +26,25 @@ import {
   QUOTE_REQUEST_BODY_MULTI_SYNTHETIC,
   QUOTE_REQUEST_CLASSIC,
   QUOTE_REQUEST_DL,
-  QUOTE_REQUEST_MULTI
+  QUOTE_REQUEST_MULTI,
 } from '../../../../utils/fixtures';
 
 import { PermitDetails } from '@uniswap/permit2-sdk';
 import { DutchOrderInfoJSON } from '@uniswap/uniswapx-sdk';
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { MetricsLogger } from 'aws-embedded-metrics';
+import { APIGatewayProxyEventHeaders } from 'aws-lambda/trigger/api-gateway-proxy';
 import { AxiosError } from 'axios';
+import { providers } from 'ethers';
 import NodeCache from 'node-cache';
 import { RoutingType } from '../../../../../lib/constants';
 import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, Quote, RequestSource } from '../../../../../lib/entities';
 import { QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index';
 import { Permit2Fetcher } from '../../../../../lib/fetchers/Permit2Fetcher';
 import {
-  GET_NO_PORTION_RESPONSE,
   GetPortionResponse,
-  PortionFetcher
+  GET_NO_PORTION_RESPONSE,
+  PortionFetcher,
 } from '../../../../../lib/fetchers/PortionFetcher';
 import { TokenFetcher } from '../../../../../lib/fetchers/TokenFetcher';
 import { ApiInjector, ApiRInj } from '../../../../../lib/handlers/base';
@@ -51,7 +53,7 @@ import {
   getBestQuote,
   getQuotes,
   QuoteHandler,
-  removeDutchRequests
+  removeDutchRequests,
 } from '../../../../../lib/handlers/quote/handler';
 import { ContainerInjected, QuoterByRoutingType } from '../../../../../lib/handlers/quote/injector';
 import { Quoter, SyntheticStatusProvider } from '../../../../../lib/providers';
@@ -59,7 +61,6 @@ import { Erc20__factory } from '../../../../../lib/types/ext/factories/Erc20__fa
 import { ErrorCode } from '../../../../../lib/util/errors';
 import { setGlobalLogger } from '../../../../../lib/util/log';
 import { INELIGIBLE_TOKEN, PERMIT2_USED, PERMIT_DETAILS, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../../constants';
-import { APIGatewayProxyEventHeaders } from 'aws-lambda/trigger/api-gateway-proxy';
 
 describe('QuoteHandler', () => {
   const OLD_ENV = process.env;
@@ -114,9 +115,9 @@ describe('QuoteHandler', () => {
       new Promise((resolve) =>
         resolve({
           getContainerInjected: (): ContainerInjected => {
-            const rpcUrlMap = new Map<ChainId, string>();
+            const chainIdRpcMap = new Map<ChainId, providers.StaticJsonRpcProvider>();
             for (const chain of Object.values(ChainId)) {
-              rpcUrlMap.set(chain as ChainId, 'url');
+              chainIdRpcMap.set(chain as ChainId, new providers.StaticJsonRpcProvider());
             }
             return {
               quoters: quoters,
@@ -124,7 +125,7 @@ describe('QuoteHandler', () => {
               portionFetcher: portionFetcher,
               permit2Fetcher: permit2Fetcher,
               syntheticStatusProvider,
-              rpcUrlMap,
+              chainIdRpcMap,
             };
           },
           getRequestInjected: () => requestInjectedMock,
@@ -207,7 +208,7 @@ describe('QuoteHandler', () => {
     const getEvent = (request: QuoteRequestBodyJSON, headers?: APIGatewayProxyEventHeaders): APIGatewayProxyEvent =>
       ({
         body: JSON.stringify(request),
-        ...(headers !== undefined && {headers: headers})
+        ...(headers !== undefined && { headers: headers }),
       } as APIGatewayProxyEvent);
 
     describe('handler test', () => {
@@ -230,8 +231,8 @@ describe('QuoteHandler', () => {
       });
 
       it('check request source', async () => {
-        const quoteMock = jest.fn().mockResolvedValue(CLASSIC_QUOTE_EXACT_IN_WORSE)
-        const quoterMock: Quoter = { quote: quoteMock }
+        const quoteMock = jest.fn().mockResolvedValue(CLASSIC_QUOTE_EXACT_IN_WORSE);
+        const quoterMock: Quoter = { quote: quoteMock };
 
         const quoters = { [RoutingType.CLASSIC]: quoterMock };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
@@ -245,20 +246,20 @@ describe('QuoteHandler', () => {
           portionFetcher,
           permit2Fetcher,
           syntheticStatusProvider
-        )
+        );
 
-        let headers: APIGatewayProxyEventHeaders = {
+        const headers: APIGatewayProxyEventHeaders = {
           'x-request-source': 'uniswap-web',
-        }
+        };
         await quoteHandler.handler(getEvent(CLASSIC_REQUEST_BODY, headers), {} as unknown as Context);
-        let quoteCallParams = quoteMock.mock.lastCall[0]
-        expect(quoteCallParams.info.source).toBe(RequestSource.UNISWAP_WEB)
+        const quoteCallParams = quoteMock.mock.lastCall[0];
+        expect(quoteCallParams.info.source).toBe(RequestSource.UNISWAP_WEB);
       });
 
       describe('handler getQuoteRequestSource', () => {
         it('test getQuoteRequestSource', async () => {
-          const quoteMock = jest.fn().mockResolvedValue(CLASSIC_QUOTE_EXACT_IN_WORSE)
-          const quoterMock: Quoter = { quote: quoteMock }
+          const quoteMock = jest.fn().mockResolvedValue(CLASSIC_QUOTE_EXACT_IN_WORSE);
+          const quoterMock: Quoter = { quote: quoteMock };
 
           const quoters = { [RoutingType.CLASSIC]: quoterMock };
           const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
@@ -272,40 +273,44 @@ describe('QuoteHandler', () => {
             portionFetcher,
             permit2Fetcher,
             syntheticStatusProvider
-          )
+          );
 
-          let headers: APIGatewayProxyEventHeaders = { 'x-request-source': 'uniswap-ios' }
-          let requestSource = quoteHandler.getQuoteRequestSource(headers)
-          expect(requestSource).toBe(RequestSource.UNISWAP_IOS)
+          let headers: APIGatewayProxyEventHeaders = { 'x-request-source': 'uniswap-ios' };
+          let requestSource = quoteHandler.getQuoteRequestSource(headers);
+          expect(requestSource).toBe(RequestSource.UNISWAP_IOS);
 
-          headers = { 'x-request-source': 'uniswap-android' }
-          requestSource = quoteHandler.getQuoteRequestSource(headers)
-          expect(requestSource).toBe(RequestSource.UNISWAP_ANDROID)
+          headers = { 'x-request-source': 'uniswap-android' };
+          requestSource = quoteHandler.getQuoteRequestSource(headers);
+          expect(requestSource).toBe(RequestSource.UNISWAP_ANDROID);
 
-          headers = { 'x-request-source': 'uniswap-web' }
-          requestSource = quoteHandler.getQuoteRequestSource(headers)
-          expect(requestSource).toBe(RequestSource.UNISWAP_WEB)
+          headers = { 'x-request-source': 'uniswap-web' };
+          requestSource = quoteHandler.getQuoteRequestSource(headers);
+          expect(requestSource).toBe(RequestSource.UNISWAP_WEB);
 
-          headers = { 'x-request-source': 'external-api' }
-          requestSource = quoteHandler.getQuoteRequestSource(headers)
-          expect(requestSource).toBe(RequestSource.EXTERNAL_API)
+          headers = { 'x-request-source': 'external-api' };
+          requestSource = quoteHandler.getQuoteRequestSource(headers);
+          expect(requestSource).toBe(RequestSource.EXTERNAL_API);
 
-          headers = { 'x-request-source': 'lonely-planet' }
-          requestSource = quoteHandler.getQuoteRequestSource(headers)
-          expect(requestSource).toBe(RequestSource.UNKNOWN)
+          headers = { 'x-request-source': 'external-api:mobile' };
+          requestSource = quoteHandler.getQuoteRequestSource(headers);
+          expect(requestSource).toBe(RequestSource.EXTERNAL_API_MOBILE);
 
-          headers = { 'x-request-source': '' }
-          requestSource = quoteHandler.getQuoteRequestSource(headers)
-          expect(requestSource).toBe(RequestSource.UNKNOWN)
+          headers = { 'x-request-source': 'lonely-planet' };
+          requestSource = quoteHandler.getQuoteRequestSource(headers);
+          expect(requestSource).toBe(RequestSource.UNKNOWN);
 
-          headers = {}
-          requestSource = quoteHandler.getQuoteRequestSource(headers)
-          expect(requestSource).toBe(RequestSource.UNKNOWN)
+          headers = { 'x-request-source': '' };
+          requestSource = quoteHandler.getQuoteRequestSource(headers);
+          expect(requestSource).toBe(RequestSource.UNKNOWN);
+
+          headers = {};
+          requestSource = quoteHandler.getQuoteRequestSource(headers);
+          expect(requestSource).toBe(RequestSource.UNKNOWN);
         });
 
         it('test getQuoteRequestSource input case insensitiveness', async () => {
-          const quoteMock = jest.fn().mockResolvedValue(CLASSIC_QUOTE_EXACT_IN_WORSE)
-          const quoterMock: Quoter = { quote: quoteMock }
+          const quoteMock = jest.fn().mockResolvedValue(CLASSIC_QUOTE_EXACT_IN_WORSE);
+          const quoterMock: Quoter = { quote: quoteMock };
 
           const quoters = { [RoutingType.CLASSIC]: quoterMock };
           const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
@@ -319,15 +324,15 @@ describe('QuoteHandler', () => {
             portionFetcher,
             permit2Fetcher,
             syntheticStatusProvider
-          )
+          );
 
-          let headers: APIGatewayProxyEventHeaders = { 'x-request-source': 'Uniswap-iOS' }
-          let requestSource = quoteHandler.getQuoteRequestSource(headers)
-          expect(requestSource).toBe(RequestSource.UNISWAP_IOS)
+          let headers: APIGatewayProxyEventHeaders = { 'x-request-source': 'Uniswap-iOS' };
+          let requestSource = quoteHandler.getQuoteRequestSource(headers);
+          expect(requestSource).toBe(RequestSource.UNISWAP_IOS);
 
-          headers = { 'x-request-source': 'UNISWAP-ANDROID' }
-          requestSource = quoteHandler.getQuoteRequestSource(headers)
-          expect(requestSource).toBe(RequestSource.UNISWAP_ANDROID)
+          headers = { 'x-request-source': 'UNISWAP-ANDROID' };
+          requestSource = quoteHandler.getQuoteRequestSource(headers);
+          expect(requestSource).toBe(RequestSource.UNISWAP_ANDROID);
         });
       });
 
