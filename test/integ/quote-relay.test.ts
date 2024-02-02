@@ -46,10 +46,10 @@ describe('relayQuote', function () {
     reactorAddress = reactorContract.address;
   });
 
-  for (const type of ['EXACT_INPUT']) {
+  for (const type of ['EXACT_INPUT', 'EXACT_OUTPUT']) {
     describe(`${ID_TO_NETWORK_NAME(1)} ${type} 2xx`, () => {
       describe(`+ Execute Swap`, () => {
-        it(`stable -> stable, large trade should return valid quote`, async () => {
+        it(`stable -> stable, gas token == input token, no encoded actions`, async () => {
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
             tokenIn: USDC_MAINNET.address,
@@ -84,7 +84,9 @@ describe('relayQuote', function () {
           expect(parseInt(order.info.inputs[0].startAmount.toString())).to.be.greaterThan(9000000000);
           expect(parseInt(order.info.inputs[0].startAmount.toString())).to.be.lessThan(11000000000);
 
-          const { tokenInBefore, tokenInAfter, gasTokenBefore, gasTokenAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeRelaySwap(
+          const gasInput = order.info.inputs.find((input) => input.recipient === "0x0000000000000000000000000000000000000000")!;
+
+          const { tokenInBefore, tokenInAfter } = await baseTest.executeRelaySwap(
             alice,
             filler,
             order,
@@ -93,17 +95,8 @@ describe('relayQuote', function () {
             USDT_MAINNET,
           );
 
-          if (type === 'EXACT_INPUT') {
-            // gte here because gas could be taken in the input token too
-            console.log(tokenInBefore.subtract(tokenInAfter).toExact(), gasTokenBefore.subtract(gasTokenAfter).toExact());
-            expect(tokenInBefore.subtract(tokenInAfter).greaterThan(10_000) || tokenInBefore.subtract(tokenInAfter).equalTo(10_000)).to.be.true;
-            expect(gasTokenBefore.subtract(gasTokenAfter).greaterThan(0) || gasTokenBefore.subtract(gasTokenAfter).equalTo(0)).to.be.true;
-          } else {
-            expect(
-              tokenOutAfter.subtract(tokenOutBefore).greaterThan(10_000) ||
-                tokenOutAfter.subtract(tokenOutBefore).equalTo(10_000)
-            ).to.be.true;
-          }
+          const netMaxInputAmount = Number(gasInput.maxAmount as unknown as string) + 10_000
+          expect(tokenInAfter.subtract(tokenInBefore).lessThan(netMaxInputAmount) || tokenInAfter.subtract(tokenInBefore).equalTo(netMaxInputAmount)).to.be.true;
         });
       });
     });

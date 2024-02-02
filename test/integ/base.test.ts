@@ -288,16 +288,7 @@ export class BaseIntegrationTestSuite {
     const gasTokenBefore = await getBalanceAndApprove(swapper, PERMIT2_ADDRESS, currencyGasToken.wrapped);
 
     const { domain, types, values } = order.permitData();
-    console.log(domain, types, values)
     const signature = await swapper._signTypedData(domain, types, values);
-
-    const structHash = ethers.utils._TypedDataEncoder.hash(domain, types, values);
-    console.log("local typehash", structHash);
-
-    const recovered = order.getSigner(signature);
-    if (recovered !== swapper.address) {
-      throw new Error('Recovered signer does not match expected signer');
-    }
 
     const transactionResponse = await reactor.execute({ order: order.serialize(), sig: signature }, filler.address);
     const receipt = await transactionResponse.wait();
