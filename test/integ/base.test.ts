@@ -11,7 +11,7 @@ import {
   WBTC_MAINNET,
   WETH9,
 } from '@uniswap/smart-order-router';
-import { DutchOrder } from '@uniswap/uniswapx-sdk';
+import { DutchOrder, RelayOrder } from '@uniswap/uniswapx-sdk';
 import {
   PERMIT2_ADDRESS,
   UNIVERSAL_ROUTER_ADDRESS as UNIVERSAL_ROUTER_ADDRESS_BY_CHAIN,
@@ -29,7 +29,7 @@ import { ClassicQuoteDataJSON } from '../../lib/entities/quote';
 import { QuoteRequestBodyJSON } from '../../lib/entities/request';
 import { Portion, PortionFetcher } from '../../lib/fetchers/PortionFetcher';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
-import { ExclusiveDutchOrderReactor__factory, Permit2__factory } from '../../lib/types/ext';
+import { ExclusiveDutchOrderReactor__factory, Permit2__factory, RelayOrderReactor__factory } from '../../lib/types/ext';
 import { resetAndFundAtBlock } from '../utils/forkAndFund';
 import { getBalance, getBalanceAndApprove } from '../utils/getBalanceAndApprove';
 import { agEUR_MAINNET, BULLET, getAmount, UNI_MAINNET, XSGD_MAINNET } from '../utils/tokens';
@@ -264,8 +264,63 @@ export class BaseIntegrationTestSuite {
     };
   };
 
+  executeRelaySwap = async (
+    swapper: SignerWithAddress,
+    filler: SignerWithAddress,
+    order: RelayOrder,
+    currencyIn: Currency,
+    currencyGasToken: Currency,
+    currencyOut: Currency
+  ): Promise<{
+    tokenInAfter: CurrencyAmount<Currency>;
+    tokenInBefore: CurrencyAmount<Currency>;
+    gasTokenAfter: CurrencyAmount<Currency>;
+    gasTokenBefore: CurrencyAmount<Currency>;
+    tokenOutAfter: CurrencyAmount<Currency>;
+    tokenOutBefore: CurrencyAmount<Currency>;
+  }> => {
+    const reactor = RelayOrderReactor__factory.connect(order.info.reactor, filler);
+
+    // Approve Permit2 for Alice
+    // Note we pass in currency.wrapped, since reactor does not support native ETH in
+    const tokenInBefore = await getBalanceAndApprove(swapper, PERMIT2_ADDRESS, currencyIn.wrapped);
+    const tokenOutBefore = await getBalance(swapper, currencyOut);
+    const gasTokenBefore = await getBalanceAndApprove(swapper, PERMIT2_ADDRESS, currencyGasToken.wrapped);
+
+    const { domain, types, values } = order.permitData();
+    console.log(domain, types, values)
+    const signature = await swapper._signTypedData(domain, types, values);
+
+    const structHash = ethers.utils._TypedDataEncoder.hash(domain, types, values);
+    console.log("local typehash", structHash);
+
+    const recovered = order.getSigner(signature);
+    if (recovered !== swapper.address) {
+      throw new Error('Recovered signer does not match expected signer');
+    }
+
+    const transactionResponse = await reactor.execute({ order: order.serialize(), sig: signature }, filler.address);
+    const receipt = await transactionResponse.wait();
+    console.log(receipt);
+
+    const tokenInAfter = await getBalance(swapper, currencyIn.wrapped);
+    const tokenOutAfter = await getBalance(swapper, currencyOut);
+    const gasTokenAfter = await getBalance(swapper, currencyGasToken.wrapped);
+
+    return {
+      tokenInAfter,
+      tokenInBefore,
+      tokenOutAfter,
+      tokenOutBefore,
+      gasTokenAfter,
+      gasTokenBefore,
+    };
+  };
+
   before = async () => {
-    const [alice, filler] = await ethers.getSigners();
+    let alice: SignerWithAddress;
+    let filler: SignerWithAddress;
+    [alice, filler] = await ethers.getSigners();
 
     // Make a dummy call to the API to get a block number to fork from.
     const quoteReq: QuoteRequestBodyJSON = {
@@ -290,7 +345,7 @@ export class BaseIntegrationTestSuite {
 
     this.block = parseInt(blockNumber) - 10;
 
-    await resetAndFundAtBlock(alice, this.block, [
+    alice = await resetAndFundAtBlock(alice, this.block, [
       parseAmount('80000000', USDC_MAINNET),
       parseAmount('50000000', USDT_MAINNET),
       parseAmount('100', WBTC_MAINNET),
@@ -309,4 +364,13 @@ export class BaseIntegrationTestSuite {
 
     return [alice, filler];
   };
+
+  deployContract = async (
+    factory: ethers.ContractFactory,
+    args: any[],
+  ): Promise<ethers.Contract> => {
+    const contract = await factory.deploy(...args);
+    await contract.deployed();
+    return contract;
+  }
 }
