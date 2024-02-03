@@ -467,9 +467,9 @@ const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
     return (quote as DutchQuote).amountOutGasAndPortionAdjusted;
   } else {
     if (quote.routingType === RoutingType.CLASSIC) {
-      return (quote as ClassicQuote).amountInGasAndPortionAdjusted;
+      return (quote as ClassicQuote).amountInGasAdjusted;
     }
-    return (quote as DutchQuote).amountInGasAndPortionAdjusted;
+    return (quote as DutchQuote).amountInGasAdjusted;
   }
 };
 

@@ -426,6 +426,10 @@ export class DutchQuote implements IQuote {
     return this.portionAmountOutStart.mul(this.amountInStart).div(this.amountOutStart.add(this.portionAmountOutStart));
   }
 
+  public get amountInGasAdjusted(): BigNumber {
+    return this.amountIn;
+  }
+
   public get amountInGasAndPortionAdjusted(): BigNumber {
     return this.amountIn.add(this.portionAmountInStart);
   }
