@@ -364,7 +364,7 @@ export class DutchQuote implements IQuote {
   }
 
   public get amountIn(): BigNumber {
-    return this.amountInStart;
+    return this.amountInStart.sub(this.portionAmountInStart);
   }
 
   // The number of seconds from now that order decay should begin
@@ -427,11 +427,11 @@ export class DutchQuote implements IQuote {
   }
 
   public get amountInGasAdjusted(): BigNumber {
-    return this.amountIn;
+    return this.amountIn.sub(this.portionAmountInStart);
   }
 
   public get amountInGasAndPortionAdjusted(): BigNumber {
-    return this.amountIn.add(this.portionAmountInStart);
+    return this.amountIn;
   }
 
   public get amountOutGasAndPortionAdjusted(): BigNumber {
