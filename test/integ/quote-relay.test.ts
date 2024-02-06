@@ -1,5 +1,6 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import {
+  DAI_MAINNET,
   ID_TO_NETWORK_NAME,
   USDC_MAINNET,
   USDT_MAINNET,
@@ -18,6 +19,8 @@ import { BaseIntegrationTestSuite, call } from './base.test';
 import { RelayOrderReactor__factory } from '../../lib/types/ext';
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { PERMIT2_ADDRESS } from '@uniswap/permit2-sdk';
+import { BigNumber } from 'ethers';
+import { CurrencyAmount } from '@uniswap/sdk-core';
 
 chai.use(chaiAsPromised);
 chai.use(chaiSubset);
@@ -81,8 +84,9 @@ describe('relayQuote', function () {
 
           expect(order.info.swapper).to.equal(alice.address);
           expect(order.info.inputs.length).to.equal(2);
-          expect(parseInt(order.info.inputs[0].startAmount.toString())).to.be.greaterThan(9000000000);
-          expect(parseInt(order.info.inputs[0].startAmount.toString())).to.be.lessThan(11000000000);
+          const swapInput = order.info.inputs.find((input) => input.recipient !== "0x0000000000000000000000000000000000000000")!;
+          expect(parseInt(swapInput.startAmount.toString())).to.be.greaterThan(9000000000);
+          expect(parseInt(swapInput.startAmount.toString())).to.be.lessThan(11000000000);
 
           const gasInput = order.info.inputs.find((input) => input.recipient === "0x0000000000000000000000000000000000000000")!;
 
@@ -95,8 +99,64 @@ describe('relayQuote', function () {
             USDT_MAINNET,
           );
 
-          const netMaxInputAmount = Number(gasInput.maxAmount as unknown as string) + 10_000
-          expect(tokenInAfter.subtract(tokenInBefore).lessThan(netMaxInputAmount) || tokenInAfter.subtract(tokenInBefore).equalTo(netMaxInputAmount)).to.be.true;
+          const netMaxAmountIn = CurrencyAmount.fromRawAmount(USDC_MAINNET, parseInt(gasInput.maxAmount.toString()) + parseInt(swapInput.maxAmount.toString()));
+          // at most netMaxAmountIn of tokenIn should be spent
+          expect(tokenInBefore.subtract(tokenInAfter).lessThan(netMaxAmountIn) || tokenInBefore.subtract(tokenInAfter).equalTo(netMaxAmountIn)).to.be.true;
+        });
+
+        it(`stable -> stable, gas token != input token, no encoded actions`, async () => {
+          const quoteReq: QuoteRequestBodyJSON = {
+            requestId: 'id',
+            tokenIn: USDC_MAINNET.address,
+            tokenInChainId: 1,
+            tokenOut: USDT_MAINNET.address,
+            tokenOutChainId: 1,
+            amount: await getAmount(1, type, 'USDC', 'USDT', '10000'),
+            type,
+            slippageTolerance: SLIPPAGE,
+            configs: [
+              {
+                routingType: RoutingType.RELAY,
+                swapper: alice.address,
+                gasToken: DAI_MAINNET.address
+              },
+            ] as RoutingConfigJSON[],
+          };
+
+          const response: AxiosResponse<QuoteResponseJSON> = await call(quoteReq);
+          const {
+            data: { quote },
+            status,
+          } = response;
+          
+          const order = new RelayOrder((quote as any).orderInfo, 1);
+          expect(status).to.equal(200);
+
+          order.info.reactor = reactorAddress;
+
+          expect(order.info.swapper).to.equal(alice.address);
+          expect(order.info.inputs.length).to.equal(2);
+          
+          const swapInput = order.info.inputs.find((input) => input.recipient !== "0x0000000000000000000000000000000000000000")!;
+          expect(parseInt(swapInput.startAmount.toString())).to.be.greaterThan(9000000000);
+          expect(parseInt(swapInput.startAmount.toString())).to.be.lessThan(11000000000);
+
+          const gasInput = order.info.inputs.find((input) => input.recipient === "0x0000000000000000000000000000000000000000")!;
+
+          const { tokenInBefore, tokenInAfter, gasTokenBefore, gasTokenAfter } = await baseTest.executeRelaySwap(
+            alice,
+            filler,
+            order,
+            USDC_MAINNET,
+            DAI_MAINNET,
+            USDT_MAINNET,
+          );
+
+          const tokenInMaxAmount = CurrencyAmount.fromRawAmount(USDC_MAINNET, parseInt(swapInput.maxAmount.toString()));
+          const gasMaxAmount = CurrencyAmount.fromRawAmount(DAI_MAINNET, parseInt(gasInput.maxAmount.toString()));
+
+          expect(tokenInBefore.subtract(tokenInAfter).lessThan(tokenInMaxAmount) || tokenInBefore.subtract(tokenInAfter).equalTo(tokenInMaxAmount)).to.be.true;
+          expect(gasTokenBefore.subtract(gasTokenAfter).lessThan(gasMaxAmount) || gasTokenBefore.subtract(gasTokenAfter).equalTo(gasMaxAmount)).to.be.true;
         });
       });
     });

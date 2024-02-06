@@ -291,8 +291,7 @@ export class BaseIntegrationTestSuite {
     const signature = await swapper._signTypedData(domain, types, values);
 
     const transactionResponse = await reactor.execute({ order: order.serialize(), sig: signature }, filler.address);
-    const receipt = await transactionResponse.wait();
-    console.log(receipt);
+    await transactionResponse.wait();
 
     const tokenInAfter = await getBalance(swapper, currencyIn.wrapped);
     const tokenOutAfter = await getBalance(swapper, currencyOut);
