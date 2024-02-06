@@ -557,7 +557,7 @@ export const CLASSIC_QUOTE_EXACT_OUT_BETTER_WITH_PORTION = createClassicQuote(
     quote: AMOUNT,
     quoteGasAdjusted: AMOUNT,
     quoteGasAndPortionAdjusted: BigNumber.from(AMOUNT)
-      .add(BigNumber.from(AMOUNT).mul(FLAT_PORTION.bips).div(BPS))
+      .sub(BigNumber.from(AMOUNT).mul(FLAT_PORTION.bips).div(BPS))
       .toString(),
     portionBips: PORTION_BIPS,
     portionRecipient: PORTION_RECIPIENT,
@@ -573,7 +573,7 @@ export const CLASSIC_QUOTE_EXACT_OUT_WORSE_WITH_PORTION = createClassicQuote(
     quote: AMOUNT_BETTER,
     quoteGasAdjusted: AMOUNT_BETTER,
     quoteGasAndPortionAdjusted: BigNumber.from(AMOUNT_BETTER)
-      .add(BigNumber.from(AMOUNT_BETTER).mul(FLAT_PORTION.bips).div(BPS))
+      .sub(BigNumber.from(AMOUNT_BETTER).mul(FLAT_PORTION.bips).div(BPS))
       .toString(),
     portionBips: PORTION_BIPS,
     portionRecipient: PORTION_RECIPIENT,
