@@ -177,6 +177,30 @@ describe('QuoteContextManager', () => {
       expect(requests[2]).toMatchObject(QUOTE_REQUEST_DL_EXACT_OUT);
     });
 
+    it('merges gasToken on classic requests', () => {
+      const context1 = new MockQuoteContext(QUOTE_REQUEST_CLASSIC);
+      context1.setDependencies([]);
+      const context2 = new MockQuoteContext(QUOTE_REQUEST_RELAY);
+      const gasToken = '0x1111111111111111111111111111111111111111';
+      context2.setDependencies([
+        Object.assign({}, QUOTE_REQUEST_CLASSIC, {
+          config: {
+            routingType: RoutingType.CLASSIC,
+            protocols: ['v3'],
+            gasToken,
+          },
+          key: QUOTE_REQUEST_CLASSIC.key,
+        }),
+      ]);
+      const handler = new QuoteContextManager([context1, context2]);
+      const requests = handler.getRequests();
+      expect(requests.length).toEqual(2);
+      expect(requests[0]).toMatchObject(QUOTE_REQUEST_CLASSIC);
+      // injects simulateFromAddress into the classic request
+      expect((requests[0].config as ClassicConfig).gasToken).toEqual(gasToken);
+      expect(requests[1]).toMatchObject(QUOTE_REQUEST_RELAY);
+    });
+
     it('deduplicates even with differing requestIds', () => {
       const context1 = new MockQuoteContext(QUOTE_REQUEST_DL);
       context1.setDependencies([QUOTE_REQUEST_DL_EXACT_OUT]);
@@ -392,6 +416,31 @@ describe('QuoteContextManager', () => {
       expect(merged.key()).toEqual(QUOTE_REQUEST_CLASSIC.key());
     });
 
+    it('keeps gasToken if defined in base', () => {
+      const baseGasToken = '0x1111111111111111111111111111111111111111';
+      const layerGastoken = '0x2222222222222222222222222222222222222222';
+      const base = Object.assign({}, QUOTE_REQUEST_CLASSIC, {
+        config: {
+          routingType: RoutingType.CLASSIC,
+          protocols: ['v3'],
+          gasToken: baseGasToken,
+        },
+      });
+
+      const layer = Object.assign({}, QUOTE_REQUEST_CLASSIC, {
+        config: {
+          routingType: RoutingType.CLASSIC,
+          protocols: ['v3'],
+          gasToken: layerGastoken,
+        },
+      });
+
+      const merged = mergeRequests(base, layer);
+      expect(merged).toMatchObject(base);
+      expect((merged.config as ClassicConfig).gasToken).toEqual(baseGasToken);
+      expect(merged.key()).toEqual(QUOTE_REQUEST_CLASSIC.key());
+    });
+
     it('sets simulateFromAddress if defined in layer', () => {
       const layerSimulateAddress = '0x2222222222222222222222222222222222222222';
       const layer = Object.assign({}, QUOTE_REQUEST_CLASSIC, {
@@ -437,6 +486,22 @@ describe('QuoteContextManager', () => {
       const merged = mergeRequests(QUOTE_REQUEST_CLASSIC, layer);
       expect(merged).toMatchObject(QUOTE_REQUEST_CLASSIC);
       expect((merged.config as ClassicConfig).recipient).toEqual(layerRecipient);
+      expect(merged.key()).toEqual(QUOTE_REQUEST_CLASSIC.key());
+    });
+
+    it('sets gasToken if defined in layer', () => {
+      const layerGasToken = '0x2222222222222222222222222222222222222222';
+      const layer = Object.assign({}, QUOTE_REQUEST_CLASSIC, {
+        config: {
+          routingType: RoutingType.CLASSIC,
+          protocols: ['v3'],
+          gasToken: layerGasToken,
+        },
+      });
+
+      const merged = mergeRequests(QUOTE_REQUEST_CLASSIC, layer);
+      expect(merged).toMatchObject(QUOTE_REQUEST_CLASSIC);
+      expect((merged.config as ClassicConfig).gasToken).toEqual(layerGasToken);
       expect(merged.key()).toEqual(QUOTE_REQUEST_CLASSIC.key());
     });
   });

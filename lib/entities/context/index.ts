@@ -116,6 +116,8 @@ export function mergeRequests(base: QuoteRequest, layer: QuoteRequest): QuoteReq
       simulateFromAddress: baseConfig.simulateFromAddress ?? layerConfig.simulateFromAddress,
       deadline: baseConfig.deadline ?? layerConfig.deadline,
       recipient: baseConfig.recipient ?? layerConfig.recipient,
+      // if base does not specify gasToken but layer does, then we add it
+      gasToken: baseConfig.gasToken ?? layerConfig.gasToken,
       // otherwise defer to base
     });
     return ClassicRequest.fromRequest(base.info, config);
