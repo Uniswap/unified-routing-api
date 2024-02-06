@@ -19,7 +19,6 @@ import { BaseIntegrationTestSuite, call } from './base.test';
 import { RelayOrderReactor__factory } from '../../lib/types/ext';
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { PERMIT2_ADDRESS } from '@uniswap/permit2-sdk';
-import { BigNumber } from 'ethers';
 import { CurrencyAmount } from '@uniswap/sdk-core';
 
 chai.use(chaiAsPromised);

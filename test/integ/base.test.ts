@@ -20,7 +20,7 @@ import { fail } from 'assert';
 import axiosStatic, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import axiosRetry from 'axios-retry';
 import { expect } from 'chai';
-import { BigNumber, providers } from 'ethers';
+import { BigNumber, Contract, ContractFactory, providers } from 'ethers';
 import hre from 'hardhat';
 import _ from 'lodash';
 import NodeCache from 'node-cache';
@@ -356,9 +356,9 @@ export class BaseIntegrationTestSuite {
   };
 
   deployContract = async (
-    factory: ethers.ContractFactory,
+    factory: ContractFactory,
     args: any[],
-  ): Promise<ethers.Contract> => {
+  ): Promise<Contract> => {
     const contract = await factory.deploy(...args);
     await contract.deployed();
     return contract;
