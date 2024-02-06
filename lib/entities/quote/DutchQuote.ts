@@ -364,7 +364,9 @@ export class DutchQuote implements IQuote {
   }
 
   public get amountIn(): BigNumber {
-    return this.amountInStart.sub(this.portionAmountInStart);
+    // The correct amount in should be amountInStart - portionAmountInStart
+    // But many places use amountIn, so we better stay safe untouched
+    return this.amountInStart;
   }
 
   // The number of seconds from now that order decay should begin
