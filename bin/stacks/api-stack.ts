@@ -124,6 +124,28 @@ export class APIStack extends cdk.Stack {
           },
         },
         {
+          name: 'IPAllowRule_CloudFlare',
+          priority: 11,
+          statement: {
+            ipSetReferenceStatement: {
+              arn: WAF_IPAllowlist.attrArn,
+              ipSetForwardedIpConfig: {
+                fallbackBehavior: 'NO_MATCH',
+                headerName: 'True-Client-IP',
+                position: 'ANY',
+              },
+            },
+          },
+          action: {
+            allow: {},
+          },
+          visibilityConfig: {
+            sampledRequestsEnabled: true,
+            cloudWatchMetricsEnabled: true,
+            metricName: `IPAllowRuleCF`,
+          },
+        },
+        {
           name: 'IPBlockRule_ExceptAPIKey',
           priority: 20,
           statement: {
