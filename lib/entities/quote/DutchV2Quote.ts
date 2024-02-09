@@ -1,5 +1,5 @@
 import { TradeType } from '@uniswap/sdk-core';
-import { DutchOrder, DutchOrderBuilder, DutchOrderInfoJSON } from '@uniswap/uniswapx-sdk';
+import { V2DutchOrder, V2DutchOrderBuilder, V2DutchOrderInfoJSON } from '@uniswap/uniswapx-sdk';
 import { BigNumber, ethers } from 'ethers';
 
 import { PermitTransferFromData } from '@uniswap/permit2-sdk';
@@ -30,7 +30,7 @@ export type DutchV2QuoteDerived = {
 }
 
 export type DutchV2QuoteDataJSON = {
-  orderInfo: DutchOrderInfoJSON;
+  orderInfo: V2DutchOrderInfoJSON;
   quoteId: string;
   requestId: string;
   encodedOrder: string;
@@ -194,14 +194,13 @@ export class DutchV2Quote implements IQuote {
     };
   }
 
-  public toOrder(): DutchOrder {
-    const orderBuilder = new DutchOrderBuilder(this.chainId);
-    const decayStartTime = Math.floor(Date.now() / 1000);
+  public toOrder(): V2DutchOrder {
+    const orderBuilder = new V2DutchOrderBuilder(this.chainId);
+    const deadline = Math.floor((Date.now() / 1000) + this.deadlineBufferSecs);
     const nonce = this.nonce ?? generateRandomNonce();
 
     const builder = orderBuilder
-      .decayStartTime(decayStartTime)
-      .deadline(decayStartTime + this.deadlineBufferSecs)
+      .deadline(deadline)
       .swapper(ethers.utils.getAddress(this.request.config.swapper))
       .nonce(BigNumber.from(nonce))
       .input({
