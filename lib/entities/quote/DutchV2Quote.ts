@@ -13,7 +13,7 @@ import {
   UNISWAPX_BASE_GAS,
   WETH_UNWRAP_GAS,
   WETH_WRAP_GAS,
-  WETH_WRAP_GAS_ALREADY_APPROVED
+  WETH_WRAP_GAS_ALREADY_APPROVED,
 } from '../../constants';
 import { Portion } from '../../fetchers/PortionFetcher';
 import { log } from '../../util/log';
@@ -27,7 +27,7 @@ const TEST_COSIGNER = '0x0000000000000000000000000000000000000000';
 
 export type DutchV2QuoteDerived = {
   largeTrade: boolean;
-}
+};
 
 export type DutchV2QuoteDataJSON = {
   orderInfo: V2DutchOrderInfoJSON;
@@ -65,22 +65,22 @@ type Amounts = {
 };
 
 type DutchV2QuoteConstructorArgs = {
-    createdAtMs?: string;
-    derived?: DutchV2QuoteDerived;
-    request: DutchV2Request;
-    chainId: number;
-    requestId: string;
-    quoteId: string;
-    tokenIn: string;
-    tokenOut: string;
-    amountInStart: BigNumber;
-    amountInEnd: BigNumber;
-    amountOutStart: BigNumber;
-    amountOutEnd: BigNumber;
-    swapper: string;
-    nonce?: string;
-    portion?: Portion;
-}
+  createdAtMs?: string;
+  derived?: DutchV2QuoteDerived;
+  request: DutchV2Request;
+  chainId: number;
+  requestId: string;
+  quoteId: string;
+  tokenIn: string;
+  tokenOut: string;
+  amountInStart: BigNumber;
+  amountInEnd: BigNumber;
+  amountOutStart: BigNumber;
+  amountOutEnd: BigNumber;
+  swapper: string;
+  nonce?: string;
+  portion?: Portion;
+};
 
 export class DutchV2Quote implements IQuote {
   public routingType: RoutingType.DUTCH_V2 = RoutingType.DUTCH_V2;
@@ -124,7 +124,7 @@ export class DutchV2Quote implements IQuote {
       amountOutStart,
       amountOutEnd,
       nonce,
-      portion
+      portion,
     });
   }
 
@@ -167,9 +167,7 @@ export class DutchV2Quote implements IQuote {
     });
   }
 
-  private constructor(
-    args: DutchV2QuoteConstructorArgs,
-  ) {
+  private constructor(args: DutchV2QuoteConstructorArgs) {
     Object.assign(this, args, {
       createdAtMs: args.createdAtMs || currentTimestampInMs(),
       derived: args.derived || { largeTrade: false },
@@ -188,15 +186,19 @@ export class DutchV2Quote implements IQuote {
       permitData: this.getPermitData(),
       // NOTE: important for URA to return 0 bps and amount, in case of no portion.
       // this is FE requirement
-      portionBips: frontendAndUraEnablePortion(this.request.info.sendPortionEnabled) ? this.portion?.bips ?? 0 : undefined,
-      portionAmount: frontendAndUraEnablePortion(this.request.info.sendPortionEnabled) ? this.portionAmountOutStart.toString() ?? '0' : undefined,
+      portionBips: frontendAndUraEnablePortion(this.request.info.sendPortionEnabled)
+        ? this.portion?.bips ?? 0
+        : undefined,
+      portionAmount: frontendAndUraEnablePortion(this.request.info.sendPortionEnabled)
+        ? this.portionAmountOutStart.toString() ?? '0'
+        : undefined,
       portionRecipient: this.portion?.recipient,
     };
   }
 
   public toOrder(): V2DutchOrder {
     const orderBuilder = new V2DutchOrderBuilder(this.chainId);
-    const deadline = Math.floor((Date.now() / 1000) + this.deadlineBufferSecs);
+    const deadline = Math.floor(Date.now() / 1000 + this.deadlineBufferSecs);
     const nonce = this.nonce ?? generateRandomNonce();
 
     const builder = orderBuilder
@@ -209,7 +211,11 @@ export class DutchV2Quote implements IQuote {
         endAmount: this.amountInEnd,
       });
 
-    if (this.portion?.recipient && this.portion?.bips && frontendAndUraEnablePortion(this.request.info.sendPortionEnabled)) {
+    if (
+      this.portion?.recipient &&
+      this.portion?.bips &&
+      frontendAndUraEnablePortion(this.request.info.sendPortionEnabled)
+    ) {
       if (this.request.info.type === TradeType.EXACT_INPUT) {
         // Amount to swapper
         builder.output({
@@ -261,9 +267,11 @@ export class DutchV2Quote implements IQuote {
       endAmountIn: this.amountInEnd.toString(),
       endAmountOut: this.amountOutEnd.toString(),
       amountInGasAdjusted: this.amountInStart.toString(),
-      amountInGasAndPortionAdjusted: this.request.info.type === TradeType.EXACT_OUTPUT ? this.amountInGasAndPortionAdjusted.toString() : undefined,
+      amountInGasAndPortionAdjusted:
+        this.request.info.type === TradeType.EXACT_OUTPUT ? this.amountInGasAndPortionAdjusted.toString() : undefined,
       amountOutGasAdjusted: this.amountOutStart.toString(),
-      amountOutGasAndPortionAdjusted: this.request.info.type === TradeType.EXACT_INPUT ? this.amountOutGasAndPortionAdjusted.toString() : undefined,
+      amountOutGasAndPortionAdjusted:
+        this.request.info.type === TradeType.EXACT_INPUT ? this.amountOutGasAndPortionAdjusted.toString() : undefined,
       swapper: this.swapper,
       routing: RoutingType[this.routingType],
       slippage: parseFloat(this.request.info.slippageTolerance),

@@ -1,9 +1,6 @@
 import { ethers } from 'ethers';
 import { defaultRequestKey, QuoteRequest, QuoteRequestInfo } from '.';
-import {
-  DEFAULT_SLIPPAGE_TOLERANCE,
-  RoutingType,
-} from '../../constants';
+import { DEFAULT_SLIPPAGE_TOLERANCE, RoutingType } from '../../constants';
 import { DutchQuoteRequestInfo } from './DutchRequest';
 
 export * from './ClassicRequest';
