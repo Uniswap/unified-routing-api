@@ -491,7 +491,7 @@ describe('quoteUniswapX', function () {
                     // only use non-synthetic quotes if it's ETH -> USDC
                     // otherwise use synthetic quotes
                     // fillers should be able to quote ETH -> USDC since this is the most popular pair
-                    useSyntheticQuotes: false,
+                    useSyntheticQuotes: true,
                   },
                 ] as RoutingConfigJSON[],
               };
