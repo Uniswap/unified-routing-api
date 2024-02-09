@@ -192,7 +192,7 @@ describe('quoteUniswapX', function () {
             checkQuoteToken(
               tokenInBefore,
               tokenInAfter,
-              CurrencyAmount.fromRawAmount(USDC_MAINNET, order.info.input.startAmount.toString())
+              CurrencyAmount.fromRawAmount(USDC_MAINNET, order.info.input.endAmount.toString())
             );
           }
         });
@@ -257,7 +257,7 @@ describe('quoteUniswapX', function () {
             checkQuoteToken(
               tokenInBefore,
               tokenInAfter,
-              CurrencyAmount.fromRawAmount(USDC_MAINNET, order.info.input.startAmount.toString())
+              CurrencyAmount.fromRawAmount(USDC_MAINNET, order.info.input.endAmount.toString())
             );
           }
         });
@@ -355,7 +355,7 @@ describe('quoteUniswapX', function () {
             checkQuoteToken(
               tokenInBefore,
               tokenInAfter,
-              CurrencyAmount.fromRawAmount(USDC_MAINNET, order.info.input.startAmount.toString())
+              CurrencyAmount.fromRawAmount(USDC_MAINNET, order.info.input.endAmount.toString())
             );
           }
         });
@@ -434,7 +434,7 @@ describe('quoteUniswapX', function () {
             checkQuoteToken(
               tokenInBefore,
               tokenInAfter,
-              CurrencyAmount.fromRawAmount(WETH9[1], order.info.input.startAmount.toString())
+              CurrencyAmount.fromRawAmount(WETH9[1], order.info.input.endAmount.toString())
             );
           }
         });
@@ -605,7 +605,7 @@ describe('quoteUniswapX', function () {
                   checkQuoteToken(
                     tokenInBefore,
                     tokenInAfter,
-                    CurrencyAmount.fromRawAmount(tokenIn, order.info.input.startAmount.toString())
+                    CurrencyAmount.fromRawAmount(tokenIn, order.info.input.endAmount.toString())
                   );
                 }
 
