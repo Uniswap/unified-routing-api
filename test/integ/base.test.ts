@@ -54,7 +54,9 @@ const API = `${process.env.UNISWAP_API!}quote`;
 
 const SLIPPAGE = '5';
 
-export const axiosHelper = axiosStatic.create();
+export const axiosHelper = axiosStatic.create({
+  timeout: 30000,
+});
 const axiosConfig: AxiosRequestConfig<any> = {
   headers: {
     ...(process.env.URA_INTERNAL_API_KEY && { 'x-api-key': process.env.URA_INTERNAL_API_KEY }),

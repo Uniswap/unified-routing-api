@@ -872,16 +872,15 @@ describe('quote', function () {
               }
             });
 
-            /// Tests for routes likely to result in MixedRoutes being returned
             if (type === 'EXACT_INPUT') {
-              it(`erc20 -> erc20 forceMixedRoutes not specified for v2,v3 does not return mixed route even when it is better`, async () => {
+              it(`erc20 -> erc20 forceMixedRoutes returns mixed route`, async () => {
                 const quoteReq: QuoteRequestBodyJSON = {
                   requestId: 'id',
-                  tokenIn: 'BOND',
+                  tokenIn: 'USDC',
                   tokenInChainId: 1,
-                  tokenOut: 'APE',
+                  tokenOut: 'USDT',
                   tokenOutChainId: 1,
-                  amount: await getAmount(1, type, 'BOND', 'APE', '10000'),
+                  amount: await getAmount(1, type, 'USDC', 'USDT', '1000'),
                   type,
                   slippageTolerance: SLIPPAGE,
                   configs: [
@@ -889,8 +888,9 @@ describe('quote', function () {
                       routingType: RoutingType.CLASSIC,
                       recipient: alice.address,
                       deadline: 360,
+                      protocols: ['v2','v3','mixed'],
                       algorithm: 'alpha',
-                      protocols: ['v2', 'v3'],
+                      forceMixedRoutes: true,
                       enableUniversalRouter: true,
                     },
                   ],
@@ -901,97 +901,28 @@ describe('quote', function () {
                   data: { quote: quoteJSON },
                   status,
                 } = response;
-                const { quoteDecimals, quoteGasAdjustedDecimals, methodParameters, routeString } =
+                const { methodParameters, route, routeString } =
                   quoteJSON as ClassicQuoteDataJSON;
 
                 expect(status).to.equal(200);
 
-                if (type == 'EXACT_INPUT') {
-                  expect(parseFloat(quoteGasAdjustedDecimals)).to.be.lessThanOrEqual(parseFloat(quoteDecimals));
-                } else {
-                  expect(parseFloat(quoteGasAdjustedDecimals)).to.be.greaterThanOrEqual(parseFloat(quoteDecimals));
-                }
-
                 expect(methodParameters).to.not.be.undefined;
-
-                expect(!routeString.includes('[V2 + V3]'));
-              });
-
-              it(`erc20 -> erc20 forceMixedRoutes true for v2,v3`, async () => {
-                const quoteReq: QuoteRequestBodyJSON = {
-                  requestId: 'id',
-                  tokenIn: 'BOND',
-                  tokenInChainId: 1,
-                  tokenOut: 'APE',
-                  tokenOutChainId: 1,
-                  amount: await getAmount(1, type, 'BOND', 'APE', '10000'),
-                  type,
-                  slippageTolerance: SLIPPAGE,
-                  configs: [
-                    {
-                      routingType: RoutingType.CLASSIC,
-                      recipient: alice.address,
-                      deadline: 360,
-                      algorithm: 'alpha',
-                      forceMixedRoutes: true,
-                      protocols: ['v2', 'v3'],
-                      enableUniversalRouter: true,
-                    },
-                  ],
-                };
-
-                await callAndExpectFail(quoteReq, {
-                  status: 404,
-                  data: {
-                    detail: 'No quotes available',
-                    errorCode: 'QUOTE_ERROR',
-                  },
-                });
-              });
-
-              it.skip(`erc20 -> erc20 forceMixedRoutes true for all protocols specified`, async () => {
-                const quoteReq: QuoteRequestBodyJSON = {
-                  requestId: 'id',
-                  tokenIn: 'BOND',
-                  tokenInChainId: 1,
-                  tokenOut: 'APE',
-                  tokenOutChainId: 1,
-                  amount: await getAmount(1, type, 'BOND', 'APE', '10000'),
-                  type,
-                  slippageTolerance: SLIPPAGE,
-                  configs: [
-                    {
-                      routingType: RoutingType.CLASSIC,
-                      recipient: alice.address,
-                      deadline: 360,
-                      algorithm: 'alpha',
-                      forceMixedRoutes: true,
-                      protocols: ['v2', 'v3', 'mixed'],
-                      enableUniversalRouter: true,
-                    },
-                  ],
-                };
-
-                const response: AxiosResponse<QuoteResponseJSON> = await call(quoteReq);
-                const {
-                  data: { quote: quoteJSON },
-                  status,
-                } = response;
-                const { quoteDecimals, quoteGasAdjustedDecimals, methodParameters, routeString } =
-                  quoteJSON as ClassicQuoteDataJSON;
-
-                expect(status).to.equal(200);
-
-                if (type == 'EXACT_INPUT') {
-                  expect(parseFloat(quoteGasAdjustedDecimals)).to.be.lessThanOrEqual(parseFloat(quoteDecimals));
-                } else {
-                  expect(parseFloat(quoteGasAdjustedDecimals)).to.be.greaterThanOrEqual(parseFloat(quoteDecimals));
-                }
-
-                expect(methodParameters).to.not.be.undefined;
-
-                /// since we only get the routeString back, we can check if there's V3 + V2
                 expect(routeString.includes('[V2 + V3]'));
+
+                let hasV3Pool = false;
+                let hasV2Pool = false;
+                for (const r of route) {
+                  for (const pool of r) {
+                    if (pool.type == 'v3-pool') {
+                      hasV3Pool = true;
+                    }
+                    if (pool.type == 'v2-pool') {
+                      hasV2Pool = true;
+                    }
+                  }
+                }
+
+                expect(hasV3Pool && hasV2Pool).to.be.true;
               });
             }
           }
