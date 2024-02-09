@@ -101,7 +101,6 @@ export const checkQuoteToken = (
     ? tokensQuoted.subtract(tokensSwapped)
     : tokensSwapped.subtract(tokensQuoted);
   const percentDiff = tokensDiff.asFraction.divide(tokensQuoted.asFraction);
-  console.log(percentDiff.toSignificant(6), (new Fraction(parseInt(SLIPPAGE), 100)).toSignificant(6));
   expect(
     percentDiff.lessThan(new Fraction(parseInt(SLIPPAGE), 100)),
     `expected tokensQuoted ${tokensQuoted.toExact()} actual tokens swapped ${tokensSwapped.toExact()}`

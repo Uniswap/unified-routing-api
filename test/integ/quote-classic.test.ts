@@ -905,7 +905,6 @@ describe('quote', function () {
                   quoteJSON as ClassicQuoteDataJSON;
 
                 expect(status).to.equal(200);
-                console.log(routeString);
 
                 expect(methodParameters).to.not.be.undefined;
                 expect(routeString.includes('[V2 + V3]'));
