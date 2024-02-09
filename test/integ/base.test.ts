@@ -288,7 +288,7 @@ export class BaseIntegrationTestSuite {
     } = await call(quoteReq);
     const { blockNumber } = quote as ClassicQuoteDataJSON;
 
-    this.block = parseInt(blockNumber) - 10;
+    this.block = parseInt(blockNumber) - 5;
 
     await resetAndFundAtBlock(alice, this.block, [
       parseAmount('80000000', USDC_MAINNET),
