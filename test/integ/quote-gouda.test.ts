@@ -743,7 +743,7 @@ describe('quoteUniswapX', function () {
                   checkQuoteToken(
                     tokenInBefore,
                     tokenInAfter,
-                    CurrencyAmount.fromRawAmount(tokenIn, order.info.input.startAmount.toString())
+                    CurrencyAmount.fromRawAmount(tokenIn, order.info.input.endAmount.toString())
                   );
                 }
 
