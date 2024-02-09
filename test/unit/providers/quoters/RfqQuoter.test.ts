@@ -2,7 +2,7 @@ import { BigNumber, ethers } from 'ethers';
 
 import NodeCache from 'node-cache';
 import { BPS } from '../../../../lib/constants';
-import { DutchQuote, DutchQuoteDataJSON, DutchQuoteJSON } from '../../../../lib/entities';
+import { DutchQuote, DutchQuoteDataJSON, DutchRFQQuoteResponseJSON } from '../../../../lib/entities';
 import { GetPortionResponse, PortionFetcher, PortionType } from '../../../../lib/fetchers/PortionFetcher';
 import { RfqQuoter } from '../../../../lib/providers';
 import axios from '../../../../lib/providers/quoters/helpers';
@@ -28,7 +28,8 @@ describe('RfqQuoter test', () => {
   const getSpy = (nonce?: string) => {
     return jest.spyOn(axios, 'get').mockResolvedValue({ data: { nonce: nonce } });
   };
-  const postSpy = (responseData: DutchQuoteJSON) => jest.spyOn(axios, 'post').mockResolvedValue({ data: responseData });
+  const postSpy = (responseData: DutchRFQQuoteResponseJSON) =>
+    jest.spyOn(axios, 'post').mockResolvedValue({ data: responseData });
 
   const portionResponse: GetPortionResponse = {
     hasPortion: true,

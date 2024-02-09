@@ -7,8 +7,8 @@ import {
   ClassicQuoteDataJSON,
   ClassicRequest,
   DutchConfig,
-  DutchQuoteJSON,
   DutchRequest,
+  DutchRFQQuoteResponseJSON,
   parseQuoteRequests,
   QuoteRequestBodyJSON,
 } from '../../lib/entities';
@@ -338,7 +338,7 @@ export const CLASSIC_QUOTE_DATA_WITH_FOX_TAX = {
 };
 
 export function createDutchQuote(
-  overrides: Partial<DutchQuoteJSON>,
+  overrides: Partial<DutchRFQQuoteResponseJSON>,
   type: string,
   nonce?: string,
   portion?: Portion,
@@ -355,7 +355,7 @@ export function createDutchQuote(
 }
 
 export function createDutchQuoteWithRequest(
-  overrides: Partial<DutchQuoteJSON>,
+  overrides: Partial<DutchRFQQuoteResponseJSON>,
   requestOverrides: Partial<QuoteRequestBodyJSON>,
   configOverrides?: Partial<DutchConfig>
 ): DutchQuote {

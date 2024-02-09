@@ -5,7 +5,7 @@ import * as _ from 'lodash';
 
 import { it } from '@jest/globals';
 import { BPS, DEFAULT_START_TIME_BUFFER_SECS, OPEN_QUOTE_START_TIME_BUFFER_SECS } from '../../../lib/constants';
-import { ClassicQuote, DutchQuote, DutchQuoteJSON } from '../../../lib/entities';
+import { ClassicQuote, DutchQuote, DutchRFQQuoteResponseJSON } from '../../../lib/entities';
 import {
   AMOUNT,
   AMOUNT_LARGE,
@@ -419,7 +419,7 @@ describe('DutchQuote', () => {
       // since we add the amount to RFQ request
       const amountOutWithPortion = dutchQuote.amountOutStart.add(dutchQuote.portionAmountOutStart);
       // RFQ returns same as mock dutch quote
-      const DL_QUOTE_JSON_RFQ: DutchQuoteJSON = {
+      const DL_QUOTE_JSON_RFQ: DutchRFQQuoteResponseJSON = {
         chainId: 1,
         requestId: '0xrequestId',
         quoteId: '0xquoteId',

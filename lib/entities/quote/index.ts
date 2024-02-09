@@ -1,13 +1,14 @@
 import { BigNumber } from 'ethers';
 
-import { DutchQuote, DutchQuoteDataJSON, QuoteRequest } from '..';
+import { DutchQuote, DutchQuoteDataJSON, DutchV2QuoteDataJSON, QuoteRequest } from '..';
 import { RoutingType } from '../../constants';
 import { ClassicQuote, ClassicQuoteDataJSON } from './ClassicQuote';
 
 export * from './ClassicQuote';
 export * from './DutchQuote';
+export * from './DutchV2Quote';
 
-export type QuoteJSON = DutchQuoteDataJSON | ClassicQuoteDataJSON;
+export type QuoteJSON = DutchQuoteDataJSON | DutchV2QuoteDataJSON | ClassicQuoteDataJSON;
 
 export type LogJSON = {
   quoteId: string;

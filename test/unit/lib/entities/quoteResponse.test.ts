@@ -1,7 +1,13 @@
 import { DutchOrder, parseValidation, ValidationType } from '@uniswap/uniswapx-sdk';
 import { BigNumber } from 'ethers';
 
-import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, DutchQuoteJSON, DutchRequest } from '../../../../lib/entities';
+import {
+  ClassicQuote,
+  ClassicQuoteDataJSON,
+  DutchQuote,
+  DutchRequest,
+  DutchRFQQuoteResponseJSON,
+} from '../../../../lib/entities';
 import {
   AMOUNT,
   CHAIN_IN_ID,
@@ -19,7 +25,7 @@ import {
   QUOTE_REQUEST_DL,
 } from '../../../utils/fixtures';
 
-const DL_QUOTE_JSON: DutchQuoteJSON = {
+const DL_QUOTE_JSON: DutchRFQQuoteResponseJSON = {
   chainId: CHAIN_IN_ID,
   requestId: '0xrequestId',
   quoteId: '0xquoteId',
@@ -31,7 +37,7 @@ const DL_QUOTE_JSON: DutchQuoteJSON = {
   filler: FILLER,
 };
 
-const DL_QUOTE_JSON_RFQ: DutchQuoteJSON = {
+const DL_QUOTE_JSON_RFQ: DutchRFQQuoteResponseJSON = {
   chainId: CHAIN_IN_ID,
   requestId: '0xrequestId',
   quoteId: '0xquoteId',

@@ -45,7 +45,9 @@ export type DutchQuoteDataJSON = {
   portionRecipient?: string;
 };
 
-export type DutchQuoteJSON = {
+// Quote response from RFQ service
+// used to create a quote
+export type DutchRFQQuoteResponseJSON = {
   chainId: number;
   requestId: string;
   quoteId: string;
@@ -62,7 +64,7 @@ export type ParameterizationOptions = {
   largeTrade: boolean;
 };
 
-type Amounts = {
+export type Amounts = {
   amountIn: BigNumber;
   amountOut: BigNumber;
 };
@@ -83,7 +85,7 @@ export class DutchQuote implements IQuote {
   // build a dutch quote from an RFQ response
   public static fromResponseBody(
     request: DutchRequest,
-    body: DutchQuoteJSON,
+    body: DutchRFQQuoteResponseJSON,
     nonce?: string,
     portion?: Portion
   ): DutchQuote {

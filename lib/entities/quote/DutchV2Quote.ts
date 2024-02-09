@@ -1,9 +1,9 @@
 import { TradeType } from '@uniswap/sdk-core';
 import { V2DutchOrder, V2DutchOrderBuilder, V2DutchOrderInfoJSON } from '@uniswap/uniswapx-sdk';
 import { BigNumber, ethers } from 'ethers';
-
 import { PermitTransferFromData } from '@uniswap/permit2-sdk';
-import { IQuote } from '.';
+
+import { IQuote, LogJSON } from '.';
 import { DutchV2Request } from '..';
 import {
   BPS,
@@ -20,15 +20,12 @@ import { log } from '../../util/log';
 import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
 import { ClassicQuote } from './ClassicQuote';
-import { LogJSON } from './index';
+import { Amounts, DutchRFQQuoteResponseJSON, getPortionAdjustedOutputs, ParameterizationOptions } from './DutchQuote';
 
 // TODO: replace with real cosigner when deployed
-const TEST_COSIGNER = '0x0000000000000000000000000000000000000000';
+const LABS_COSIGNER = '0x0000000000000000000000000000000000000000';
 
-export type DutchV2QuoteDerived = {
-  largeTrade: boolean;
-};
-
+// JSON format of a DutchQuote, to be returned by the API
 export type DutchV2QuoteDataJSON = {
   orderInfo: V2DutchOrderInfoJSON;
   quoteId: string;
@@ -43,30 +40,8 @@ export type DutchV2QuoteDataJSON = {
   portionRecipient?: string;
 };
 
-export type DutchV2QuoteJSON = {
-  chainId: number;
-  requestId: string;
-  quoteId: string;
-  tokenIn: string;
-  amountIn: string;
-  tokenOut: string;
-  amountOut: string;
-  swapper: string;
-};
-
-export type ParameterizationOptions = {
-  hasApprovedPermit2: boolean;
-  largeTrade: boolean;
-};
-
-type Amounts = {
-  amountIn: BigNumber;
-  amountOut: BigNumber;
-};
-
 type DutchV2QuoteConstructorArgs = {
   createdAtMs?: string;
-  derived?: DutchV2QuoteDerived;
   request: DutchV2Request;
   chainId: number;
   requestId: string;
@@ -83,10 +58,9 @@ type DutchV2QuoteConstructorArgs = {
 };
 
 export class DutchV2Quote implements IQuote {
-  public routingType: RoutingType.DUTCH_V2 = RoutingType.DUTCH_V2;
+  public readonly routingType: RoutingType.DUTCH_V2 = RoutingType.DUTCH_V2;
 
   public readonly request: DutchV2Request;
-  public readonly derived: DutchV2QuoteDerived;
   public readonly createdAtMs: string;
   public readonly chainId: number;
   public readonly requestId: string;
@@ -104,7 +78,7 @@ export class DutchV2Quote implements IQuote {
   // build a dutch v2 quote from an RFQ response
   public static fromResponseBody(
     request: DutchV2Request,
-    body: DutchV2QuoteJSON,
+    body: DutchRFQQuoteResponseJSON,
     nonce?: string,
     portion?: Portion
   ): DutchV2Quote {
@@ -170,7 +144,6 @@ export class DutchV2Quote implements IQuote {
   private constructor(args: DutchV2QuoteConstructorArgs) {
     Object.assign(this, args, {
       createdAtMs: args.createdAtMs || currentTimestampInMs(),
-      derived: args.derived || { largeTrade: false },
     });
   }
 
@@ -205,53 +178,27 @@ export class DutchV2Quote implements IQuote {
       .deadline(deadline)
       .swapper(ethers.utils.getAddress(this.request.config.swapper))
       .nonce(BigNumber.from(nonce))
+      .cosigner(LABS_COSIGNER)
       .input({
         token: this.tokenIn,
         startAmount: this.amountInStart,
         endAmount: this.amountInEnd,
       });
 
-    if (
-      this.portion?.recipient &&
-      this.portion?.bips &&
-      frontendAndUraEnablePortion(this.request.info.sendPortionEnabled)
-    ) {
-      if (this.request.info.type === TradeType.EXACT_INPUT) {
-        // Amount to swapper
-        builder.output({
-          token: this.tokenOut,
-          startAmount: this.amountOutStart.sub(this.portionAmountOutStart),
-          endAmount: this.amountOutEnd.sub(this.portionAmountOutEnd),
-          recipient: this.request.config.swapper,
-        });
-      } else if (this.request.info.type === TradeType.EXACT_OUTPUT) {
-        // Amount to swapper
-        builder.output({
-          token: this.tokenOut,
-          startAmount: this.amountOutStart,
-          endAmount: this.amountOutEnd,
-          recipient: this.request.config.swapper,
-        });
-      }
-
-      // Amount to portion recipient
-      builder.output({
-        token: this.tokenOut,
-        startAmount: this.portionAmountOutStart,
-        endAmount: this.portionAmountOutEnd,
-        recipient: this.portion?.recipient,
-      });
-    } else {
-      // Amount to swapper
-      builder.output({
+    const outputs = getPortionAdjustedOutputs(
+      {
         token: this.tokenOut,
         startAmount: this.amountOutStart,
         endAmount: this.amountOutEnd,
         recipient: this.request.config.swapper,
-      });
-    }
+      },
+      this.request.info.type,
+      this.request.info.sendPortionEnabled,
+      this.portion
+    );
+    outputs.forEach((output) => builder.output(output));
 
-    return builder.build();
+    return builder.buildPartial();
   }
 
   public toLog(): LogJSON {
@@ -304,11 +251,11 @@ export class DutchV2Quote implements IQuote {
 
     switch (this.chainId) {
       case 1:
-        return 12;
-      case 137:
-        return 5;
+        // 10 blocks from now
+        // to cover time to sign, run secondary auction, and some blocks for decay
+        return 120;
       default:
-        return 5;
+        return 30;
     }
   }
 
