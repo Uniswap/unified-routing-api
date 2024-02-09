@@ -24,13 +24,15 @@ import { BigNumber, providers } from 'ethers';
 import hre from 'hardhat';
 import _ from 'lodash';
 import NodeCache from 'node-cache';
+import { RoutingType } from '../../lib/constants';
+import { ClassicQuoteDataJSON } from '../../lib/entities/quote';
 import { QuoteRequestBodyJSON } from '../../lib/entities/request';
 import { Portion, PortionFetcher } from '../../lib/fetchers/PortionFetcher';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { ExclusiveDutchOrderReactor__factory, Permit2__factory } from '../../lib/types/ext';
 import { resetAndFundAtBlock } from '../utils/forkAndFund';
 import { getBalance, getBalanceAndApprove } from '../utils/getBalanceAndApprove';
-import { agEUR_MAINNET, BULLET, UNI_MAINNET, XSGD_MAINNET } from '../utils/tokens';
+import { agEUR_MAINNET, BULLET, getAmount, UNI_MAINNET, XSGD_MAINNET } from '../utils/tokens';
 
 const { ethers } = hre;
 
@@ -265,7 +267,28 @@ export class BaseIntegrationTestSuite {
   before = async () => {
     const [alice, filler] = await ethers.getSigners();
 
-    this.block = 19167000;
+    // Make a dummy call to the API to get a block number to fork from.
+    const quoteReq: QuoteRequestBodyJSON = {
+      requestId: 'id',
+      tokenIn: 'USDC',
+      tokenInChainId: 1,
+      tokenOut: 'USDT',
+      tokenOutChainId: 1,
+      amount: await getAmount(1, 'EXACT_INPUT', 'USDC', 'USDT', '100'),
+      type: 'EXACT_INPUT',
+      configs: [
+        {
+          routingType: RoutingType.CLASSIC,
+        },
+      ],
+    };
+
+    const {
+      data: { quote },
+    } = await call(quoteReq);
+    const { blockNumber } = quote as ClassicQuoteDataJSON;
+
+    this.block = parseInt(blockNumber) - 10;
 
     await resetAndFundAtBlock(alice, this.block, [
       parseAmount('80000000', USDC_MAINNET),
