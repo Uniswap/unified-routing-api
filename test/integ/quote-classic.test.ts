@@ -871,6 +871,61 @@ describe('quote', function () {
                 checkQuoteToken(tokenInBefore, tokenInAfter, CurrencyAmount.fromRawAmount(USDC_MAINNET, quote));
               }
             });
+
+            if (type === 'EXACT_INPUT') {
+              it(`erc20 -> erc20 forceMixedRoutes returns mixed route`, async () => {
+                const quoteReq: QuoteRequestBodyJSON = {
+                  requestId: 'id',
+                  tokenIn: 'USDC',
+                  tokenInChainId: 1,
+                  tokenOut: 'USDT',
+                  tokenOutChainId: 1,
+                  amount: await getAmount(1, type, 'USDC', 'USDT', '1000'),
+                  type,
+                  slippageTolerance: SLIPPAGE,
+                  configs: [
+                    {
+                      routingType: RoutingType.CLASSIC,
+                      recipient: alice.address,
+                      deadline: 360,
+                      protocols: ['v2','v3','mixed'],
+                      algorithm: 'alpha',
+                      forceMixedRoutes: true,
+                      enableUniversalRouter: true,
+                    },
+                  ],
+                };
+
+                const response: AxiosResponse<QuoteResponseJSON> = await call(quoteReq);
+                const {
+                  data: { quote: quoteJSON },
+                  status,
+                } = response;
+                const { methodParameters, route, routeString } =
+                  quoteJSON as ClassicQuoteDataJSON;
+
+                expect(status).to.equal(200);
+                console.log(routeString);
+
+                expect(methodParameters).to.not.be.undefined;
+                expect(routeString.includes('[V2 + V3]'));
+
+                let hasV3Pool = false;
+                let hasV2Pool = false;
+                for (const r of route) {
+                  for (const pool of r) {
+                    if (pool.type == 'v3-pool') {
+                      hasV3Pool = true;
+                    }
+                    if (pool.type == 'v2-pool') {
+                      hasV2Pool = true;
+                    }
+                  }
+                }
+
+                expect(hasV3Pool && hasV2Pool).to.be.true;
+              });
+            }
           }
         });
 

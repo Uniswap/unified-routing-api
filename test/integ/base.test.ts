@@ -54,7 +54,9 @@ const API = `${process.env.UNISWAP_API!}quote`;
 
 const SLIPPAGE = '5';
 
-export const axiosHelper = axiosStatic.create();
+export const axiosHelper = axiosStatic.create({
+  timeout: 30000,
+});
 const axiosConfig: AxiosRequestConfig<any> = {
   headers: {
     ...(process.env.URA_INTERNAL_API_KEY && { 'x-api-key': process.env.URA_INTERNAL_API_KEY }),
@@ -99,6 +101,7 @@ export const checkQuoteToken = (
     ? tokensQuoted.subtract(tokensSwapped)
     : tokensSwapped.subtract(tokensQuoted);
   const percentDiff = tokensDiff.asFraction.divide(tokensQuoted.asFraction);
+  console.log(percentDiff.toSignificant(6), (new Fraction(parseInt(SLIPPAGE), 100)).toSignificant(6));
   expect(
     percentDiff.lessThan(new Fraction(parseInt(SLIPPAGE), 100)),
     `expected tokensQuoted ${tokensQuoted.toExact()} actual tokens swapped ${tokensSwapped.toExact()}`
