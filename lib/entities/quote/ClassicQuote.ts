@@ -207,7 +207,7 @@ export class ClassicQuote implements IQuote {
   }
 
   public get portion(): Portion | undefined {
-    if (!this.quoteData.portionBips || !this.quoteData.portionRecipient) return undefined;
+    if (this.quoteData.portionBips === undefined || this.quoteData.portionRecipient === undefined) return undefined;
 
     return {
       bips: this.quoteData.portionBips,
