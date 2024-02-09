@@ -207,12 +207,14 @@ export class ClassicQuote implements IQuote {
   }
 
   public get portion(): Portion | undefined {
+    // we get the portion _type_ from the original classic URA request
+    // and merge it with the bips / recipient from the routing API quoteData
     if (this.quoteData.portionBips === undefined || this.quoteData.portionRecipient === undefined) return undefined;
 
     return {
       bips: this.quoteData.portionBips,
       recipient: this.quoteData.portionRecipient,
-      type: PortionType.Flat,
+      type: this.request.info.portion?.type ?? PortionType.Flat,
     };
   }
 }
