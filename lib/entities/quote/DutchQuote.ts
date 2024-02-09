@@ -1,5 +1,5 @@
 import { TradeType } from '@uniswap/sdk-core';
-import { DutchOrder, DutchOrderBuilder, DutchOutput, DutchOrderInfoJSON } from '@uniswap/uniswapx-sdk';
+import { DutchOrder, DutchOrderBuilder, DutchOrderInfoJSON, DutchOutput } from '@uniswap/uniswapx-sdk';
 import { BigNumber, ethers } from 'ethers';
 
 import { PermitTransferFromData } from '@uniswap/permit2-sdk';
@@ -16,7 +16,7 @@ import {
   UNISWAPX_BASE_GAS,
   WETH_UNWRAP_GAS,
   WETH_WRAP_GAS,
-  WETH_WRAP_GAS_ALREADY_APPROVED
+  WETH_WRAP_GAS_ALREADY_APPROVED,
 } from '../../constants';
 import { Portion } from '../../fetchers/PortionFetcher';
 import { log } from '../../util/log';
@@ -27,7 +27,7 @@ import { LogJSON } from './index';
 
 export type DutchQuoteDerived = {
   largeTrade: boolean;
-}
+};
 
 export type DutchQuoteDataJSON = {
   orderInfo: DutchOrderInfoJSON;
@@ -110,8 +110,7 @@ export class DutchQuote implements IQuote {
       DutchQuoteType.RFQ,
       body.filler,
       nonce,
-      portion?.bips,
-      portion?.recipient
+      portion
     );
   }
 
@@ -153,8 +152,7 @@ export class DutchQuote implements IQuote {
       DutchQuoteType.SYNTHETIC,
       NATIVE_ADDRESS, // synthetic quote has no filler
       generateRandomNonce(), // synthetic quote has no nonce
-      quote.getPortionBips(),
-      quote.getPortionRecipient()
+      quote.portion
     );
   }
 
@@ -203,8 +201,7 @@ export class DutchQuote implements IQuote {
       quote.quoteType,
       quote.filler,
       quote.nonce,
-      classic.getPortionBips(),
-      classic.getPortionRecipient(),
+      classic.portion,
       {
         largeTrade: options?.largeTrade ?? false,
       }
@@ -249,8 +246,12 @@ export class DutchQuote implements IQuote {
       permitData: this.getPermitData(),
       // NOTE: important for URA to return 0 bps and amount, in case of no portion.
       // this is FE requirement
-      portionBips: frontendAndUraEnablePortion(this.request.info.sendPortionEnabled) ? this.portion?.bips ?? 0 : undefined,
-      portionAmount: frontendAndUraEnablePortion(this.request.info.sendPortionEnabled) ? this.portionAmountOutStart.toString() ?? '0' : undefined,
+      portionBips: frontendAndUraEnablePortion(this.request.info.sendPortionEnabled)
+        ? this.portion?.bips ?? 0
+        : undefined,
+      portionAmount: frontendAndUraEnablePortion(this.request.info.sendPortionEnabled)
+        ? this.portionAmountOutStart.toString() ?? '0'
+        : undefined,
       portionRecipient: this.portion?.recipient,
     };
   }
@@ -272,41 +273,18 @@ export class DutchQuote implements IQuote {
         endAmount: this.amountInEnd,
       });
 
-    if (this.portion?.recipient && this.portion?.bips && frontendAndUraEnablePortion(this.request.info.sendPortionEnabled)) {
-      if (this.request.info.type === TradeType.EXACT_INPUT) {
-        // Amount to swapper
-        builder.output({
-          token: this.tokenOut,
-          startAmount: this.amountOutStart.sub(this.portionAmountOutStart),
-          endAmount: this.amountOutEnd.sub(this.portionAmountOutEnd),
-          recipient: this.request.config.swapper,
-        });
-      } else if (this.request.info.type === TradeType.EXACT_OUTPUT) {
-        // Amount to swapper
-        builder.output({
-          token: this.tokenOut,
-          startAmount: this.amountOutStart,
-          endAmount: this.amountOutEnd,
-          recipient: this.request.config.swapper,
-        });
-      }
-
-      // Amount to portion recipient
-      builder.output({
-        token: this.tokenOut,
-        startAmount: this.portionAmountOutStart,
-        endAmount: this.portionAmountOutEnd,
-        recipient: this.portion?.recipient,
-      });
-    } else {
-      // Amount to swapper
-      builder.output({
+    const outputs = getPortionAdjustedOutputs(
+      {
         token: this.tokenOut,
         startAmount: this.amountOutStart,
         endAmount: this.amountOutEnd,
         recipient: this.request.config.swapper,
-      });
-    }
+      },
+      this.request.info.type,
+      this.request.info.sendPortionEnabled,
+      this.portion
+    );
+    outputs.forEach((output) => builder.output(output));
 
     if (this.isExclusiveQuote() && this.filler) {
       builder.exclusiveFiller(this.filler, BigNumber.from(this.request.config.exclusivityOverrideBps));
@@ -328,9 +306,11 @@ export class DutchQuote implements IQuote {
       endAmountIn: this.amountInEnd.toString(),
       endAmountOut: this.amountOutEnd.toString(),
       amountInGasAdjusted: this.amountInStart.toString(),
-      amountInGasAndPortionAdjusted: this.request.info.type === TradeType.EXACT_OUTPUT ? this.amountInGasAndPortionAdjusted.toString() : undefined,
+      amountInGasAndPortionAdjusted:
+        this.request.info.type === TradeType.EXACT_OUTPUT ? this.amountInGasAndPortionAdjusted.toString() : undefined,
       amountOutGasAdjusted: this.amountOutStart.toString(),
-      amountOutGasAndPortionAdjusted: this.request.info.type === TradeType.EXACT_INPUT ? this.amountOutGasAndPortionAdjusted.toString() : undefined,
+      amountOutGasAndPortionAdjusted:
+        this.request.info.type === TradeType.EXACT_INPUT ? this.amountOutGasAndPortionAdjusted.toString() : undefined,
       swapper: this.swapper,
       filler: this.filler,
       routing: RoutingType[this.routingType],
@@ -553,35 +533,48 @@ export class DutchQuote implements IQuote {
   }
 }
 
-export function getPortionAdjustedOutputs(portion?: Portion, sendPortionEnabled: boolean, tradeType: TradeType, baseOutput: DutchOutput): DutchOutput[] {
-  if (portion === undefined || !sendPortionEnabled) return [baseOutput];
+// baseOutput is the output that we would use for the swapper if no portion
+// returns list of outputs including portion
+export function getPortionAdjustedOutputs(
+  baseOutput: DutchOutput,
+  tradeType: TradeType,
+  sendPortionEnabled?: boolean,
+  portion?: Portion
+): DutchOutput[] {
+  if (portion === undefined || !frontendAndUraEnablePortion(sendPortionEnabled)) return [baseOutput];
+  const portionStartAmount = baseOutput.startAmount.mul(portion.bips).div(BPS);
+  const portionEndAmount = baseOutput.endAmount.mul(portion.bips).div(BPS);
 
   const outputs: DutchOutput[] = [];
+
+  // Output to swapper
   if (tradeType === TradeType.EXACT_INPUT) {
-    // Amount to swapper
     outputs.push({
-      token: this.tokenOut,
-      startAmount: this.amountOutStart.sub(this.portionAmountOutStart),
-      endAmount: this.amountOutEnd.sub(this.portionAmountOutEnd),
-      recipient: this.request.config.swapper,
+      token: baseOutput.token,
+      startAmount: baseOutput.startAmount.sub(portionStartAmount),
+      endAmount: baseOutput.endAmount.sub(portionEndAmount),
+      recipient: baseOutput.recipient,
     });
   } else if (tradeType === TradeType.EXACT_OUTPUT) {
     // Amount to swapper
+    // for exact output, we append portion rather than subtracting it from the base
     outputs.push({
-      token: this.tokenOut,
-      startAmount: this.amountOutStart,
-      endAmount: this.amountOutEnd,
-      recipient: this.request.config.swapper,
+      token: baseOutput.token,
+      startAmount: baseOutput.startAmount,
+      endAmount: baseOutput.endAmount,
+      recipient: baseOutput.recipient,
     });
   }
 
-  // Amount to portion recipient
+  // Output to portion recipient
   outputs.push({
-    token: this.tokenOut,
-    startAmount: this.portionAmountOutStart,
-    endAmount: this.portionAmountOutEnd,
-    recipient: this.portion?.recipient,
+    token: baseOutput.token,
+    startAmount: portionStartAmount,
+    endAmount: portionEndAmount,
+    recipient: portion.recipient,
   });
+
+  return outputs;
 }
 
 // parses a slippage tolerance as a percent string

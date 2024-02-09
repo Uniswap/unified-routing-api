@@ -48,7 +48,6 @@ describe('DutchQuote', () => {
   });
 
   describe('Reparameterize', () => {
-
     it('slippage is in percent terms', async () => {
       const amountIn = BigNumber.from('1000000000');
       const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchQuote.applySlippage(
@@ -108,19 +107,21 @@ describe('DutchQuote', () => {
       expect(amountInSlippageAdjusted.gte(amountInGasAdjusted)).toBeTruthy();
       expect(amountOutSlippageAdjusted.eq(amountOutGasAdjusted)).toBeTruthy();
     });
-    
+
     it.each([
-      { title: 'overrides', largeTrade: true, },
-      { title: 'does not override', largeTrade: false }
+      { title: 'overrides', largeTrade: true },
+      { title: 'does not override', largeTrade: false },
     ])('$title auctionPeriodSec if order size is considered large: $largeTrade', async (params) => {
       const classic = params.largeTrade ? CLASSIC_QUOTE_EXACT_IN_LARGE : CLASSIC_QUOTE_EXACT_IN_SMALL;
-      const reparamatrized = DutchQuote.reparameterize(DL_QUOTE_EXACT_IN_LARGE, classic, {hasApprovedPermit2: true, largeTrade: params.largeTrade});
+      const reparamatrized = DutchQuote.reparameterize(DL_QUOTE_EXACT_IN_LARGE, classic, {
+        hasApprovedPermit2: true,
+        largeTrade: params.largeTrade,
+      });
       if (params.largeTrade) {
         expect(reparamatrized.auctionPeriodSecs).toEqual(120);
       } else {
         expect(reparamatrized.auctionPeriodSecs).toEqual(60);
       }
-
     });
 
     it.each([true, false])(
@@ -131,12 +132,12 @@ describe('DutchQuote', () => {
         expect(reparameterized).toMatchObject(dutchLargeQuote);
 
         if (enablePortion) {
-          expect(reparameterized.portionBips).toEqual(PORTION_BIPS);
-          expect(reparameterized.portionRecipient).toEqual(PORTION_RECIPIENT);
+          expect(reparameterized.portion?.bips).toEqual(PORTION_BIPS);
+          expect(reparameterized.portion?.recipient).toEqual(PORTION_RECIPIENT);
         }
       }
     );
-    
+
     it('only override auctionPeriodSec on mainnet', async () => {
       const classic = CLASSIC_QUOTE_EXACT_IN_LARGE;
       const dutchRequest = createDutchQuote({ amountOut: AMOUNT_LARGE, chainId: 137 }, 'EXACT_INPUT', '1');
@@ -168,8 +169,8 @@ describe('DutchQuote', () => {
       expect(reparameterized.amountOutEnd).toEqual(amountOutEnd);
 
       if (enablePortion) {
-        expect(reparameterized.portionBips).toEqual(PORTION_BIPS);
-        expect(reparameterized.portionRecipient).toEqual(PORTION_RECIPIENT);
+        expect(reparameterized.portion?.bips).toEqual(PORTION_BIPS);
+        expect(reparameterized.portion?.recipient).toEqual(PORTION_RECIPIENT);
         expect(reparameterized.portionAmountOutStart).toEqual(
           reparameterized.amountOutStart.mul(PORTION_BIPS).div(BPS)
         );
@@ -203,8 +204,8 @@ describe('DutchQuote', () => {
         expect(reparameterized.amountOutStart).toEqual(dutchQuote.amountOutStart);
 
         if (enablePortion) {
-          expect(reparameterized.portionBips).toEqual(PORTION_BIPS);
-          expect(reparameterized.portionRecipient).toEqual(PORTION_RECIPIENT);
+          expect(reparameterized.portion?.bips).toEqual(PORTION_BIPS);
+          expect(reparameterized.portion?.recipient).toEqual(PORTION_RECIPIENT);
           expect(reparameterized.portionAmountOutStart).toEqual(dutchQuote.amountOutStart.mul(PORTION_BIPS).div(BPS));
           expect(reparameterized.portionAmountOutEnd).toEqual(amountOutEnd.mul(PORTION_BIPS).div(BPS));
         }
@@ -239,8 +240,8 @@ describe('DutchQuote', () => {
         expect(reparameterized.amountOutEnd).toEqual(amountOutEnd);
 
         if (enablePortion) {
-          expect(reparameterized.portionBips).toEqual(PORTION_BIPS);
-          expect(reparameterized.portionRecipient).toEqual(PORTION_RECIPIENT);
+          expect(reparameterized.portion?.bips).toEqual(PORTION_BIPS);
+          expect(reparameterized.portion?.recipient).toEqual(PORTION_RECIPIENT);
           expect(reparameterized.portionAmountOutStart).toEqual(
             reparameterized.amountOutStart.mul(PORTION_BIPS).div(BPS)
           );
@@ -368,8 +369,8 @@ describe('DutchQuote', () => {
       expect(firstNonce).toEqual(secondNonce);
 
       if (enablePortion) {
-        expect(result.portionBips).toEqual(PORTION_BIPS);
-        expect(result.portionRecipient).toEqual(PORTION_RECIPIENT);
+        expect(result.portion?.bips).toEqual(PORTION_BIPS);
+        expect(result.portion?.recipient).toEqual(PORTION_RECIPIENT);
         expect(result.portionAmountOutStart).toEqual(result.amountOutStart.mul(PORTION_BIPS).div(BPS));
         expect(result.portionAmountOutEnd).toEqual(result.amountOutEnd.mul(PORTION_BIPS).div(BPS));
       }
@@ -402,8 +403,8 @@ describe('DutchQuote', () => {
       expect(result.amountOutEnd.lte(slippageAdjustedAmountOut)).toBeTruthy();
 
       if (enablePortion) {
-        expect(result.portionBips).toEqual(PORTION_BIPS);
-        expect(result.portionRecipient).toEqual(PORTION_RECIPIENT);
+        expect(result.portion?.bips).toEqual(PORTION_BIPS);
+        expect(result.portion?.recipient).toEqual(PORTION_RECIPIENT);
         expect(result.portionAmountOutStart).toEqual(result.amountOutStart.mul(PORTION_BIPS).div(BPS));
         expect(result.portionAmountOutEnd).toEqual(result.amountOutEnd.mul(PORTION_BIPS).div(BPS));
       }

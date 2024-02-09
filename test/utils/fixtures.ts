@@ -272,7 +272,8 @@ export const CLASSIC_QUOTE_DATA = {
     permitNonce: '1',
     tradeType: 'exactIn',
     slippage: 0.5,
-    portionBips: 0, // always assume portion Bips will get returned from routing-api
+    portionBips: 0, // always assume portion will get returned from routing-api
+    portionRecipient: '0x0000000000000000000000000000000000000000',
   },
 };
 
@@ -492,7 +493,10 @@ export const CLASSIC_QUOTE_EXACT_IN_WORSE_WITH_PORTION = createClassicQuote(
   undefined,
   FLAT_PORTION
 );
-export const CLASSIC_QUOTE_EXACT_IN_SMALL = createClassicQuote({gasUseEstimateQuote: '1', quoteGasAdjusted: '10', gasUseEstimateUSD: '100' }, { type: 'EXACT_INPUT' });
+export const CLASSIC_QUOTE_EXACT_IN_SMALL = createClassicQuote(
+  { gasUseEstimateQuote: '1', quoteGasAdjusted: '10', gasUseEstimateUSD: '100' },
+  { type: 'EXACT_INPUT' }
+);
 export const CLASSIC_QUOTE_EXACT_IN_LARGE = createClassicQuote({}, { type: 'EXACT_INPUT' });
 export const CLASSIC_QUOTE_EXACT_IN_LARGE_WITH_PORTION = createClassicQuote(
   {

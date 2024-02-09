@@ -17,8 +17,9 @@ import {
 } from '../../../constants';
 import {
   QUOTE_REQUEST_DL,
-  QUOTE_REQUEST_DL_EXACT_OUT, QUOTE_REQUEST_DL_EXACT_OUT_WITH_PORTION,
-  QUOTE_REQUEST_DL_FE_SEND_PORTION
+  QUOTE_REQUEST_DL_EXACT_OUT,
+  QUOTE_REQUEST_DL_EXACT_OUT_WITH_PORTION,
+  QUOTE_REQUEST_DL_FE_SEND_PORTION,
 } from '../../../utils/fixtures';
 
 const UUID = 'c67c2882-24aa-4a68-a90b-53250ef81517';
@@ -171,8 +172,8 @@ describe('RfqQuoter test', () => {
         amountOutStart: BigNumber.from(AMOUNT),
       });
       expect(quote).toBeInstanceOf(DutchQuote);
-      expect((quote as DutchQuote).portionBips).toEqual(portionResponse.portion?.bips);
-      expect((quote as DutchQuote).portionRecipient).toEqual(portionResponse.portion?.recipient);
+      expect((quote as DutchQuote).portion?.bips).toEqual(portionResponse.portion?.bips);
+      expect((quote as DutchQuote).portion?.recipient).toEqual(portionResponse.portion?.recipient);
     });
 
     it('returns EXACT_INPUT quote with portion', async () => {
@@ -187,8 +188,8 @@ describe('RfqQuoter test', () => {
         amountOutStart: BigNumber.from(AMOUNT),
       });
       expect(quote).toBeInstanceOf(DutchQuote);
-      expect((quote as DutchQuote).portionBips).toEqual(portionResponse.portion?.bips);
-      expect((quote as DutchQuote).portionRecipient).toEqual(portionResponse.portion?.recipient);
+      expect((quote as DutchQuote).portion?.bips).toEqual(portionResponse.portion?.bips);
+      expect((quote as DutchQuote).portion?.recipient).toEqual(portionResponse.portion?.recipient);
 
       expect(
         postSpy({
@@ -231,8 +232,8 @@ describe('RfqQuoter test', () => {
         amountOutStart: BigNumber.from(AMOUNT),
       });
       expect(quote).toBeInstanceOf(DutchQuote);
-      expect((quote as DutchQuote).portionBips).toEqual(portionResponse.portion?.bips);
-      expect((quote as DutchQuote).portionRecipient).toEqual(portionResponse.portion?.recipient);
+      expect((quote as DutchQuote).portion?.bips).toEqual(portionResponse.portion?.bips);
+      expect((quote as DutchQuote).portion?.recipient).toEqual(portionResponse.portion?.recipient);
 
       expect(
         postSpy({

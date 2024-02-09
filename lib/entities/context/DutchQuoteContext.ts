@@ -221,11 +221,14 @@ export class DutchQuoteContext implements QuoteContext {
     }
     return true;
   }
-  
+
   // large as defined by >= $10k USD
   isLargeOrder(log: Logger, classicQuote: Quote): boolean {
     // gasUseEstimateUSD on other chains seem to be unreliable
-    if (classicQuote.request.info.tokenInChainId !== ChainId.MAINNET || classicQuote.request.info.tokenOutChainId !== ChainId.MAINNET) {
+    if (
+      classicQuote.request.info.tokenInChainId !== ChainId.MAINNET ||
+      classicQuote.request.info.tokenOutChainId !== ChainId.MAINNET
+    ) {
       return false;
     }
     const quoteSizeEstimateUSD = getQuoteSizeEstimateUSD(classicQuote);
