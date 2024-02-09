@@ -6,6 +6,7 @@ import { PermitDetails, PermitSingleData, PermitTransferFromData } from '@uniswa
 import { v4 as uuidv4 } from 'uuid';
 import { QuoteRequest } from '..';
 import { RoutingType } from '../../constants';
+import { Portion, PortionType } from '../../fetchers/PortionFetcher';
 import { createPermitData } from '../../util/permit2';
 import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
 import { IQuote, LogJSON } from './index';
@@ -205,11 +206,13 @@ export class ClassicQuote implements IQuote {
     return this.request.info.slippageTolerance ? parseFloat(this.request.info.slippageTolerance) : -1;
   }
 
-  public getPortionBips(): number | undefined {
-    return this.quoteData.portionBips;
-  }
+  public get portion(): Portion | undefined {
+    if (!this.quoteData.portionBips || !this.quoteData.portionRecipient) return undefined;
 
-  public getPortionRecipient(): string | undefined {
-    return this.quoteData.portionRecipient;
+    return {
+      bips: this.quoteData.portionBips,
+      recipient: this.quoteData.portionRecipient,
+      type: PortionType.Flat,
+    };
   }
 }

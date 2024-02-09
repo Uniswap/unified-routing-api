@@ -616,7 +616,6 @@ describe('DutchQuoteContext', () => {
         ...rfqQuote,
         amountOutStart: expect.any(BigNumber),
         amountOutEnd: expect.any(BigNumber),
-        portionBips: 0,
         derived: {
           largeTrade: true,
         },
@@ -630,7 +629,6 @@ describe('DutchQuoteContext', () => {
         ...rfqQuote,
         amountOutStart: expect.any(BigNumber),
         amountOutEnd: expect.any(BigNumber),
-        portionBips: 0,
         derived: {
           largeTrade: true,
         },
