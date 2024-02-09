@@ -280,8 +280,8 @@ export class DutchQuote implements IQuote {
         endAmount: this.amountOutEnd,
         recipient: this.request.config.swapper,
       },
-      !!this.request.info.sendPortionEnabled,
       this.request.info.type,
+      this.request.info.sendPortionEnabled,
       this.portion
     );
     outputs.forEach((output) => builder.output(output));
@@ -537,11 +537,11 @@ export class DutchQuote implements IQuote {
 // returns list of outputs including portion
 export function getPortionAdjustedOutputs(
   baseOutput: DutchOutput,
-  sendPortionEnabled: boolean,
   tradeType: TradeType,
+  sendPortionEnabled?: boolean,
   portion?: Portion
 ): DutchOutput[] {
-  if (portion === undefined || !sendPortionEnabled) return [baseOutput];
+  if (portion === undefined || !frontendAndUraEnablePortion(sendPortionEnabled)) return [baseOutput];
   const portionStartAmount = baseOutput.startAmount.mul(portion.bips).div(BPS);
   const portionEndAmount = baseOutput.endAmount.mul(portion.bips).div(BPS);
 
