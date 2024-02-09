@@ -132,8 +132,8 @@ describe('DutchQuote', () => {
         expect(reparameterized).toMatchObject(dutchLargeQuote);
 
         if (enablePortion) {
-          expect(reparameterized.portionBips).toEqual(PORTION_BIPS);
-          expect(reparameterized.portionRecipient).toEqual(PORTION_RECIPIENT);
+          expect(reparameterized.portion?.bips).toEqual(PORTION_BIPS);
+          expect(reparameterized.portion?.recipient).toEqual(PORTION_RECIPIENT);
         }
       }
     );
@@ -169,8 +169,8 @@ describe('DutchQuote', () => {
       expect(reparameterized.amountOutEnd).toEqual(amountOutEnd);
 
       if (enablePortion) {
-        expect(reparameterized.portionBips).toEqual(PORTION_BIPS);
-        expect(reparameterized.portionRecipient).toEqual(PORTION_RECIPIENT);
+        expect(reparameterized.portion?.bips).toEqual(PORTION_BIPS);
+        expect(reparameterized.portion?.recipient).toEqual(PORTION_RECIPIENT);
         expect(reparameterized.portionAmountOutStart).toEqual(
           reparameterized.amountOutStart.mul(PORTION_BIPS).div(BPS)
         );
@@ -204,8 +204,8 @@ describe('DutchQuote', () => {
         expect(reparameterized.amountOutStart).toEqual(dutchQuote.amountOutStart);
 
         if (enablePortion) {
-          expect(reparameterized.portionBips).toEqual(PORTION_BIPS);
-          expect(reparameterized.portionRecipient).toEqual(PORTION_RECIPIENT);
+          expect(reparameterized.portion?.bips).toEqual(PORTION_BIPS);
+          expect(reparameterized.portion?.recipient).toEqual(PORTION_RECIPIENT);
           expect(reparameterized.portionAmountOutStart).toEqual(dutchQuote.amountOutStart.mul(PORTION_BIPS).div(BPS));
           expect(reparameterized.portionAmountOutEnd).toEqual(amountOutEnd.mul(PORTION_BIPS).div(BPS));
         }
@@ -240,8 +240,8 @@ describe('DutchQuote', () => {
         expect(reparameterized.amountOutEnd).toEqual(amountOutEnd);
 
         if (enablePortion) {
-          expect(reparameterized.portionBips).toEqual(PORTION_BIPS);
-          expect(reparameterized.portionRecipient).toEqual(PORTION_RECIPIENT);
+          expect(reparameterized.portion?.bips).toEqual(PORTION_BIPS);
+          expect(reparameterized.portion?.recipient).toEqual(PORTION_RECIPIENT);
           expect(reparameterized.portionAmountOutStart).toEqual(
             reparameterized.amountOutStart.mul(PORTION_BIPS).div(BPS)
           );
@@ -369,8 +369,8 @@ describe('DutchQuote', () => {
       expect(firstNonce).toEqual(secondNonce);
 
       if (enablePortion) {
-        expect(result.portionBips).toEqual(PORTION_BIPS);
-        expect(result.portionRecipient).toEqual(PORTION_RECIPIENT);
+        expect(result.portion?.bips).toEqual(PORTION_BIPS);
+        expect(result.portion?.recipient).toEqual(PORTION_RECIPIENT);
         expect(result.portionAmountOutStart).toEqual(result.amountOutStart.mul(PORTION_BIPS).div(BPS));
         expect(result.portionAmountOutEnd).toEqual(result.amountOutEnd.mul(PORTION_BIPS).div(BPS));
       }
@@ -403,8 +403,8 @@ describe('DutchQuote', () => {
       expect(result.amountOutEnd.lte(slippageAdjustedAmountOut)).toBeTruthy();
 
       if (enablePortion) {
-        expect(result.portionBips).toEqual(PORTION_BIPS);
-        expect(result.portionRecipient).toEqual(PORTION_RECIPIENT);
+        expect(result.portion?.bips).toEqual(PORTION_BIPS);
+        expect(result.portion?.recipient).toEqual(PORTION_RECIPIENT);
         expect(result.portionAmountOutStart).toEqual(result.amountOutStart.mul(PORTION_BIPS).div(BPS));
         expect(result.portionAmountOutEnd).toEqual(result.amountOutEnd.mul(PORTION_BIPS).div(BPS));
       }

@@ -67,7 +67,7 @@ describe('quote', function () {
 
   before(async function () {
     baseTest = new BaseIntegrationTestSuite();
-    [alice,] = await baseTest.before();
+    [alice] = await baseTest.before();
     // Do any custom setup here for this test suite
 
     // Help with test flakiness by retrying.

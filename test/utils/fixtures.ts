@@ -272,7 +272,8 @@ export const CLASSIC_QUOTE_DATA = {
     permitNonce: '1',
     tradeType: 'exactIn',
     slippage: 0.5,
-    portionBips: 0, // always assume portion Bips will get returned from routing-api
+    portionBips: 0, // always assume portion will get returned from routing-api
+    portionRecipient: '0x0000000000000000000000000000000000000000',
   },
 };
 

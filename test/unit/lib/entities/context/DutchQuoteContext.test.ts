@@ -616,7 +616,11 @@ describe('DutchQuoteContext', () => {
         ...rfqQuote,
         amountOutStart: expect.any(BigNumber),
         amountOutEnd: expect.any(BigNumber),
-        portionBips: 0,
+        portion: {
+          bips: 0,
+          recipient: '0x0000000000000000000000000000000000000000',
+          type: 'flat',
+        },
         derived: {
           largeTrade: true,
         },
@@ -630,7 +634,11 @@ describe('DutchQuoteContext', () => {
         ...rfqQuote,
         amountOutStart: expect.any(BigNumber),
         amountOutEnd: expect.any(BigNumber),
-        portionBips: 0,
+        portion: {
+          bips: 0,
+          recipient: '0x0000000000000000000000000000000000000000',
+          type: 'flat',
+        },
         derived: {
           largeTrade: true,
         },
