@@ -365,15 +365,15 @@ export const GREENLIST_TOKEN_PAIRS: Array<[Currency, Currency]> = [
 export function getTestAmount(currency: Currency): string {
   switch (currency) {
     case agEUR_MAINNET:
-      return '1000'
+      return '1000';
     case XSGD_MAINNET:
-      return '1000'
+      return '1000';
     case DAI_ON(ChainId.MAINNET):
-      return '1000'
+      return '1000';
     case WBTC_MAINNET:
-      return '1'
+      return '1';
     default:
-      return '10'
+      return '10';
   }
 }
 

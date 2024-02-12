@@ -1,6 +1,6 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { AllowanceTransfer, PermitSingle } from '@uniswap/permit2-sdk';
-import { ChainId, CurrencyAmount, Ether, Fraction, Token, WETH9, TradeType } from '@uniswap/sdk-core';
+import { ChainId, CurrencyAmount, Ether, Fraction, Token, WETH9 } from '@uniswap/sdk-core';
 import {
   CEUR_CELO,
   CEUR_CELO_ALFAJORES,
@@ -30,7 +30,7 @@ import { RoutingType } from '../../lib/constants';
 import { ClassicQuoteDataJSON, V2PoolInRouteJSON } from '../../lib/entities/quote';
 import { QuoteRequestBodyJSON } from '../../lib/entities/request';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
-import { FLAT_PORTION, GREENLIST_STABLE_TO_STABLE_PAIRS, GREENLIST_TOKEN_PAIRS, getTestAmount } from '../constants';
+import { FLAT_PORTION, getTestAmount, GREENLIST_STABLE_TO_STABLE_PAIRS, GREENLIST_TOKEN_PAIRS } from '../constants';
 import {
   BULLET,
   BULLET_WHT_FOT_TAX,
@@ -889,7 +889,7 @@ describe('quote', function () {
                       routingType: RoutingType.CLASSIC,
                       recipient: alice.address,
                       deadline: 360,
-                      protocols: ['v2','v3','mixed'],
+                      protocols: ['v2', 'v3', 'mixed'],
                       algorithm: 'alpha',
                       forceMixedRoutes: true,
                       enableUniversalRouter: true,
@@ -902,8 +902,7 @@ describe('quote', function () {
                   data: { quote: quoteJSON },
                   status,
                 } = response;
-                const { methodParameters, route, routeString } =
-                  quoteJSON as ClassicQuoteDataJSON;
+                const { methodParameters, route, routeString } = quoteJSON as ClassicQuoteDataJSON;
 
                 expect(status).to.equal(200);
 
@@ -1439,7 +1438,7 @@ describe('quote', function () {
             GREENLIST_TOKEN_PAIRS.forEach(([tokenIn, tokenOut]) => {
               sendPortionEnabledValues.forEach((sendPortionEnabled) => {
                 it(`${tokenIn.symbol} -> ${tokenOut.symbol} sendPortionEnabled = ${sendPortionEnabled}`, async () => {
-                  const originalAmount = getTestAmount(type === TradeType.EXACT_INPUT ? tokenIn : tokenOut);
+                  const originalAmount = getTestAmount(type === 'EXACT_INPUT' ? tokenIn : tokenOut);
                   const tokenInSymbol = tokenIn.symbol!;
                   const tokenOutSymbol = tokenOut.symbol!;
                   const tokenInAddress = tokenIn.isNative ? tokenInSymbol : tokenIn.address;
