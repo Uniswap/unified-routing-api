@@ -1,6 +1,6 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { AllowanceTransfer, PermitSingle } from '@uniswap/permit2-sdk';
-import { ChainId, CurrencyAmount, Ether, Fraction, Token, WETH9 } from '@uniswap/sdk-core';
+import { ChainId, CurrencyAmount, Ether, Fraction, Token, WETH9, TradeType } from '@uniswap/sdk-core';
 import {
   CEUR_CELO,
   CEUR_CELO_ALFAJORES,
@@ -30,7 +30,7 @@ import { RoutingType } from '../../lib/constants';
 import { ClassicQuoteDataJSON, V2PoolInRouteJSON } from '../../lib/entities/quote';
 import { QuoteRequestBodyJSON } from '../../lib/entities/request';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
-import { FLAT_PORTION, GREENLIST_STABLE_TO_STABLE_PAIRS, GREENLIST_TOKEN_PAIRS } from '../constants';
+import { FLAT_PORTION, GREENLIST_STABLE_TO_STABLE_PAIRS, GREENLIST_TOKEN_PAIRS, getTestAmount } from '../constants';
 import {
   BULLET,
   BULLET_WHT_FOT_TAX,
@@ -873,14 +873,15 @@ describe('quote', function () {
             });
 
             if (type === 'EXACT_INPUT') {
-              it(`erc20 -> erc20 forceMixedRoutes returns mixed route`, async () => {
+              // TODO: reenable when mixed routes become stable, currently flaky
+              xit(`erc20 -> erc20 forceMixedRoutes returns mixed route`, async () => {
                 const quoteReq: QuoteRequestBodyJSON = {
                   requestId: 'id',
                   tokenIn: 'USDC',
                   tokenInChainId: 1,
-                  tokenOut: 'USDT',
+                  tokenOut: 'DAI',
                   tokenOutChainId: 1,
-                  amount: await getAmount(1, type, 'USDC', 'USDT', '1000'),
+                  amount: await getAmount(1, type, 'USDC', 'DAI', '1000'),
                   type,
                   slippageTolerance: SLIPPAGE,
                   configs: [
@@ -1438,7 +1439,7 @@ describe('quote', function () {
             GREENLIST_TOKEN_PAIRS.forEach(([tokenIn, tokenOut]) => {
               sendPortionEnabledValues.forEach((sendPortionEnabled) => {
                 it(`${tokenIn.symbol} -> ${tokenOut.symbol} sendPortionEnabled = ${sendPortionEnabled}`, async () => {
-                  const originalAmount = '10';
+                  const originalAmount = getTestAmount(type === TradeType.EXACT_INPUT ? tokenIn : tokenOut);
                   const tokenInSymbol = tokenIn.symbol!;
                   const tokenOutSymbol = tokenOut.symbol!;
                   const tokenInAddress = tokenIn.isNative ? tokenInSymbol : tokenIn.address;

@@ -361,4 +361,20 @@ export const GREENLIST_TOKEN_PAIRS: Array<[Currency, Currency]> = [
   [agEUR_MAINNET, XSGD_MAINNET], // good pair that simultaneously test two use cases: 1) stable-to-stable which is not in carve-out 2) newly published tokens in the default token list
 ];
 
+// reasonably sized token amounts for integ tests
+export function getTestAmount(currency: Currency): string {
+  switch (currency) {
+    case agEUR_MAINNET:
+      return '1000'
+    case XSGD_MAINNET:
+      return '1000'
+    case DAI_ON(ChainId.MAINNET):
+      return '1000'
+    case WBTC_MAINNET:
+      return '1'
+    default:
+      return '10'
+  }
+}
+
 export const GREENLIST_STABLE_TO_STABLE_PAIRS: Array<[Currency, Currency]> = [[USDC_MAINNET, DAI_MAINNET]];
