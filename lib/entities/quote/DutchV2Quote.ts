@@ -20,7 +20,7 @@ import { log } from '../../util/log';
 import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
 import { ClassicQuote } from './ClassicQuote';
-import { Amounts, DutchRFQQuoteResponseJSON, getPortionAdjustedOutputs, ParameterizationOptions, parseSlippageToleranceBps } from './DutchQuote';
+import { Amounts, DutchQuote, DutchRFQQuoteResponseJSON, getPortionAdjustedOutputs, ParameterizationOptions, parseSlippageToleranceBps } from './DutchQuote';
 
 // TODO: replace with real cosigner when deployed
 const LABS_COSIGNER = '0x0000000000000000000000000000000000000000';
@@ -104,7 +104,7 @@ export class DutchV2Quote implements IQuote {
 
   // reparameterize an RFQ quote with awareness of classic
   // sets the ending prices of the dutch auction to be a reasonable fillable price for classic
-  public static reparameterize(
+  public static fromRFQAndClassic(
     quote: DutchV2Quote,
     classic?: ClassicQuote,
     options?: ParameterizationOptions
