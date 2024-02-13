@@ -18,10 +18,10 @@ import {
   BASE_REQUEST_INFO_EXACT_IN,
   createClassicQuote,
   createDutchQuote,
+  createDutchQuoteWithRequest,
   DL_QUOTE_EXACT_IN_BETTER,
   makeDutchV2Request,
   QUOTE_REQUEST_DUTCH_V2,
-  createDutchQuoteWithRequest,
 } from '../../../../utils/fixtures';
 
 describe('DutchV2QuoteContext', () => {

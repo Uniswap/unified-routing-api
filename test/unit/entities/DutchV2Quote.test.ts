@@ -3,14 +3,8 @@ import Logger from 'bunyan';
 import { it } from '@jest/globals';
 import { RoutingType } from '../../../lib/constants';
 import { DutchV2Quote, LABS_COSIGNER } from '../../../lib/entities';
-import {
-  ETH_IN,
-  TOKEN_IN,
-} from '../../constants';
-import {
-  makeDutchV2Request,
-  createDutchQuote,
-} from '../../utils/fixtures';
+import { ETH_IN, TOKEN_IN } from '../../constants';
+import { createDutchQuote, makeDutchV2Request } from '../../utils/fixtures';
 
 describe('DutchV2Quote', () => {
   // silent logger in tests
