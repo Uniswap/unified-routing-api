@@ -11,6 +11,7 @@ import { DutchQuoteContext } from './DutchQuoteContext';
 
 export * from './ClassicQuoteContext';
 export * from './DutchQuoteContext';
+export * from './DutchV2QuoteContext';
 
 export type RequestByKey = {
   [key: string]: QuoteRequest;

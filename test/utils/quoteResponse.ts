@@ -6,6 +6,8 @@ import {
   DutchQuote,
   DutchQuoteJSON,
   DutchRequest,
+  DutchV2Quote,
+  DutchV2Request,
   Quote,
   QuoteRequest,
 } from '../../lib/entities';
@@ -91,6 +93,11 @@ function parseQuote(
   switch (routing) {
     case RoutingType.DUTCH_LIMIT:
       return DutchQuote.fromResponseBody(request as DutchRequest, quote as DutchQuoteJSON, nonce, portion);
+    case RoutingType.DUTCH_V2:
+      return DutchV2Quote.fromV1Quote(
+        request as DutchV2Request,
+        DutchQuote.fromResponseBody(request as DutchRequest, quote as DutchQuoteJSON, nonce, portion)
+      );
     case RoutingType.CLASSIC:
       // TODO: figure out how to determine tradetype from output JSON
       // also: is this parsing quote responses even needed outside of testing?
