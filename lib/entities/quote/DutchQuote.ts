@@ -581,6 +581,6 @@ export function getPortionAdjustedOutputs(
 
 // parses a slippage tolerance as a percent string
 // and returns it as a number between 0 and 10000
-function parseSlippageToleranceBps(slippageTolerance: string): number {
+export function parseSlippageToleranceBps(slippageTolerance: string): number {
   return Math.round(parseFloat(slippageTolerance) * 100);
 }
