@@ -62,7 +62,7 @@ export type ParameterizationOptions = {
   largeTrade: boolean;
 };
 
-type Amounts = {
+export type Amounts = {
   amountIn: BigNumber;
   amountOut: BigNumber;
 };

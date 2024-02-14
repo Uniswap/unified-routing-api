@@ -23,6 +23,7 @@ export const OPEN_QUOTE_START_TIME_BUFFER_SECS = 60;
 export enum RoutingType {
   CLASSIC = 'CLASSIC',
   DUTCH_LIMIT = 'DUTCH_LIMIT',
+  DUTCH_V2 = 'DUTCH_V2',
 }
 
 export const DEFAULT_POSITIVE_CACHE_ENTRY_TTL = 600; // 10 minutes
