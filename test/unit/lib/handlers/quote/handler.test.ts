@@ -46,15 +46,8 @@ import { AxiosError } from 'axios';
 import { BigNumber, providers } from 'ethers';
 import NodeCache from 'node-cache';
 import { RoutingType } from '../../../../../lib/constants';
-import {
-  ClassicQuote,
-  ClassicQuoteDataJSON,
-  DutchQuote,
-  Quote,
-  RelayQuote,
-  RequestSource,
-} from '../../../../../lib/entities';
-import { QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index';
+import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, RelayQuote, Quote, RequestSource } from '../../../../../lib/entities';
+import { DutchConfigJSON, QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index';
 import { Permit2Fetcher } from '../../../../../lib/fetchers/Permit2Fetcher';
 import {
   GetPortionResponse,
@@ -404,7 +397,9 @@ describe('QuoteHandler', () => {
       });
 
       it('handles exactOut DL quotes', async () => {
-        const request: QuoteRequestBodyJSON = {
+        const request: QuoteRequestBodyJSON & {
+          configs: DutchConfigJSON[]
+        } = {
           ...BASE_REQUEST_INFO_EXACT_OUT,
           configs: [
             {
@@ -1481,6 +1476,16 @@ describe('QuoteHandler', () => {
       const quotes = await getQuotes(quoters, QUOTE_REQUEST_MULTI);
       const bestQuote = await getBestQuote(quotes);
       expect(bestQuote).toEqual(DL_QUOTE_EXACT_IN_BETTER_WITH_PORTION);
+    });
+
+    it('returns the DL with portion quote among one DL with portion quote and one classic with portion quote', async () => {
+      const quoters: QuoterByRoutingType = {
+        DUTCH_LIMIT: quoterMock(DL_QUOTE_EXACT_OUT_BETTER_WITH_PORTION),
+        CLASSIC: quoterMock(CLASSIC_QUOTE_EXACT_OUT_WORSE_WITH_PORTION),
+      };
+      const quotes = await getQuotes(quoters, QUOTE_REQUEST_MULTI);
+      const bestQuote = await getBestQuote(quotes);
+      expect(bestQuote).toEqual(DL_QUOTE_EXACT_OUT_BETTER_WITH_PORTION);
     });
   });
 

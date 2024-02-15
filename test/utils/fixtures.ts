@@ -7,8 +7,12 @@ import {
   ClassicQuoteDataJSON,
   ClassicRequest,
   DutchConfig,
+  DutchConfigJSON,
   DutchQuoteJSON,
   DutchRequest,
+  DutchV2Config,
+  DutchV2Quote,
+  DutchV2Request,
   parseQuoteRequests,
   QuoteRequestBodyJSON,
 } from '../../lib/entities';
@@ -209,6 +213,27 @@ export function makeDutchRequest(
   }).quoteRequests[0] as DutchRequest;
 }
 
+export function makeDutchV2Request(
+  overrides: Partial<QuoteRequestBodyJSON>,
+  configOverrides?: Partial<DutchV2Config>,
+  baseRequestInfo = BASE_REQUEST_INFO_EXACT_IN
+): DutchV2Request {
+  const requestInfo = Object.assign({}, baseRequestInfo, overrides);
+  return parseQuoteRequests({
+    ...requestInfo,
+    configs: [
+      {
+        routingType: RoutingType.DUTCH_V2,
+        swapper: SWAPPER,
+        deadlineBufferSecs: 12,
+        ...configOverrides,
+      },
+    ],
+  }).quoteRequests[0] as DutchV2Request;
+}
+
+export const QUOTE_REQUEST_DUTCH_V2 = makeDutchV2Request({}, { useSyntheticQuotes: true });
+
 export const QUOTE_REQUEST_DL = makeDutchRequest({}, { useSyntheticQuotes: true });
 export const QUOTE_REQUEST_DL_FE_SEND_PORTION = makeDutchRequest({ sendPortionEnabled: true, portion: FLAT_PORTION });
 export const QUOTE_REQUEST_DL_EXACT_OUT = makeDutchRequest({ type: 'EXACT_OUTPUT' });
@@ -293,6 +318,21 @@ const DL_QUOTE_DATA = {
   },
 };
 
+const DUTCH_V2_QUOTE_DATA = {
+  routing: RoutingType.DUTCH_V2,
+  quote: {
+    chainId: 1,
+    requestId: 'requestId',
+    quoteId: 'quoteId',
+    tokenIn: TOKEN_IN,
+    amountIn: AMOUNT,
+    tokenOut: TOKEN_OUT,
+    amountOut: AMOUNT,
+    swapper: SWAPPER,
+    filler: FILLER,
+  },
+};
+
 export const CLASSIC_QUOTE_DATA = {
   routing: RoutingType.CLASSIC,
   quote: {
@@ -316,7 +356,8 @@ export const CLASSIC_QUOTE_DATA = {
     permitNonce: '1',
     tradeType: 'exactIn',
     slippage: 0.5,
-    portionBips: 0, // always assume portion Bips will get returned from routing-api
+    portionBips: 0, // always assume portion will get returned from routing-api
+    portionRecipient: '0x0000000000000000000000000000000000000000',
   },
 };
 
@@ -466,6 +507,36 @@ export function createDutchQuoteWithRequest(
     }),
     makeDutchRequest({ ...requestOverrides }, configOverrides)
   ) as DutchQuote;
+}
+
+export function createDutchV2Quote(
+  overrides: Partial<DutchQuoteJSON>,
+  type: string,
+  nonce?: string,
+  portion?: Portion,
+  sendPortionEnabled?: boolean
+): DutchV2Quote {
+  return buildQuoteResponse(
+    Object.assign({}, DUTCH_V2_QUOTE_DATA, {
+      quote: { ...DUTCH_V2_QUOTE_DATA.quote, type: RoutingType.DUTCH_V2, ...overrides },
+    }),
+    makeDutchV2Request({ type, sendPortionEnabled }),
+    nonce,
+    portion
+  ) as DutchV2Quote;
+}
+
+export function createDutchV2QuoteWithRequest(
+  overrides: Partial<DutchQuoteJSON>,
+  requestOverrides: Partial<QuoteRequestBodyJSON>,
+  configOverrides?: Partial<DutchV2Config>
+): DutchV2Quote {
+  return buildQuoteResponse(
+    Object.assign({}, DUTCH_V2_QUOTE_DATA, {
+      quote: { ...DUTCH_V2_QUOTE_DATA.quote, type: RoutingType.DUTCH_V2, ...overrides },
+    }),
+    makeDutchV2Request({ ...requestOverrides }, configOverrides)
+  ) as DutchV2Quote;
 }
 
 export function createClassicQuote(
@@ -659,7 +730,7 @@ export const CLASSIC_QUOTE_EXACT_OUT_BETTER_WITH_PORTION = createClassicQuote(
     quote: AMOUNT,
     quoteGasAdjusted: AMOUNT,
     quoteGasAndPortionAdjusted: BigNumber.from(AMOUNT)
-      .add(BigNumber.from(AMOUNT).mul(FLAT_PORTION.bips).div(BPS))
+      .sub(BigNumber.from(AMOUNT).mul(FLAT_PORTION.bips).div(BPS))
       .toString(),
     portionBips: PORTION_BIPS,
     portionRecipient: PORTION_RECIPIENT,
@@ -675,7 +746,7 @@ export const CLASSIC_QUOTE_EXACT_OUT_WORSE_WITH_PORTION = createClassicQuote(
     quote: AMOUNT_BETTER,
     quoteGasAdjusted: AMOUNT_BETTER,
     quoteGasAndPortionAdjusted: BigNumber.from(AMOUNT_BETTER)
-      .add(BigNumber.from(AMOUNT_BETTER).mul(FLAT_PORTION.bips).div(BPS))
+      .sub(BigNumber.from(AMOUNT_BETTER).mul(FLAT_PORTION.bips).div(BPS))
       .toString(),
     portionBips: PORTION_BIPS,
     portionRecipient: PORTION_RECIPIENT,

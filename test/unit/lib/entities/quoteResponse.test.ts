@@ -167,8 +167,8 @@ describe('QuoteResponse', () => {
     });
     expect(quote.amountIn.toString()).toEqual(CLASSIC_QUOTE_JSON.amount);
     expect(quote.amountOut.toString()).toEqual(CLASSIC_QUOTE_JSON.quote);
-    expect(quote.getPortionBips()).toEqual(CLASSIC_QUOTE_JSON.portionBips);
-    expect(quote.getPortionRecipient()).toEqual(CLASSIC_QUOTE_JSON.portionRecipient);
+    expect(quote.portion?.bips).toEqual(CLASSIC_QUOTE_JSON.portionBips);
+    expect(quote.portion?.recipient).toEqual(CLASSIC_QUOTE_JSON.portionRecipient);
   });
 
   it('parses classic quote exactOutput', () => {
@@ -182,7 +182,7 @@ describe('QuoteResponse', () => {
     });
     expect(quote.amountIn.toString()).toEqual(CLASSIC_QUOTE_JSON.quote);
     expect(quote.amountOut.toString()).toEqual(CLASSIC_QUOTE_JSON.amount);
-    expect(quote.getPortionBips()).toEqual(CLASSIC_QUOTE_JSON.portionBips);
-    expect(quote.getPortionRecipient()).toEqual(CLASSIC_QUOTE_JSON.portionRecipient);
+    expect(quote.portion?.bips).toEqual(CLASSIC_QUOTE_JSON.portionBips);
+    expect(quote.portion?.recipient).toEqual(CLASSIC_QUOTE_JSON.portionRecipient);
   });
 });

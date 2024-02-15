@@ -25,6 +25,7 @@ export enum RoutingType {
   CLASSIC = 'CLASSIC',
   DUTCH_LIMIT = 'DUTCH_LIMIT',
   RELAY = 'RELAY',
+  DUTCH_V2 = 'DUTCH_V2',
 }
 
 export const DEFAULT_POSITIVE_CACHE_ENTRY_TTL = 600; // 10 minutes

@@ -22,4 +22,5 @@ export const SUPPORTED_CHAINS = {
   ],
   [RoutingType.DUTCH_LIMIT]: [ChainId.MAINNET, ChainId.POLYGON, ChainId.GOERLI],
   [RoutingType.RELAY]: [ChainId.MAINNET, ChainId.GOERLI],
+  [RoutingType.DUTCH_V2]: [ChainId.MAINNET],
 };

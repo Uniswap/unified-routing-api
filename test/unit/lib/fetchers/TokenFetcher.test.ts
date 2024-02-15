@@ -42,7 +42,7 @@ const tests: FetcherTest[] = [
     testName: 'Succeeds - Symbol Polygon',
     input: {
       chainId: 137,
-      address: 'USDC',
+      address: 'USDC.e',
     },
     output: USDC_ADDRESS_POLYGON,
   },

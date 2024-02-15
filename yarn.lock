@@ -1923,10 +1923,15 @@
   resolved "https://registry.yarnpkg.com/@ungap/structured-clone/-/structured-clone-1.2.0.tgz#756641adb587851b5ccb3e095daf27ae581c8406"
   integrity sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==
 
-"@uniswap/default-token-list@^11.2.0", "@uniswap/default-token-list@^11.7.0":
+"@uniswap/default-token-list@^11.2.0":
   version "11.7.0"
   resolved "https://registry.yarnpkg.com/@uniswap/default-token-list/-/default-token-list-11.7.0.tgz#2267dbb4ac5f9fd2ce83057e761efe98eb1daada"
   integrity sha512-IZmD222NYPfYlRZou1+kbd4vDbye8ir1XJTJmpUsOXkRsOejknKGMqU5nXx8cY5FUVdNXyz6E+HmOLMk0PQyGQ==
+
+"@uniswap/default-token-list@^11.7.0":
+  version "11.13.0"
+  resolved "https://registry.yarnpkg.com/@uniswap/default-token-list/-/default-token-list-11.13.0.tgz#c94fd1fb54309d824c5a0f16425477cfb6445f27"
+  integrity sha512-hbXp0Y1Ic91FlYT2SVHq1HplKSznkvnjJoCMwdfLaMcD810HRNRMSP1icA+oqr3nKSEEeejnkuLfQD6NdB9/+g==
 
 "@uniswap/lib@^4.0.1-alpha":
   version "4.0.1-alpha"
