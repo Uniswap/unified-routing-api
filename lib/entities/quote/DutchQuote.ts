@@ -305,7 +305,7 @@ export class DutchQuote implements IQuote {
       amountOut: this.amountOutStart.toString(),
       endAmountIn: this.amountInEnd.toString(),
       endAmountOut: this.amountOutEnd.toString(),
-      amountInGasAdjusted: this.amountInStart.toString(),
+      amountInGasAdjusted: this.request.info.type === TradeType.EXACT_OUTPUT ? this.amountInGasAdjusted.toString() : undefined,
       amountInGasAndPortionAdjusted:
         this.request.info.type === TradeType.EXACT_OUTPUT ? this.amountInGasAndPortionAdjusted.toString() : undefined,
       amountOutGasAdjusted: this.amountOutStart.toString(),
@@ -333,6 +333,8 @@ export class DutchQuote implements IQuote {
   }
 
   public get amountIn(): BigNumber {
+    // The correct amount in should be amountInStart - portionAmountInStart
+    // But many places use amountIn, so we better stay safe untouched
     return this.amountInStart;
   }
 
@@ -395,8 +397,12 @@ export class DutchQuote implements IQuote {
     return this.portionAmountOutStart.mul(this.amountInStart).div(this.amountOutStart.add(this.portionAmountOutStart));
   }
 
+  public get amountInGasAdjusted(): BigNumber {
+    return this.amountIn.sub(this.portionAmountInStart);
+  }
+
   public get amountInGasAndPortionAdjusted(): BigNumber {
-    return this.amountIn.add(this.portionAmountInStart);
+    return this.amountIn;
   }
 
   public get amountOutGasAndPortionAdjusted(): BigNumber {
