@@ -136,21 +136,19 @@ describe('QuoteResponse', () => {
     const quote = RelayQuote.fromResponseBody(relayConfig, RELAY_QUOTE_JSON);
     expect(quote.toOrder().toJSON()).toMatchObject({
       swapper: SWAPPER,
-      inputs: [
-        {
-          token: TOKEN_IN,
-          startAmount: AMOUNT,
-          maxAmount: AMOUNT,
-          recipient: UNIVERSAL_ROUTER_ADDRESS,
-        },
-        {
-          token: TOKEN_IN,
-          startAmount: AMOUNT,
-          maxAmount: AMOUNT,
-          recipient: FILLER_SENTINEL_ADDRESS,
-        },
-      ],
-      actions: [],
+      input: {
+        token: TOKEN_IN,
+        amount: AMOUNT,
+        recipient: UNIVERSAL_ROUTER_ADDRESS,
+      },
+      fee: {
+        token: TOKEN_IN,
+        startAmount: AMOUNT,
+        endAmount: AMOUNT,
+        startTime: expect.any(Number),
+        endTime: expect.any(Number),
+      },
+      universalRouterCalldata: '0x',
     });
     const order = RelayOrder.fromJSON(quote.toOrder().toJSON(), quote.chainId);
     expect(BigNumber.from(order.toJSON().nonce).gt(0)).toBeTruthy();

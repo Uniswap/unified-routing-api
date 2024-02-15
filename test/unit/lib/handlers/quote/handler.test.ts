@@ -652,9 +652,10 @@ describe('QuoteHandler', () => {
         const permitData = responseBody.quote.permitData;
         const quote = responseBody.quote.orderInfo as RelayOrderInfoJSON;
         expect(permitData.values.permitted[0].token).toBe(quote.input.token);
+        expect(BigNumber.from(permitData.values.permitted[0].amount).eq(quote.input.amount)).toBe(true);
         expect(permitData.values.permitted[1].token).toBe(quote.fee.token);
-        expect(BigNumber.from(permitData.values.witness.startAmounts[0]).eq(quote.input.amount)).toBe(true);
-        expect(BigNumber.from(permitData.values.witness.startAmounts[1]).eq(quote.fee.endAmount)).toBe(true);
+        expect(BigNumber.from(permitData.values.permitted[1].amount).eq(quote.fee.endAmount)).toBe(true);
+        expect(BigNumber.from(permitData.values.witness.feeStartAmount).eq(quote.fee.startAmount)).toBe(true);
         expect(permit2Fetcher.fetchAllowance).not.toHaveBeenCalled();
       });
 

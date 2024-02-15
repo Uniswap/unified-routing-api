@@ -411,24 +411,24 @@ export const RELAY_PERMIT = {
         type: 'address',
       },
       {
-        name: 'startAmounts',
-        type: 'uint256[]',
+        "name": "inputRecipient",
+        "type": "address"
       },
       {
-        name: 'recipients',
-        type: 'address[]',
+        "name": "feeStartAmount",
+        "type": "uint256"
       },
       {
-        name: 'decayStartTime',
-        type: 'uint256',
+        "name": "feeStartTime",
+        "type": "uint256"
       },
       {
-        name: 'decayEndTime',
-        type: 'uint256',
+        "name": "feeEndTime",
+        "type": "uint256"
       },
       {
-        name: 'actions',
-        type: 'bytes[]',
+        "name": "universalRouterCalldata",
+        "type": "bytes"
       },
     ],
   },
@@ -458,20 +458,14 @@ export const RELAY_PERMIT = {
     witness: {
       reactor: REACTOR_ADDRESS_MAPPING[ChainId.MAINNET]['Relay'],
       swapper: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
-      decayStartTime: 0,
-      decayEndTime: 60,
-      startAmounts: [
-        {
-          type: 'BigNumber',
-          hex: '0x0de0b6b3a7640000',
-        },
-        {
-          type: 'BigNumber',
-          hex: '0x0de0b6b3a7640000',
-        },
-      ],
-      recipients: ['0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD', '0x0000000000000000000000000000000000000000'],
-      actions: [],
+      inputRecipient: '0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD',
+      feeStartAmount: {
+        type: 'BigNumber',
+        hex: '0x0de0b6b3a7640000',
+      },
+      feeStartTime: 0,
+      feeEndTime: 60,
+      universalRouterCalldata: '0x',
     },
   },
 };
