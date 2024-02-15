@@ -319,9 +319,9 @@ export class BaseIntegrationTestSuite {
       requestId: 'id',
       tokenIn: 'USDC',
       tokenInChainId: 1,
-      tokenOut: 'USDT',
+      tokenOut: 'DAI',
       tokenOutChainId: 1,
-      amount: await getAmount(1, 'EXACT_INPUT', 'USDC', 'USDT', '100'),
+      amount: await getAmount(1, 'EXACT_INPUT', 'USDC', 'DAI', '100'),
       type: 'EXACT_INPUT',
       configs: [
         {

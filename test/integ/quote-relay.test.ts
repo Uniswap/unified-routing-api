@@ -37,14 +37,14 @@ describe('relayQuote', function () {
     [alice, filler] = await baseTest.before();
     // deploy reactor
     const factory = new RelayOrderReactor__factory(alice);
-    const reactorContract = await baseTest.deployContract(factory, [PERMIT2_ADDRESS, UNIVERSAL_ROUTER_ADDRESS(1)]);
+    const reactorContract = await baseTest.deployContract(factory, [UNIVERSAL_ROUTER_ADDRESS(1)]);
     reactorAddress = reactorContract.address;
   });
 
   for (const type of ['EXACT_INPUT', 'EXACT_OUTPUT']) {
     describe(`${ID_TO_NETWORK_NAME(1)} ${type} 2xx`, () => {
       describe(`+ Execute Swap`, () => {
-        it(`stable -> stable, gas token == input token, no encoded actions`, async () => {
+        it(`stable -> stable, gas token == input token, no encoded universalRouterCalldata`, async () => {
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
             tokenIn: USDC_MAINNET.address,
@@ -73,18 +73,13 @@ describe('relayQuote', function () {
           expect(status).to.equal(200);
 
           order.info.reactor = reactorAddress;
+          order.info.universalRouterCalldata = '0x';
 
           expect(order.info.swapper).to.equal(alice.address);
-          expect(order.info.inputs.length).to.equal(2);
-          const swapInput = order.info.inputs.find(
-            (input) => input.recipient !== '0x0000000000000000000000000000000000000000'
-          )!;
-          expect(parseInt(swapInput.startAmount.toString())).to.be.greaterThan(9000000000);
-          expect(parseInt(swapInput.startAmount.toString())).to.be.lessThan(11000000000);
-
-          const gasInput = order.info.inputs.find(
-            (input) => input.recipient === '0x0000000000000000000000000000000000000000'
-          )!;
+          expect(order.info.input).to.not.be.undefined;
+          expect(order.info.fee).to.not.be.undefined;
+          expect(parseInt(order.info.input.amount.toString())).to.be.greaterThan(9000000000);
+          expect(parseInt(order.info.input.amount.toString())).to.be.lessThan(11000000000);
 
           const { tokenInBefore, tokenInAfter } = await baseTest.executeRelaySwap(
             alice,
@@ -97,7 +92,7 @@ describe('relayQuote', function () {
 
           const netMaxAmountIn = CurrencyAmount.fromRawAmount(
             USDC_MAINNET,
-            parseInt(gasInput.maxAmount.toString()) + parseInt(swapInput.maxAmount.toString())
+            parseInt(order.info.fee.endAmount.toString()) + parseInt(order.info.input.amount.toString())
           );
           // at most netMaxAmountIn of tokenIn should be spent
           expect(
@@ -106,7 +101,7 @@ describe('relayQuote', function () {
           ).to.be.true;
         });
 
-        it(`stable -> stable, gas token != input token, no encoded actions`, async () => {
+        it(`stable -> stable, gas token != input token, no encoded universalRouterCalldata`, async () => {
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
             tokenIn: USDC_MAINNET.address,
@@ -135,19 +130,14 @@ describe('relayQuote', function () {
           expect(status).to.equal(200);
 
           order.info.reactor = reactorAddress;
+          order.info.universalRouterCalldata = '0x';
 
           expect(order.info.swapper).to.equal(alice.address);
-          expect(order.info.inputs.length).to.equal(2);
+          expect(order.info.input).to.not.be.undefined;
+          expect(order.info.fee).to.not.be.undefined;
 
-          const swapInput = order.info.inputs.find(
-            (input) => input.recipient !== '0x0000000000000000000000000000000000000000'
-          )!;
-          expect(parseInt(swapInput.startAmount.toString())).to.be.greaterThan(9000000000);
-          expect(parseInt(swapInput.startAmount.toString())).to.be.lessThan(11000000000);
-
-          const gasInput = order.info.inputs.find(
-            (input) => input.recipient === '0x0000000000000000000000000000000000000000'
-          )!;
+          expect(parseInt(order.info.input.amount.toString())).to.be.greaterThan(9000000000);
+          expect(parseInt(order.info.input.amount.toString())).to.be.lessThan(11000000000);
 
           const { tokenInBefore, tokenInAfter, gasTokenBefore, gasTokenAfter } = await baseTest.executeRelaySwap(
             alice,
@@ -158,8 +148,8 @@ describe('relayQuote', function () {
             USDT_MAINNET
           );
 
-          const tokenInMaxAmount = CurrencyAmount.fromRawAmount(USDC_MAINNET, parseInt(swapInput.maxAmount.toString()));
-          const gasMaxAmount = CurrencyAmount.fromRawAmount(DAI_MAINNET, parseInt(gasInput.maxAmount.toString()));
+          const tokenInMaxAmount = CurrencyAmount.fromRawAmount(USDC_MAINNET, parseInt(order.info.input.amount.toString()));
+          const gasMaxAmount = CurrencyAmount.fromRawAmount(DAI_MAINNET, parseInt(order.info.fee.endAmount.toString()));
 
           expect(
             tokenInBefore.subtract(tokenInAfter).lessThan(tokenInMaxAmount) ||
