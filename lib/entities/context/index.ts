@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 
 import { RoutingType } from '../../constants';
-import { ClassicConfig, ClassicRequest, DutchRequest, DutchV2Request, Quote, QuoteRequest } from '../../entities';
+import { ClassicConfig, ClassicRequest, DutchRequest, DutchV2Request, RelayRequest, Quote, QuoteRequest } from '../../entities';
 
 import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
 import { SyntheticStatusProvider } from '../../providers';
@@ -12,6 +12,7 @@ import { ClassicQuoteContext, DutchQuoteContext, DutchV2QuoteContext, RelayQuote
 export * from './ClassicQuoteContext';
 export * from './DutchQuoteContext';
 export * from './DutchV2QuoteContext';
+export * from './RelayQuoteContext';
 
 export type RequestByKey = {
   [key: string]: QuoteRequest;

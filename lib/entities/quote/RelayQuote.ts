@@ -134,28 +134,26 @@ export class RelayQuote implements IQuote {
   // note: calldata must be built by the caller and added to the built order
   public toOrder(): RelayOrder {
     const orderBuilder = new RelayOrderBuilder(this.chainId);
-    const decayStartTime = Math.floor(Date.now() / 1000);
+    const feeStartTime = Math.floor(Date.now() / 1000);
     const nonce = this.nonce ?? generateRandomNonce();
 
     const builder = orderBuilder
       .swapper(ethers.utils.getAddress(this.request.config.swapper))
       .nonce(BigNumber.from(nonce))
-      .decayStartTime(decayStartTime)
-      .decayEndTime(decayStartTime + this.auctionPeriodSecs)
-      .deadline(decayStartTime + this.auctionPeriodSecs + this.deadlineBufferSecs)
+      .deadline(feeStartTime + this.auctionPeriodSecs + this.deadlineBufferSecs)
       // Add the swap input to UR
       .input({
         token: this.tokenIn,
-        startAmount: this.amountInStart,
-        maxAmount: this.amountInEnd,
+        amount: this.amountInStart,
         recipient: UNIVERSAL_ROUTER_ADDRESS(this.chainId),
       })
       // Add the gas token input to the filler
-      .input({
+      .fee({
         token: this.request.config.gasToken,
         startAmount: this.amountInGasTokenStart,
-        maxAmount: this.amountInGasTokenEnd,
-        recipient: ethers.constants.AddressZero, // sentinel value for the filler
+        endAmount: this.amountInGasTokenEnd,
+        startTime: feeStartTime,
+        endTime: feeStartTime + this.auctionPeriodSecs
       });
 
     return builder.build();
@@ -266,7 +264,7 @@ export class RelayQuote implements IQuote {
 
   // return the amounts, with the gasAdjustment value taken out
   // classicQuote used to get the gas price values in quote token
-  static getGasAdjustedAmounts(amounts: Amounts, gasAdjustment: BigNumber, classicQuote: ClassicQuote): Amounts {
+  static getGasAdjustedAmounts(amounts: Amounts, gasAdjustment: BigNumber, _classicQuote: ClassicQuote): Amounts {
     const { amountIn: startAmountIn, amountInGasToken: startAmountInGasToken } = amounts;
 
     // TODO: naively for now just add 25% buffer
@@ -275,7 +273,7 @@ export class RelayQuote implements IQuote {
   }
 
   // Returns the number of gas units extra required to execute this quote through the relayer
-  static getGasAdjustment(classicQuote: ClassicQuote): BigNumber {
+  static getGasAdjustment(_classicQuote: ClassicQuote): BigNumber {
     let result = BigNumber.from(0);
 
     return result.add(RELAY_BASE_GAS);

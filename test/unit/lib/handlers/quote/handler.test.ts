@@ -39,7 +39,7 @@ import { providers } from 'ethers';
 import NodeCache from 'node-cache';
 import { RoutingType } from '../../../../../lib/constants';
 import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, Quote, RequestSource } from '../../../../../lib/entities';
-import { QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index';
+import { DutchConfigJSON, QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index';
 import { Permit2Fetcher } from '../../../../../lib/fetchers/Permit2Fetcher';
 import {
   GetPortionResponse,
@@ -383,7 +383,9 @@ describe('QuoteHandler', () => {
       });
 
       it('handles exactOut DL quotes', async () => {
-        const request = {
+        const request: QuoteRequestBodyJSON & {
+          configs: DutchConfigJSON[]
+        } = {
           ...BASE_REQUEST_INFO_EXACT_OUT,
           configs: [
             {

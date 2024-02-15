@@ -7,6 +7,7 @@ import {
   ClassicQuoteDataJSON,
   ClassicRequest,
   DutchConfig,
+  DutchConfigJSON,
   DutchQuoteJSON,
   DutchRequest,
   DutchV2Config,
@@ -94,7 +95,9 @@ export const QUOTE_REQUEST_BODY_MULTI_SYNTHETIC: QuoteRequestBodyJSON = {
   ],
 };
 
-export const DL_REQUEST_BODY = {
+export const DL_REQUEST_BODY: QuoteRequestBodyJSON & {
+  configs: DutchConfigJSON[]
+} = {
   ...BASE_REQUEST_INFO_EXACT_IN,
   configs: [
     {

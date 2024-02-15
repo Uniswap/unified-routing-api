@@ -14,6 +14,7 @@ import { DutchV2Config, DutchV2ConfigJSON, DutchV2Request } from './DutchV2Reque
 export * from './ClassicRequest';
 export * from './DutchRequest';
 export * from './DutchV2Request';
+export * from './RelayRequest';
 
 export type RequestByRoutingType = { [routingType in RoutingType]?: QuoteRequest };
 
