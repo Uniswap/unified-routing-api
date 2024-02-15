@@ -1,11 +1,9 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import {
-  DAI_MAINNET,
-  ID_TO_NETWORK_NAME,
-  USDC_MAINNET,
-  USDT_MAINNET,
-} from '@uniswap/smart-order-router';
+import { PERMIT2_ADDRESS } from '@uniswap/permit2-sdk';
+import { CurrencyAmount } from '@uniswap/sdk-core';
+import { DAI_MAINNET, ID_TO_NETWORK_NAME, USDC_MAINNET, USDT_MAINNET } from '@uniswap/smart-order-router';
 import { RelayOrder } from '@uniswap/uniswapx-sdk';
+import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { AxiosResponse } from 'axios';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
@@ -14,12 +12,9 @@ import _ from 'lodash';
 import { RoutingType } from '../../lib/constants';
 import { QuoteRequestBodyJSON, RoutingConfigJSON } from '../../lib/entities';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
+import { RelayOrderReactor__factory } from '../../lib/types/ext';
 import { getAmount } from '../utils/tokens';
 import { BaseIntegrationTestSuite, call } from './base.test';
-import { RelayOrderReactor__factory } from '../../lib/types/ext';
-import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
-import { PERMIT2_ADDRESS } from '@uniswap/permit2-sdk';
-import { CurrencyAmount } from '@uniswap/sdk-core';
 
 chai.use(chaiAsPromised);
 chai.use(chaiSubset);
@@ -42,9 +37,7 @@ describe('relayQuote', function () {
     [alice, filler] = await baseTest.before();
     // deploy reactor
     const factory = new RelayOrderReactor__factory(alice);
-    const reactorContract = (await baseTest.deployContract(factory, [
-      PERMIT2_ADDRESS, UNIVERSAL_ROUTER_ADDRESS(1)
-    ]));
+    const reactorContract = await baseTest.deployContract(factory, [PERMIT2_ADDRESS, UNIVERSAL_ROUTER_ADDRESS(1)]);
     reactorAddress = reactorContract.address;
   });
 
@@ -65,7 +58,7 @@ describe('relayQuote', function () {
               {
                 routingType: RoutingType.RELAY,
                 swapper: alice.address,
-                gasToken: USDC_MAINNET.address
+                gasToken: USDC_MAINNET.address,
               },
             ] as RoutingConfigJSON[],
           };
@@ -75,7 +68,7 @@ describe('relayQuote', function () {
             data: { quote },
             status,
           } = response;
-          
+
           const order = new RelayOrder((quote as any).orderInfo, 1);
           expect(status).to.equal(200);
 
@@ -83,11 +76,15 @@ describe('relayQuote', function () {
 
           expect(order.info.swapper).to.equal(alice.address);
           expect(order.info.inputs.length).to.equal(2);
-          const swapInput = order.info.inputs.find((input) => input.recipient !== "0x0000000000000000000000000000000000000000")!;
+          const swapInput = order.info.inputs.find(
+            (input) => input.recipient !== '0x0000000000000000000000000000000000000000'
+          )!;
           expect(parseInt(swapInput.startAmount.toString())).to.be.greaterThan(9000000000);
           expect(parseInt(swapInput.startAmount.toString())).to.be.lessThan(11000000000);
 
-          const gasInput = order.info.inputs.find((input) => input.recipient === "0x0000000000000000000000000000000000000000")!;
+          const gasInput = order.info.inputs.find(
+            (input) => input.recipient === '0x0000000000000000000000000000000000000000'
+          )!;
 
           const { tokenInBefore, tokenInAfter } = await baseTest.executeRelaySwap(
             alice,
@@ -95,12 +92,18 @@ describe('relayQuote', function () {
             order,
             USDC_MAINNET,
             USDC_MAINNET,
-            USDT_MAINNET,
+            USDT_MAINNET
           );
 
-          const netMaxAmountIn = CurrencyAmount.fromRawAmount(USDC_MAINNET, parseInt(gasInput.maxAmount.toString()) + parseInt(swapInput.maxAmount.toString()));
+          const netMaxAmountIn = CurrencyAmount.fromRawAmount(
+            USDC_MAINNET,
+            parseInt(gasInput.maxAmount.toString()) + parseInt(swapInput.maxAmount.toString())
+          );
           // at most netMaxAmountIn of tokenIn should be spent
-          expect(tokenInBefore.subtract(tokenInAfter).lessThan(netMaxAmountIn) || tokenInBefore.subtract(tokenInAfter).equalTo(netMaxAmountIn)).to.be.true;
+          expect(
+            tokenInBefore.subtract(tokenInAfter).lessThan(netMaxAmountIn) ||
+              tokenInBefore.subtract(tokenInAfter).equalTo(netMaxAmountIn)
+          ).to.be.true;
         });
 
         it(`stable -> stable, gas token != input token, no encoded actions`, async () => {
@@ -117,7 +120,7 @@ describe('relayQuote', function () {
               {
                 routingType: RoutingType.RELAY,
                 swapper: alice.address,
-                gasToken: DAI_MAINNET.address
+                gasToken: DAI_MAINNET.address,
               },
             ] as RoutingConfigJSON[],
           };
@@ -127,7 +130,7 @@ describe('relayQuote', function () {
             data: { quote },
             status,
           } = response;
-          
+
           const order = new RelayOrder((quote as any).orderInfo, 1);
           expect(status).to.equal(200);
 
@@ -135,12 +138,16 @@ describe('relayQuote', function () {
 
           expect(order.info.swapper).to.equal(alice.address);
           expect(order.info.inputs.length).to.equal(2);
-          
-          const swapInput = order.info.inputs.find((input) => input.recipient !== "0x0000000000000000000000000000000000000000")!;
+
+          const swapInput = order.info.inputs.find(
+            (input) => input.recipient !== '0x0000000000000000000000000000000000000000'
+          )!;
           expect(parseInt(swapInput.startAmount.toString())).to.be.greaterThan(9000000000);
           expect(parseInt(swapInput.startAmount.toString())).to.be.lessThan(11000000000);
 
-          const gasInput = order.info.inputs.find((input) => input.recipient === "0x0000000000000000000000000000000000000000")!;
+          const gasInput = order.info.inputs.find(
+            (input) => input.recipient === '0x0000000000000000000000000000000000000000'
+          )!;
 
           const { tokenInBefore, tokenInAfter, gasTokenBefore, gasTokenAfter } = await baseTest.executeRelaySwap(
             alice,
@@ -148,14 +155,20 @@ describe('relayQuote', function () {
             order,
             USDC_MAINNET,
             DAI_MAINNET,
-            USDT_MAINNET,
+            USDT_MAINNET
           );
 
           const tokenInMaxAmount = CurrencyAmount.fromRawAmount(USDC_MAINNET, parseInt(swapInput.maxAmount.toString()));
           const gasMaxAmount = CurrencyAmount.fromRawAmount(DAI_MAINNET, parseInt(gasInput.maxAmount.toString()));
 
-          expect(tokenInBefore.subtract(tokenInAfter).lessThan(tokenInMaxAmount) || tokenInBefore.subtract(tokenInAfter).equalTo(tokenInMaxAmount)).to.be.true;
-          expect(gasTokenBefore.subtract(gasTokenAfter).lessThan(gasMaxAmount) || gasTokenBefore.subtract(gasTokenAfter).equalTo(gasMaxAmount)).to.be.true;
+          expect(
+            tokenInBefore.subtract(tokenInAfter).lessThan(tokenInMaxAmount) ||
+              tokenInBefore.subtract(tokenInAfter).equalTo(tokenInMaxAmount)
+          ).to.be.true;
+          expect(
+            gasTokenBefore.subtract(gasTokenAfter).lessThan(gasMaxAmount) ||
+              gasTokenBefore.subtract(gasTokenAfter).equalTo(gasMaxAmount)
+          ).to.be.true;
         });
       });
     });

@@ -175,8 +175,8 @@ export class RelayQuote implements IQuote {
         startAmount: this.amountInGasTokenStart,
         endAmount: this.amountInGasTokenEnd,
         startTime: feeStartTime,
-        endTime: feeStartTime + this.auctionPeriodSecs
-      });
+        endTime: feeStartTime + this.auctionPeriodSecs,
+      })
 
     return builder.build();
   }

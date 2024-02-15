@@ -46,7 +46,14 @@ import { AxiosError } from 'axios';
 import { BigNumber, providers } from 'ethers';
 import NodeCache from 'node-cache';
 import { RoutingType } from '../../../../../lib/constants';
-import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, RelayQuote, Quote, RequestSource } from '../../../../../lib/entities';
+import {
+  ClassicQuote,
+  ClassicQuoteDataJSON,
+  DutchQuote,
+  Quote,
+  RelayQuote,
+  RequestSource,
+} from '../../../../../lib/entities';
 import { DutchConfigJSON, QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index';
 import { Permit2Fetcher } from '../../../../../lib/fetchers/Permit2Fetcher';
 import {
@@ -398,7 +405,7 @@ describe('QuoteHandler', () => {
 
       it('handles exactOut DL quotes', async () => {
         const request: QuoteRequestBodyJSON & {
-          configs: DutchConfigJSON[]
+          configs: DutchConfigJSON[];
         } = {
           ...BASE_REQUEST_INFO_EXACT_OUT,
           configs: [
@@ -477,7 +484,7 @@ describe('QuoteHandler', () => {
           syntheticStatusProvider
         ).handler(getEvent(RELAY_REQUEST_BODY), {} as unknown as Context);
         const quoteJSON = JSON.parse(res.body).quote.orderInfo as RelayOrderInfoJSON;
-        expect(quoteJSON.inputs[0].startAmount).toBe(RELAY_QUOTE_EXACT_IN_BETTER.amountIn.toString());
+        expect(quoteJSON.input.amount).toBe(RELAY_QUOTE_EXACT_IN_BETTER.amountIn.toString());
       });
 
       it('returns relay quote if both relay and classic are requested', async () => {
@@ -500,7 +507,7 @@ describe('QuoteHandler', () => {
         const quoteJSON = JSON.parse(res.body).quote.orderInfo as RelayOrderInfoJSON;
         // Expect relay to always be preferred over classic if requested together
         expect(JSON.parse(res.body).routing).toEqual(RoutingType.RELAY);
-        expect(quoteJSON.inputs[0].startAmount).toBe(RELAY_QUOTE_EXACT_IN_BETTER.amountIn.toString());
+        expect(quoteJSON.input.amount).toBe(RELAY_QUOTE_EXACT_IN_BETTER.amountIn.toString());
 
         const allQuotes = JSON.parse(res.body).allQuotes;
         expect(allQuotes.length).toEqual(2);
@@ -526,7 +533,7 @@ describe('QuoteHandler', () => {
           syntheticStatusProvider
         ).handler(getEvent(RELAY_REQUEST_BODY_EXACT_OUT), {} as unknown as Context);
         const quoteJSON = JSON.parse(res.body).quote.orderInfo as RelayOrderInfoJSON;
-        expect(quoteJSON.inputs[0].startAmount).toBe(RELAY_QUOTE_EXACT_OUT_BETTER.amountIn.toString());
+        expect(quoteJSON.input.amount).toBe(RELAY_QUOTE_EXACT_OUT_BETTER.amountIn.toString());
       });
 
       it('returns allQuotes', async () => {
@@ -644,10 +651,10 @@ describe('QuoteHandler', () => {
         const responseBody = JSON.parse(response.body);
         const permitData = responseBody.quote.permitData;
         const quote = responseBody.quote.orderInfo as RelayOrderInfoJSON;
-        expect(permitData.values.permitted[0].token).toBe(quote.inputs[0].token);
-        expect(permitData.values.permitted[1].token).toBe(quote.inputs[1].token);
-        expect(BigNumber.from(permitData.values.witness.startAmounts[0]).eq(quote.inputs[0].startAmount)).toBe(true);
-        expect(BigNumber.from(permitData.values.witness.startAmounts[1]).eq(quote.inputs[1].startAmount)).toBe(true);
+        expect(permitData.values.permitted[0].token).toBe(quote.input.token);
+        expect(permitData.values.permitted[1].token).toBe(quote.fee.token);
+        expect(BigNumber.from(permitData.values.witness.startAmounts[0]).eq(quote.input.amount)).toBe(true);
+        expect(BigNumber.from(permitData.values.witness.startAmounts[1]).eq(quote.fee.endAmount)).toBe(true);
         expect(permit2Fetcher.fetchAllowance).not.toHaveBeenCalled();
       });
 

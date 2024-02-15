@@ -7,8 +7,8 @@ import { RelayQuote, RelayQuoteDataJSON } from './RelayQuote';
 
 export * from './ClassicQuote';
 export * from './DutchQuote';
-export * from './RelayQuote';
 export * from './DutchV2Quote';
+export * from './RelayQuote';
 
 export type QuoteJSON = DutchQuoteDataJSON | DutchV2QuoteDataJSON | RelayQuoteDataJSON | ClassicQuoteDataJSON;
 

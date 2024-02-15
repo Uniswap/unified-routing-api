@@ -357,12 +357,9 @@ export class BaseIntegrationTestSuite {
     return [alice, filler];
   };
 
-  deployContract = async (
-    factory: ContractFactory,
-    args: any[],
-  ): Promise<Contract> => {
+  deployContract = async (factory: ContractFactory, args: any[]): Promise<Contract> => {
     const contract = await factory.deploy(...args);
     await contract.deployed();
     return contract;
-  }
+  };
 }

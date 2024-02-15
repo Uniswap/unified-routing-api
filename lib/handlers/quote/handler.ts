@@ -460,7 +460,7 @@ export const QuoteComparisonOverrides = {
 
   breakTie(lhs: Quote, rhs: Quote): boolean {
     // Prefer classic over relay if requested together
-    if(QuoteComparisonOverrides.relayAndClassic(lhs, rhs)) return lhs.routingType === RoutingType.CLASSIC;
+    if (QuoteComparisonOverrides.relayAndClassic(lhs, rhs)) return lhs.routingType === RoutingType.CLASSIC;
     // Otherwise, we default to keeping rhs in the case of a tie
     return false;
   },
@@ -469,7 +469,7 @@ export const QuoteComparisonOverrides = {
 // Compare quotes, returning true if lhs is better than rhs
 // Applies any overrides before the default comparision logic using quoted amount
 export const compareQuotes = (lhs: Quote, rhs: Quote, tradeType: TradeType): boolean => {
-  if(getQuotedAmount(lhs, tradeType).eq(getQuotedAmount(rhs, tradeType))) {
+  if (getQuotedAmount(lhs, tradeType).eq(getQuotedAmount(rhs, tradeType))) {
     return QuoteComparisonOverrides.breakTie(lhs, rhs);
   }
 
