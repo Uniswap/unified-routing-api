@@ -192,7 +192,7 @@ describe('quoteUniswapX', function () {
             checkQuoteToken(
               tokenInBefore,
               tokenInAfter,
-              CurrencyAmount.fromRawAmount(USDC_MAINNET, order.info.input.startAmount.toString())
+              CurrencyAmount.fromRawAmount(USDC_MAINNET, order.info.input.endAmount.toString())
             );
           }
         });
@@ -257,7 +257,7 @@ describe('quoteUniswapX', function () {
             checkQuoteToken(
               tokenInBefore,
               tokenInAfter,
-              CurrencyAmount.fromRawAmount(USDC_MAINNET, order.info.input.startAmount.toString())
+              CurrencyAmount.fromRawAmount(USDC_MAINNET, order.info.input.endAmount.toString())
             );
           }
         });
@@ -355,7 +355,7 @@ describe('quoteUniswapX', function () {
             checkQuoteToken(
               tokenInBefore,
               tokenInAfter,
-              CurrencyAmount.fromRawAmount(USDC_MAINNET, order.info.input.startAmount.toString())
+              CurrencyAmount.fromRawAmount(USDC_MAINNET, order.info.input.endAmount.toString())
             );
           }
         });
@@ -434,7 +434,7 @@ describe('quoteUniswapX', function () {
             checkQuoteToken(
               tokenInBefore,
               tokenInAfter,
-              CurrencyAmount.fromRawAmount(WETH9[1], order.info.input.startAmount.toString())
+              CurrencyAmount.fromRawAmount(WETH9[1], order.info.input.endAmount.toString())
             );
           }
         });
@@ -487,6 +487,7 @@ describe('quoteUniswapX', function () {
                   {
                     routingType: RoutingType.DUTCH_LIMIT,
                     swapper: alice.address,
+                    deadlineBufferSecs: 120,
                     // only use non-synthetic quotes if it's ETH -> USDC
                     // otherwise use synthetic quotes
                     // fillers should be able to quote ETH -> USDC since this is the most popular pair
@@ -605,7 +606,7 @@ describe('quoteUniswapX', function () {
                   checkQuoteToken(
                     tokenInBefore,
                     tokenInAfter,
-                    CurrencyAmount.fromRawAmount(tokenIn, order.info.input.startAmount.toString())
+                    CurrencyAmount.fromRawAmount(tokenIn, order.info.input.endAmount.toString())
                   );
                 }
 
@@ -660,6 +661,7 @@ describe('quoteUniswapX', function () {
                   {
                     routingType: RoutingType.DUTCH_LIMIT,
                     swapper: alice.address,
+                    deadlineBufferSecs: 120,
                     useSyntheticQuotes: true,
                   },
                 ] as RoutingConfigJSON[],
@@ -743,7 +745,7 @@ describe('quoteUniswapX', function () {
                   checkQuoteToken(
                     tokenInBefore,
                     tokenInAfter,
-                    CurrencyAmount.fromRawAmount(tokenIn, order.info.input.startAmount.toString())
+                    CurrencyAmount.fromRawAmount(tokenIn, order.info.input.endAmount.toString())
                   );
                 }
 

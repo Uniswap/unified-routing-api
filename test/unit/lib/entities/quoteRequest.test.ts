@@ -4,6 +4,8 @@ import {
   ClassicRequest,
   DutchConfigJSON,
   DutchRequest,
+  DutchV2ConfigJSON,
+  DutchV2Request,
   parseQuoteRequests,
   QuoteRequestBodyJSON,
 } from '../../../../lib/entities';
@@ -17,6 +19,12 @@ const MOCK_DL_CONFIG_JSON: DutchConfigJSON = {
   auctionPeriodSecs: 60,
   deadlineBufferSecs: 12,
   useSyntheticQuotes: true,
+};
+
+const MOCK_DUTCH_V2_CONFIG_JSON: DutchV2ConfigJSON = {
+  routingType: RoutingType.DUTCH_V2,
+  swapper: SWAPPER,
+  deadlineBufferSecs: 12,
 };
 
 const CLASSIC_CONFIG_JSON: ClassicConfigJSON = {
@@ -59,6 +67,30 @@ const EXACT_OUTPUT_MOCK_REQUEST_JSON: QuoteRequestBodyJSON = {
   type: 'EXACT_OUTPUT',
   swapper: SWAPPER,
   configs: [MOCK_DL_CONFIG_JSON, CLASSIC_CONFIG_JSON],
+};
+
+const EXACT_INPUT_V2_MOCK_REQUEST_JSON: QuoteRequestBodyJSON = {
+  requestId: 'requestId',
+  tokenInChainId: CHAIN_IN_ID,
+  tokenOutChainId: CHAIN_OUT_ID,
+  tokenIn: TOKEN_IN,
+  tokenOut: TOKEN_OUT,
+  amount: AMOUNT,
+  type: 'EXACT_INPUT',
+  swapper: SWAPPER,
+  configs: [MOCK_DUTCH_V2_CONFIG_JSON, CLASSIC_CONFIG_JSON],
+};
+
+const EXACT_OUTPUT_V2_MOCK_REQUEST_JSON: QuoteRequestBodyJSON = {
+  requestId: 'requestId',
+  tokenInChainId: CHAIN_IN_ID,
+  tokenOutChainId: CHAIN_OUT_ID,
+  tokenIn: TOKEN_IN,
+  tokenOut: TOKEN_OUT,
+  amount: AMOUNT,
+  type: 'EXACT_OUTPUT',
+  swapper: SWAPPER,
+  configs: [MOCK_DUTCH_V2_CONFIG_JSON, CLASSIC_CONFIG_JSON],
 };
 
 describe('QuoteRequest', () => {
@@ -119,4 +151,41 @@ describe('QuoteRequest', () => {
       });
     });
   }
+
+  describe('DutchV2', () => {
+    for (const request of [EXACT_INPUT_V2_MOCK_REQUEST_JSON, EXACT_OUTPUT_V2_MOCK_REQUEST_JSON]) {
+      describe(request.type, () => {
+        it('parses exactInput dutch limit order config properly', () => {
+          const { quoteRequests: requests } = parseQuoteRequests(request);
+          const dutchRequest = requests[0] as DutchV2Request;
+
+          expect(dutchRequest.toJSON()).toEqual(
+            Object.assign({}, MOCK_DUTCH_V2_CONFIG_JSON, { useSyntheticQuotes: false })
+          );
+        });
+
+        it('parses basic classic quote order config properly', () => {
+          const { quoteRequests: requests } = parseQuoteRequests(request);
+          const classicRequest = requests[1] as ClassicRequest;
+
+          expect(classicRequest.toJSON()).toEqual(CLASSIC_CONFIG_JSON);
+        });
+
+        it('converts to dutch v1 request', () => {
+          const { quoteRequests: requests } = parseQuoteRequests(request);
+          const dutchRequest = requests[0] as DutchV2Request;
+          const converted = dutchRequest.toDutchV1Request();
+
+          expect(converted.routingType === RoutingType.DUTCH_LIMIT);
+          expect(converted.toJSON()).toEqual({
+            routingType: RoutingType.DUTCH_LIMIT,
+            exclusivityOverrideBps: 0,
+            swapper: SWAPPER,
+            deadlineBufferSecs: 12,
+            useSyntheticQuotes: false,
+          });
+        });
+      });
+    }
+  });
 });

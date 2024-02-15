@@ -1271,6 +1271,16 @@ describe('QuoteHandler', () => {
       const bestQuote = await getBestQuote(quotes);
       expect(bestQuote).toEqual(DL_QUOTE_EXACT_IN_BETTER_WITH_PORTION);
     });
+
+    it('returns the DL with portion quote among one DL with portion quote and one classic with portion quote', async () => {
+      const quoters: QuoterByRoutingType = {
+        DUTCH_LIMIT: quoterMock(DL_QUOTE_EXACT_OUT_BETTER_WITH_PORTION),
+        CLASSIC: quoterMock(CLASSIC_QUOTE_EXACT_OUT_WORSE_WITH_PORTION),
+      };
+      const quotes = await getQuotes(quoters, QUOTE_REQUEST_MULTI);
+      const bestQuote = await getBestQuote(quotes);
+      expect(bestQuote).toEqual(DL_QUOTE_EXACT_OUT_BETTER_WITH_PORTION);
+    });
   });
 
   describe('removeDutchRequests', () => {

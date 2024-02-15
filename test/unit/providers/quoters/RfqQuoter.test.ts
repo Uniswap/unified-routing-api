@@ -172,8 +172,8 @@ describe('RfqQuoter test', () => {
         amountOutStart: BigNumber.from(AMOUNT),
       });
       expect(quote).toBeInstanceOf(DutchQuote);
-      expect((quote as DutchQuote).portionBips).toEqual(portionResponse.portion?.bips);
-      expect((quote as DutchQuote).portionRecipient).toEqual(portionResponse.portion?.recipient);
+      expect((quote as DutchQuote).portion?.bips).toEqual(portionResponse.portion?.bips);
+      expect((quote as DutchQuote).portion?.recipient).toEqual(portionResponse.portion?.recipient);
     });
 
     it('returns EXACT_INPUT quote with portion', async () => {
@@ -188,8 +188,8 @@ describe('RfqQuoter test', () => {
         amountOutStart: BigNumber.from(AMOUNT),
       });
       expect(quote).toBeInstanceOf(DutchQuote);
-      expect((quote as DutchQuote).portionBips).toEqual(portionResponse.portion?.bips);
-      expect((quote as DutchQuote).portionRecipient).toEqual(portionResponse.portion?.recipient);
+      expect((quote as DutchQuote).portion?.bips).toEqual(portionResponse.portion?.bips);
+      expect((quote as DutchQuote).portion?.recipient).toEqual(portionResponse.portion?.recipient);
 
       expect(
         postSpy({
@@ -232,8 +232,8 @@ describe('RfqQuoter test', () => {
         amountOutStart: BigNumber.from(AMOUNT),
       });
       expect(quote).toBeInstanceOf(DutchQuote);
-      expect((quote as DutchQuote).portionBips).toEqual(portionResponse.portion?.bips);
-      expect((quote as DutchQuote).portionRecipient).toEqual(portionResponse.portion?.recipient);
+      expect((quote as DutchQuote).portion?.bips).toEqual(portionResponse.portion?.bips);
+      expect((quote as DutchQuote).portion?.recipient).toEqual(portionResponse.portion?.recipient);
 
       expect(
         postSpy({

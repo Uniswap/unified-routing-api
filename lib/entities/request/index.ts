@@ -9,15 +9,17 @@ import { ValidationError } from '../../util/errors';
 import { ClassicConfig, ClassicConfigJSON, ClassicRequest } from './ClassicRequest';
 import { DutchConfig, DutchConfigJSON, DutchRequest } from './DutchRequest';
 import { RelayConfig, RelayConfigJSON, RelayRequest } from './RelayRequest';
+import { DutchV2Config, DutchV2ConfigJSON, DutchV2Request } from './DutchV2Request';
 
 export * from './ClassicRequest';
 export * from './DutchRequest';
+export * from './DutchV2Request';
 
 export type RequestByRoutingType = { [routingType in RoutingType]?: QuoteRequest };
 
 // config specific to the given routing type
-export type RoutingConfig = DutchConfig | ClassicConfig | RelayConfig;
-export type RoutingConfigJSON = DutchConfigJSON | ClassicConfigJSON | RelayConfigJSON;
+export type RoutingConfig = DutchConfig | DutchV2Config | RelayConfig | ClassicConfig;
+export type RoutingConfigJSON = DutchConfigJSON | DutchV2ConfigJSON | RelayConfigJSON | ClassicConfigJSON;
 
 // shared info for all quote requests
 export interface QuoteRequestInfo {
@@ -96,6 +98,12 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON): {
       info.tokenInChainId === info.tokenOutChainId
     ) {
       return RelayRequest.fromRequestBody(info, config as RelayConfigJSON);
+    } else if (
+      config.routingType == RoutingType.DUTCH_V2 &&
+      SUPPORTED_CHAINS[RoutingType.DUTCH_V2].includes(info.tokenInChainId) &&
+      info.tokenInChainId === info.tokenOutChainId
+    ) {
+      return DutchV2Request.fromRequestBody(info, config as DutchV2ConfigJSON);
     }
     return [];
   });

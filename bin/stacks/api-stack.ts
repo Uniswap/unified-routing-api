@@ -124,6 +124,28 @@ export class APIStack extends cdk.Stack {
           },
         },
         {
+          name: 'IPAllowRule_CloudFlare',
+          priority: 11,
+          statement: {
+            ipSetReferenceStatement: {
+              arn: WAF_IPAllowlist.attrArn,
+              ipSetForwardedIpConfig: {
+                fallbackBehavior: 'NO_MATCH',
+                headerName: 'True-Client-IP',
+                position: 'ANY',
+              },
+            },
+          },
+          action: {
+            allow: {},
+          },
+          visibilityConfig: {
+            sampledRequestsEnabled: true,
+            cloudWatchMetricsEnabled: true,
+            metricName: `IPAllowRuleCF`,
+          },
+        },
+        {
           name: 'IPBlockRule_ExceptAPIKey',
           priority: 20,
           statement: {
@@ -226,7 +248,7 @@ export class APIStack extends cdk.Stack {
     if (provisionedConcurrency > 0) {
       const quoteTarget = new aws_asg.ScalableTarget(this, 'QuoteProvConcASG', {
         serviceNamespace: aws_asg.ServiceNamespace.LAMBDA,
-        maxCapacity: provisionedConcurrency * 5,
+        maxCapacity: provisionedConcurrency * 10,
         minCapacity: provisionedConcurrency,
         resourceId: `function:${quoteLambdaAlias.lambda.functionName}:${quoteLambdaAlias.aliasName}`,
         scalableDimension: 'lambda:function:ProvisionedConcurrency',
@@ -235,7 +257,7 @@ export class APIStack extends cdk.Stack {
       quoteTarget.node.addDependency(quoteLambdaAlias);
 
       quoteTarget.scaleToTrackMetric('QuoteProvConcTracking', {
-        targetValue: 0.8,
+        targetValue: 0.7,
         predefinedMetric: aws_asg.PredefinedMetric.LAMBDA_PROVISIONED_CONCURRENCY_UTILIZATION,
       });
     }
