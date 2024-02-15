@@ -72,7 +72,7 @@
     "@uniswap/router-sdk": "^1.4.0",
     "@uniswap/sdk-core": "^4.0.7",
     "@uniswap/smart-order-router": "3.17.1",
-    "@uniswap/uniswapx-sdk": "../gouda-sdk/uniswap-uniswapx-sdk-v2.0.0.tgz",
+    "@uniswap/uniswapx-sdk": "../gouda-sdk",
     "@uniswap/universal-router-sdk": "1.5.8",
     "aws-cdk-lib": "2.85.0",
     "aws-embedded-metrics": "^4.1.0",
