@@ -106,4 +106,11 @@ export class FieldValidator {
     slippageTolerance: FieldValidator.slippageTolerance.optional(),
     useSyntheticQuotes: Joi.boolean().optional(),
   });
+
+  public static readonly dutchV2Config = Joi.object({
+    routingType: FieldValidator.routingType.required(),
+    swapper: FieldValidator.address.optional(),
+    deadlineBufferSecs: FieldValidator.positiveNumber.optional(),
+    useSyntheticQuotes: Joi.boolean().optional(),
+  });
 }
