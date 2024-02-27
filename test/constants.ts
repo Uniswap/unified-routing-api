@@ -41,6 +41,12 @@ export const DL_CONFIG = {
   auctionPeriodSecs: 60,
 };
 
+export const DUTCH_V2_CONFIG = {
+  routingType: RoutingType.DUTCH_V2,
+  swapper: SWAPPER,
+  deadlineBufferSecs: 24,
+};
+
 export const CLASSIC_CONFIG = {
   routingType: RoutingType.CLASSIC,
   protocols: ['V2', 'V3', 'MIXED'],
