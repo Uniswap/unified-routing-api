@@ -75,7 +75,7 @@ export class FieldValidator {
   public static readonly quoteSpeed = Joi.string().valid('fast', 'standard');
 
   public static readonly classicConfig = Joi.object({
-    routingType: FieldValidator.routingType.required(),
+    routingType: Joi.string().valid('CLASSIC'),
     protocols: FieldValidator.protocols.required(),
     gasPriceWei: FieldValidator.gasPriceWei.optional(),
     simulateFromAddress: FieldValidator.address.optional(),
@@ -97,7 +97,7 @@ export class FieldValidator {
   });
 
   public static readonly dutchLimitConfig = Joi.object({
-    routingType: FieldValidator.routingType.required(),
+    routingType: Joi.string().valid('DUTCH_LIMIT'),
     swapper: FieldValidator.address.optional(),
     exclusivityOverrideBps: FieldValidator.positiveNumber.optional(),
     startTimeBufferSecs: FieldValidator.positiveNumber.optional(),
@@ -108,7 +108,7 @@ export class FieldValidator {
   });
 
   public static readonly dutchV2Config = Joi.object({
-    routingType: FieldValidator.routingType.required(),
+    routingType: Joi.string().valid('DUTCH_V2'),
     swapper: FieldValidator.address.optional(),
     deadlineBufferSecs: FieldValidator.positiveNumber.optional(),
     useSyntheticQuotes: Joi.boolean().optional(),

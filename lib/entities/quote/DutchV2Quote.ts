@@ -1,6 +1,6 @@
 import { PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { TradeType } from '@uniswap/sdk-core';
-import { UnsignedV2DutchOrder, V2DutchOrderBuilder, UnsignedV2DutchOrderInfoJSON } from '@uniswap/uniswapx-sdk';
+import { UnsignedV2DutchOrder, UnsignedV2DutchOrderInfoJSON, V2DutchOrderBuilder } from '@uniswap/uniswapx-sdk';
 import { BigNumber, ethers } from 'ethers';
 
 import { IQuote, LogJSON } from '.';
