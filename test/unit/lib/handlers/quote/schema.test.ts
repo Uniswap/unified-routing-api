@@ -51,7 +51,7 @@ describe('Post quote request validation', () => {
     it('should reject dutch v2 config as dutch v1', () => {
       const { error } = FieldValidator.dutchLimitConfig.validate(DUTCH_V2_CONFIG_JSON);
       expect(error).toBeDefined();
-      expect(error?.message).toEqual('\"routingType\" must be [DUTCH_LIMIT]');
+      expect(error?.message).toEqual('"routingType" must be [DUTCH_LIMIT]');
     });
 
     it('should reject invalid routingType', () => {
@@ -60,7 +60,7 @@ describe('Post quote request validation', () => {
         routingType: 'INVALID',
       });
       expect(error).toBeDefined();
-      expect(error?.message).toEqual('\"routingType\" must be [DUTCH_LIMIT]');
+      expect(error?.message).toEqual('"routingType" must be [DUTCH_LIMIT]');
     });
 
     it('should reject invalid slippage', () => {
@@ -98,7 +98,7 @@ describe('Post quote request validation', () => {
         routingType: 'INVALID',
       });
       expect(error).toBeDefined();
-      expect(error?.message).toEqual('\"routingType\" must be [CLASSIC]');
+      expect(error?.message).toEqual('"routingType" must be [CLASSIC]');
     });
 
     it('should reject invalid protocols', () => {
