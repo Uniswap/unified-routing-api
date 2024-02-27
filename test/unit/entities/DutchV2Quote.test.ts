@@ -37,9 +37,9 @@ describe('DutchV2Quote', () => {
       const order = v2Quote.toOrder();
 
       const orderJson = order.toJSON();
-      expect(orderJson.input.startAmount).toEqual(v2Quote.amountIn.toString());
-      expect(orderJson.outputs.length).toEqual(1);
-      expect(orderJson.outputs[0].startAmount).toEqual(v2Quote.amountOut.toString());
+      expect(orderJson.baseInput.startAmount).toEqual(v2Quote.amountIn.toString());
+      expect(orderJson.baseOutputs.length).toEqual(1);
+      expect(orderJson.baseOutputs[0].startAmount).toEqual(v2Quote.amountOut.toString());
       expect(orderJson.cosigner).toEqual(LABS_COSIGNER);
     });
 
