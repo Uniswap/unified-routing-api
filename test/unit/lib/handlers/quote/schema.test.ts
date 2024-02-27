@@ -6,6 +6,7 @@ import {
   CHAIN_OUT_ID,
   CLASSIC_CONFIG,
   DL_CONFIG,
+  DUTCH_V2_CONFIG,
   TOKEN_IN,
   TOKEN_OUT,
 } from '../../../../constants';
@@ -13,6 +14,11 @@ import {
 const DL_CONFIG_JSON = {
   ...DL_CONFIG,
   routingType: 'DUTCH_LIMIT',
+};
+
+const DUTCH_V2_CONFIG_JSON = {
+  ...DUTCH_V2_CONFIG,
+  routingType: 'DUTCH_V2',
 };
 
 const CLASSIC_CONFIG_JSON = {
@@ -34,6 +40,11 @@ describe('Post quote request validation', () => {
   describe('config validation', () => {
     it('should validate dutch limit config', () => {
       const { error } = FieldValidator.dutchLimitConfig.validate(DL_CONFIG_JSON);
+      expect(error).toBeUndefined();
+    });
+
+    it('should validate dutch v2 config', () => {
+      const { error } = FieldValidator.dutchLimitConfig.validate(DUTCH_V2_CONFIG_JSON);
       expect(error).toBeUndefined();
     });
 
