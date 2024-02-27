@@ -159,9 +159,7 @@ describe('QuoteRequest', () => {
           const { quoteRequests: requests } = parseQuoteRequests(request);
           const dutchRequest = requests[0] as DutchV2Request;
 
-          expect(dutchRequest.toJSON()).toEqual(
-            Object.assign({}, MOCK_DUTCH_V2_CONFIG_JSON, { useSyntheticQuotes: false })
-          );
+          expect(dutchRequest.toJSON()).toEqual(Object.assign({}, MOCK_DUTCH_V2_CONFIG_JSON, { useSyntheticQuotes: false }));
         });
 
         it('parses basic classic quote order config properly', () => {
