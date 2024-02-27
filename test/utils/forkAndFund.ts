@@ -24,7 +24,7 @@ const WHALES = [
   '0xd0C6f16CC58f1b23c51d1529B95fec2740218F0a',
   '0x171d311eAcd2206d21Cb462d661C33F0eddadC03',
   '0xD91cd0Bcc450409a542A4daeFbFc4118a9F9f5f3',
-  '0x4fa745fccc04555f2afa8874cd23961636cdf982',
+  '0xa173524e030a2d2398036fb33ea3ed6d784c5904',
 ];
 
 const { ethers } = hre;
