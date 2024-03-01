@@ -305,7 +305,8 @@ export class DutchQuote implements IQuote {
       amountOut: this.amountOutStart.toString(),
       endAmountIn: this.amountInEnd.toString(),
       endAmountOut: this.amountOutEnd.toString(),
-      amountInGasAdjusted: this.request.info.type === TradeType.EXACT_OUTPUT ? this.amountInGasAdjusted.toString() : undefined,
+      amountInGasAdjusted:
+        this.request.info.type === TradeType.EXACT_OUTPUT ? this.amountInGasAdjusted.toString() : undefined,
       amountInGasAndPortionAdjusted:
         this.request.info.type === TradeType.EXACT_OUTPUT ? this.amountInGasAndPortionAdjusted.toString() : undefined,
       amountOutGasAdjusted: this.amountOutStart.toString(),
