@@ -111,7 +111,7 @@ function parseQuote(
       // also: is this parsing quote responses even needed outside of testing?
       return ClassicQuote.fromResponseBody(request, quote as ClassicQuoteDataJSON);
     case RoutingType.RELAY:
-      return RelayQuote.fromResponseBody(request as RelayRequest, quote as RelayQuoteJSON);
+      return RelayQuote.fromResponseBody(request as RelayRequest, quote as RelayQuoteJSON, nonce);
     default:
       throw new Error(`Unknown routing type: ${routing}`);
   }

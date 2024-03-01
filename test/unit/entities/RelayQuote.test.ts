@@ -58,6 +58,7 @@ describe('RelayQuote', () => {
       const dlQuote = quote as RelayQuote;
       const result = dlQuote.getPermitData();
       const expected = RELAY_PERMIT;
+      console.log(JSON.stringify(result));
       expect(_.isEqual(JSON.stringify(result), JSON.stringify(expected))).toBe(true);
       jest.clearAllTimers();
     });
@@ -106,8 +107,8 @@ describe('RelayQuote', () => {
         classicAmountInGasAndPortionAdjusted: relayQuote.classicAmountInGasAndPortionAdjusted.toString(),
         classicAmountOutGasAndPortionAdjusted: relayQuote.classicAmountOutGasAndPortionAdjusted.toString(),
       };
-      const quote = RelayQuote.fromResponseBody(relayQuote.request, RELAY_QUOTE_JSON);
-      // nonce will be different so we can't compare the whole object
+      const quote = RelayQuote.fromResponseBody(relayQuote.request, RELAY_QUOTE_JSON, relayQuote.nonce);
+
       expect(quote.toJSON().orderHash).toEqual(relayQuote.toJSON().orderHash);
     });
   });

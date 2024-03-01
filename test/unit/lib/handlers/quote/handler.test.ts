@@ -655,7 +655,8 @@ describe('QuoteHandler', () => {
         expect(BigNumber.from(permitData.values.permitted[0].amount).eq(quote.input.amount)).toBe(true);
         expect(permitData.values.permitted[1].token).toBe(quote.fee.token);
         expect(BigNumber.from(permitData.values.permitted[1].amount).eq(quote.fee.endAmount)).toBe(true);
-        expect(BigNumber.from(permitData.values.witness.feeStartAmount).eq(quote.fee.startAmount)).toBe(true);
+        expect(BigNumber.from(permitData.values.witness.fee.startAmount).eq(quote.fee.startAmount)).toBe(true);
+        expect(BigNumber.from(permitData.values.witness.fee.endAmount).eq(quote.fee.endAmount)).toBe(true);
         expect(permit2Fetcher.fetchAllowance).not.toHaveBeenCalled();
       });
 
