@@ -7,6 +7,7 @@ import {
   CLASSIC_CONFIG,
   DL_CONFIG,
   RELAY_CONFIG,
+  DUTCH_V2_CONFIG,
   TOKEN_IN,
   TOKEN_OUT,
 } from '../../../../constants';
@@ -14,6 +15,11 @@ import {
 const DL_CONFIG_JSON = {
   ...DL_CONFIG,
   routingType: 'DUTCH_LIMIT',
+};
+
+const DUTCH_V2_CONFIG_JSON = {
+  ...DUTCH_V2_CONFIG,
+  routingType: 'DUTCH_V2',
 };
 
 const CLASSIC_CONFIG_JSON = {
@@ -43,13 +49,24 @@ describe('Post quote request validation', () => {
       expect(error).toBeUndefined();
     });
 
+    it('should validate dutch v2 config', () => {
+      const { error } = FieldValidator.dutchV2Config.validate(DUTCH_V2_CONFIG_JSON);
+      expect(error).toBeUndefined();
+    });
+
+    it('should reject dutch v2 config as dutch v1', () => {
+      const { error } = FieldValidator.dutchLimitConfig.validate(DUTCH_V2_CONFIG_JSON);
+      expect(error).toBeDefined();
+      expect(error?.message).toEqual('"routingType" must be [DUTCH_LIMIT]');
+    });
+
     it('should reject invalid routingType', () => {
       const { error } = FieldValidator.dutchLimitConfig.validate({
         ...DL_CONFIG_JSON,
         routingType: 'INVALID',
       });
       expect(error).toBeDefined();
-      expect(error?.message).toEqual('Invalid routingType');
+      expect(error?.message).toEqual('"routingType" must be [DUTCH_LIMIT]');
     });
 
     it('should reject invalid slippage', () => {
@@ -100,7 +117,7 @@ describe('Post quote request validation', () => {
         routingType: 'INVALID',
       });
       expect(error).toBeDefined();
-      expect(error?.message).toEqual('Invalid routingType');
+      expect(error?.message).toEqual('"routingType" must be [CLASSIC]');
     });
 
     it('should reject invalid protocols', () => {

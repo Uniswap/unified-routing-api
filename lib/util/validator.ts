@@ -38,7 +38,7 @@ export class FieldValidator {
 
   public static readonly tradeType = Joi.string().valid('EXACT_INPUT', 'EXACT_OUTPUT');
 
-  public static readonly routingType = Joi.string().valid('CLASSIC', 'DUTCH_LIMIT', 'RELAY').messages({
+  public static readonly routingType = Joi.string().valid('CLASSIC', 'DUTCH_LIMIT', 'DUTCH_V2', 'RELAY').messages({
     'any.only': 'Invalid routingType',
   });
 
@@ -75,7 +75,7 @@ export class FieldValidator {
   public static readonly quoteSpeed = Joi.string().valid('fast', 'standard');
 
   public static readonly classicConfig = Joi.object({
-    routingType: FieldValidator.routingType.required(),
+    routingType: Joi.string().valid('CLASSIC'),
     protocols: FieldValidator.protocols.required(),
     gasPriceWei: FieldValidator.gasPriceWei.optional(),
     simulateFromAddress: FieldValidator.address.optional(),
@@ -97,7 +97,7 @@ export class FieldValidator {
   });
 
   public static readonly dutchLimitConfig = Joi.object({
-    routingType: FieldValidator.routingType.required(),
+    routingType: Joi.string().valid('DUTCH_LIMIT'),
     swapper: FieldValidator.address.optional(),
     exclusivityOverrideBps: FieldValidator.positiveNumber.optional(),
     startTimeBufferSecs: FieldValidator.positiveNumber.optional(),
@@ -116,5 +116,12 @@ export class FieldValidator {
     deadlineBufferSecs: FieldValidator.positiveNumber.optional(),
     slippageTolerance: FieldValidator.slippageTolerance.optional(),
     amountInGasTokenStartOverride: FieldValidator.amount.optional(),
+  });
+
+  public static readonly dutchV2Config = Joi.object({
+    routingType: Joi.string().valid('DUTCH_V2'),
+    swapper: FieldValidator.address.optional(),
+    deadlineBufferSecs: FieldValidator.positiveNumber.optional(),
+    useSyntheticQuotes: Joi.boolean().optional(),
   });
 }

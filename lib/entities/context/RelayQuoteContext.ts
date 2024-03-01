@@ -79,9 +79,6 @@ export class RelayQuoteContext implements QuoteContext {
 
     if (!quote) return null;
 
-    // TODO: validate tokens, gas tokens, etc.
-    // add checks for too large price impact, etc.
-
     // if its invalid for some reason, i.e. too much decay then return null
     if (!quote.validate()) return null;
     return quote;

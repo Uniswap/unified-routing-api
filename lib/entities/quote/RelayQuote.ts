@@ -178,7 +178,7 @@ export class RelayQuote implements IQuote {
         endTime: feeStartTime + this.auctionPeriodSecs,
       })
       // The order is not fully built yet, the calldata must be added by the caller
-      .universalRouterCalldata('0x')
+      .universalRouterCalldata('0x');
 
     return builder.build();
   }

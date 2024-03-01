@@ -1,6 +1,6 @@
 import { PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { TradeType } from '@uniswap/sdk-core';
-import { V2DutchOrder, V2DutchOrderBuilder, V2DutchOrderInfoJSON } from '@uniswap/uniswapx-sdk';
+import { UnsignedV2DutchOrder, UnsignedV2DutchOrderInfoJSON, V2DutchOrderBuilder } from '@uniswap/uniswapx-sdk';
 import { BigNumber, ethers } from 'ethers';
 
 import { IQuote, LogJSON } from '.';
@@ -16,7 +16,7 @@ export const LABS_COSIGNER = '0x0000000000000000000000000000000000000000';
 
 // JSON format of a DutchV2Quote, to be returned by the API
 export type DutchV2QuoteDataJSON = {
-  orderInfo: V2DutchOrderInfoJSON;
+  orderInfo: UnsignedV2DutchOrderInfoJSON;
   quoteId: string;
   requestId: string;
   encodedOrder: string;
@@ -99,7 +99,7 @@ export class DutchV2Quote implements IQuote {
     };
   }
 
-  public toOrder(): V2DutchOrder {
+  public toOrder(): UnsignedV2DutchOrder {
     const orderBuilder = new V2DutchOrderBuilder(this.chainId);
     const deadline = Math.floor(Date.now() / 1000 + this.deadlineBufferSecs);
     const nonce = this.nonce ?? generateRandomNonce();
@@ -111,7 +111,7 @@ export class DutchV2Quote implements IQuote {
       .cosigner(LABS_COSIGNER)
       // empty cosignature so we can serialize the order
       .cosignature(ethers.constants.HashZero)
-      .input({
+      .baseInput({
         token: this.tokenIn,
         startAmount: this.amountInStart,
         endAmount: this.amountInEnd,
@@ -128,7 +128,7 @@ export class DutchV2Quote implements IQuote {
       this.request.info.sendPortionEnabled,
       this.portion
     );
-    outputs.forEach((output) => builder.output(output));
+    outputs.forEach((output) => builder.baseOutput(output));
 
     return builder.buildPartial();
   }
