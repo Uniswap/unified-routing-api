@@ -225,7 +225,7 @@ export class RelayQuote implements IQuote {
   public get amountInGasAndPortionAdjustedClassic(): BigNumber {
     return this.classicAmountInGasAndPortionAdjusted;
   }
-  
+
   public get amountOutGasAndPortionAdjustedClassic(): BigNumber {
     return this.classicAmountOutGasAndPortionAdjusted;
   }
