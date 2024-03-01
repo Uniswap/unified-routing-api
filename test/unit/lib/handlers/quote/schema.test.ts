@@ -6,8 +6,8 @@ import {
   CHAIN_OUT_ID,
   CLASSIC_CONFIG,
   DL_CONFIG,
-  RELAY_CONFIG,
   DUTCH_V2_CONFIG,
+  RELAY_CONFIG,
   TOKEN_IN,
   TOKEN_OUT,
 } from '../../../../constants';

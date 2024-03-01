@@ -7,7 +7,6 @@ import {
   ClassicQuoteDataJSON,
   ClassicRequest,
   DutchConfig,
-  DutchConfigJSON,
   DutchQuoteJSON,
   DutchRequest,
   DutchV2Config,

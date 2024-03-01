@@ -1,5 +1,4 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { PERMIT2_ADDRESS } from '@uniswap/permit2-sdk';
 import { CurrencyAmount } from '@uniswap/sdk-core';
 import { DAI_MAINNET, ID_TO_NETWORK_NAME, USDC_MAINNET, USDT_MAINNET } from '@uniswap/smart-order-router';
 import { RelayOrder } from '@uniswap/uniswapx-sdk';
@@ -148,7 +147,10 @@ describe('relayQuote', function () {
             USDT_MAINNET
           );
 
-          const tokenInMaxAmount = CurrencyAmount.fromRawAmount(USDC_MAINNET, parseInt(order.info.input.amount.toString()));
+          const tokenInMaxAmount = CurrencyAmount.fromRawAmount(
+            USDC_MAINNET,
+            parseInt(order.info.input.amount.toString())
+          );
           const gasMaxAmount = CurrencyAmount.fromRawAmount(DAI_MAINNET, parseInt(order.info.fee.endAmount.toString()));
 
           expect(

@@ -1,6 +1,5 @@
 import { ChainId, Currency, Ether, WETH9 } from '@uniswap/sdk-core';
 import { DAI_MAINNET, USDC_MAINNET, WBTC_MAINNET } from '@uniswap/smart-order-router';
-import { REACTOR_ADDRESS_MAPPING } from '@uniswap/uniswapx-sdk';
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { BigNumber } from 'ethers';
 import { getAddress } from 'ethers/lib/utils';
@@ -369,175 +368,175 @@ export const DUTCH_LIMIT_ORDER_JSON_WITH_PORTION = {
 };
 
 export const RELAY_PERMIT = {
-  "domain": {
-    "name": "Permit2",
-    "chainId": 1,
-    "verifyingContract": "0x000000000022d473030f116ddee9f6b43ac78ba3"
+  domain: {
+    name: 'Permit2',
+    chainId: 1,
+    verifyingContract: '0x000000000022d473030f116ddee9f6b43ac78ba3',
   },
-  "types": {
-    "PermitBatchWitnessTransferFrom": [
+  types: {
+    PermitBatchWitnessTransferFrom: [
       {
-        "name": "permitted",
-        "type": "TokenPermissions[]"
+        name: 'permitted',
+        type: 'TokenPermissions[]',
       },
       {
-        "name": "spender",
-        "type": "address"
+        name: 'spender',
+        type: 'address',
       },
       {
-        "name": "nonce",
-        "type": "uint256"
+        name: 'nonce',
+        type: 'uint256',
       },
       {
-        "name": "deadline",
-        "type": "uint256"
+        name: 'deadline',
+        type: 'uint256',
       },
       {
-        "name": "witness",
-        "type": "RelayOrder"
-      }
+        name: 'witness',
+        type: 'RelayOrder',
+      },
     ],
-    "TokenPermissions": [
+    TokenPermissions: [
       {
-        "name": "token",
-        "type": "address"
+        name: 'token',
+        type: 'address',
       },
       {
-        "name": "amount",
-        "type": "uint256"
-      }
+        name: 'amount',
+        type: 'uint256',
+      },
     ],
-    "FeeEscalator": [
+    FeeEscalator: [
       {
-        "name": "token",
-        "type": "address"
+        name: 'token',
+        type: 'address',
       },
       {
-        "name": "startAmount",
-        "type": "uint256"
+        name: 'startAmount',
+        type: 'uint256',
       },
       {
-        "name": "endAmount",
-        "type": "uint256"
+        name: 'endAmount',
+        type: 'uint256',
       },
       {
-        "name": "startTime",
-        "type": "uint256"
+        name: 'startTime',
+        type: 'uint256',
       },
       {
-        "name": "endTime",
-        "type": "uint256"
-      }
+        name: 'endTime',
+        type: 'uint256',
+      },
     ],
-    "Input": [
+    Input: [
       {
-        "name": "token",
-        "type": "address"
+        name: 'token',
+        type: 'address',
       },
       {
-        "name": "amount",
-        "type": "uint256"
+        name: 'amount',
+        type: 'uint256',
       },
       {
-        "name": "recipient",
-        "type": "address"
-      }
+        name: 'recipient',
+        type: 'address',
+      },
     ],
-    "OrderInfo": [
+    OrderInfo: [
       {
-        "name": "reactor",
-        "type": "address"
+        name: 'reactor',
+        type: 'address',
       },
       {
-        "name": "swapper",
-        "type": "address"
+        name: 'swapper',
+        type: 'address',
       },
       {
-        "name": "nonce",
-        "type": "uint256"
+        name: 'nonce',
+        type: 'uint256',
       },
       {
-        "name": "deadline",
-        "type": "uint256"
-      }
+        name: 'deadline',
+        type: 'uint256',
+      },
     ],
-    "RelayOrder": [
+    RelayOrder: [
       {
-        "name": "info",
-        "type": "OrderInfo"
+        name: 'info',
+        type: 'OrderInfo',
       },
       {
-        "name": "input",
-        "type": "Input"
+        name: 'input',
+        type: 'Input',
       },
       {
-        "name": "fee",
-        "type": "FeeEscalator"
+        name: 'fee',
+        type: 'FeeEscalator',
       },
       {
-        "name": "universalRouterCalldata",
-        "type": "bytes"
-      }
-    ]
+        name: 'universalRouterCalldata',
+        type: 'bytes',
+      },
+    ],
   },
-  "values": {
-    "permitted": [
+  values: {
+    permitted: [
       {
-        "token": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
-        "amount": {
-          "type": "BigNumber",
-          "hex": "0x0de0b6b3a7640000"
-        }
+        token: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
+        amount: {
+          type: 'BigNumber',
+          hex: '0x0de0b6b3a7640000',
+        },
       },
       {
-        "token": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
-        "amount": {
-          "type": "BigNumber",
-          "hex": "0x0de0b6b3a7640000"
-        }
-      }
+        token: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
+        amount: {
+          type: 'BigNumber',
+          hex: '0x0de0b6b3a7640000',
+        },
+      },
     ],
-    "spender": "0x0000000000000000000000000000000000000000",
-    "nonce": {
-      "type": "BigNumber",
-      "hex": "0x01"
+    spender: '0x0000000000000000000000000000000000000000',
+    nonce: {
+      type: 'BigNumber',
+      hex: '0x01',
     },
-    "deadline": 72,
-    "witness": {
-      "info": {
-        "reactor": "0x0000000000000000000000000000000000000000",
-        "swapper": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-        "nonce": {
-          "type": "BigNumber",
-          "hex": "0x01"
+    deadline: 72,
+    witness: {
+      info: {
+        reactor: '0x0000000000000000000000000000000000000000',
+        swapper: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+        nonce: {
+          type: 'BigNumber',
+          hex: '0x01',
         },
-        "deadline": 72
+        deadline: 72,
       },
-      "input": {
-        "token": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
-        "amount": {
-          "type": "BigNumber",
-          "hex": "0x0de0b6b3a7640000"
+      input: {
+        token: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
+        amount: {
+          type: 'BigNumber',
+          hex: '0x0de0b6b3a7640000',
         },
-        "recipient": "0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD"
+        recipient: '0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD',
       },
-      "fee": {
-        "token": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
-        "startAmount": {
-          "type": "BigNumber",
-          "hex": "0x0de0b6b3a7640000"
+      fee: {
+        token: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
+        startAmount: {
+          type: 'BigNumber',
+          hex: '0x0de0b6b3a7640000',
         },
-        "endAmount": {
-          "type": "BigNumber",
-          "hex": "0x0de0b6b3a7640000"
+        endAmount: {
+          type: 'BigNumber',
+          hex: '0x0de0b6b3a7640000',
         },
-        "startTime": 0,
-        "endTime": 60
+        startTime: 0,
+        endTime: 60,
       },
-      "universalRouterCalldata": "0x"
-    }
-  }
-}
+      universalRouterCalldata: '0x',
+    },
+  },
+};
 
 export const GREENLIST_TOKEN_PAIRS: Array<[Currency, Currency]> = [
   [Ether.onChain(ChainId.MAINNET), USDC_ON(ChainId.MAINNET)],
