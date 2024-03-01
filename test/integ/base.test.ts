@@ -281,6 +281,7 @@ export class BaseIntegrationTestSuite {
       configs: [
         {
           routingType: RoutingType.CLASSIC,
+          protocols: ['V2'],
         },
       ],
     };
