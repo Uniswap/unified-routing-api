@@ -91,6 +91,7 @@ describe('quote', function () {
               configs: [
                 {
                   routingType: RoutingType.CLASSIC,
+                  protocols: ['V2', 'V3', 'MIXED'],
                   recipient: alice.address,
                   deadline: 360,
                   algorithm,
@@ -149,6 +150,7 @@ describe('quote', function () {
               configs: [
                 {
                   routingType: RoutingType.CLASSIC,
+                  protocols: ['V2', 'V3', 'MIXED'],
                   recipient: alice.address,
                   deadline: 360,
                   algorithm,
@@ -225,6 +227,7 @@ describe('quote', function () {
               configs: [
                 {
                   routingType: RoutingType.CLASSIC,
+                  protocols: ['V2', 'V3', 'MIXED'],
                   recipient: alice.address,
                   deadline: 360,
                   algorithm,
@@ -289,6 +292,7 @@ describe('quote', function () {
               configs: [
                 {
                   routingType: RoutingType.CLASSIC,
+                  protocols: ['V2', 'V3', 'MIXED'],
                   recipient: alice.address,
                   deadline: 360,
                   algorithm,
@@ -340,6 +344,7 @@ describe('quote', function () {
               configs: [
                 {
                   routingType: RoutingType.CLASSIC,
+                  protocols: ['V2', 'V3', 'MIXED'],
                   recipient: alice.address,
                   deadline: 360,
                   algorithm,
@@ -429,6 +434,7 @@ describe('quote', function () {
               configs: [
                 {
                   routingType: RoutingType.CLASSIC,
+                  protocols: ['V2', 'V3', 'MIXED'],
                   recipient: alice.address,
                   deadline: 360,
                   algorithm,
@@ -487,6 +493,7 @@ describe('quote', function () {
               configs: [
                 {
                   routingType: RoutingType.CLASSIC,
+                  protocols: ['V2', 'V3', 'MIXED'],
                   recipient: alice.address,
                   deadline: 360,
                   algorithm,
@@ -540,6 +547,7 @@ describe('quote', function () {
               configs: [
                 {
                   routingType: RoutingType.CLASSIC,
+                  protocols: ['V2', 'V3', 'MIXED'],
                   recipient: alice.address,
                   deadline: 360,
                   algorithm,
@@ -590,6 +598,7 @@ describe('quote', function () {
               configs: [
                 {
                   routingType: RoutingType.CLASSIC,
+                  protocols: ['V2', 'V3', 'MIXED'],
                   recipient: alice.address,
                   deadline: 360,
                   algorithm,
@@ -638,6 +647,7 @@ describe('quote', function () {
               configs: [
                 {
                   routingType: RoutingType.CLASSIC,
+                  protocols: ['V2', 'V3', 'MIXED'],
                   recipient: alice.address,
                   deadline: 360,
                   algorithm,
@@ -683,10 +693,10 @@ describe('quote', function () {
                 configs: [
                   {
                     routingType: RoutingType.CLASSIC,
+                    protocols: ['V3'],
                     recipient: alice.address,
                     deadline: 360,
                     algorithm: 'alpha',
-                    protocols: ['v3'],
                     enableUniversalRouter: true,
                   },
                 ],
@@ -748,10 +758,10 @@ describe('quote', function () {
                 configs: [
                   {
                     routingType: RoutingType.CLASSIC,
+                    protocols: ['V2'],
                     recipient: alice.address,
                     deadline: 360,
                     algorithm: 'alpha',
-                    protocols: ['v2'],
                     enableUniversalRouter: true,
                   },
                 ],
@@ -812,6 +822,7 @@ describe('quote', function () {
                 configs: [
                   {
                     routingType: RoutingType.CLASSIC,
+                    protocols: ['V2', 'V3', 'MIXED'],
                     recipient: alice.address,
                     deadline: 360,
                     algorithm: 'alpha',
@@ -887,9 +898,9 @@ describe('quote', function () {
                   configs: [
                     {
                       routingType: RoutingType.CLASSIC,
+                      protocols: ['V2', 'V3', 'MIXED'],
                       recipient: alice.address,
                       deadline: 360,
-                      protocols: ['v2', 'v3', 'mixed'],
                       algorithm: 'alpha',
                       forceMixedRoutes: true,
                       enableUniversalRouter: true,
@@ -943,6 +954,7 @@ describe('quote', function () {
                 configs: [
                   {
                     routingType: RoutingType.CLASSIC,
+                    protocols: ['V2', 'V3', 'MIXED'],
                     recipient: alice.address,
                     deadline: 360,
                     algorithm,
@@ -1002,6 +1014,7 @@ describe('quote', function () {
                 configs: [
                   {
                     routingType: RoutingType.CLASSIC,
+                    protocols: ['V2', 'V3', 'MIXED'],
                     recipient: alice.address,
                     deadline: 360,
                     algorithm,
@@ -1085,6 +1098,7 @@ describe('quote', function () {
                   configs: [
                     {
                       routingType: RoutingType.CLASSIC,
+                      protocols: ['V2', 'V3', 'MIXED'],
                       recipient: wallet.address,
                       deadline: 360,
                       algorithm,
@@ -1136,6 +1150,7 @@ describe('quote', function () {
                 configs: [
                   {
                     routingType: RoutingType.CLASSIC,
+                    protocols: ['V2', 'V3', 'MIXED'],
                     recipient: alice.address,
                     deadline: 360,
                     algorithm,
@@ -1189,6 +1204,7 @@ describe('quote', function () {
                 configs: [
                   {
                     routingType: RoutingType.CLASSIC,
+                    protocols: ['V2', 'V3', 'MIXED'],
                     recipient: alice.address,
                     deadline: 360,
                     algorithm,
@@ -1260,6 +1276,7 @@ describe('quote', function () {
                 configs: [
                   {
                     routingType: RoutingType.CLASSIC,
+                    protocols: ['V2', 'V3', 'MIXED'],
                     recipient: alice.address,
                     deadline: 360,
                     algorithm,
@@ -1311,6 +1328,7 @@ describe('quote', function () {
                 configs: [
                   {
                     routingType: RoutingType.CLASSIC,
+                    protocols: ['V2', 'V3', 'MIXED'],
                     recipient: alice.address,
                     deadline: 360,
                     algorithm,
@@ -1357,6 +1375,7 @@ describe('quote', function () {
                 configs: [
                   {
                     routingType: RoutingType.CLASSIC,
+                    protocols: ['V2', 'V3', 'MIXED'],
                     recipient: alice.address,
                     deadline: 360,
                     algorithm,
@@ -1402,6 +1421,7 @@ describe('quote', function () {
                 configs: [
                   {
                     routingType: RoutingType.CLASSIC,
+                    protocols: ['V2', 'V3', 'MIXED'],
                     recipient: alice.address,
                     deadline: 360,
                     algorithm,
@@ -1467,6 +1487,7 @@ describe('quote', function () {
                     configs: [
                       {
                         routingType: RoutingType.CLASSIC,
+                        protocols: ['V2', 'V3', 'MIXED'],
                         recipient: alice.address,
                         deadline: 360,
                         algorithm,
@@ -1621,6 +1642,7 @@ describe('quote', function () {
                     configs: [
                       {
                         routingType: RoutingType.CLASSIC,
+                        protocols: ['V2', 'V3', 'MIXED'],
                         recipient: alice.address,
                         deadline: 360,
                         simulateFromAddress: '0xf584f8728b874a6a5c7a8d4d387c9aae9172d621',
@@ -1775,7 +1797,7 @@ describe('quote', function () {
                         simulateFromAddress: simulateFromAddress,
                         // we already know that SOR only supports FOT in v2 as of now
                         // so we can send v2 only to send some test runtime
-                        protocols: ['v2'],
+                        protocols: ['V2'],
                         algorithm,
                         enableUniversalRouter: true,
                         enableFeeOnTransferFeeFetching: true,
@@ -1854,6 +1876,7 @@ describe('quote', function () {
             configs: [
               {
                 routingType: RoutingType.CLASSIC,
+                protocols: ['V2', 'V3', 'MIXED'],
                 algorithm,
                 enableUniversalRouter: true,
               },
@@ -1895,6 +1918,7 @@ describe('quote', function () {
             configs: [
               {
                 routingType: RoutingType.CLASSIC,
+                protocols: ['V2', 'V3', 'MIXED'],
                 deadline: 360,
                 algorithm,
                 enableUniversalRouter: true,
@@ -1936,6 +1960,7 @@ describe('quote', function () {
             configs: [
               {
                 routingType: RoutingType.CLASSIC,
+                protocols: ['V2', 'V3', 'MIXED'],
                 algorithm,
                 gasPriceWei: '60000000000',
                 enableUniversalRouter: true,
@@ -1984,6 +2009,7 @@ describe('quote', function () {
             configs: [
               {
                 routingType: RoutingType.CLASSIC,
+                protocols: ['V2', 'V3', 'MIXED'],
                 recipient: alice.address,
                 deadline: 360,
                 algorithm,
@@ -2025,6 +2051,7 @@ describe('quote', function () {
             configs: [
               {
                 routingType: RoutingType.CLASSIC,
+                protocols: ['V2', 'V3', 'MIXED'],
                 recipient: alice.address,
                 deadline: 360,
                 algorithm,
@@ -2066,6 +2093,7 @@ describe('quote', function () {
             configs: [
               {
                 routingType: RoutingType.CLASSIC,
+                protocols: ['V2', 'V3', 'MIXED'],
                 recipient: alice.address,
                 deadline: 360,
                 algorithm,
@@ -2096,6 +2124,7 @@ describe('quote', function () {
             configs: [
               {
                 routingType: RoutingType.CLASSIC,
+                protocols: ['V2', 'V3', 'MIXED'],
                 recipient: '0x88fc765949a27405480F374Aa49E20dcCD3fCfb8',
                 deadline: 360,
                 algorithm,
@@ -2132,6 +2161,7 @@ describe('quote', function () {
             configs: [
               {
                 routingType: RoutingType.CLASSIC,
+                protocols: ['V2', 'V3', 'MIXED'],
                 recipient: alice.address,
                 deadline: 360,
                 algorithm,
@@ -2161,6 +2191,7 @@ describe('quote', function () {
             configs: [
               {
                 routingType: RoutingType.CLASSIC,
+                protocols: ['V2', 'V3', 'MIXED'],
                 recipient: alice.address,
                 deadline: 360,
                 algorithm,
@@ -2191,6 +2222,7 @@ describe('quote', function () {
             configs: [
               {
                 routingType: RoutingType.CLASSIC,
+                protocols: ['V2', 'V3', 'MIXED'],
                 recipient: alice.address,
                 deadline: 360,
                 algorithm,
@@ -2222,6 +2254,7 @@ describe('quote', function () {
             configs: [
               {
                 routingType: RoutingType.CLASSIC,
+                protocols: ['V2'],
                 recipient: alice.address,
                 deadline: 360,
                 algorithm,
@@ -2252,6 +2285,7 @@ describe('quote', function () {
             configs: [
               {
                 routingType: RoutingType.CLASSIC,
+                protocols: ['V2'],
                 recipient: alice.address,
                 deadline: 360,
                 algorithm,
@@ -2283,6 +2317,7 @@ describe('quote', function () {
             configs: [
               {
                 routingType: RoutingType.CLASSIC,
+                protocols: ['V2'],
                 recipient: alice.address,
                 deadline: 360,
                 algorithm,
@@ -2314,6 +2349,7 @@ describe('quote', function () {
             configs: [
               {
                 routingType: RoutingType.CLASSIC,
+                protocols: ['V2'],
                 recipient: alice.address,
                 deadline: 360,
                 algorithm,
@@ -2344,6 +2380,7 @@ describe('quote', function () {
             configs: [
               {
                 routingType: RoutingType.CLASSIC,
+                protocols: ['V2'],
                 recipient: alice.address,
                 deadline: 360,
                 algorithm,
@@ -2373,6 +2410,7 @@ describe('quote', function () {
             configs: [
               {
                 routingType: RoutingType.CLASSIC,
+                protocols: ['V2'],
                 recipient: '0xAb5801a7D398351b8bE11C439e05C5B3259aZZZZZZZ',
                 deadline: 360,
                 algorithm,
@@ -2403,6 +2441,7 @@ describe('quote', function () {
             configs: [
               {
                 routingType: RoutingType.CLASSIC,
+                protocols: ['V2'],
                 recipient: alice.address,
                 deadline: 360,
                 algorithm,
@@ -2503,6 +2542,7 @@ describe('quote', function () {
             configs: [
               {
                 routingType: RoutingType.CLASSIC,
+                protocols: ['V2'],
                 enableUniversalRouter: true,
               },
             ],
@@ -2530,6 +2570,7 @@ describe('quote', function () {
             configs: [
               {
                 routingType: RoutingType.CLASSIC,
+                protocols: ['V2'],
               },
             ],
           };
@@ -2556,6 +2597,7 @@ describe('quote', function () {
             configs: [
               {
                 routingType: RoutingType.CLASSIC,
+                protocols: ['V2'],
                 enableUniversalRouter: true,
               },
             ],
@@ -2582,6 +2624,7 @@ describe('quote', function () {
             configs: [
               {
                 routingType: RoutingType.CLASSIC,
+                protocols: ['V2'],
               },
             ],
           };
