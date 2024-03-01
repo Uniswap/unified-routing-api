@@ -1,5 +1,5 @@
 import { RelayOrder, RelayOrderBuilder, RelayOrderInfoJSON } from '@uniswap/uniswapx-sdk';
-import { UNIVERSAL_ROUTER_ADDRESS} from '@uniswap/universal-router-sdk';
+import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { BigNumber, ethers } from 'ethers';
 
 import { PermitBatchTransferFromData } from '@uniswap/permit2-sdk';
@@ -52,6 +52,28 @@ export class RelayQuote implements IQuote {
   public readonly createdAt: string;
   public derived: RelayQuoteDerived;
   public routingType: RoutingType.RELAY = RoutingType.RELAY;
+
+  public static fromResponseBody(request: RelayRequest, body: RelayQuoteJSON): RelayQuote {
+    return new RelayQuote(
+      currentTimestampInMs(),
+      request,
+      request.info.tokenInChainId,
+      request.info.requestId,
+      uuidv4(), // synthetic quote doesn't receive a quoteId from RFQ api, so generate one
+      request.info.tokenIn,
+      body.tokenOut,
+      BigNumber.from(body.amountIn), // apply no gas adjustment
+      BigNumber.from(body.amountIn), // apply no gas adjustment
+      BigNumber.from(body.amountOut), // apply no gas adjustment
+      BigNumber.from(body.amountOut), // apply no gas adjustment
+      BigNumber.from(body.amountInGasToken),
+      BigNumber.from(body.amountInGasToken),
+      request.config.swapper,
+      BigNumber.from(body.classicAmountInGasAndPortionAdjusted),
+      BigNumber.from(body.classicAmountOutGasAndPortionAdjusted),
+      generateRandomNonce()
+    );
+  }
 
   // build a relay quote from a classic quote
   public static fromClassicQuote(request: RelayRequest, quote: ClassicQuote): RelayQuote {
@@ -153,8 +175,10 @@ export class RelayQuote implements IQuote {
         startAmount: this.amountInGasTokenStart,
         endAmount: this.amountInGasTokenEnd,
         startTime: feeStartTime,
-        endTime: feeStartTime + this.auctionPeriodSecs
-      });
+        endTime: feeStartTime + this.auctionPeriodSecs,
+      })
+      // The order is not fully built yet, the calldata must be added by the caller
+      .universalRouterCalldata('0x');
 
     return builder.build();
   }
@@ -195,6 +219,15 @@ export class RelayQuote implements IQuote {
   // note that this does not include gas tokens since they are not guaranteed to be in the same token denomination
   public get amountIn(): BigNumber {
     return this.amountInStart;
+  }
+
+  // Values used only for comparing relay quotes vs. other types of quotes
+  public get amountInGasAndPortionAdjustedClassic(): BigNumber {
+    return this.classicAmountInGasAndPortionAdjusted;
+  }
+  
+  public get amountOutGasAndPortionAdjustedClassic(): BigNumber {
+    return this.classicAmountOutGasAndPortionAdjusted;
   }
 
   // The number of seconds from now that order decay should begin
@@ -274,7 +307,7 @@ export class RelayQuote implements IQuote {
 
   // Returns the number of gas units extra required to execute this quote through the relayer
   static getGasAdjustment(_classicQuote: ClassicQuote): BigNumber {
-    let result = BigNumber.from(0);
+    const result = BigNumber.from(0);
 
     return result.add(RELAY_BASE_GAS);
   }

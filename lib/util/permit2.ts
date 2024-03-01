@@ -24,4 +24,3 @@ export function createPermitData(tokenAddress: string, chainId: number, nonce: s
 
   return AllowanceTransfer.getPermitData(permit, PERMIT2_ADDRESS, chainId) as PermitSingleData;
 }
-

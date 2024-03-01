@@ -1,7 +1,15 @@
 import { ethers } from 'ethers';
 
 import { RoutingType } from '../../constants';
-import { ClassicConfig, ClassicRequest, DutchRequest, DutchV2Request, RelayRequest, Quote, QuoteRequest } from '../../entities';
+import {
+  ClassicConfig,
+  ClassicRequest,
+  DutchRequest,
+  DutchV2Request,
+  Quote,
+  QuoteRequest,
+  RelayRequest,
+} from '../../entities';
 
 import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
 import { SyntheticStatusProvider } from '../../providers';
@@ -117,6 +125,8 @@ export function mergeRequests(base: QuoteRequest, layer: QuoteRequest): QuoteReq
       simulateFromAddress: baseConfig.simulateFromAddress ?? layerConfig.simulateFromAddress,
       deadline: baseConfig.deadline ?? layerConfig.deadline,
       recipient: baseConfig.recipient ?? layerConfig.recipient,
+      // if base does not specify gasToken but layer does, then we add it
+      gasToken: baseConfig.gasToken ?? layerConfig.gasToken,
       // otherwise defer to base
     });
     return ClassicRequest.fromRequest(base.info, config);
