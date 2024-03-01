@@ -89,6 +89,13 @@ export const call = async (
   return await axiosHelper.post<QuoteResponseJSON>(`${API}`, quoteReq, config);
 };
 
+export const callIndicative = async (
+  quoteReq: Partial<QuoteRequestBodyJSON>,
+  config = axiosConfig
+): Promise<AxiosResponse<QuoteResponseJSON>> => {
+  return await axiosHelper.post<QuoteResponseJSON>(`${API}`, quoteReq, config);
+};
+
 export const checkQuoteToken = (
   before: CurrencyAmount<Currency>,
   after: CurrencyAmount<Currency>,

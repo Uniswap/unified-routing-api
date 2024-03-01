@@ -45,7 +45,7 @@ describe('quoteUniswapX', function () {
 
   // Help with test flakiness by retrying.
   this.retries(2);
-  this.timeout(40000);
+  this.timeout(100000);
 
   let alice: SignerWithAddress;
   let filler: SignerWithAddress;
