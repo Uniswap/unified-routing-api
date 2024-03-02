@@ -63,7 +63,7 @@ describe('quote', function () {
 
   let alice: SignerWithAddress;
 
-  this.timeout(80000);
+  this.timeout(40000);
 
   before(async function () {
     baseTest = new BaseIntegrationTestSuite();
