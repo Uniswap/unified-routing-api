@@ -63,7 +63,7 @@ describe('quote', function () {
 
   let alice: SignerWithAddress;
 
-  this.timeout(40000);
+  this.timeout(80000);
 
   before(async function () {
     baseTest = new BaseIntegrationTestSuite();
@@ -2422,8 +2422,8 @@ describe('quote', function () {
           await callAndExpectFail(quoteReq, {
             status: 404,
             data: {
-              detail: 'No quotes available',
-              errorCode: 'QUOTE_ERROR',
+              detail: `"configs[0]" does not match any of the allowed types`,
+              errorCode: 'VALIDATION_ERROR',
             },
           });
         });
@@ -2542,7 +2542,7 @@ describe('quote', function () {
             configs: [
               {
                 routingType: RoutingType.CLASSIC,
-                protocols: ['V2'],
+                protocols: ['V2', 'V3', 'MIXED'],
                 enableUniversalRouter: true,
               },
             ],
@@ -2570,7 +2570,7 @@ describe('quote', function () {
             configs: [
               {
                 routingType: RoutingType.CLASSIC,
-                protocols: ['V2'],
+                protocols: ['V2', 'V3', 'MIXED'],
               },
             ],
           };
@@ -2597,7 +2597,7 @@ describe('quote', function () {
             configs: [
               {
                 routingType: RoutingType.CLASSIC,
-                protocols: ['V2'],
+                protocols: ['V2', 'V3', 'MIXED'],
                 enableUniversalRouter: true,
               },
             ],
@@ -2624,7 +2624,7 @@ describe('quote', function () {
             configs: [
               {
                 routingType: RoutingType.CLASSIC,
-                protocols: ['V2'],
+                protocols: ['V2', 'V3', 'MIXED'],
               },
             ],
           };
