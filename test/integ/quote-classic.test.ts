@@ -2420,7 +2420,7 @@ describe('quote', function () {
           };
 
           await callAndExpectFail(quoteReq, {
-            status: 404,
+            status: 400,
             data: {
               detail: `"configs[0]" does not match any of the allowed types`,
               errorCode: 'VALIDATION_ERROR',
