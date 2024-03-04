@@ -158,6 +158,7 @@ describe('quoteUniswapX-v2', function () {
             tokenInChainId: 1,
             tokenOutChainId: 1,
           };
+          //TODO: other infras are in place we can remove the try catch
           try {
             const secondaryResponse: AxiosResponse<HardQuoteResponseData> = await callHard(hardQuoteReq);
             expect(secondaryResponse.status).to.equal(200);
