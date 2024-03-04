@@ -1,5 +1,5 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { CurrencyAmount, Ether, WETH9 } from '@uniswap/sdk-core';
+import { WETH9 } from '@uniswap/sdk-core';
 import {
   DAI_MAINNET,
   ID_TO_NETWORK_NAME,
@@ -9,32 +9,18 @@ import {
   USDT_MAINNET,
   WBTC_MAINNET,
 } from '@uniswap/smart-order-router';
-import { DutchOrder, UnsignedV2DutchOrder } from '@uniswap/uniswapx-sdk';
+import { UnsignedV2DutchOrder } from '@uniswap/uniswapx-sdk';
 import { AxiosResponse } from 'axios';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import chaiSubset from 'chai-subset';
-import { BigNumber, ethers } from 'ethers';
-import qs from 'qs';
-import { BPS, NATIVE_ADDRESS, RoutingType } from '../../lib/constants';
-import { DutchQuoteDataJSON, QuoteRequestBodyJSON, RoutingConfigJSON } from '../../lib/entities';
+import { ethers } from 'ethers';
+import { RoutingType } from '../../lib/constants';
+import { QuoteRequestBodyJSON, RoutingConfigJSON } from '../../lib/entities';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
-import { GREENLIST_STABLE_TO_STABLE_PAIRS, GREENLIST_TOKEN_PAIRS } from '../constants';
 import { fund } from '../utils/forkAndFund';
-import { RoutingApiQuoteResponse } from '../utils/quoteResponse';
-import { agEUR_MAINNET, getAmount, getAmountFromToken, XSGD_MAINNET } from '../utils/tokens';
-import {
-  axiosHelper,
-  BaseIntegrationTestSuite,
-  BaseXV2IntegrationTestSuite,
-  call,
-  callAndExpectFail,
-  callHard,
-  callIndicative,
-  checkPortionRecipientToken,
-  checkQuoteToken,
-  HardQuoteResponseData,
-} from './base.test';
+import { agEUR_MAINNET, getAmount, XSGD_MAINNET } from '../utils/tokens';
+import { BaseIntegrationTestSuite, callHard, callIndicative, HardQuoteResponseData } from './base.test';
 
 chai.use(chaiAsPromised);
 chai.use(chaiSubset);
