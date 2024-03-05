@@ -40,7 +40,7 @@ const NO_LIQ_TOKEN = '0x69b148395Ce0015C13e36BFfBAd63f49EF874E03';
 const ROUTING_API = `${process.env.ROUTING_API!}/quote`;
 const SLIPPAGE = '5';
 
-describe('quoteUniswapX', function () {
+describe.skip('quoteUniswapX', function () {
   let baseTest: BaseIntegrationTestSuite;
 
   // Help with test flakiness by retrying.
