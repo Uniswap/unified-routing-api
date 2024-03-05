@@ -50,9 +50,28 @@ if (!process.env.PORTION_API_URL) {
   throw new Error('Must set PORTION_API_URL env variables for integ tests. See README');
 }
 
+// URA endpoint
 const API = `${process.env.UNISWAP_API!}quote`;
+const hardQuoteAPI = `${process.env.PARAMETERIZATION_API_URL!}hard-quote`;
 
 const SLIPPAGE = '5';
+
+export interface HardQuoteRequest {
+  requestId: string;
+  encodedInnerOrder: string;
+  innerSig: string;
+  tokenInChainId: number;
+  tokenOutChainId: number;
+}
+
+export interface HardQuoteResponseData {
+  requestId: string;
+  quoteId?: string;
+  chainId: number;
+  encodedOrder: string;
+  orderHash: string;
+  filler?: string;
+}
 
 export const axiosHelper = axiosStatic.create({
   timeout: 30000,
@@ -87,6 +106,20 @@ export const call = async (
   config = axiosConfig
 ): Promise<AxiosResponse<QuoteResponseJSON>> => {
   return await axiosHelper.post<QuoteResponseJSON>(`${API}`, quoteReq, config);
+};
+
+export const callIndicative = async (
+  quoteReq: Partial<QuoteRequestBodyJSON>,
+  config = axiosConfig
+): Promise<AxiosResponse<QuoteResponseJSON>> => {
+  return await axiosHelper.post<QuoteResponseJSON>(`${API}`, quoteReq, config);
+};
+
+export const callHard = async (
+  hardQuoteReq: Partial<HardQuoteRequest>,
+  config = axiosConfig
+): Promise<AxiosResponse<HardQuoteResponseData>> => {
+  return await axiosHelper.post<HardQuoteResponseData>(`${hardQuoteAPI}`, hardQuoteReq, config);
 };
 
 export const checkQuoteToken = (
