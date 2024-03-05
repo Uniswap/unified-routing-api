@@ -53,7 +53,7 @@ export class RelayQuote implements IQuote {
   public derived: RelayQuoteDerived;
   public routingType: RoutingType.RELAY = RoutingType.RELAY;
 
-  public static fromResponseBody(request: RelayRequest, body: RelayQuoteJSON): RelayQuote {
+  public static fromResponseBody(request: RelayRequest, body: RelayQuoteJSON, nonce?: string): RelayQuote {
     return new RelayQuote(
       currentTimestampInMs(),
       request,
@@ -71,7 +71,7 @@ export class RelayQuote implements IQuote {
       request.config.swapper,
       BigNumber.from(body.classicAmountInGasAndPortionAdjusted),
       BigNumber.from(body.classicAmountOutGasAndPortionAdjusted),
-      generateRandomNonce()
+      nonce
     );
   }
 
