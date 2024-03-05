@@ -76,7 +76,7 @@ export class FieldValidator {
 
   public static readonly classicConfig = Joi.object({
     routingType: Joi.string().valid('CLASSIC'),
-    protocols: FieldValidator.protocols.required(),
+    protocols: FieldValidator.protocols.optional(),
     gasPriceWei: FieldValidator.gasPriceWei.optional(),
     simulateFromAddress: FieldValidator.address.optional(),
     recipient: FieldValidator.address.optional(),
