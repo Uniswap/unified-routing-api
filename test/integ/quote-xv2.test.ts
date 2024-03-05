@@ -28,7 +28,7 @@ chai.use(chaiSubset);
 const SLIPPAGE = '5';
 const REQUEST_ID = 'bbe75c5f-8ae5-46a1-ab3d-ce201cf56689';
 
-describe.skip('quoteUniswapX-v2', function () {
+describe('quoteUniswapX-v2', function () {
   let baseTest: BaseIntegrationTestSuite;
 
   // Help with test flakiness by retrying.
