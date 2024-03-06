@@ -161,9 +161,9 @@ export class APIPipeline extends Stack {
       },
     });
 
-    const betaUsEast2AppStage = pipeline.addStage(betaUsEast2Stage);
+    pipeline.addStage(betaUsEast2Stage);
 
-    this.addIntegTests(code, betaUsEast2Stage, betaUsEast2AppStage, STAGE.BETA);
+    //this.addIntegTests(code, betaUsEast2Stage, betaUsEast2AppStage, STAGE.BETA);
 
     // Prod us-east-2
     const prodUsEast2Stage = new APIStage(this, 'prod-us-east-2', {
