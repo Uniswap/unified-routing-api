@@ -248,6 +248,10 @@ export class APIPipeline extends Stack {
             value: 'force-portion-secret',
             type: BuildEnvironmentVariableType.SECRETS_MANAGER,
           },
+          PARAM_API_URL: {
+            value: `${stage}/param-api/url`,
+            type: BuildEnvironmentVariableType.SECRETS_MANAGER,
+          },
         },
       },
       commands: [
