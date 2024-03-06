@@ -1,6 +1,6 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { AllowanceTransfer, PermitSingle } from '@uniswap/permit2-sdk';
-import { ChainId, CurrencyAmount, Ether, Token, WETH9 } from '@uniswap/sdk-core';
+import { ChainId, CurrencyAmount, Ether, Fraction, Token, WETH9 } from '@uniswap/sdk-core';
 import {
   CEUR_CELO,
   CEUR_CELO_ALFAJORES,
@@ -23,15 +23,32 @@ import { AxiosResponse } from 'axios';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import chaiSubset from 'chai-subset';
-import { BigNumber } from 'ethers';
+import { BigNumber, Wallet } from 'ethers';
 import _ from 'lodash';
 import { SUPPORTED_CHAINS } from '../../lib/config/chains';
 import { RoutingType } from '../../lib/constants';
-import { ClassicQuoteDataJSON } from '../../lib/entities/quote';
+import { ClassicQuoteDataJSON, V2PoolInRouteJSON } from '../../lib/entities/quote';
 import { QuoteRequestBodyJSON } from '../../lib/entities/request';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
-import { DAI_ON, getAmount, getAmountFromToken, UNI_MAINNET, USDC_ON, WNATIVE_ON } from '../utils/tokens';
-import { BaseIntegrationTestSuite, call, callAndExpectFail, checkQuoteToken } from './base.test';
+import { FLAT_PORTION, getTestAmount, GREENLIST_STABLE_TO_STABLE_PAIRS, GREENLIST_TOKEN_PAIRS } from '../constants';
+import {
+  BULLET,
+  BULLET_WHT_FOT_TAX,
+  DAI_ON,
+  getAmount,
+  getAmountFromToken,
+  UNI_MAINNET,
+  USDC_ON,
+  WNATIVE_ON,
+} from '../utils/tokens';
+import {
+  BaseIntegrationTestSuite,
+  call,
+  callAndExpectFail,
+  checkPortionRecipientToken,
+  checkQuoteToken,
+  isTesterPKEnvironmentSet,
+} from './base.test';
 
 chai.use(chaiAsPromised);
 chai.use(chaiSubset);
@@ -922,7 +939,6 @@ describe('quote', function () {
           }
         });
 
-        /* TODO: temporarily disable for an incident hot-fix
         if (algorithm == 'alpha') {
           describe(`+ Simulate Swap + Execute Swap`, () => {
             it(`erc20 -> erc20`, async () => {
@@ -1847,7 +1863,6 @@ describe('quote', function () {
             }
           });
         }
-        */
 
         it(`erc20 -> erc20 no recipient/deadline/slippage`, async () => {
           const quoteReq: QuoteRequestBodyJSON = {
