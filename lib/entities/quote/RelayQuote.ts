@@ -94,7 +94,7 @@ export class RelayQuote implements IQuote {
       request,
       request.info.tokenInChainId,
       request.info.requestId,
-      uuidv4(), // synthetic quote doesn't receive a quoteId from RFQ api, so generate one
+      uuidv4(),
       request.info.tokenIn,
       quote.request.info.tokenOut,
       quote.amountIn, // apply no gas adjustment
@@ -104,9 +104,9 @@ export class RelayQuote implements IQuote {
       startAmounts.amountInGasToken,
       endAmounts.amountInGasToken,
       request.config.swapper,
-      quote.amountInGasAndPortionAdjusted,
-      quote.amountOutGasAndPortionAdjusted,
-      generateRandomNonce() // synthetic quote has no nonce
+      quote.amountInGasAndPortionAdjusted, // store gas and portion adjusted values for comparison
+      quote.amountOutGasAndPortionAdjusted, // store gas and portion adjusted values for comparison
+      generateRandomNonce() // add nonce
     );
   }
 
@@ -124,7 +124,7 @@ export class RelayQuote implements IQuote {
     public readonly amountInEnd: BigNumber,
     public readonly amountOutStart: BigNumber,
     public readonly amountOutEnd: BigNumber,
-    // Used for gas token
+    // Used for gas token parameterization
     public readonly amountInGasTokenStart: BigNumber,
     public readonly amountInGasTokenEnd: BigNumber,
     public readonly swapper: string,
