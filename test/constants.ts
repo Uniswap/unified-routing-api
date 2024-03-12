@@ -442,7 +442,7 @@ export const RELAY_PERMIT = {
         type: 'address',
       },
     ],
-    OrderInfo: [
+    RelayOrderInfo: [
       {
         name: 'reactor',
         type: 'address',
