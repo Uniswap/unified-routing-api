@@ -529,7 +529,7 @@ describe('quote', function () {
               const percentDiff = tokensDiff.asFraction.divide(quoteReq.amount);
               // After Dencun, start seeing exact out amount has slight rounding error
               // We will tolerate by 0.0001% for now
-              expect(percentDiff.lessThan(new Fraction(parseInt(1), 1000000)));
+              expect(percentDiff.lessThan(new Fraction(1, 1000000))).to.be.true;
               // Can't easily check slippage for ETH due to gas costs effecting ETH balance.
             }
           });
