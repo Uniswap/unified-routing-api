@@ -37,7 +37,7 @@ export class RelayQuoteContext implements QuoteContext {
       ...this.request.config,
       // add overrides to prefer top level swapper over nested recipient field in classic config
       simulateFromAddress: this.request.info.swapper,
-      recipient: this.request.info.swapper
+      recipient: this.request.info.swapper,
     });
     this.classicKey = classicRequest.key();
     this.log.info({ classicRequest: classicRequest.info }, 'Adding base classic request');

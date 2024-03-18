@@ -1,13 +1,14 @@
 import { Protocol } from '@uniswap/router-sdk';
 
-import { ClassicConfig, ClassicConfigJSON, defaultRequestKey, QuoteRequest, QuoteRequestInfo } from '.';
+import { BigNumber } from 'ethers';
+import { ClassicConfig, ClassicConfigJSON, defaultRequestKey, parseProtocol, QuoteRequest, QuoteRequestInfo } from '.';
 import { DEFAULT_SLIPPAGE_TOLERANCE, NATIVE_ADDRESS, RoutingType } from '../../constants';
 
 export * from './ClassicRequest';
 export * from './RelayRequest';
 
 // Relay conrigs are extended classic configs with a required gasToken
-// and optional UniswapX-like parameters for the fee escalation
+// and optional UniswapX-like parameters to customize the parametization of the fee escalation
 export interface RelayConfig extends ClassicConfig {
   swapper: string;
   gasToken: string;
@@ -42,14 +43,13 @@ export class RelayRequest implements QuoteRequest {
         ...info,
         slippageTolerance: convertedSlippage,
       },
-      {
+      Object.assign({}, body, {
+        // Classic quote specific formatting
+        protocols: body.protocols?.flatMap((p: string) => parseProtocol(p)),
+        permitAmount: body.permitAmount ? BigNumber.from(body.permitAmount) : undefined,
+        // Relay quote specific formatting
         swapper: body.swapper ?? NATIVE_ADDRESS,
-        gasToken: body.gasToken,
-        startTimeBufferSecs: body.startTimeBufferSecs,
-        auctionPeriodSecs: body.auctionPeriodSecs,
-        deadlineBufferSecs: body.deadlineBufferSecs,
-        amountInGasTokenStartOverride: body.amountInGasTokenStartOverride,
-      }
+      })
     );
   }
 
@@ -58,6 +58,7 @@ export class RelayRequest implements QuoteRequest {
   public toJSON(): RelayConfigJSON {
     return Object.assign({}, this.config, {
       routingType: RoutingType.RELAY as RoutingType.RELAY,
+      // Classic quote specific formatting
       protocols: this.config.protocols?.map((p: Protocol) => p.toString()),
       ...(this.config.permitAmount !== undefined && { permitAmount: this.config.permitAmount.toString() }),
       ...(this.info.source !== undefined && { source: this.info.source.toString() }),

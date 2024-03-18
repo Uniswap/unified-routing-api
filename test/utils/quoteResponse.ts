@@ -10,6 +10,9 @@ import {
   DutchV2Request,
   Quote,
   QuoteRequest,
+  RelayQuote,
+  RelayQuoteJSON,
+  RelayRequest,
 } from '../../lib/entities';
 import { Portion } from '../../lib/fetchers/PortionFetcher';
 
@@ -107,6 +110,8 @@ function parseQuote(
       // TODO: figure out how to determine tradetype from output JSON
       // also: is this parsing quote responses even needed outside of testing?
       return ClassicQuote.fromResponseBody(request, quote as ClassicQuoteDataJSON);
+    case RoutingType.RELAY:
+      return RelayQuote.fromResponseBody(request as RelayRequest, quote as RelayQuoteJSON);
     default:
       throw new Error(`Unknown routing type: ${routing}`);
   }
