@@ -1,10 +1,14 @@
-import { defaultRequestKey, QuoteRequest, QuoteRequestInfo } from '.';
+import { Protocol } from '@uniswap/router-sdk';
+
+import { ClassicConfig, ClassicConfigJSON, defaultRequestKey, QuoteRequest, QuoteRequestInfo } from '.';
 import { DEFAULT_SLIPPAGE_TOLERANCE, NATIVE_ADDRESS, RoutingType } from '../../constants';
 
 export * from './ClassicRequest';
 export * from './RelayRequest';
 
-export interface RelayConfig {
+// Relay conrigs are extended classic configs with a required gasToken
+// and optional UniswapX-like parameters for the fee escalation
+export interface RelayConfig extends ClassicConfig {
   swapper: string;
   gasToken: string;
   startTimeBufferSecs?: number;
@@ -18,7 +22,7 @@ export interface RelayQuoteRequestInfo extends QuoteRequestInfo {
   slippageTolerance: string;
 }
 
-export interface RelayConfigJSON {
+export interface RelayConfigJSON extends Omit<ClassicConfigJSON, 'routingType'> {
   routingType: RoutingType.RELAY;
   gasToken: string;
   swapper?: string;
@@ -54,6 +58,9 @@ export class RelayRequest implements QuoteRequest {
   public toJSON(): RelayConfigJSON {
     return Object.assign({}, this.config, {
       routingType: RoutingType.RELAY as RoutingType.RELAY,
+      protocols: this.config.protocols?.map((p: Protocol) => p.toString()),
+      ...(this.config.permitAmount !== undefined && { permitAmount: this.config.permitAmount.toString() }),
+      ...(this.info.source !== undefined && { source: this.info.source.toString() }),
     });
   }
 
