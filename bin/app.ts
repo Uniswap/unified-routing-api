@@ -147,6 +147,7 @@ export class APIPipeline extends Stack {
       envVars: {
         ...envVars,
         ...jsonRpcProviders,
+        RELOAD: '1',
         ROUTING_API_KEY: routingApiKeySecret.secretValue.toString(),
         PARAMETERIZATION_API_KEY: parameterizationApiKeySecret.secretValue.toString(),
         PARAMETERIZATION_API_URL: urlSecrets.secretValueFromJson('PARAMETERIZATION_API_BETA').toString(),
