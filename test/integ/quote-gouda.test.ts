@@ -7,7 +7,7 @@ import {
   UNI_MAINNET,
   USDC_MAINNET,
   USDT_MAINNET,
-  WBTC_MAINNET,
+  WBTC_MAINNET
 } from '@uniswap/smart-order-router';
 import { DutchOrder } from '@uniswap/uniswapx-sdk';
 import { AxiosResponse } from 'axios';
@@ -17,7 +17,7 @@ import chaiSubset from 'chai-subset';
 import { BigNumber } from 'ethers';
 import qs from 'qs';
 import { BPS, NATIVE_ADDRESS, RoutingType } from '../../lib/constants';
-import { DutchQuoteDataJSON, QuoteRequestBodyJSON, RoutingConfigJSON } from '../../lib/entities';
+import { DutchQuoteDataJSON, QuoteRequestBodyJSON, RequestSource, RoutingConfigJSON } from '../../lib/entities';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { GREENLIST_STABLE_TO_STABLE_PAIRS, GREENLIST_TOKEN_PAIRS } from '../constants';
 import { fund } from '../utils/forkAndFund';
@@ -29,7 +29,7 @@ import {
   call,
   callAndExpectFail,
   checkPortionRecipientToken,
-  checkQuoteToken,
+  checkQuoteToken
 } from './base.test';
 
 chai.use(chaiAsPromised);
@@ -467,7 +467,8 @@ describe('quoteUniswapX', function () {
                 tokenIn.chainId,
                 tokenInAddress,
                 tokenOut.chainId,
-                tokenOutAddress
+                tokenOutAddress,
+                RequestSource.UNKNOWN
               );
               expect(getPortionResponse.hasPortion).to.be.true;
               expect(getPortionResponse.portion).to.not.be.undefined;
@@ -638,7 +639,8 @@ describe('quoteUniswapX', function () {
                 tokenIn.chainId,
                 tokenInAddress,
                 tokenOut.chainId,
-                tokenOutAddress
+                tokenOutAddress,
+                RequestSource.UNKNOWN
               );
 
               if (sendPortionEnabled) {
