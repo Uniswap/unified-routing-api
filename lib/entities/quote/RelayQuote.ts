@@ -215,7 +215,6 @@ export class RelayQuote implements IQuote {
 
   public get universalRouterCalldata(): string {
     const route = this.classicQuote.toJSON().route;
-    console.log(this.slippage);
     return SwapRouter.swapCallParameters(new UniswapTrade(RouterTradeAdapter.fromClassicQuote({
       route,
       tokenIn: this.tokenIn,
