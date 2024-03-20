@@ -26,8 +26,8 @@ export enum RoutingType {
   DUTCH_V2 = 'DUTCH_V2',
 }
 
-export const DEFAULT_POSITIVE_CACHE_ENTRY_TTL = 600; // 10 minutes
-export const DEFAULT_NEGATIVE_CACHE_ENTRY_TTL = 600; // 10 minute
+export const DEFAULT_POSITIVE_CACHE_ENTRY_TTL = 300; // 5 minutes
+export const DEFAULT_NEGATIVE_CACHE_ENTRY_TTL = 300; // 5 minutes
 
 // we need this functional style of always enquirying the env var,
 // otherwise when assigning process.env.ENABLE_PORTION to const variables,

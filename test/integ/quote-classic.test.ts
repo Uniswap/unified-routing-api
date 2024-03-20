@@ -28,7 +28,7 @@ import _ from 'lodash';
 import { SUPPORTED_CHAINS } from '../../lib/config/chains';
 import { RoutingType } from '../../lib/constants';
 import { ClassicQuoteDataJSON, V2PoolInRouteJSON } from '../../lib/entities/quote';
-import { QuoteRequestBodyJSON } from '../../lib/entities/request';
+import { QuoteRequestBodyJSON, RequestSource } from '../../lib/entities/request';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { FLAT_PORTION, getTestAmount, GREENLIST_STABLE_TO_STABLE_PAIRS, GREENLIST_TOKEN_PAIRS } from '../constants';
 import {
@@ -1467,12 +1467,14 @@ describe('quote', function () {
                   const tokenOutSymbol = tokenOut.symbol!;
                   const tokenInAddress = tokenIn.isNative ? tokenInSymbol : tokenIn.address;
                   const tokenOutAddress = tokenOut.isNative ? tokenOutSymbol : tokenOut.address;
+                  const requestSource = RequestSource.UNISWAP_IOS;
                   const amount = await getAmountFromToken(type, tokenIn.wrapped, tokenOut.wrapped, originalAmount);
                   const getPortionResponse = await baseTest.portionFetcher.getPortion(
                     tokenIn.chainId,
                     tokenInAddress,
                     tokenOut.chainId,
-                    tokenOutAddress
+                    tokenOutAddress,
+                    requestSource
                   );
 
                   expect(getPortionResponse.hasPortion).to.be.true;
@@ -1622,12 +1624,14 @@ describe('quote', function () {
                   const tokenOutSymbol = tokenOut.symbol!;
                   const tokenInAddress = tokenIn.isNative ? tokenInSymbol : tokenIn.address;
                   const tokenOutAddress = tokenOut.isNative ? tokenOutSymbol : tokenOut.address;
+                  const requestSource = RequestSource.UNISWAP_ANDROID;
                   const amount = await getAmountFromToken(type, tokenIn.wrapped, tokenOut.wrapped, originalAmount);
                   const getPortionResponse = await baseTest.portionFetcher.getPortion(
                     tokenIn.chainId,
                     tokenInAddress,
                     tokenOut.chainId,
-                    tokenOutAddress
+                    tokenOutAddress,
+                    requestSource
                   );
 
                   expect(getPortionResponse.hasPortion).to.be.false;
