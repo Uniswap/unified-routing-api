@@ -52,7 +52,7 @@ if (!process.env.PORTION_API_URL) {
 
 // URA endpoint
 const API = `${process.env.UNISWAP_API!}quote`;
-const hardQuoteAPI = `${process.env.PARAMETERIZATION_API_URL!}hard-quote`;
+const hardQuoteAPI = `${process.env.PARAM_API_URL!}hard-quote`;
 
 const SLIPPAGE = '5';
 

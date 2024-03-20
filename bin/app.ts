@@ -162,7 +162,6 @@ export class APIPipeline extends Stack {
     });
 
     const betaUsEast2AppStage = pipeline.addStage(betaUsEast2Stage);
-
     this.addIntegTests(code, betaUsEast2Stage, betaUsEast2AppStage, STAGE.BETA);
 
     // Prod us-east-2
@@ -247,7 +246,11 @@ export class APIPipeline extends Stack {
           FORCE_PORTION_SECRET: {
             value: 'force-portion-secret',
             type: BuildEnvironmentVariableType.SECRETS_MANAGER,
-          }
+          },
+          PARAM_API_URL: {
+            value: `${stage}/param-api/url`,
+            type: BuildEnvironmentVariableType.SECRETS_MANAGER,
+          },
         },
       },
       commands: [

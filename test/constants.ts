@@ -654,7 +654,7 @@ export function getTestAmount(currency: Currency): string {
     case XSGD_MAINNET:
       return '1000';
     case DAI_ON(ChainId.MAINNET):
-      return '1000';
+      return '5000';
     case WBTC_MAINNET:
       return '1';
     default:

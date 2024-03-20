@@ -19,6 +19,7 @@ export const SUPPORTED_CHAINS = {
     ChainId.AVALANCHE,
     ChainId.BASE_GOERLI,
     ChainId.BASE,
+    ChainId.BLAST,
   ],
   [RoutingType.DUTCH_LIMIT]: [ChainId.MAINNET, ChainId.POLYGON, ChainId.GOERLI],
   [RoutingType.RELAY]: [ChainId.MAINNET, ChainId.GOERLI],
