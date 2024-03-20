@@ -16,16 +16,14 @@ export type RelayQuoteContextProviders = {
 export class RelayQuoteContext implements QuoteContext {
   routingType: RoutingType.RELAY;
   private log: Logger;
-  private rpcProvider: ethers.providers.StaticJsonRpcProvider;
 
   public requestKey: string;
   public classicKey: string;
   public routeToNativeKey: string;
   public needsRouteToNative: boolean;
 
-  constructor(_log: Logger, public request: RelayRequest, providers: RelayQuoteContextProviders) {
+  constructor(_log: Logger, public request: RelayRequest, _providers: RelayQuoteContextProviders) {
     this.log = _log.child({ context: 'RelayQuoteContext' });
-    this.rpcProvider = providers.rpcProvider;
     this.requestKey = this.request.key();
   }
 
@@ -62,7 +60,7 @@ export class RelayQuoteContext implements QuoteContext {
   // return either the relay quote or a constructed relay quote from  classic dependency
   async resolve(dependencies: QuoteByKey): Promise<Quote | null> {
     const quote = await this.resolveHandler(dependencies);
-    if (!quote || (quote as RelayQuote).amountOutEnd.eq(0)) return null;
+    if (!quote || (quote as RelayQuote).amountOut.eq(0)) return null;
     return quote;
   }
 

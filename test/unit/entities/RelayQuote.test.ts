@@ -5,7 +5,7 @@ import { it } from '@jest/globals';
 import { DEFAULT_START_TIME_BUFFER_SECS } from '../../../lib/constants';
 import { RelayQuote } from '../../../lib/entities';
 import {
-    CLASSIC_QUOTE_DATA_WITH_METHOD_PARAMETERS_AND_GAS_TOKEN,
+    CLASSIC_QUOTE_DATA_WITH_ROUTE_AND_GAS_TOKEN,
   createClassicQuote,
   createRelayQuote,
   createRelayQuoteWithRequest,
@@ -54,7 +54,7 @@ describe('RelayQuote', () => {
     });
   });
 
-//   export const CLASSIC_QUOTE_DATA_WITH_METHOD_PARAMETERS_AND_GAS_TOKEN = {
+//   export const CLASSIC_QUOTE_DATA_WITH_ROUTE_AND_GAS_TOKEN = {
 //     routing: RoutingType.CLASSIC,
 //     quote: {
 //       requestId: 'requestId',
@@ -100,15 +100,15 @@ describe('RelayQuote', () => {
       });
 
       const order = quote.toOrder();
-      // expect that the order has the same built calldata as the quote
-      expect(order.info.universalRouterCalldata).toEqual(CLASSIC_QUOTE_DATA_WITH_METHOD_PARAMETERS_AND_GAS_TOKEN.quote.methodParameters.calldata);
+      // expect generated calldata from quote class to be added to order
+      expect(quote.universalRouterCalldata).toEqual(order.info.universalRouterCalldata);
     });
   });
 
   describe('fromClassicQuote', () => {
     it('Succeeds - Generates nonce on initialization with portion flag %p', () => {
       const classicQuote = createClassicQuote(
-        CLASSIC_QUOTE_DATA_WITH_METHOD_PARAMETERS_AND_GAS_TOKEN.quote,
+        CLASSIC_QUOTE_DATA_WITH_ROUTE_AND_GAS_TOKEN.quote,
         {}
       );
       const relayRequest = makeRelayRequest({ type: 'EXACT_INPUT' });

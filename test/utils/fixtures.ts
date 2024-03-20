@@ -38,6 +38,7 @@ import {
 } from '../constants';
 import { buildQuoteResponse } from './quoteResponse';
 import { BULLET_WHT_FOT_TAX } from './tokens';
+import { PoolType } from '@uniswap/universal-router-sdk';
 
 export const BASE_REQUEST_INFO_EXACT_IN = {
   tokenInChainId: CHAIN_IN_ID,
@@ -337,7 +338,7 @@ export const CLASSIC_QUOTE_DATA_WITH_FOX_TAX = {
     route: [
       [
         {
-          type: 'v2-pool',
+          type: PoolType.V2Pool,
           address: '0x0D0A1767da735F725f41c4315E072c63Dbc6ab3D',
           tokenIn: {
             chainId: ChainId.MAINNET,
@@ -381,7 +382,10 @@ export const CLASSIC_QUOTE_DATA_WITH_FOX_TAX = {
   },
 };
 
-export const CLASSIC_QUOTE_DATA_WITH_METHOD_PARAMETERS_AND_GAS_TOKEN = {
+export const CLASSIC_QUOTE_DATA_WITH_ROUTE_AND_GAS_TOKEN: {
+  routing: RoutingType.CLASSIC;
+  quote: ClassicQuoteDataJSON;
+} = {
   routing: RoutingType.CLASSIC,
   quote: {
     requestId: 'requestId',
@@ -401,16 +405,47 @@ export const CLASSIC_QUOTE_DATA_WITH_METHOD_PARAMETERS_AND_GAS_TOKEN = {
     simulationStatus: 'start',
     gasPriceWei: '10000',
     blockNumber: '1234',
-    route: [],
-    routeString: 'USD-ETH',
-    permitNonce: '1',
+    route: [
+      [{
+        type: PoolType.V2Pool,
+        address: '0x0D0A1767da735F725f41c4315E072c63Dbc6ab3D',
+        tokenIn: {
+          chainId: ChainId.MAINNET,
+          decimals: '18',
+          address: TOKEN_IN,
+          symbol: 'UNI',
+        },
+        tokenOut: {
+          chainId: ChainId.MAINNET,
+          decimals: '18',
+          address: TOKEN_OUT,
+          symbol: 'WETH',
+        },
+        reserve0: {
+          token: {
+            chainId: ChainId.MAINNET,
+            decimals: '18',
+            address: TOKEN_IN,
+            symbol: 'UNI',
+          },
+          quotient: AMOUNT,
+        },
+        reserve1: {
+          token: {
+            chainId: ChainId.MAINNET,
+            decimals: '18',
+            address: TOKEN_OUT,
+            symbol: 'WETH',
+          },
+          quotient: AMOUNT,
+        },
+        amountIn: AMOUNT,
+        amountOut: AMOUNT,
+      }]
+    ],
+    routeString: 'UNI-ETH',
     tradeType: 'exactIn',
     slippage: 0.5,
-    methodParameters: {
-      to: '0x',
-      calldata: '0x',
-      value: '0',
-    },
     portionBips: 0, // always assume portion will get returned from routing-api
     portionRecipient: '0x0000000000000000000000000000000000000000',
   },
@@ -473,7 +508,7 @@ const RELAY_QUOTE_DATA: {
     amountInGasTokenStart: AMOUNT,
     amountInGasTokenEnd: AMOUNT,
     swapper: SWAPPER,
-    classicQuoteData: CLASSIC_QUOTE_DATA_WITH_METHOD_PARAMETERS_AND_GAS_TOKEN.quote,
+    classicQuoteData: CLASSIC_QUOTE_DATA_WITH_ROUTE_AND_GAS_TOKEN.quote,
   },
 };
 
