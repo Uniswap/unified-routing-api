@@ -91,13 +91,17 @@ describe('RelayQuote', () => {
 
   describe('toJSON', () => {
     it('Succeeds', () => {
-      const quote = createRelayQuote({ amountOut: '10000' }, 'EXACT_INPUT', '1') as any;
-      const result = quote.toJSON();
+      const quote = createRelayQuote({ amountOut: '10000' }, 'EXACT_INPUT', '1');
+      const quoteJSON = quote.toJSON();
 
-      expect(result).toMatchObject({
+      expect(quoteJSON).toMatchObject({
         requestId: 'requestId',
-        quoteId: '1'
+        quoteId: 'quoteId'
       });
+
+      const order = quote.toOrder();
+      // expect that the order has the same built calldata as the quote
+      expect(order.info.universalRouterCalldata).toEqual(CLASSIC_QUOTE_DATA_WITH_METHOD_PARAMETERS_AND_GAS_TOKEN.quote.methodParameters.calldata);
     });
   });
 

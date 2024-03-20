@@ -1,5 +1,5 @@
 import { RelayOrder, RelayOrderBuilder, RelayOrderInfoJSON } from '@uniswap/uniswapx-sdk';
-import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
+import { RouterTradeAdapter, SwapRouter, UNIVERSAL_ROUTER_ADDRESS, UniswapTrade } from '@uniswap/universal-router-sdk';
 import { BigNumber, ethers } from 'ethers';
 
 import { IQuote } from '.';
@@ -10,6 +10,7 @@ import { RelayRequest } from '../request/RelayRequest';
 import { ClassicQuote, ClassicQuoteDataJSON } from './ClassicQuote';
 import { LogJSON } from './index';
 import { PermitBatchTransferFromData } from '@uniswap/permit2-sdk';
+import { Percent } from '@uniswap/sdk-core';
 
 // Data returned by the API
 export type RelayQuoteDataJSON = {
@@ -156,7 +157,7 @@ export class RelayQuote implements IQuote {
   }
 
   // Callers MUST add the calldata to the order before submitting it
-  // We return an order builder here instead of an order to enforce this
+  // by default we build orders with calldata that will revert
   public toOrder(): RelayOrder {
     const orderBuilder = new RelayOrderBuilder(this.chainId);
     const feeStartTime = Math.floor(Date.now() / 1000);
@@ -180,8 +181,7 @@ export class RelayQuote implements IQuote {
         startTime: feeStartTime,
         endTime: feeStartTime + this.auctionPeriodSecs,
       })
-      // TODO:
-      .universalRouterCalldata(this.classicQuoteData.methodParameters?.calldata ?? '0x');
+      .universalRouterCalldata(this.universalRouterCalldata);
 
     return builder.build();
   }
@@ -207,6 +207,20 @@ export class RelayQuote implements IQuote {
 
   getPermitData(): PermitBatchTransferFromData {
     return this.toOrder().permitData();
+  }
+
+  public get universalRouterCalldata(): string {
+    return SwapRouter.swapCallParameters(new UniswapTrade(RouterTradeAdapter.fromClassicQuote({
+      route: this.classicQuote.toJSON().route,
+      tokenIn: this.tokenIn,
+      tokenOut: this.tokenOut,
+      tradeType: this.request.info.type,
+    }), {
+      slippageTolerance: new Percent(this.request.info.slippageTolerance, 100),
+      recipient: this.swapper,
+    }), {
+      
+    }).calldata;
   }
 
   // Value used only for comparing relay quotes vs. other types of quotes
