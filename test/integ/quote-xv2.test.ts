@@ -89,7 +89,7 @@ describe('quoteUniswapX-v2', function () {
             expect(status).to.equal(200);
             expect(order.info.cosigner).to.equal(ethers.constants.AddressZero);
             expect(order.info.swapper).to.equal(alice.address);
-            expect(order.info.baseOutputs.length).to.equal(1);
+            expect(order.info.outputs.length).to.equal(1);
           } catch (e: any) {
             expect(e.response.status).to.equal(404);
             expect(e.response.data.detail).to.equal('No quotes available');
@@ -127,11 +127,11 @@ describe('quoteUniswapX-v2', function () {
           expect(status).to.equal(200);
 
           expect(order.info.swapper).to.equal(alice.address);
-          expect(order.info.baseOutputs.length).to.equal(1);
-          expect(parseInt(order.info.baseOutputs[0].startAmount.toString())).to.be.greaterThan(9000000000);
-          expect(parseInt(order.info.baseOutputs[0].startAmount.toString())).to.be.lessThan(11000000000);
-          expect(parseInt(order.info.baseInput.startAmount.toString())).to.be.greaterThan(9000000000);
-          expect(parseInt(order.info.baseInput.startAmount.toString())).to.be.lessThan(11000000000);
+          expect(order.info.outputs.length).to.equal(1);
+          expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.greaterThan(9000000000);
+          expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.lessThan(11000000000);
+          expect(parseInt(order.info.input.startAmount.toString())).to.be.greaterThan(9000000000);
+          expect(parseInt(order.info.input.startAmount.toString())).to.be.lessThan(11000000000);
 
           // user accepts and signs quote
           const { domain, types, values } = order.permitData();

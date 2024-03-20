@@ -209,20 +209,23 @@ export class RelayQuote implements IQuote {
     return this.toOrder().permitData();
   }
 
+  public get slippage(): Percent {
+    return new Percent(parseFloat(this.request.info.slippageTolerance) * 100, 10_000)
+  }
+
   public get universalRouterCalldata(): string {
     const route = this.classicQuote.toJSON().route;
-    console.log(route, this.tokenIn, this.tokenOut);
+    console.log(this.slippage);
     return SwapRouter.swapCallParameters(new UniswapTrade(RouterTradeAdapter.fromClassicQuote({
       route,
       tokenIn: this.tokenIn,
       tokenOut: this.tokenOut,
       tradeType: this.request.info.type,
     }), {
-      slippageTolerance: new Percent(parseFloat(this.request.info.slippageTolerance), 100),
+      slippageTolerance: this.slippage,
       recipient: this.swapper,
-    }), {
-      
-    }).calldata;
+      payerIsUser: false
+    })).calldata;
   }
 
   // Value used only for comparing relay quotes vs. other types of quotes
