@@ -491,7 +491,7 @@ export const { quoteRequests: QUOTE_REQUEST_RELAY_MULTI } = parseQuoteRequests({
     },
   ],
 });
-const RELAY_QUOTE_DATA: {
+export const RELAY_QUOTE_DATA: {
   routing: RoutingType.RELAY;
   quote: RelayQuoteJSON;
 } = {
@@ -819,13 +819,13 @@ export function createRelayQuoteWithRequest(
   overrides: Partial<RelayQuoteJSON>,
   requestOverrides: Partial<QuoteRequestBodyJSON>,
   configOverrides?: Partial<RelayConfigJSON>
-): DutchQuote {
+): RelayQuote {
   return buildQuoteResponse(
     Object.assign({}, RELAY_QUOTE_DATA, {
       quote: { ...RELAY_QUOTE_DATA.quote, type: RoutingType.RELAY, ...overrides },
     }),
     makeRelayRequest({ ...requestOverrides }, configOverrides)
-  ) as DutchQuote;
+  ) as RelayQuote;
 }
 
 export const RELAY_QUOTE_EXACT_IN_BETTER = createRelayQuote(

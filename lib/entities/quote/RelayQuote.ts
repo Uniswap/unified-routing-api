@@ -1,7 +1,9 @@
 import { RelayOrder, RelayOrderBuilder, RelayOrderInfoJSON } from '@uniswap/uniswapx-sdk';
-import { RouterTradeAdapter, SwapRouter, UNIVERSAL_ROUTER_ADDRESS, UniswapTrade } from '@uniswap/universal-router-sdk';
+import { RouterTradeAdapter, SwapRouter, UniswapTrade, UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { BigNumber, ethers } from 'ethers';
 
+import { PermitBatchTransferFromData } from '@uniswap/permit2-sdk';
+import { Percent } from '@uniswap/sdk-core';
 import { IQuote } from '.';
 import { DEFAULT_START_TIME_BUFFER_SECS, RELAY_BASE_GAS, RoutingType } from '../../constants';
 import { generateRandomNonce } from '../../util/nonce';
@@ -9,8 +11,6 @@ import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
 import { RelayRequest } from '../request/RelayRequest';
 import { ClassicQuote, ClassicQuoteDataJSON } from './ClassicQuote';
 import { LogJSON } from './index';
-import { PermitBatchTransferFromData } from '@uniswap/permit2-sdk';
-import { Percent } from '@uniswap/sdk-core';
 
 // Data returned by the API
 export type RelayQuoteDataJSON = {
@@ -41,7 +41,7 @@ export type RelayQuoteJSON = {
   gasToken: string;
   // from classic quote
   classicQuoteData: ClassicQuoteDataJSON;
-}
+};
 
 type RelayQuoteConstructorArgs = {
   createdAtMs?: string;
@@ -98,7 +98,7 @@ export class RelayQuote implements IQuote {
       amountInGasTokenEnd: BigNumber.from(body.amountInGasTokenEnd),
       swapper: body.swapper,
       classicQuoteData: body.classicQuoteData,
-      nonce
+      nonce,
     });
   }
 
@@ -210,21 +210,26 @@ export class RelayQuote implements IQuote {
   }
 
   public get slippage(): Percent {
-    return new Percent(parseFloat(this.request.info.slippageTolerance) * 100, 10_000)
+    return new Percent(parseFloat(this.request.info.slippageTolerance) * 100, 10_000);
   }
 
   public get universalRouterCalldata(): string {
     const route = this.classicQuote.toJSON().route;
-    return SwapRouter.swapCallParameters(new UniswapTrade(RouterTradeAdapter.fromClassicQuote({
-      route,
-      tokenIn: this.tokenIn,
-      tokenOut: this.tokenOut,
-      tradeType: this.request.info.type,
-    }), {
-      slippageTolerance: this.slippage,
-      recipient: this.swapper,
-      payerIsUser: false
-    })).calldata;
+    return SwapRouter.swapCallParameters(
+      new UniswapTrade(
+        RouterTradeAdapter.fromClassicQuote({
+          route,
+          tokenIn: this.tokenIn,
+          tokenOut: this.tokenOut,
+          tradeType: this.request.info.type,
+        }),
+        {
+          slippageTolerance: this.slippage,
+          recipient: this.swapper,
+          payerIsUser: false,
+        }
+      )
+    ).calldata;
   }
 
   // Value used only for comparing relay quotes vs. other types of quotes
@@ -301,7 +306,11 @@ export class RelayQuote implements IQuote {
 
   // return the amounts, with the gasAdjustment value taken out
   // classicQuote used to get the gas price values in quote token
-  static getGasAdjustedAmounts(amountInGasToken: BigNumber, gasAdjustment: BigNumber, _classicQuote: ClassicQuote): BigNumber {
+  static getGasAdjustedAmounts(
+    amountInGasToken: BigNumber,
+    gasAdjustment: BigNumber,
+    _classicQuote: ClassicQuote
+  ): BigNumber {
     // TODO: naively for now just add 25% buffer
     const amountInGasTokenEnd = amountInGasToken.add(gasAdjustment.mul(125).div(100));
     return amountInGasTokenEnd;
