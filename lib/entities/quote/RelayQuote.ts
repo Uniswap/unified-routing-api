@@ -228,7 +228,7 @@ export class RelayQuote implements IQuote {
           slippageTolerance: this.slippage,
           recipient: this.swapper,
           payerIsUser: false,
-          deadlineOrPreviousBlockhash: deadline
+          deadlineOrPreviousBlockhash: deadline,
         }
       )
     ).calldata;

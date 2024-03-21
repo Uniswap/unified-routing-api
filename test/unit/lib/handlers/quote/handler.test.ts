@@ -483,6 +483,7 @@ describe('QuoteHandler', () => {
           permit2Fetcher,
           syntheticStatusProvider
         ).handler(getEvent(RELAY_REQUEST_BODY), {} as unknown as Context);
+        console.log(res.body);
         const quoteJSON = JSON.parse(res.body).quote.orderInfo as RelayOrderInfoJSON;
         expect(quoteJSON.input.amount).toBe(RELAY_QUOTE_EXACT_IN_BETTER.amountIn.toString());
       });

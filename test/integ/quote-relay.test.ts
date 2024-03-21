@@ -9,7 +9,7 @@ import chaiAsPromised from 'chai-as-promised';
 import chaiSubset from 'chai-subset';
 import _ from 'lodash';
 import { RoutingType } from '../../lib/constants';
-import { QuoteRequestBodyJSON, RoutingConfigJSON } from '../../lib/entities';
+import { QuoteRequestBodyJSON, RelayQuoteDataJSON, RoutingConfigJSON } from '../../lib/entities';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { RelayOrderReactor__factory } from '../../lib/types/ext';
 import { getAmount } from '../utils/tokens';
@@ -31,7 +31,7 @@ describe('relayQuote', function () {
   let alice: SignerWithAddress;
   let filler: SignerWithAddress;
 
-  before(async function () {
+  beforeEach(async function () {
     baseTest = new BaseIntegrationTestSuite();
     [alice, filler] = await baseTest.before();
     // deploy reactor
@@ -43,14 +43,14 @@ describe('relayQuote', function () {
   for (const type of ['EXACT_INPUT', 'EXACT_OUTPUT']) {
     describe(`${ID_TO_NETWORK_NAME(1)} ${type} 2xx`, () => {
       describe(`+ Execute Swap`, () => {
-        it(`stable -> stable, gas token == input token, no encoded universalRouterCalldata`, async () => {
+        it(`stable -> stable, gas token == input token`, async () => {
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
             tokenIn: USDC_MAINNET.address,
             tokenInChainId: 1,
             tokenOut: USDT_MAINNET.address,
             tokenOutChainId: 1,
-            amount: await getAmount(1, type, 'USDC', 'USDT', '10000'),
+            amount: await getAmount(1, type, 'USDC', 'USDT', '100'),
             type,
             slippageTolerance: SLIPPAGE,
             configs: [
@@ -68,17 +68,16 @@ describe('relayQuote', function () {
             status,
           } = response;
 
-          const order = new RelayOrder((quote as any).orderInfo, 1);
           expect(status).to.equal(200);
-
+          const order = RelayOrder.parse((quote as RelayQuoteDataJSON).encodedOrder, 1);
           order.info.reactor = reactorAddress;
-          order.info.universalRouterCalldata = '0x';
 
           expect(order.info.swapper).to.equal(alice.address);
           expect(order.info.input).to.not.be.undefined;
           expect(order.info.fee).to.not.be.undefined;
-          expect(parseInt(order.info.input.amount.toString())).to.be.greaterThan(9000000000);
-          expect(parseInt(order.info.input.amount.toString())).to.be.lessThan(11000000000);
+          expect(order.info.universalRouterCalldata).to.not.be.undefined;
+          expect(parseInt(order.info.input.amount.toString())).to.be.greaterThan(90000000);
+          expect(parseInt(order.info.input.amount.toString())).to.be.lessThan(110000000);
 
           const { tokenInBefore, tokenInAfter } = await baseTest.executeRelaySwap(
             alice,
@@ -100,14 +99,14 @@ describe('relayQuote', function () {
           ).to.be.true;
         });
 
-        it(`stable -> stable, gas token != input token, no encoded universalRouterCalldata`, async () => {
+        it(`stable -> stable, gas token != input token`, async () => {
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
             tokenIn: USDC_MAINNET.address,
             tokenInChainId: 1,
             tokenOut: USDT_MAINNET.address,
             tokenOutChainId: 1,
-            amount: await getAmount(1, type, 'USDC', 'USDT', '10000'),
+            amount: await getAmount(1, type, 'USDC', 'USDT', '100'),
             type,
             slippageTolerance: SLIPPAGE,
             configs: [
@@ -129,14 +128,14 @@ describe('relayQuote', function () {
           expect(status).to.equal(200);
 
           order.info.reactor = reactorAddress;
-          order.info.universalRouterCalldata = '0x';
 
           expect(order.info.swapper).to.equal(alice.address);
           expect(order.info.input).to.not.be.undefined;
           expect(order.info.fee).to.not.be.undefined;
+          expect(order.info.universalRouterCalldata).to.not.be.undefined;
 
-          expect(parseInt(order.info.input.amount.toString())).to.be.greaterThan(9000000000);
-          expect(parseInt(order.info.input.amount.toString())).to.be.lessThan(11000000000);
+          expect(parseInt(order.info.input.amount.toString())).to.be.greaterThan(90000000);
+          expect(parseInt(order.info.input.amount.toString())).to.be.lessThan(110000000);
 
           const { tokenInBefore, tokenInAfter, gasTokenBefore, gasTokenAfter } = await baseTest.executeRelaySwap(
             alice,
