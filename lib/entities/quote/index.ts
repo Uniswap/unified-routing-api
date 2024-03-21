@@ -44,8 +44,8 @@ export type LogJSON = {
   portionAmountOutStart?: string;
   portionAmountOutEnd?: string;
   gasToken?: string;
-  amountInGasToken?: string;
-  endAmountInGasToken?: string;
+  amountInGasTokenStart?: string;
+  amountInGasTokenEnd?: string;
 };
 
 export interface IQuote {

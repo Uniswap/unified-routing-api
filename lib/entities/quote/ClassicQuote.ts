@@ -3,6 +3,7 @@ import { MethodParameters } from '@uniswap/smart-order-router';
 import { BigNumber } from 'ethers';
 
 import { PermitDetails, PermitSingleData, PermitTransferFromData } from '@uniswap/permit2-sdk';
+import { V2PoolInRoute, V3PoolInRoute } from '@uniswap/universal-router-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { QuoteRequest } from '..';
 import { RoutingType } from '../../constants';
@@ -10,44 +11,6 @@ import { Portion, PortionType } from '../../fetchers/PortionFetcher';
 import { createPermitData } from '../../util/permit2';
 import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
 import { IQuote, LogJSON } from './index';
-
-export type V2ReserveJSON = {
-  token: TokenInRouteJSON;
-  quotient: string;
-};
-
-export type V2PoolInRouteJSON = {
-  type: 'v2-pool';
-  address: string;
-  tokenIn: TokenInRouteJSON;
-  tokenOut: TokenInRouteJSON;
-  reserve0: V2ReserveJSON;
-  reserve1: V2ReserveJSON;
-  amountIn?: string;
-  amountOut?: string;
-};
-
-export type TokenInRouteJSON = {
-  address: string;
-  chainId: number;
-  symbol: string;
-  decimals: string;
-  sellFeeBps?: string;
-  buyFeeBps?: string;
-};
-
-export type V3PoolInRouteJSON = {
-  type: 'v3-pool';
-  address: string;
-  tokenIn: TokenInRouteJSON;
-  tokenOut: TokenInRouteJSON;
-  sqrtRatioX96: string;
-  liquidity: string;
-  tickCurrent: string;
-  fee: string;
-  amountIn?: string;
-  amountOut?: string;
-};
 
 export type ClassicQuoteDataJSON = {
   requestId: string;
@@ -68,7 +31,7 @@ export type ClassicQuoteDataJSON = {
   simulationStatus: string;
   gasPriceWei: string;
   blockNumber: string;
-  route: Array<(V3PoolInRouteJSON | V2PoolInRouteJSON)[]>;
+  route: Array<(V3PoolInRoute | V2PoolInRoute)[]>;
   routeString: string;
   methodParameters?: MethodParameters;
   permitData?: PermitSingleData | PermitTransferFromData;

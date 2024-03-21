@@ -3,9 +3,17 @@ import * as _ from 'lodash';
 
 import { it } from '@jest/globals';
 import { DEFAULT_START_TIME_BUFFER_SECS } from '../../../lib/constants';
-import { RelayQuote, RelayQuoteJSON } from '../../../lib/entities';
-import { AMOUNT, RELAY_PERMIT } from '../../constants';
-import { createClassicQuote, createRelayQuote, createRelayQuoteWithRequest } from '../../utils/fixtures';
+import { RelayQuote } from '../../../lib/entities';
+import {
+    CLASSIC_QUOTE_DATA_WITH_ROUTE_AND_GAS_TOKEN,
+  QUOTE_REQUEST_RELAY,
+  RELAY_QUOTE_DATA,
+  createClassicQuote,
+  createRelayQuote,
+  createRelayQuoteWithRequest,
+  makeRelayRequest,
+} from '../../utils/fixtures';
+import { AMOUNT } from '../../constants';
 
 describe('RelayQuote', () => {
   // silent logger in tests
@@ -48,68 +56,59 @@ describe('RelayQuote', () => {
     });
   });
 
-  describe('getPermit', () => {
-    it('Succeeds - Basic', () => {
-      jest.useFakeTimers({
-        now: 0,
-      });
-      const quote = createRelayQuote({}, 'EXACT_INPUT') as any;
-      quote.nonce = 1;
-      const dlQuote = quote as RelayQuote;
-      const result = dlQuote.getPermitData();
-      const expected = RELAY_PERMIT;
-      console.log(JSON.stringify(result));
-      expect(_.isEqual(JSON.stringify(result), JSON.stringify(expected))).toBe(true);
-      jest.clearAllTimers();
+  describe('toOrder', () => {
+    it('generates calldata for a classic swap and adds it', () => {
+      const quote = createRelayQuote({ amountOut: '10000' }, 'EXACT_INPUT', '1');
+      const order = quote.toOrder();
+      // expect generated calldata from quote class to be added to order
+      expect(quote.universalRouterCalldata).toEqual(order.info.universalRouterCalldata);
     });
-  });
+  })
 
   describe('toJSON', () => {
     it('Succeeds', () => {
-      const quote = createRelayQuote({ amountOut: '10000' }, 'EXACT_INPUT', '1') as any;
-      const result = quote.toJSON();
-      // TODO
-      expect(result).toMatchObject({});
-    });
-  });
+      const quote = createRelayQuote({ amountOut: '10000' }, 'EXACT_INPUT', '1');
+      const quoteJSON = quote.toJSON();
 
-  describe('fromClassicQuote', () => {
-    it('Succeeds - Generates nonce on initialization with portion flag %p', () => {
-      const classicQuote = createClassicQuote(
-        {
-          gasUseEstimateGasToken: '0',
-        },
-        {}
-      );
-      const dutchQuote = createRelayQuote({}, 'EXACT_INPUT');
-      const result = RelayQuote.fromClassicQuote(dutchQuote.request, classicQuote);
-      const firstNonce = result.toOrder().info.nonce;
-      const secondNonce = result.toOrder().info.nonce;
-      expect(firstNonce).toEqual(secondNonce);
+      expect(quoteJSON).toMatchObject({
+        requestId: 'requestId',
+        quoteId: 'quoteId'
+      });
     });
   });
 
   describe('fromResponseBody', () => {
-    it('correctly creates RelayQuote', () => {
-      const amountOut = AMOUNT;
-      const relayQuote = createRelayQuote({ amountOut }, 'EXACT_OUTPUT', '1');
-      const RELAY_QUOTE_JSON: RelayQuoteJSON = {
-        chainId: relayQuote.chainId,
-        requestId: relayQuote.requestId,
-        quoteId: relayQuote.quoteId,
-        tokenIn: relayQuote.tokenIn,
-        amountIn: relayQuote.amountIn.toString(),
-        tokenOut: relayQuote.tokenOut,
-        amountOut: relayQuote.amountOut.toString(),
-        gasToken: relayQuote.request.config.gasToken,
-        amountInGasToken: relayQuote.amountInGasTokenStart.toString(),
-        swapper: relayQuote.swapper,
-        classicAmountInGasAndPortionAdjusted: relayQuote.classicAmountInGasAndPortionAdjusted.toString(),
-        classicAmountOutGasAndPortionAdjusted: relayQuote.classicAmountOutGasAndPortionAdjusted.toString(),
-      };
-      const quote = RelayQuote.fromResponseBody(relayQuote.request, RELAY_QUOTE_JSON, relayQuote.nonce);
+    it('Succeeds', () => {
+      const relayQuote = RelayQuote.fromResponseBody(
+        QUOTE_REQUEST_RELAY,
+        RELAY_QUOTE_DATA.quote
+      );
+      expect(relayQuote).toBeDefined();
+      // check quote attr
+      expect(relayQuote.requestId).toEqual(RELAY_QUOTE_DATA.quote.requestId);
+      expect(relayQuote.quoteId).toEqual(RELAY_QUOTE_DATA.quote.quoteId);
+      expect(relayQuote.chainId).toEqual(RELAY_QUOTE_DATA.quote.chainId);
+      expect(relayQuote.amountIn.toString()).toEqual(RELAY_QUOTE_DATA.quote.amountIn);
+      expect(relayQuote.amountOut.toString()).toEqual(RELAY_QUOTE_DATA.quote.amountOut);
+      expect(relayQuote.swapper).toEqual(RELAY_QUOTE_DATA.quote.swapper);
+      expect(relayQuote.toJSON().classicQuoteData).toMatchObject(RELAY_QUOTE_DATA.quote.classicQuoteData);
+      // check request attr
+      expect(relayQuote.request.toJSON()).toMatchObject(QUOTE_REQUEST_RELAY.toJSON());
+    })
+  })
 
-      expect(quote.toJSON().orderHash).toEqual(relayQuote.toJSON().orderHash);
+  describe('fromClassicQuote', () => {
+    it('Succeeds', () => {
+      const classicQuote = createClassicQuote(
+        CLASSIC_QUOTE_DATA_WITH_ROUTE_AND_GAS_TOKEN.quote,
+        {}
+      );
+      const relayRequest = makeRelayRequest({ type: 'EXACT_INPUT' });
+      const quote = RelayQuote.fromClassicQuote(relayRequest, classicQuote);
+      expect(quote).toBeDefined();
+      expect(quote.amountInGasTokenStart.eq(AMOUNT)).toBeTruthy();
+      // Expect escalation to be applied to gas token amount
+      expect(quote.amountInGasTokenEnd.gt(quote.amountInGasTokenStart)).toBeTruthy();
     });
   });
 });

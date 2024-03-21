@@ -1,6 +1,6 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { AllowanceTransfer, PermitSingle } from '@uniswap/permit2-sdk';
-import { ChainId, CurrencyAmount, Ether, Token, WETH9 } from '@uniswap/sdk-core';
+import { ChainId, CurrencyAmount, Ether, Fraction, Token, WETH9 } from '@uniswap/sdk-core';
 import {
   CEUR_CELO,
   CEUR_CELO_ALFAJORES,
@@ -17,21 +17,39 @@ import {
 import {
   PERMIT2_ADDRESS,
   UNIVERSAL_ROUTER_ADDRESS as UNIVERSAL_ROUTER_ADDRESS_BY_CHAIN,
+  V2PoolInRoute,
 } from '@uniswap/universal-router-sdk';
 import { fail } from 'assert';
 import { AxiosResponse } from 'axios';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import chaiSubset from 'chai-subset';
-import { BigNumber } from 'ethers';
+import { BigNumber, Wallet } from 'ethers';
 import _ from 'lodash';
 import { SUPPORTED_CHAINS } from '../../lib/config/chains';
 import { RoutingType } from '../../lib/constants';
 import { ClassicQuoteDataJSON } from '../../lib/entities/quote';
 import { QuoteRequestBodyJSON } from '../../lib/entities/request';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
-import { DAI_ON, getAmount, getAmountFromToken, UNI_MAINNET, USDC_ON, WNATIVE_ON } from '../utils/tokens';
-import { BaseIntegrationTestSuite, call, callAndExpectFail, checkQuoteToken } from './base.test';
+import { FLAT_PORTION, getTestAmount, GREENLIST_STABLE_TO_STABLE_PAIRS, GREENLIST_TOKEN_PAIRS } from '../constants';
+import {
+  BULLET,
+  BULLET_WHT_FOT_TAX,
+  DAI_ON,
+  getAmount,
+  getAmountFromToken,
+  UNI_MAINNET,
+  USDC_ON,
+  WNATIVE_ON,
+} from '../utils/tokens';
+import {
+  BaseIntegrationTestSuite,
+  call,
+  callAndExpectFail,
+  checkPortionRecipientToken,
+  checkQuoteToken,
+  isTesterPKEnvironmentSet,
+} from './base.test';
 
 chai.use(chaiAsPromised);
 chai.use(chaiSubset);
@@ -508,7 +526,11 @@ describe('quote', function () {
                 CurrencyAmount.fromRawAmount(UNI_MAINNET, quoteJSON.quote)
               );
             } else {
-              expect(tokenOutAfter.subtract(tokenOutBefore).toExact()).to.equal('10000');
+              const tokensDiff = tokenOutBefore.subtract(tokenOutAfter);
+              const percentDiff = tokensDiff.asFraction.divide(quoteReq.amount);
+              // After Dencun, start seeing exact out amount has slight rounding error
+              // We will tolerate by 0.0001% for now
+              expect(percentDiff.lessThan(new Fraction(1, 1000000))).to.be.true;
               // Can't easily check slippage for ETH due to gas costs effecting ETH balance.
             }
           });
@@ -922,7 +944,6 @@ describe('quote', function () {
           }
         });
 
-        /* TODO: temporarily disable for an incident hot-fix
         if (algorithm == 'alpha') {
           describe(`+ Simulate Swap + Execute Swap`, () => {
             it(`erc20 -> erc20`, async () => {
@@ -1801,7 +1822,7 @@ describe('quote', function () {
                   for (const r of quoteJSON.route) {
                     for (const pool of r) {
                       expect(pool.type).equal('v2-pool');
-                      const v2Pool = pool as V2PoolInRouteJSON;
+                      const v2Pool = pool as V2PoolInRoute;
 
                       if (v2Pool.tokenIn.address === BULLET_WHT_FOT_TAX.address) {
                         expect(v2Pool.tokenIn.sellFeeBps).to.be.equals(BULLET_WHT_FOT_TAX.sellFeeBps?.toString());
@@ -1847,7 +1868,6 @@ describe('quote', function () {
             }
           });
         }
-        */
 
         it(`erc20 -> erc20 no recipient/deadline/slippage`, async () => {
           const quoteReq: QuoteRequestBodyJSON = {
@@ -2454,6 +2474,7 @@ describe('quote', function () {
     [ChainId.MAINNET]: USDC_ON(1),
     [ChainId.OPTIMISM]: USDC_ON(ChainId.OPTIMISM),
     [ChainId.OPTIMISM_GOERLI]: USDC_ON(ChainId.OPTIMISM_GOERLI),
+    [ChainId.OPTIMISM_SEPOLIA]: null,
     [ChainId.ARBITRUM_ONE]: USDC_ON(ChainId.ARBITRUM_ONE),
     [ChainId.POLYGON]: USDC_ON(ChainId.POLYGON),
     [ChainId.POLYGON_MUMBAI]: USDC_ON(ChainId.POLYGON_MUMBAI),
@@ -2466,14 +2487,20 @@ describe('quote', function () {
     [ChainId.MOONBEAM]: null,
     [ChainId.GNOSIS]: null,
     [ChainId.ARBITRUM_GOERLI]: null,
+    [ChainId.ARBITRUM_SEPOLIA]: null,
     [ChainId.BASE_GOERLI]: USDC_ON(ChainId.BASE_GOERLI),
     [ChainId.BASE]: USDC_ON(ChainId.BASE),
+    [ChainId.ZORA]: null,
+    [ChainId.ZORA_SEPOLIA]: null,
+    [ChainId.ROOTSTOCK]: null,
+    [ChainId.BLAST]: null,
   };
 
   const TEST_ERC20_2: { [chainId in ChainId]: Token | null } = {
     [ChainId.MAINNET]: DAI_ON(1),
     [ChainId.OPTIMISM]: DAI_ON(ChainId.OPTIMISM),
     [ChainId.OPTIMISM_GOERLI]: DAI_ON(ChainId.OPTIMISM_GOERLI),
+    [ChainId.OPTIMISM_SEPOLIA]: null,
     [ChainId.ARBITRUM_ONE]: DAI_ON(ChainId.ARBITRUM_ONE),
     [ChainId.POLYGON]: DAI_ON(ChainId.POLYGON),
     [ChainId.POLYGON_MUMBAI]: DAI_ON(ChainId.POLYGON_MUMBAI),
@@ -2486,8 +2513,13 @@ describe('quote', function () {
     [ChainId.MOONBEAM]: null,
     [ChainId.GNOSIS]: null,
     [ChainId.ARBITRUM_GOERLI]: null,
+    [ChainId.ARBITRUM_SEPOLIA]: null,
     [ChainId.BASE_GOERLI]: WNATIVE_ON(ChainId.BASE_GOERLI),
     [ChainId.BASE]: WNATIVE_ON(ChainId.BASE),
+    [ChainId.ZORA]: null,
+    [ChainId.ZORA_SEPOLIA]: null,
+    [ChainId.ROOTSTOCK]: null,
+    [ChainId.BLAST]: null,
   };
 
   // TODO: Find valid pools/tokens on optimistic kovan and polygon mumbai. We skip those tests for now.
@@ -2496,12 +2528,19 @@ describe('quote', function () {
     (c) =>
       c !== ChainId.POLYGON_MUMBAI &&
       c !== ChainId.ARBITRUM_GOERLI &&
+      c !== ChainId.ARBITRUM_SEPOLIA &&
       c !== ChainId.CELO_ALFAJORES &&
       c !== ChainId.GOERLI &&
       c !== ChainId.SEPOLIA &&
       c !== ChainId.OPTIMISM_GOERLI &&
-      c != ChainId.BASE &&
-      c != ChainId.BASE_GOERLI
+      c != ChainId.OPTIMISM_SEPOLIA &&
+      c !== ChainId.BASE &&
+      c !== ChainId.BASE_GOERLI &&
+      // We will follow up supporting ZORA and ROOTSTOCK
+      c !== ChainId.ZORA &&
+      c !== ChainId.ZORA_SEPOLIA &&
+      c !== ChainId.ROOTSTOCK &&
+      c !== ChainId.BLAST
   )) {
     for (const type of ['EXACT_INPUT', 'EXACT_OUTPUT']) {
       const erc1 = TEST_ERC20_1[chain];

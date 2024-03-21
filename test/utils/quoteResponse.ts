@@ -12,49 +12,12 @@ import {
   QuoteRequest,
   RelayQuote,
   RelayQuoteJSON,
+  RelayRequest,
 } from '../../lib/entities';
-import { RelayRequest } from '../../lib/entities/request/RelayRequest';
 import { Portion } from '../../lib/fetchers/PortionFetcher';
+import { V2PoolInRoute, V3PoolInRoute } from '@uniswap/universal-router-sdk';
 
 type ReceivedQuoteData = DutchQuoteJSON | ClassicQuoteDataJSON;
-
-type TokenInRoute = {
-  address: string;
-  chainId: number;
-  symbol: string;
-  decimals: string;
-  sellFeeBps?: string;
-  buyFeeBps?: string;
-};
-
-type V3PoolInRoute = {
-  type: 'v3-pool';
-  address: string;
-  tokenIn: TokenInRoute;
-  tokenOut: TokenInRoute;
-  sqrtRatioX96: string;
-  liquidity: string;
-  tickCurrent: string;
-  fee: string;
-  amountIn?: string;
-  amountOut?: string;
-};
-
-type V2Reserve = {
-  token: TokenInRoute;
-  quotient: string;
-};
-
-type V2PoolInRoute = {
-  type: 'v2-pool';
-  address: string;
-  tokenIn: TokenInRoute;
-  tokenOut: TokenInRoute;
-  reserve0: V2Reserve;
-  reserve1: V2Reserve;
-  amountIn?: string;
-  amountOut?: string;
-};
 
 export type RoutingApiQuoteResponse = {
   quoteId: string;
