@@ -61,7 +61,7 @@ describe('RelayQuote', () => {
       const quote = createRelayQuote({ amountOut: '10000' }, 'EXACT_INPUT', '1');
       const order = quote.toOrder();
       // expect generated calldata from quote class to be added to order
-      expect(quote.universalRouterCalldata).toEqual(order.info.universalRouterCalldata);
+      expect(quote.universalRouterCalldata(quote.toOrder().info.deadline)).toEqual(order.info.universalRouterCalldata);
     });
   })
 
