@@ -161,12 +161,13 @@ export class RelayQuote implements IQuote {
   public toOrder(): RelayOrder {
     const orderBuilder = new RelayOrderBuilder(this.chainId);
     const feeStartTime = Math.floor(Date.now() / 1000);
+    const deadline = feeStartTime + this.auctionPeriodSecs + this.deadlineBufferSecs;
     const nonce = this.nonce ?? generateRandomNonce();
 
     const builder = orderBuilder
       .swapper(ethers.utils.getAddress(this.request.config.swapper))
       .nonce(BigNumber.from(nonce))
-      .deadline(feeStartTime + this.auctionPeriodSecs + this.deadlineBufferSecs)
+      .deadline(deadline)
       // Add the swap input to UR
       .input({
         token: this.tokenIn,
@@ -181,7 +182,7 @@ export class RelayQuote implements IQuote {
         startTime: feeStartTime,
         endTime: feeStartTime + this.auctionPeriodSecs,
       })
-      .universalRouterCalldata(this.universalRouterCalldata);
+      .universalRouterCalldata(this.universalRouterCalldata(deadline));
 
     return builder.build();
   }
@@ -213,7 +214,7 @@ export class RelayQuote implements IQuote {
     return new Percent(parseFloat(this.request.info.slippageTolerance) * 100, 10_000);
   }
 
-  public get universalRouterCalldata(): string {
+  public universalRouterCalldata(deadline: number): string {
     const route = this.classicQuote.toJSON().route;
     return SwapRouter.swapCallParameters(
       new UniswapTrade(
@@ -227,6 +228,7 @@ export class RelayQuote implements IQuote {
           slippageTolerance: this.slippage,
           recipient: this.swapper,
           payerIsUser: false,
+          deadlineOrPreviousBlockhash: deadline
         }
       )
     ).calldata;
