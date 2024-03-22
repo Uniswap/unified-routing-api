@@ -70,6 +70,7 @@ describe('relayQuote', function () {
 
           expect(status).to.equal(200);
           const order = RelayOrder.parse((quote as RelayQuoteDataJSON).encodedOrder, 1);
+          console.log(order.permitData());
           order.info.reactor = reactorAddress;
 
           expect(order.info.swapper).to.equal(alice.address);

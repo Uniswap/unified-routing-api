@@ -459,8 +459,8 @@ export const QuoteComparisonOverrides = {
   },
 
   breakTie(lhs: Quote, rhs: Quote): boolean {
-    // Prefer classic over relay if requested together
-    if (QuoteComparisonOverrides.relayAndClassic(lhs, rhs)) return lhs.routingType === RoutingType.CLASSIC;
+    // Prefer relay over classic if requested together
+    if (QuoteComparisonOverrides.relayAndClassic(lhs, rhs)) return lhs.routingType === RoutingType.RELAY;
     // Otherwise, we default to keeping rhs in the case of a tie
     return false;
   },

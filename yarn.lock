@@ -2176,9 +2176,9 @@
     "@uniswap/sdk-core" "^4.0.3"
     ethers "^5.7.0"
 
-"@uniswap/universal-router-sdk@../universal-router-sdk/uniswap-universal-router-sdk-v2.0.1.tgz":
-  version "2.0.1"
-  resolved "../universal-router-sdk/uniswap-universal-router-sdk-v2.0.1.tgz#895668d0f209bbd833d283cdbde3a2cf81055fc4"
+"@uniswap/universal-router-sdk@../universal-router-sdk/uniswap-universal-router-sdk-v2.0.0.tgz":
+  version "2.0.0"
+  resolved "../universal-router-sdk/uniswap-universal-router-sdk-v2.0.0.tgz#ae68b3de9aab9131e01d8e24958f309eb2a67da5"
   dependencies:
     "@uniswap/permit2-sdk" "^1.2.0"
     "@uniswap/router-sdk" "^1.9.0"

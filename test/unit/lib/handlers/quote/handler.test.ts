@@ -6,10 +6,12 @@ import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_IN_BETTER_WITH_PORTION,
   CLASSIC_QUOTE_EXACT_IN_WORSE,
+  CLASSIC_QUOTE_EXACT_IN_WORSE_GAS_TOKEN,
   CLASSIC_QUOTE_EXACT_IN_WORSE_WITH_PORTION,
   CLASSIC_QUOTE_EXACT_OUT_BETTER,
   CLASSIC_QUOTE_EXACT_OUT_BETTER_WITH_PORTION,
   CLASSIC_QUOTE_EXACT_OUT_WORSE,
+  CLASSIC_QUOTE_EXACT_OUT_WORSE_GAS_TOKEN,
   CLASSIC_QUOTE_EXACT_OUT_WORSE_WITH_PORTION,
   CLASSIC_REQUEST_BODY,
   createClassicQuote,
@@ -468,7 +470,7 @@ describe('QuoteHandler', () => {
 
       it('handles exactIn relay quotes', async () => {
         const quoters = {
-          [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
+          [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE_GAS_TOKEN),
           [RoutingType.RELAY]: RelayQuoterMock(RELAY_QUOTE_NATIVE_EXACT_IN_BETTER),
         };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
@@ -483,14 +485,13 @@ describe('QuoteHandler', () => {
           permit2Fetcher,
           syntheticStatusProvider
         ).handler(getEvent(RELAY_REQUEST_BODY), {} as unknown as Context);
-        console.log(res.body);
         const quoteJSON = JSON.parse(res.body).quote.orderInfo as RelayOrderInfoJSON;
         expect(quoteJSON.input.amount).toBe(RELAY_QUOTE_EXACT_IN_BETTER.amountIn.toString());
       });
 
       it('returns relay quote if both relay and classic are requested', async () => {
         const quoters = {
-          [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
+          [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE_GAS_TOKEN),
           [RoutingType.RELAY]: RelayQuoterMock(RELAY_QUOTE_NATIVE_EXACT_IN_BETTER),
         };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
@@ -518,7 +519,7 @@ describe('QuoteHandler', () => {
 
       it('handles exactOut relay quotes', async () => {
         const quoters = {
-          [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_OUT_WORSE),
+          [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_OUT_WORSE_GAS_TOKEN),
           [RoutingType.RELAY]: RelayQuoterMock(RELAY_QUOTE_EXACT_OUT_BETTER),
         };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
@@ -1251,8 +1252,8 @@ describe('QuoteHandler', () => {
       );
     });
 
-    it('returns true if lhs is a classic quote than rhs relay', () => {
-      expect(compareQuotes(CLASSIC_QUOTE_EXACT_IN_BETTER, RELAY_QUOTE_EXACT_IN_BETTER, TradeType.EXACT_INPUT)).toBe(
+    it('expect relay to always be preferred over classic', () => {
+      expect(compareQuotes(RELAY_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_IN_BETTER, TradeType.EXACT_INPUT)).toBe(
         true
       );
       // expect to be the same
@@ -1262,7 +1263,7 @@ describe('QuoteHandler', () => {
         )
       ).toBe(true);
 
-      expect(compareQuotes(CLASSIC_QUOTE_EXACT_OUT_BETTER, RELAY_QUOTE_EXACT_OUT_BETTER, TradeType.EXACT_OUTPUT)).toBe(
+      expect(compareQuotes(RELAY_QUOTE_EXACT_OUT_BETTER, CLASSIC_QUOTE_EXACT_OUT_BETTER, TradeType.EXACT_OUTPUT)).toBe(
         true
       );
       // expect to be the same

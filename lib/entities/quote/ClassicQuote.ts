@@ -159,7 +159,10 @@ export class ClassicQuote implements IQuote {
       : BigNumber.from(this.quoteData.amount);
   }
 
-  public get gasUseEstimateGasToken(): BigNumber | undefined {
+  public get gasUseEstimateGasToken(): BigNumber {
+    console.log(this.quoteData);
+    if (!this.quoteData.gasUseEstimateGasToken) throw new Error('No gasUseEstimateGasToken in ClassicQuote');
+
     return BigNumber.from(this.quoteData.gasUseEstimateGasToken);
   }
 
