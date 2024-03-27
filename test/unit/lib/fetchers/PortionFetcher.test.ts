@@ -1,6 +1,7 @@
 import { AxiosInstance } from 'axios';
 import NodeCache from 'node-cache';
 import { DEFAULT_NEGATIVE_CACHE_ENTRY_TTL, DEFAULT_POSITIVE_CACHE_ENTRY_TTL } from '../../../../lib/constants';
+import { RequestSource } from '../../../../lib/entities';
 import { GetPortionResponse, GET_NO_PORTION_RESPONSE, PortionFetcher } from '../../../../lib/fetchers/PortionFetcher';
 import axios from '../../../../lib/providers/quoters/helpers';
 import { forcePortion, setGlobalForcePortion } from '../../../../lib/util/portion';
@@ -11,13 +12,7 @@ function testPortion() {
   const tokenInAddress = '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984';
   const tokenOutChainId = 1;
   const tokenOutAddress = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
-  const PORTION_CACHE_KEY = (
-    tokenInChainId: number,
-    tokenOutChainId: number,
-    tokenInAddress: string,
-    tokenOutAddress: string
-  ) =>
-    `PortionFetcher-${tokenInChainId}-${tokenInAddress.toLowerCase()}-${tokenOutChainId}-${tokenOutAddress.toLowerCase()}`;
+  const requestSource = RequestSource.UNISWAP_WEB;
 
   it('Portion Service returns portion data', async () => {
     const portionResponse: GetPortionResponse = {
@@ -40,7 +35,8 @@ function testPortion() {
       tokenInChainId,
       tokenInAddress,
       tokenOutChainId,
-      tokenOutAddress
+      tokenOutAddress,
+      requestSource
     );
     expect(portionData.hasPortion).toEqual(true);
     expect(portionData.portion).toBeDefined;
@@ -49,7 +45,7 @@ function testPortion() {
       expect(portionData.portion).toStrictEqual(portionResponse.portion);
 
       const cachedPortionData = portionCache.get<GetPortionResponse>(
-        PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
+        PortionFetcher.PORTION_CACHE_KEY(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress, requestSource)
       );
 
       if (!forcePortion) {
@@ -60,7 +56,7 @@ function testPortion() {
 
         const ttlUpperBoundBuffer = 1; // in seconds
         const ttl = portionCache.getTtl(
-          PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
+          PortionFetcher.PORTION_CACHE_KEY(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress, requestSource)
         );
         expect(Math.floor((ttl ?? 0) / 1000)).toBeGreaterThanOrEqual(
           currentEpochTimeInSeconds + DEFAULT_POSITIVE_CACHE_ENTRY_TTL
@@ -90,12 +86,13 @@ function testPortion() {
       tokenInChainId,
       tokenInAddress,
       tokenOutChainId,
-      tokenOutAddress
+      tokenOutAddress,
+      requestSource
     );
     expect(portionData.hasPortion).toEqual(GET_NO_PORTION_RESPONSE.hasPortion);
 
     const cachedPortionData = portionCache.get<GetPortionResponse>(
-      PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
+      PortionFetcher.PORTION_CACHE_KEY(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress, requestSource)
     );
 
     if (!forcePortion) {
@@ -104,7 +101,7 @@ function testPortion() {
 
       const ttlUpperBoundBuffer = 1; // in seconds
       const ttl = portionCache.getTtl(
-        PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
+        PortionFetcher.PORTION_CACHE_KEY(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress, requestSource)
       );
       expect(Math.floor((ttl ?? 0) / 1000)).toBeGreaterThanOrEqual(
         currentEpochTimeInSeconds + DEFAULT_NEGATIVE_CACHE_ENTRY_TTL
@@ -132,12 +129,13 @@ function testPortion() {
       tokenInChainId,
       tokenInAddress,
       tokenOutChainId,
-      tokenOutAddress
+      tokenOutAddress,
+      requestSource
     );
     expect(portionData.hasPortion).toEqual(GET_NO_PORTION_RESPONSE.hasPortion);
 
     const cachedPortionData = portionCache.get<GetPortionResponse>(
-      PORTION_CACHE_KEY(tokenInChainId, tokenOutChainId, tokenInAddress, tokenOutAddress)
+      PortionFetcher.PORTION_CACHE_KEY(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress, requestSource)
     );
     expect(cachedPortionData).toBeUndefined;
   });

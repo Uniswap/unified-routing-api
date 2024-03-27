@@ -79,6 +79,8 @@ export class QuoteHandler extends APIGLambdaHandler<
       requestId: uuidv4(),
     };
 
+    const requestSource = this.getQuoteRequestSource(params.event.headers);
+
     const beforeResolveTokens = Date.now();
     const tokenInAddress = await tokenFetcher.resolveTokenBySymbolOrAddress(request.tokenInChainId, request.tokenIn);
     const tokenOutAddress = await tokenFetcher.resolveTokenBySymbolOrAddress(request.tokenOutChainId, request.tokenOut);
@@ -94,7 +96,8 @@ export class QuoteHandler extends APIGLambdaHandler<
             request.tokenInChainId,
             tokenInAddress,
             request.tokenOutChainId,
-            tokenOutAddress
+            tokenOutAddress,
+            requestSource
           )
         ).portion
       : undefined;
@@ -127,7 +130,6 @@ export class QuoteHandler extends APIGLambdaHandler<
     const requests = contextHandler.getRequests();
     log.info({ requests }, 'requests');
 
-    const requestSource = this.getQuoteRequestSource(params.event.headers);
     for (const request of requests) {
       request.info.source = requestSource;
     }

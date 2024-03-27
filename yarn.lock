@@ -2165,10 +2165,10 @@
   resolved "https://registry.npmjs.org/@uniswap/token-lists/-/token-lists-1.0.0-beta.33.tgz"
   integrity sha512-JQkXcpRI3jFG8y3/CGC4TS8NkDgcxXaOQuYW8Qdvd6DcDiIyg2vVYCG9igFEzF0G6UvxgHkBKC7cWCgzZNYvQg==
 
-"@uniswap/uniswapx-sdk@^2.0.1-alpha.2":
-  version "2.0.1-alpha.2"
-  resolved "https://registry.yarnpkg.com/@uniswap/uniswapx-sdk/-/uniswapx-sdk-2.0.1-alpha.2.tgz#e636a92875f85e6c0baf4397b20d2ddf1e9cec67"
-  integrity sha512-Iutek6+s/GtQmyqVJctGpITTpPl0AAqaXA9JpidIns1v2ysasZVof1BdexUNvmInQZZ58lbX0Yy0h2/BP8Chmg==
+"@uniswap/uniswapx-sdk@^2.0.1-alpha.4":
+  version "2.0.1-alpha.4"
+  resolved "https://registry.yarnpkg.com/@uniswap/uniswapx-sdk/-/uniswapx-sdk-2.0.1-alpha.4.tgz#812d7fe33a43497a82f4921a278a9ba4e2cd4b16"
+  integrity sha512-T1wbfNSMbPm5V94Hi29i5sVOwkqWOdz9x20e+MuYvYMluUhx7NHCpDf0JltPv3Vpi26eR8gwIJyu9ublU0BsQA==
   dependencies:
     "@ethersproject/bytes" "^5.7.0"
     "@ethersproject/providers" "^5.7.0"
@@ -2176,9 +2176,9 @@
     "@uniswap/sdk-core" "^4.0.3"
     ethers "^5.7.0"
 
-"@uniswap/universal-router-sdk@../universal-router-sdk/uniswap-universal-router-sdk-v2.0.0.tgz":
-  version "2.0.0"
-  resolved "../universal-router-sdk/uniswap-universal-router-sdk-v2.0.0.tgz#ae68b3de9aab9131e01d8e24958f309eb2a67da5"
+"@uniswap/universal-router-sdk@../universal-router-sdk/uniswap-universal-router-sdk-v2.0.1.tgz":
+  version "2.0.1"
+  resolved "../universal-router-sdk/uniswap-universal-router-sdk-v2.0.1.tgz#895668d0f209bbd833d283cdbde3a2cf81055fc4"
   dependencies:
     "@uniswap/permit2-sdk" "^1.2.0"
     "@uniswap/router-sdk" "^1.9.0"

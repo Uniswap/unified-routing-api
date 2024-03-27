@@ -11,6 +11,7 @@ import {
   NATIVE_CURRENCY,
   parseAmount,
   SWAP_ROUTER_02_ADDRESSES,
+  USDB_BLAST,
   USDC_MAINNET,
   USDT_MAINNET,
 } from '@uniswap/smart-order-router';
@@ -29,7 +30,7 @@ import _ from 'lodash';
 import { SUPPORTED_CHAINS } from '../../lib/config/chains';
 import { RoutingType } from '../../lib/constants';
 import { ClassicQuoteDataJSON } from '../../lib/entities/quote';
-import { QuoteRequestBodyJSON } from '../../lib/entities/request';
+import { QuoteRequestBodyJSON, RequestSource } from '../../lib/entities/request';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { FLAT_PORTION, getTestAmount, GREENLIST_STABLE_TO_STABLE_PAIRS, GREENLIST_TOKEN_PAIRS } from '../constants';
 import {
@@ -1468,12 +1469,14 @@ describe('quote', function () {
                   const tokenOutSymbol = tokenOut.symbol!;
                   const tokenInAddress = tokenIn.isNative ? tokenInSymbol : tokenIn.address;
                   const tokenOutAddress = tokenOut.isNative ? tokenOutSymbol : tokenOut.address;
+                  const requestSource = RequestSource.UNISWAP_IOS;
                   const amount = await getAmountFromToken(type, tokenIn.wrapped, tokenOut.wrapped, originalAmount);
                   const getPortionResponse = await baseTest.portionFetcher.getPortion(
                     tokenIn.chainId,
                     tokenInAddress,
                     tokenOut.chainId,
-                    tokenOutAddress
+                    tokenOutAddress,
+                    requestSource
                   );
 
                   expect(getPortionResponse.hasPortion).to.be.true;
@@ -1623,12 +1626,14 @@ describe('quote', function () {
                   const tokenOutSymbol = tokenOut.symbol!;
                   const tokenInAddress = tokenIn.isNative ? tokenInSymbol : tokenIn.address;
                   const tokenOutAddress = tokenOut.isNative ? tokenOutSymbol : tokenOut.address;
+                  const requestSource = RequestSource.UNISWAP_ANDROID;
                   const amount = await getAmountFromToken(type, tokenIn.wrapped, tokenOut.wrapped, originalAmount);
                   const getPortionResponse = await baseTest.portionFetcher.getPortion(
                     tokenIn.chainId,
                     tokenInAddress,
                     tokenOut.chainId,
-                    tokenOutAddress
+                    tokenOutAddress,
+                    requestSource
                   );
 
                   expect(getPortionResponse.hasPortion).to.be.false;
@@ -2493,7 +2498,7 @@ describe('quote', function () {
     [ChainId.ZORA]: null,
     [ChainId.ZORA_SEPOLIA]: null,
     [ChainId.ROOTSTOCK]: null,
-    [ChainId.BLAST]: null,
+    [ChainId.BLAST]: USDB_BLAST,
   };
 
   const TEST_ERC20_2: { [chainId in ChainId]: Token | null } = {
@@ -2519,7 +2524,7 @@ describe('quote', function () {
     [ChainId.ZORA]: null,
     [ChainId.ZORA_SEPOLIA]: null,
     [ChainId.ROOTSTOCK]: null,
-    [ChainId.BLAST]: null,
+    [ChainId.BLAST]: WNATIVE_ON(ChainId.BLAST),
   };
 
   // TODO: Find valid pools/tokens on optimistic kovan and polygon mumbai. We skip those tests for now.
@@ -2539,8 +2544,7 @@ describe('quote', function () {
       // We will follow up supporting ZORA and ROOTSTOCK
       c !== ChainId.ZORA &&
       c !== ChainId.ZORA_SEPOLIA &&
-      c !== ChainId.ROOTSTOCK &&
-      c !== ChainId.BLAST
+      c !== ChainId.ROOTSTOCK
   )) {
     for (const type of ['EXACT_INPUT', 'EXACT_OUTPUT']) {
       const erc1 = TEST_ERC20_1[chain];
@@ -2555,13 +2559,16 @@ describe('quote', function () {
         const wrappedNative = WNATIVE_ON(chain);
 
         it(`${wrappedNative.symbol} -> erc20`, async () => {
+          // Current WETH/USDB pool (https://blastscan.io/address/0xf52b4b69123cbcf07798ae8265642793b2e8990c) has low WETH amount
+          const amount = type === 'EXACT_OUTPUT' && chain === ChainId.BLAST ? '0.002' : '1';
+
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
             tokenIn: wrappedNative.address,
             tokenInChainId: chain,
             tokenOut: erc1.address,
             tokenOutChainId: chain,
-            amount: await getAmountFromToken(type, wrappedNative, erc1, '1'),
+            amount: await getAmountFromToken(type, wrappedNative, erc1, amount),
             type,
             configs: [
               {
@@ -2570,6 +2577,10 @@ describe('quote', function () {
                 enableUniversalRouter: true,
               },
             ],
+            // actual classic-only quote doesn't pass in swapper,
+            // but we need it to ensure it can hit
+            // https://github.com/Uniswap/unified-routing-api/blob/78f72f971601a5c2b53b34d3c50222e06c0b8cf2/lib/entities/context/ClassicQuoteContext.ts#L34
+            swapper: alice.address,
           };
 
           try {
@@ -2583,13 +2594,16 @@ describe('quote', function () {
         });
 
         it(`erc20 -> erc20`, async () => {
+          // Current WETH/USDB pool (https://blastscan.io/address/0xf52b4b69123cbcf07798ae8265642793b2e8990c) has low WETH amount
+          const amount = type === 'EXACT_OUTPUT' && chain === ChainId.BLAST ? '0.002' : '1';
+
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
             tokenIn: erc1.address,
             tokenInChainId: chain,
             tokenOut: erc2.address,
             tokenOutChainId: chain,
-            amount: await getAmountFromToken(type, erc1, erc2, '1'),
+            amount: await getAmountFromToken(type, erc1, erc2, amount),
             type,
             configs: [
               {
@@ -2597,6 +2611,10 @@ describe('quote', function () {
                 protocols: ['V2', 'V3', 'MIXED'],
               },
             ],
+            // actual classic-only quote doesn't pass in swapper,
+            // but we need it to ensure it can hit
+            // https://github.com/Uniswap/unified-routing-api/blob/78f72f971601a5c2b53b34d3c50222e06c0b8cf2/lib/entities/context/ClassicQuoteContext.ts#L34
+            swapper: alice.address,
           };
 
           try {
@@ -2610,6 +2628,11 @@ describe('quote', function () {
         });
         const native = NATIVE_CURRENCY[chain];
         it(`${native} -> erc20`, async () => {
+          if (chain === ChainId.BLAST) {
+            // Blast doesn't have DAI or USDC yet
+            return;
+          }
+
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
             tokenIn: native,
@@ -2637,13 +2660,16 @@ describe('quote', function () {
           }
         });
         it(`has quoteGasAdjusted values`, async () => {
+          // Current WETH/USDB pool (https://blastscan.io/address/0xf52b4b69123cbcf07798ae8265642793b2e8990c) has low WETH amount
+          const amount = type === 'EXACT_OUTPUT' && chain === ChainId.BLAST ? '0.002' : '1';
+
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
             tokenIn: erc1.address,
             tokenInChainId: chain,
             tokenOut: erc2.address,
             tokenOutChainId: chain,
-            amount: await getAmountFromToken(type, erc1, erc2, '1'),
+            amount: await getAmountFromToken(type, erc1, erc2, amount),
             type,
             configs: [
               {
@@ -2651,6 +2677,10 @@ describe('quote', function () {
                 protocols: ['V2', 'V3', 'MIXED'],
               },
             ],
+            // actual classic-only quote doesn't pass in swapper,
+            // but we need it to ensure it can hit
+            // https://github.com/Uniswap/unified-routing-api/blob/78f72f971601a5c2b53b34d3c50222e06c0b8cf2/lib/entities/context/ClassicQuoteContext.ts#L34
+            swapper: alice.address,
           };
 
           try {
