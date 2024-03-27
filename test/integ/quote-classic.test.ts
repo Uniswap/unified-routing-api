@@ -18,6 +18,7 @@ import {
 import {
   PERMIT2_ADDRESS,
   UNIVERSAL_ROUTER_ADDRESS as UNIVERSAL_ROUTER_ADDRESS_BY_CHAIN,
+  V2PoolInRoute,
 } from '@uniswap/universal-router-sdk';
 import { fail } from 'assert';
 import { AxiosResponse } from 'axios';
@@ -28,7 +29,7 @@ import { BigNumber, Wallet } from 'ethers';
 import _ from 'lodash';
 import { SUPPORTED_CHAINS } from '../../lib/config/chains';
 import { RoutingType } from '../../lib/constants';
-import { ClassicQuoteDataJSON, V2PoolInRouteJSON } from '../../lib/entities/quote';
+import { ClassicQuoteDataJSON } from '../../lib/entities/quote';
 import { QuoteRequestBodyJSON, RequestSource } from '../../lib/entities/request';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { FLAT_PORTION, getTestAmount, GREENLIST_STABLE_TO_STABLE_PAIRS, GREENLIST_TOKEN_PAIRS } from '../constants';
@@ -1826,7 +1827,7 @@ describe('quote', function () {
                   for (const r of quoteJSON.route) {
                     for (const pool of r) {
                       expect(pool.type).equal('v2-pool');
-                      const v2Pool = pool as V2PoolInRouteJSON;
+                      const v2Pool = pool as V2PoolInRoute;
 
                       if (v2Pool.tokenIn.address === BULLET_WHT_FOT_TAX.address) {
                         expect(v2Pool.tokenIn.sellFeeBps).to.be.equals(BULLET_WHT_FOT_TAX.sellFeeBps?.toString());

@@ -1,3 +1,4 @@
+import { Protocol } from '@uniswap/router-sdk';
 import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber } from 'ethers';
 
@@ -8,16 +9,18 @@ import { ValidationError } from '../../util/errors';
 import { ClassicConfig, ClassicConfigJSON, ClassicRequest } from './ClassicRequest';
 import { DutchConfig, DutchConfigJSON, DutchRequest } from './DutchRequest';
 import { DutchV2Config, DutchV2ConfigJSON, DutchV2Request } from './DutchV2Request';
+import { RelayConfig, RelayConfigJSON, RelayRequest } from './RelayRequest';
 
 export * from './ClassicRequest';
 export * from './DutchRequest';
 export * from './DutchV2Request';
+export * from './RelayRequest';
 
 export type RequestByRoutingType = { [routingType in RoutingType]?: QuoteRequest };
 
 // config specific to the given routing type
-export type RoutingConfig = DutchConfig | DutchV2Config | ClassicConfig;
-export type RoutingConfigJSON = DutchConfigJSON | DutchV2ConfigJSON | ClassicConfigJSON;
+export type RoutingConfig = DutchConfig | DutchV2Config | RelayConfig | ClassicConfig;
+export type RoutingConfigJSON = DutchConfigJSON | DutchV2ConfigJSON | RelayConfigJSON | ClassicConfigJSON;
 
 // shared info for all quote requests
 export interface QuoteRequestInfo {
@@ -91,6 +94,12 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON): {
     ) {
       return DutchRequest.fromRequestBody(info, config as DutchConfigJSON);
     } else if (
+      config.routingType == RoutingType.RELAY &&
+      SUPPORTED_CHAINS[RoutingType.RELAY].includes(info.tokenInChainId) &&
+      info.tokenInChainId === info.tokenOutChainId
+    ) {
+      return RelayRequest.fromRequestBody(info, config as RelayConfigJSON);
+    } else if (
       config.routingType == RoutingType.DUTCH_V2 &&
       SUPPORTED_CHAINS[RoutingType.DUTCH_V2].includes(info.tokenInChainId) &&
       info.tokenInChainId === info.tokenOutChainId
@@ -135,4 +144,17 @@ export function defaultRequestKey(request: QuoteRequest): string {
     amount: info.amount.toString(),
     type: info.type,
   });
+}
+
+export function parseProtocol(protocol: string): Protocol {
+  switch (protocol.toLowerCase()) {
+    case 'v2':
+      return Protocol.V2;
+    case 'v3':
+      return Protocol.V3;
+    case 'mixed':
+      return Protocol.MIXED;
+    default:
+      throw new Error(`Invalid protocol: ${protocol}`);
+  }
 }

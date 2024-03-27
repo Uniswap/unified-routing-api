@@ -111,7 +111,7 @@ export class DutchV2Quote implements IQuote {
       .cosigner(LABS_COSIGNER)
       // empty cosignature so we can serialize the order
       .cosignature(ethers.constants.HashZero)
-      .baseInput({
+      .input({
         token: this.tokenIn,
         startAmount: this.amountInStart,
         endAmount: this.amountInEnd,
@@ -128,7 +128,7 @@ export class DutchV2Quote implements IQuote {
       this.request.info.sendPortionEnabled,
       this.portion
     );
-    outputs.forEach((output) => builder.baseOutput(output));
+    outputs.forEach((output) => builder.output(output));
 
     return builder.buildPartial();
   }
