@@ -2165,10 +2165,10 @@
   resolved "https://registry.npmjs.org/@uniswap/token-lists/-/token-lists-1.0.0-beta.33.tgz"
   integrity sha512-JQkXcpRI3jFG8y3/CGC4TS8NkDgcxXaOQuYW8Qdvd6DcDiIyg2vVYCG9igFEzF0G6UvxgHkBKC7cWCgzZNYvQg==
 
-"@uniswap/uniswapx-sdk@2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@uniswap/uniswapx-sdk/-/uniswapx-sdk-2.0.0.tgz#fc544feeadf1ea2816ccbae0ca8e86d9c7415f9e"
-  integrity sha512-3kQNUf1uqfmhbR4Ue8Ua1VA3WnNxrWZc0lU73S3Bbx0L4iXYWUfQvDHte+Ok/fLs4xmb/Eat0I6i6AF3oO79oQ==
+"@uniswap/uniswapx-sdk@^2.0.1-alpha.4":
+  version "2.0.1-alpha.4"
+  resolved "https://registry.yarnpkg.com/@uniswap/uniswapx-sdk/-/uniswapx-sdk-2.0.1-alpha.4.tgz#812d7fe33a43497a82f4921a278a9ba4e2cd4b16"
+  integrity sha512-T1wbfNSMbPm5V94Hi29i5sVOwkqWOdz9x20e+MuYvYMluUhx7NHCpDf0JltPv3Vpi26eR8gwIJyu9ublU0BsQA==
   dependencies:
     "@ethersproject/bytes" "^5.7.0"
     "@ethersproject/providers" "^5.7.0"
