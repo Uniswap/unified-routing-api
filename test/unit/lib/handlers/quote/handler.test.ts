@@ -6,10 +6,12 @@ import {
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_IN_BETTER_WITH_PORTION,
   CLASSIC_QUOTE_EXACT_IN_WORSE,
+  CLASSIC_QUOTE_EXACT_IN_WORSE_GAS_TOKEN,
   CLASSIC_QUOTE_EXACT_IN_WORSE_WITH_PORTION,
   CLASSIC_QUOTE_EXACT_OUT_BETTER,
   CLASSIC_QUOTE_EXACT_OUT_BETTER_WITH_PORTION,
   CLASSIC_QUOTE_EXACT_OUT_WORSE,
+  CLASSIC_QUOTE_EXACT_OUT_WORSE_GAS_TOKEN,
   CLASSIC_QUOTE_EXACT_OUT_WORSE_WITH_PORTION,
   CLASSIC_REQUEST_BODY,
   createClassicQuote,
@@ -27,18 +29,33 @@ import {
   QUOTE_REQUEST_CLASSIC,
   QUOTE_REQUEST_DL,
   QUOTE_REQUEST_MULTI,
+  RELAY_QUOTE_EXACT_IN_BETTER,
+  RELAY_QUOTE_EXACT_IN_WORSE,
+  RELAY_QUOTE_EXACT_OUT_BETTER,
+  RELAY_QUOTE_EXACT_OUT_WORSE,
+  RELAY_QUOTE_NATIVE_EXACT_IN_BETTER,
+  RELAY_REQUEST_BODY,
+  RELAY_REQUEST_BODY_EXACT_OUT,
+  RELAY_REQUEST_WITH_CLASSIC_BODY,
 } from '../../../../utils/fixtures';
 
 import { PermitDetails } from '@uniswap/permit2-sdk';
-import { DutchOrderInfoJSON } from '@uniswap/uniswapx-sdk';
+import { DutchOrderInfoJSON, RelayOrderInfoJSON } from '@uniswap/uniswapx-sdk';
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { MetricsLogger } from 'aws-embedded-metrics';
 import { APIGatewayProxyEventHeaders } from 'aws-lambda/trigger/api-gateway-proxy';
 import { AxiosError } from 'axios';
-import { providers } from 'ethers';
+import { BigNumber, providers } from 'ethers';
 import NodeCache from 'node-cache';
 import { RoutingType } from '../../../../../lib/constants';
-import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, Quote, RequestSource } from '../../../../../lib/entities';
+import {
+  ClassicQuote,
+  ClassicQuoteDataJSON,
+  DutchQuote,
+  Quote,
+  RelayQuote,
+  RequestSource,
+} from '../../../../../lib/entities';
 import { DutchConfigJSON, QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index';
 import { Permit2Fetcher } from '../../../../../lib/fetchers/Permit2Fetcher';
 import {
@@ -153,6 +170,12 @@ describe('QuoteHandler', () => {
     const RfqQuoterErrorMock = (axiosError: AxiosError): Quoter => {
       return {
         quote: jest.fn().mockReturnValue(Promise.reject(axiosError)),
+      };
+    };
+
+    const RelayQuoterMock = (relayQuote: RelayQuote): Quoter => {
+      return {
+        quote: jest.fn().mockResolvedValue(relayQuote),
       };
     };
 
@@ -445,6 +468,76 @@ describe('QuoteHandler', () => {
         expect(quoteJSON.outputs[0].endAmount).toBe(slippageAdjustedAmountOut.toString());
       });
 
+      it('handles exactIn relay quotes', async () => {
+        const quoters = {
+          [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE_GAS_TOKEN),
+          [RoutingType.RELAY]: RelayQuoterMock(RELAY_QUOTE_NATIVE_EXACT_IN_BETTER),
+        };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(GET_NO_PORTION_RESPONSE);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+        const syntheticStatusProvider = SyntheticStatusProviderMock(false);
+
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(RELAY_REQUEST_BODY), {} as unknown as Context);
+        const quoteJSON = JSON.parse(res.body).quote.orderInfo as RelayOrderInfoJSON;
+        expect(quoteJSON.input.amount).toBe(RELAY_QUOTE_EXACT_IN_BETTER.amountIn.toString());
+      });
+
+      it('returns relay quote if both relay and classic are requested', async () => {
+        const quoters = {
+          [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE_GAS_TOKEN),
+          [RoutingType.RELAY]: RelayQuoterMock(RELAY_QUOTE_NATIVE_EXACT_IN_BETTER),
+        };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(GET_NO_PORTION_RESPONSE);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+        const syntheticStatusProvider = SyntheticStatusProviderMock(false);
+
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(RELAY_REQUEST_WITH_CLASSIC_BODY), {} as unknown as Context);
+        const quoteJSON = JSON.parse(res.body).quote.orderInfo as RelayOrderInfoJSON;
+        // Expect relay to always be preferred over classic if requested together
+        expect(JSON.parse(res.body).routing).toEqual(RoutingType.RELAY);
+        expect(quoteJSON.input.amount).toBe(RELAY_QUOTE_EXACT_IN_BETTER.amountIn.toString());
+
+        const allQuotes = JSON.parse(res.body).allQuotes;
+        expect(allQuotes.length).toEqual(2);
+        expect(allQuotes[0].routing).toEqual(RoutingType.RELAY);
+        expect(allQuotes[1].routing).toEqual(RoutingType.CLASSIC);
+      });
+
+      it('handles exactOut relay quotes', async () => {
+        const quoters = {
+          [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_OUT_WORSE_GAS_TOKEN),
+          [RoutingType.RELAY]: RelayQuoterMock(RELAY_QUOTE_EXACT_OUT_BETTER),
+        };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(GET_NO_PORTION_RESPONSE);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+        const syntheticStatusProvider = SyntheticStatusProviderMock(false);
+
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(RELAY_REQUEST_BODY_EXACT_OUT), {} as unknown as Context);
+        const quoteJSON = JSON.parse(res.body).quote.orderInfo as RelayOrderInfoJSON;
+        expect(quoteJSON.input.amount).toBe(RELAY_QUOTE_EXACT_OUT_BETTER.amountIn.toString());
+      });
+
       it('returns allQuotes', async () => {
         const quoters = {
           [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE),
@@ -537,6 +630,35 @@ describe('QuoteHandler', () => {
         expect(permitData.values.permitted.token).toBe(quote.input.token);
         expect(permitData.values.witness.inputToken).toBe(quote.input.token);
         expect(permitData.values.witness.outputs[0].token).toBe(quote.outputs[0].token);
+        expect(permit2Fetcher.fetchAllowance).not.toHaveBeenCalled();
+      });
+
+      it('always returns correct permit for relay', async () => {
+        const quoters = {
+          [RoutingType.RELAY]: RelayQuoterMock(RELAY_QUOTE_EXACT_IN_BETTER),
+        };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(GET_NO_PORTION_RESPONSE);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+        const syntheticStatusProvider = SyntheticStatusProviderMock(false);
+
+        const response = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(RELAY_REQUEST_WITH_CLASSIC_BODY), {} as unknown as Context);
+
+        const responseBody = JSON.parse(response.body);
+        const permitData = responseBody.quote.permitData;
+        const quote = responseBody.quote.orderInfo as RelayOrderInfoJSON;
+        expect(permitData.values.permitted[0].token).toBe(quote.input.token);
+        expect(BigNumber.from(permitData.values.permitted[0].amount).eq(quote.input.amount)).toBe(true);
+        expect(permitData.values.permitted[1].token).toBe(quote.fee.token);
+        expect(BigNumber.from(permitData.values.permitted[1].amount).eq(quote.fee.endAmount)).toBe(true);
+        expect(BigNumber.from(permitData.values.witness.fee.startAmount).eq(quote.fee.startAmount)).toBe(true);
+        expect(BigNumber.from(permitData.values.witness.fee.endAmount).eq(quote.fee.endAmount)).toBe(true);
         expect(permit2Fetcher.fetchAllowance).not.toHaveBeenCalled();
       });
 
@@ -683,6 +805,28 @@ describe('QuoteHandler', () => {
           permit2Fetcher,
           syntheticStatusProvider
         ).handler(getEvent(QUOTE_REQUEST_BODY_MULTI), {} as unknown as Context);
+
+        const responseBody = JSON.parse(response.body);
+        const quote = responseBody.quote;
+        expect(quote.encodedOrder).not.toBe(null);
+      });
+
+      it('always returns encodedOrder in quote for relay', async () => {
+        const quoters = {
+          [RoutingType.RELAY]: RelayQuoterMock(RELAY_QUOTE_EXACT_IN_BETTER),
+        };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(GET_NO_PORTION_RESPONSE);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+        const syntheticStatusProvider = SyntheticStatusProviderMock(false);
+
+        const response = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(RELAY_REQUEST_WITH_CLASSIC_BODY), {} as unknown as Context);
 
         const responseBody = JSON.parse(response.body);
         const quote = responseBody.quote;
@@ -932,6 +1076,26 @@ describe('QuoteHandler', () => {
         expect(res.state).toBe('valid');
       });
 
+      it('Succeeds - Relay Quote', async () => {
+        const quoters = { [RoutingType.RELAY]: RelayQuoterMock(RELAY_QUOTE_EXACT_IN_BETTER) };
+        const event = {
+          body: JSON.stringify(RELAY_REQUEST_BODY),
+        } as APIGatewayProxyEvent;
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(GET_NO_PORTION_RESPONSE);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+        const syntheticStatusProvider = SyntheticStatusProviderMock(false);
+
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).parseAndValidateRequest(event, logger as unknown as Logger);
+        expect(res.state).toBe('valid');
+      });
+
       it('Succeeds - Bad swapper address', async () => {
         const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE) };
         const event = {
@@ -1074,12 +1238,63 @@ describe('QuoteHandler', () => {
       ).toBe(false);
     });
 
+    it('returns true if lhs is a better relay quote than rhs', () => {
+      expect(compareQuotes(RELAY_QUOTE_EXACT_IN_BETTER, RELAY_QUOTE_EXACT_IN_WORSE, TradeType.EXACT_INPUT)).toBe(true);
+      expect(compareQuotes(RELAY_QUOTE_EXACT_OUT_BETTER, RELAY_QUOTE_EXACT_OUT_WORSE, TradeType.EXACT_OUTPUT)).toBe(
+        true
+      );
+    });
+
+    it('returns false if lhs is a worse relay quote than rhs', () => {
+      expect(compareQuotes(RELAY_QUOTE_EXACT_IN_WORSE, RELAY_QUOTE_EXACT_IN_BETTER, TradeType.EXACT_INPUT)).toBe(false);
+      expect(compareQuotes(RELAY_QUOTE_EXACT_OUT_WORSE, RELAY_QUOTE_EXACT_OUT_BETTER, TradeType.EXACT_OUTPUT)).toBe(
+        false
+      );
+    });
+
+    it('expect relay to always be preferred over classic', () => {
+      expect(compareQuotes(RELAY_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_IN_BETTER, TradeType.EXACT_INPUT)).toBe(
+        true
+      );
+      // expect to be the same
+      expect(
+        RELAY_QUOTE_EXACT_IN_BETTER.amountOutGasAndPortionAdjustedClassic.eq(
+          CLASSIC_QUOTE_EXACT_IN_BETTER.amountOutGasAndPortionAdjusted
+        )
+      ).toBe(true);
+
+      expect(compareQuotes(RELAY_QUOTE_EXACT_OUT_BETTER, CLASSIC_QUOTE_EXACT_OUT_BETTER, TradeType.EXACT_OUTPUT)).toBe(
+        true
+      );
+      // expect to be the same
+      expect(
+        RELAY_QUOTE_EXACT_OUT_BETTER.amountInGasAndPortionAdjustedClassic.eq(
+          CLASSIC_QUOTE_EXACT_OUT_BETTER.amountInGasAndPortionAdjusted
+        )
+      ).toBe(true);
+    });
+
+    it('returns true if lhs is a better dutch quote than rhs relay', () => {
+      expect(compareQuotes(DL_QUOTE_EXACT_IN_BETTER, RELAY_QUOTE_EXACT_IN_WORSE, TradeType.EXACT_INPUT)).toBe(true);
+      expect(compareQuotes(DL_QUOTE_EXACT_OUT_BETTER, RELAY_QUOTE_EXACT_OUT_WORSE, TradeType.EXACT_OUTPUT)).toBe(true);
+    });
+
+    it('returns true if lhs is a better relay quote than rhs dutch', () => {
+      expect(compareQuotes(RELAY_QUOTE_EXACT_IN_BETTER, DL_QUOTE_EXACT_IN_WORSE, TradeType.EXACT_INPUT)).toBe(true);
+      expect(compareQuotes(RELAY_QUOTE_EXACT_OUT_BETTER, DL_QUOTE_EXACT_OUT_WORSE, TradeType.EXACT_OUTPUT)).toBe(true);
+    });
+
     it('returns true if lhs is a better mixed type', () => {
       expect(compareQuotes(DL_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_IN_WORSE, TradeType.EXACT_INPUT)).toBe(true);
       expect(compareQuotes(CLASSIC_QUOTE_EXACT_IN_BETTER, DL_QUOTE_EXACT_IN_WORSE, TradeType.EXACT_INPUT)).toBe(true);
       expect(compareQuotes(DL_QUOTE_EXACT_OUT_BETTER, CLASSIC_QUOTE_EXACT_OUT_WORSE, TradeType.EXACT_OUTPUT)).toBe(
         true
       );
+      expect(compareQuotes(RELAY_QUOTE_EXACT_IN_BETTER, DL_QUOTE_EXACT_IN_WORSE, TradeType.EXACT_INPUT)).toBe(true);
+      expect(compareQuotes(RELAY_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_IN_WORSE, TradeType.EXACT_INPUT)).toBe(
+        true
+      );
+      expect(compareQuotes(RELAY_QUOTE_EXACT_OUT_BETTER, DL_QUOTE_EXACT_OUT_WORSE, TradeType.EXACT_OUTPUT)).toBe(true);
     });
 
     it('returns true if lhs is a better mixed type with portion', () => {

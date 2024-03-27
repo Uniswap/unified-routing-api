@@ -4,6 +4,7 @@ import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { BigNumber } from 'ethers';
 import { getAddress } from 'ethers/lib/utils';
 import { BPS, RoutingType } from '../lib/constants';
+import { RelayConfig } from '../lib/entities/request/RelayRequest';
 import { Portion, PortionType } from '../lib/fetchers/PortionFetcher';
 import { agEUR_MAINNET, DAI_ON, USDC_ON, USDT_ON, XSGD_MAINNET } from './utils/tokens';
 
@@ -50,6 +51,12 @@ export const DUTCH_V2_CONFIG = {
 export const CLASSIC_CONFIG = {
   routingType: RoutingType.CLASSIC,
   protocols: ['V2', 'V3', 'MIXED'],
+};
+
+export const RELAY_CONFIG: RelayConfig = {
+  swapper: SWAPPER,
+  auctionPeriodSecs: 60,
+  gasToken: TOKEN_IN,
 };
 
 export const PERMIT2_USED = {
