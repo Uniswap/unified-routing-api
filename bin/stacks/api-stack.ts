@@ -230,7 +230,7 @@ export class APIStack extends cdk.Stack {
         sourceMap: true,
       },
       environment: {
-        VERSION: '9',
+        VERSION: '10',
         NODE_OPTIONS: '--enable-source-maps',
         stage: props.stage,
         ...props.envVars,

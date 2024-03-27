@@ -3,6 +3,7 @@ import * as http from 'http';
 import * as https from 'https';
 import NodeCache from 'node-cache';
 import { DEFAULT_NEGATIVE_CACHE_ENTRY_TTL, DEFAULT_POSITIVE_CACHE_ENTRY_TTL, uraEnablePortion } from '../constants';
+import { RequestSource } from '../entities';
 import axios from '../providers/quoters/helpers';
 import { log } from '../util/log';
 import { metrics } from '../util/metrics';
@@ -27,13 +28,14 @@ export interface GetPortionResponse {
 export const GET_NO_PORTION_RESPONSE: GetPortionResponse = { hasPortion: false, portion: undefined };
 
 export class PortionFetcher {
-  private PORTION_CACHE_KEY = (
+  public static PORTION_CACHE_KEY = (
     tokenInChainId: number,
     tokenInAddress: string,
     tokenOutChainId: number,
-    tokenOutAddress: string
+    tokenOutAddress: string,
+    requestSource: RequestSource
   ) =>
-    `PortionFetcher-${tokenInChainId}-${tokenInAddress.toLowerCase()}-${tokenOutChainId}-${tokenOutAddress.toLowerCase()}`;
+    `PortionFetcher-${tokenInChainId}-${tokenInAddress.toLowerCase()}-${tokenOutChainId}-${tokenOutAddress.toLowerCase()}-${requestSource}`;
 
   private getPortionFullPath = `${this.portionApiUrl}/portion`;
   private portionServiceInstance = axios.create({
@@ -55,7 +57,8 @@ export class PortionFetcher {
     tokenInChainId: number,
     tokenInAddress: string,
     tokenOutChainId: number,
-    tokenOutAddress: string
+    tokenOutAddress: string,
+    requestSource: RequestSource
   ): Promise<GetPortionResponse> {
     metrics.putMetric(`PortionFetcherRequest`, 1);
 
@@ -71,7 +74,7 @@ export class PortionFetcher {
     const portionFromCache =
       !forcePortion &&
       this.portionCache.get<GetPortionResponse>(
-        this.PORTION_CACHE_KEY(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress)
+        PortionFetcher.PORTION_CACHE_KEY(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress, requestSource)
       );
 
     if (portionFromCache) {
@@ -87,6 +90,7 @@ export class PortionFetcher {
           tokenInAddress: tokenInAddress,
           tokenOutChainId: tokenOutChainId,
           tokenOutAddress: tokenOutAddress,
+          requestSource: requestSource
         },
       });
 
@@ -99,7 +103,7 @@ export class PortionFetcher {
       // We do it to avoid cache conflicts since `forcePortion` is only for testing purposes.
       if (!forcePortion) {
         this.portionCache.set<GetPortionResponse>(
-          this.PORTION_CACHE_KEY(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress),
+          PortionFetcher.PORTION_CACHE_KEY(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress, requestSource),
           portionResponse.data,
           portionResponse.data.portion ? this.positiveCacheEntryTtl : this.negativeCacheEntryTtl
         );
