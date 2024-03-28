@@ -45,7 +45,13 @@ function testPortion() {
       expect(portionData.portion).toStrictEqual(portionResponse.portion);
 
       const cachedPortionData = portionCache.get<GetPortionResponse>(
-        PortionFetcher.PORTION_CACHE_KEY(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress, requestSource)
+        PortionFetcher.PORTION_CACHE_KEY(
+          tokenInChainId,
+          tokenInAddress,
+          tokenOutChainId,
+          tokenOutAddress,
+          requestSource
+        )
       );
 
       if (!forcePortion) {
@@ -56,7 +62,13 @@ function testPortion() {
 
         const ttlUpperBoundBuffer = 1; // in seconds
         const ttl = portionCache.getTtl(
-          PortionFetcher.PORTION_CACHE_KEY(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress, requestSource)
+          PortionFetcher.PORTION_CACHE_KEY(
+            tokenInChainId,
+            tokenInAddress,
+            tokenOutChainId,
+            tokenOutAddress,
+            requestSource
+          )
         );
         expect(Math.floor((ttl ?? 0) / 1000)).toBeGreaterThanOrEqual(
           currentEpochTimeInSeconds + DEFAULT_POSITIVE_CACHE_ENTRY_TTL
@@ -101,7 +113,13 @@ function testPortion() {
 
       const ttlUpperBoundBuffer = 1; // in seconds
       const ttl = portionCache.getTtl(
-        PortionFetcher.PORTION_CACHE_KEY(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress, requestSource)
+        PortionFetcher.PORTION_CACHE_KEY(
+          tokenInChainId,
+          tokenInAddress,
+          tokenOutChainId,
+          tokenOutAddress,
+          requestSource
+        )
       );
       expect(Math.floor((ttl ?? 0) / 1000)).toBeGreaterThanOrEqual(
         currentEpochTimeInSeconds + DEFAULT_NEGATIVE_CACHE_ENTRY_TTL
