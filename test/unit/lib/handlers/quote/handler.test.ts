@@ -2,6 +2,7 @@ import { ChainId, TradeType } from '@uniswap/sdk-core';
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { default as Logger } from 'bunyan';
 import {
+  BASE_REQUEST_INFO_EXACT_IN,
   BASE_REQUEST_INFO_EXACT_OUT,
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_IN_BETTER_WITH_PORTION,
@@ -62,6 +63,137 @@ import { ErrorCode } from '../../../../../lib/util/errors';
 import { setGlobalLogger } from '../../../../../lib/util/log';
 import { INELIGIBLE_TOKEN, PERMIT2_USED, PERMIT_DETAILS, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../../constants';
 
+export const LOGGER_MOCK = {
+  info: jest.fn(),
+  error: jest.fn(),
+  child: () => ({
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+  }),
+};
+
+export const METRICS_MOCK = {
+  putMetric: jest.fn(),
+};
+
+export const requestInjectedMock: Promise<ApiRInj> = new Promise((resolve) => {
+  setGlobalLogger(LOGGER_MOCK as any);
+  resolve({
+    log: LOGGER_MOCK as unknown as Logger,
+    requestId: 'test',
+    metrics: METRICS_MOCK as unknown as MetricsLogger,
+  }) as unknown as ApiRInj;
+});
+
+const injectorPromiseMock = (
+  quoters: QuoterByRoutingType,
+  tokenFetcher: TokenFetcher,
+  portionFetcher: PortionFetcher,
+  permit2Fetcher: Permit2Fetcher,
+  syntheticStatusProvider: SyntheticStatusProvider
+): Promise<ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>> =>
+  new Promise((resolve) =>
+    resolve({
+      getContainerInjected: (): ContainerInjected => {
+        const chainIdRpcMap = new Map<ChainId, providers.StaticJsonRpcProvider>();
+        for (const chain of Object.values(ChainId)) {
+          chainIdRpcMap.set(chain as ChainId, new providers.StaticJsonRpcProvider());
+        }
+        return {
+          quoters: quoters,
+          tokenFetcher: tokenFetcher,
+          portionFetcher: portionFetcher,
+          permit2Fetcher: permit2Fetcher,
+          syntheticStatusProvider,
+          chainIdRpcMap,
+        };
+      },
+      getRequestInjected: () => requestInjectedMock,
+    } as unknown as ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>)
+  );
+
+export const getQuoteHandler = (
+  quoters: QuoterByRoutingType,
+  tokenFetcher: TokenFetcher,
+  portionFetcher: PortionFetcher,
+  permit2Fetcher: Permit2Fetcher,
+  syntheticStatusProvider: SyntheticStatusProvider
+) =>
+  new QuoteHandler(
+    'quote',
+    injectorPromiseMock(quoters, tokenFetcher, portionFetcher, permit2Fetcher, syntheticStatusProvider)
+  );
+
+export const RfqQuoterMock = (dlQuote: DutchQuote): Quoter => {
+  return {
+    quote: jest.fn().mockResolvedValue(dlQuote),
+  };
+};
+
+export const RfqQuoterErrorMock = (axiosError: AxiosError): Quoter => {
+  return {
+    quote: jest.fn().mockReturnValue(Promise.reject(axiosError)),
+  };
+};
+
+export const ClassicQuoterMock = (classicQuote: ClassicQuote): Quoter => {
+  return {
+    quote: jest.fn().mockResolvedValue(classicQuote),
+  };
+};
+export const TokenFetcherMock = (addresses: string[], isError = false): TokenFetcher => {
+  const fetcher = {
+    resolveTokenBySymbolOrAddress: jest.fn(),
+    getTokenBySymbolOrAddress: (_chainId: number, address: string) => [TOKEN_IN, TOKEN_OUT].includes(address),
+  };
+
+  if (isError) {
+    fetcher.resolveTokenBySymbolOrAddress.mockRejectedValue(new Error('error'));
+    return fetcher as unknown as TokenFetcher;
+  }
+
+  for (const address of addresses) {
+    fetcher.resolveTokenBySymbolOrAddress.mockResolvedValueOnce(address);
+  }
+  return fetcher as unknown as TokenFetcher;
+};
+
+export const PortionFetcherMock = (portionResponse: GetPortionResponse): PortionFetcher => {
+  const portionCache = new NodeCache({ stdTTL: 600 });
+  const portionFetcher = new PortionFetcher('https://portion.uniswap.org/', portionCache);
+  jest.spyOn(portionFetcher, 'getPortion').mockResolvedValue(portionResponse);
+  return portionFetcher;
+};
+
+export const Permit2FetcherMock = (permitDetails: PermitDetails, isError = false): Permit2Fetcher => {
+  const fetcher = {
+    fetchAllowance: jest.fn(),
+  };
+
+  if (isError) {
+    fetcher.fetchAllowance.mockRejectedValue(new Error('error'));
+    return fetcher as unknown as Permit2Fetcher;
+  }
+
+  fetcher.fetchAllowance.mockResolvedValueOnce(permitDetails);
+  return fetcher as unknown as Permit2Fetcher;
+};
+
+export const SyntheticStatusProviderMock = (syntheticEnabled: boolean): SyntheticStatusProvider => {
+  const provider = {
+    getStatus: jest.fn(),
+  };
+
+  provider.getStatus.mockResolvedValueOnce({ syntheticEnabled });
+  return provider as unknown as SyntheticStatusProvider;
+};
+export const getEvent = (request: QuoteRequestBodyJSON, headers?: APIGatewayProxyEventHeaders): APIGatewayProxyEvent =>
+  ({
+    body: JSON.stringify(request),
+    ...(headers !== undefined && { headers: headers }),
+  } as APIGatewayProxyEvent);
+
 describe('QuoteHandler', () => {
   const OLD_ENV = process.env;
 
@@ -83,135 +215,7 @@ describe('QuoteHandler', () => {
   });
 
   describe('handler', () => {
-    const logger = {
-      info: jest.fn(),
-      error: jest.fn(),
-      child: () => ({
-        info: jest.fn(),
-        error: jest.fn(),
-        warn: jest.fn(),
-      }),
-    };
-
-    const metrics = {
-      putMetric: jest.fn(),
-    };
-    const requestInjectedMock: Promise<ApiRInj> = new Promise((resolve) => {
-      setGlobalLogger(logger as any);
-      resolve({
-        log: logger as unknown as Logger,
-        requestId: 'test',
-        metrics: metrics as unknown as MetricsLogger,
-      }) as unknown as ApiRInj;
-    });
-
-    const injectorPromiseMock = (
-      quoters: QuoterByRoutingType,
-      tokenFetcher: TokenFetcher,
-      portionFetcher: PortionFetcher,
-      permit2Fetcher: Permit2Fetcher,
-      syntheticStatusProvider: SyntheticStatusProvider
-    ): Promise<ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>> =>
-      new Promise((resolve) =>
-        resolve({
-          getContainerInjected: (): ContainerInjected => {
-            const chainIdRpcMap = new Map<ChainId, providers.StaticJsonRpcProvider>();
-            for (const chain of Object.values(ChainId)) {
-              chainIdRpcMap.set(chain as ChainId, new providers.StaticJsonRpcProvider());
-            }
-            return {
-              quoters: quoters,
-              tokenFetcher: tokenFetcher,
-              portionFetcher: portionFetcher,
-              permit2Fetcher: permit2Fetcher,
-              syntheticStatusProvider,
-              chainIdRpcMap,
-            };
-          },
-          getRequestInjected: () => requestInjectedMock,
-        } as unknown as ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>)
-      );
-
-    const getQuoteHandler = (
-      quoters: QuoterByRoutingType,
-      tokenFetcher: TokenFetcher,
-      portionFetcher: PortionFetcher,
-      permit2Fetcher: Permit2Fetcher,
-      syntheticStatusProvider: SyntheticStatusProvider
-    ) =>
-      new QuoteHandler(
-        'quote',
-        injectorPromiseMock(quoters, tokenFetcher, portionFetcher, permit2Fetcher, syntheticStatusProvider)
-      );
-
-    const RfqQuoterMock = (dlQuote: DutchQuote): Quoter => {
-      return {
-        quote: jest.fn().mockResolvedValue(dlQuote),
-      };
-    };
-
-    const RfqQuoterErrorMock = (axiosError: AxiosError): Quoter => {
-      return {
-        quote: jest.fn().mockReturnValue(Promise.reject(axiosError)),
-      };
-    };
-
-    const ClassicQuoterMock = (classicQuote: ClassicQuote): Quoter => {
-      return {
-        quote: jest.fn().mockResolvedValue(classicQuote),
-      };
-    };
-    const TokenFetcherMock = (addresses: string[], isError = false): TokenFetcher => {
-      const fetcher = {
-        resolveTokenBySymbolOrAddress: jest.fn(),
-        getTokenBySymbolOrAddress: (_chainId: number, address: string) => [TOKEN_IN, TOKEN_OUT].includes(address),
-      };
-
-      if (isError) {
-        fetcher.resolveTokenBySymbolOrAddress.mockRejectedValue(new Error('error'));
-        return fetcher as unknown as TokenFetcher;
-      }
-
-      for (const address of addresses) {
-        fetcher.resolveTokenBySymbolOrAddress.mockResolvedValueOnce(address);
-      }
-      return fetcher as unknown as TokenFetcher;
-    };
-    const PortionFetcherMock = (portionResponse: GetPortionResponse): PortionFetcher => {
-      const portionCache = new NodeCache({ stdTTL: 600 });
-      const portionFetcher = new PortionFetcher('https://portion.uniswap.org/', portionCache);
-      jest.spyOn(portionFetcher, 'getPortion').mockResolvedValue(portionResponse);
-      return portionFetcher;
-    };
-    const Permit2FetcherMock = (permitDetails: PermitDetails, isError = false): Permit2Fetcher => {
-      const fetcher = {
-        fetchAllowance: jest.fn(),
-      };
-
-      if (isError) {
-        fetcher.fetchAllowance.mockRejectedValue(new Error('error'));
-        return fetcher as unknown as Permit2Fetcher;
-      }
-
-      fetcher.fetchAllowance.mockResolvedValueOnce(permitDetails);
-      return fetcher as unknown as Permit2Fetcher;
-    };
-
-    const SyntheticStatusProviderMock = (syntheticEnabled: boolean): SyntheticStatusProvider => {
-      const provider = {
-        getStatus: jest.fn(),
-      };
-
-      provider.getStatus.mockResolvedValueOnce({ syntheticEnabled });
-      return provider as unknown as SyntheticStatusProvider;
-    };
-    const getEvent = (request: QuoteRequestBodyJSON, headers?: APIGatewayProxyEventHeaders): APIGatewayProxyEvent =>
-      ({
-        body: JSON.stringify(request),
-        ...(headers !== undefined && { headers: headers }),
-      } as APIGatewayProxyEvent);
-
-    describe('handler test', () => {
+    describe('Handler Test', () => {
       it('handles exactIn classic quotes', async () => {
         const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE) };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
@@ -871,7 +875,7 @@ describe('QuoteHandler', () => {
           getEvent(QUOTE_REQUEST_BODY_MULTI),
           {} as unknown as Context
         );
-        expect(logger.info).toHaveBeenCalledWith(
+        expect(LOGGER_MOCK.info).toHaveBeenCalledWith(
           expect.objectContaining({
             eventType: 'UnifiedRoutingQuoteRequest',
             body: expect.objectContaining({
@@ -889,7 +893,7 @@ describe('QuoteHandler', () => {
           })
         );
 
-        expect(logger.info).toHaveBeenCalledWith(
+        expect(LOGGER_MOCK.info).toHaveBeenCalledWith(
           expect.objectContaining({
             eventType: 'UnifiedRoutingQuoteResponse',
             body: expect.objectContaining({
@@ -928,7 +932,7 @@ describe('QuoteHandler', () => {
           portionFetcher,
           permit2Fetcher,
           syntheticStatusProvider
-        ).parseAndValidateRequest(event, logger as unknown as Logger);
+        ).parseAndValidateRequest(event, LOGGER_MOCK as unknown as Logger);
         expect(res.state).toBe('valid');
       });
 
@@ -951,7 +955,7 @@ describe('QuoteHandler', () => {
           portionFetcher,
           permit2Fetcher,
           syntheticStatusProvider
-        ).parseAndValidateRequest(event, logger as unknown as Logger);
+        ).parseAndValidateRequest(event, LOGGER_MOCK as unknown as Logger);
         expect(res.state).toBe('invalid');
       });
 
@@ -971,7 +975,7 @@ describe('QuoteHandler', () => {
           portionFetcher,
           permit2Fetcher,
           syntheticStatusProvider
-        ).parseAndValidateRequest(event, logger as unknown as Logger);
+        ).parseAndValidateRequest(event, LOGGER_MOCK as unknown as Logger);
         expect(res.state).toBe('valid');
       });
     });
@@ -1289,6 +1293,341 @@ describe('QuoteHandler', () => {
     it('removes all dutch limit requests', () => {
       const requests = removeDutchRequests([QUOTE_REQUEST_DL, QUOTE_REQUEST_CLASSIC]);
       expect(requests).toEqual([QUOTE_REQUEST_CLASSIC]);
+    });
+  });
+
+  describe('Failure Cases', () => {
+    const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+    const portionFetcher = PortionFetcherMock(GET_NO_PORTION_RESPONSE);
+    const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+    const syntheticStatusProvider = SyntheticStatusProviderMock(false);
+
+    function buildClassicRequestBody(requestInfo: Partial<QuoteRequestBodyJSON>): QuoteRequestBodyJSON {
+      return {
+        ...BASE_REQUEST_INFO_EXACT_IN,
+        configs: [
+          {
+            routingType: RoutingType.CLASSIC,
+            protocols: ['V3', 'V2', 'MIXED'],
+          },
+        ],
+        ...requestInfo,
+      };
+    }
+
+    describe('Validation', () => {
+      it('chainId mismatch', async () => {
+        const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER) };
+
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(
+          getEvent(buildClassicRequestBody({ tokenInChainId: 1, tokenOutChainId: 10 })),
+          {} as unknown as Context
+        );
+
+        expect(res.statusCode).toBe(400);
+        const { errorCode, detail } = JSON.parse(res.body);
+        expect(errorCode).toBe('VALIDATION_ERROR');
+        expect(detail).toBe('Cannot request quotes for tokens on different chains');
+      });
+
+      it('Throws RPC error for unknown chain', async () => {
+        const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER) };
+
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(
+          getEvent(buildClassicRequestBody({ tokenInChainId: 1234, tokenOutChainId: 1234 })),
+          {} as unknown as Context
+        );
+
+        expect(res.statusCode).toBe(400);
+        const { errorCode, detail } = JSON.parse(res.body);
+        expect(errorCode).toBe('VALIDATION_ERROR');
+        expect(detail).toContain('"tokenInChainId" must be one of');
+      });
+
+      it('invalid tokenIn', async () => {
+        const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER) };
+
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(
+          getEvent(buildClassicRequestBody({ tokenIn: '0x00000000000000000000000000000000000000000' })),
+          {} as unknown as Context
+        );
+
+        expect(res.statusCode).toBe(400);
+        const { errorCode, detail } = JSON.parse(res.body);
+        expect(errorCode).toBe('VALIDATION_ERROR');
+        expect(detail).toContain('"tokenIn" length must be');
+      });
+
+      it('invalid tokenOut', async () => {
+        const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER) };
+
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(
+          getEvent(buildClassicRequestBody({ tokenOut: '0x00000000000000000000000000000000000000000' })),
+          {} as unknown as Context
+        );
+
+        expect(res.statusCode).toBe(400);
+        const { errorCode, detail } = JSON.parse(res.body);
+        expect(errorCode).toBe('VALIDATION_ERROR');
+        expect(detail).toContain('"tokenOut" length must be');
+      });
+
+      it('negative amount', async () => {
+        const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER) };
+
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(buildClassicRequestBody({ amount: '-1234' })), {} as unknown as Context);
+
+        expect(res.statusCode).toBe(400);
+        const { errorCode, detail } = JSON.parse(res.body);
+        expect(errorCode).toBe('VALIDATION_ERROR');
+        expect(detail).toContain('Invalid amount: negative number');
+      });
+
+      it('invalid tradeType', async () => {
+        const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER) };
+
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(buildClassicRequestBody({ type: 'NOT_EXACT' })), {} as unknown as Context);
+
+        expect(res.statusCode).toBe(400);
+        const { errorCode, detail } = JSON.parse(res.body);
+        expect(errorCode).toBe('VALIDATION_ERROR');
+        expect(detail).toContain('"type" must be one of');
+      });
+
+      it('Unknown config type', async () => {
+        const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER) };
+
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(
+          getEvent(
+            buildClassicRequestBody({
+              configs: [
+                {
+                  routingType: 'UNKNOWN',
+                } as any,
+              ],
+            })
+          ),
+          {} as unknown as Context
+        );
+
+        expect(res.statusCode).toBe(400);
+        const { errorCode, detail } = JSON.parse(res.body);
+        expect(errorCode).toBe('VALIDATION_ERROR');
+        expect(detail).toContain('"configs[0]" does not match any of the allowed types');
+      });
+
+      it('no configs', async () => {
+        const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER) };
+
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(buildClassicRequestBody({ configs: [] })), {} as unknown as Context);
+
+        expect(res.statusCode).toBe(400);
+        const { errorCode, detail } = JSON.parse(res.body);
+        expect(errorCode).toBe('VALIDATION_ERROR');
+        expect(detail).toContain('"configs" must contain at least 1 items');
+      });
+
+      it('duplicate config', async () => {
+        const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER) };
+
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(
+          getEvent(
+            buildClassicRequestBody({
+              configs: [
+                {
+                  routingType: RoutingType.CLASSIC,
+                  protocols: ['V3', 'V2', 'MIXED'],
+                },
+                {
+                  routingType: RoutingType.CLASSIC,
+                  protocols: ['V3'],
+                },
+              ],
+            })
+          ),
+          {} as unknown as Context
+        );
+
+        expect(res.statusCode).toBe(400);
+        const { errorCode, detail } = JSON.parse(res.body);
+        expect(errorCode).toBe('VALIDATION_ERROR');
+        expect(detail).toContain('Duplicate routingType in configs');
+      });
+
+      it('required sub-fields are validated', async () => {
+        const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER) };
+
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(
+          getEvent(
+            buildClassicRequestBody({
+              configs: [
+                {
+                  routingType: RoutingType.CLASSIC,
+                  protocols: ['UNKNOWN_VERSION'],
+                },
+              ],
+            })
+          ),
+          {} as unknown as Context
+        );
+
+        expect(res.statusCode).toBe(400);
+        const { errorCode, detail } = JSON.parse(res.body);
+        expect(errorCode).toBe('VALIDATION_ERROR');
+        expect(detail).toContain('"configs[0]" does not match any of the allowed types');
+      });
+
+      it('optional sub-fields are validated', async () => {
+        const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER) };
+
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(
+          getEvent(
+            buildClassicRequestBody({
+              configs: [
+                {
+                  routingType: RoutingType.CLASSIC,
+                  protocols: ['V2'],
+                  recipient: '0x0000',
+                },
+              ],
+            })
+          ),
+          {} as unknown as Context
+        );
+
+        expect(res.statusCode).toBe(400);
+        const { errorCode, detail } = JSON.parse(res.body);
+        expect(errorCode).toBe('VALIDATION_ERROR');
+        expect(detail).toContain('"configs[0]" does not match any of the allowed types');
+      });
+
+      it('Invalid exclusivity override', async () => {
+        const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER) };
+
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(
+          getEvent(
+            buildClassicRequestBody({
+              configs: [
+                {
+                  routingType: RoutingType.DUTCH_LIMIT,
+                  swapper: SWAPPER,
+                  useSyntheticQuotes: true,
+                  exclusivityOverrideBps: -1,
+                },
+              ],
+            })
+          ),
+          {} as unknown as Context
+        );
+
+        expect(res.statusCode).toBe(400);
+        const { errorCode, detail } = JSON.parse(res.body);
+        expect(errorCode).toBe('VALIDATION_ERROR');
+        expect(detail).toContain('"configs[0]" does not match any of the allowed types');
+      });
+
+      it('Invalid exclusivity override', async () => {
+        const quoters = { [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER) };
+
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(
+          getEvent(
+            buildClassicRequestBody({
+              configs: [
+                {
+                  routingType: RoutingType.DUTCH_LIMIT,
+                  swapper: SWAPPER,
+                  useSyntheticQuotes: true,
+                  auctionPeriodSecs: -1,
+                },
+              ],
+            })
+          ),
+          {} as unknown as Context
+        );
+
+        expect(res.statusCode).toBe(400);
+        const { errorCode, detail } = JSON.parse(res.body);
+        expect(errorCode).toBe('VALIDATION_ERROR');
+        expect(detail).toContain('"configs[0]" does not match any of the allowed types');
+      });
     });
   });
 });
