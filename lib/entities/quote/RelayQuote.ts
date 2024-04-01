@@ -156,8 +156,6 @@ export class RelayQuote implements IQuote {
     };
   }
 
-  // Callers MUST add the calldata to the order before submitting it
-  // by default we build orders with calldata that will revert
   public toOrder(): RelayOrder {
     const orderBuilder = new RelayOrderBuilder(this.chainId);
     const feeStartTime = Math.floor(Date.now() / 1000);
@@ -227,7 +225,7 @@ export class RelayQuote implements IQuote {
         {
           slippageTolerance: this.slippage,
           recipient: this.swapper,
-          payerIsUser: false,
+          useRouterBalance: true,
           deadlineOrPreviousBlockhash: deadline
         }
       )
@@ -286,7 +284,8 @@ export class RelayQuote implements IQuote {
   }
 
   validate(): boolean {
-    // TODO:
+    // fee escalation must be strictly increasing
+    if(this.amountInGasTokenStart.gt(this.amountInGasTokenEnd)) return false;
     return true;
   }
 
