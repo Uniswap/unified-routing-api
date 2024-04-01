@@ -16,7 +16,7 @@ export interface RelayConfig extends ClassicConfig {
   auctionPeriodSecs?: number;
   deadlineBufferSecs?: number;
   // Passed in by cients
-  amountInGasTokenStartOverride?: string;
+  feeAmountStartOverride?: string;
 }
 
 export interface RelayQuoteRequestInfo extends QuoteRequestInfo {
@@ -30,7 +30,7 @@ export interface RelayConfigJSON extends Omit<ClassicConfigJSON, 'routingType'> 
   startTimeBufferSecs?: number;
   auctionPeriodSecs?: number;
   deadlineBufferSecs?: number;
-  amountInGasTokenStartOverride?: string;
+  feeAmountStartOverride?: string;
 }
 
 export class RelayRequest implements QuoteRequest {
