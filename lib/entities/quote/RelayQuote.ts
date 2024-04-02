@@ -213,15 +213,12 @@ export class RelayQuote implements IQuote {
 
   public universalRouterCalldata(deadline: number): string {
     return SwapRouter.swapCallParameters(
-      new UniswapTrade(
-        this.classicQuote.toRouterTrade(),
-        {
-          slippageTolerance: this.slippage,
-          recipient: this.swapper,
-          useRouterBalance: true,
-          deadlineOrPreviousBlockhash: deadline
-        }
-      )
+      new UniswapTrade(this.classicQuote.toRouterTrade(), {
+        slippageTolerance: this.slippage,
+        recipient: this.swapper,
+        useRouterBalance: true,
+        deadlineOrPreviousBlockhash: deadline,
+      })
     ).calldata;
   }
 
@@ -264,7 +261,7 @@ export class RelayQuote implements IQuote {
 
   validate(): boolean {
     // fee escalation must be strictly increasing
-    if(this.feeAmountStart.gt(this.feeAmountEnd)) return false;
+    if (this.feeAmountStart.gt(this.feeAmountEnd)) return false;
     return true;
   }
 
@@ -277,11 +274,7 @@ export class RelayQuote implements IQuote {
     const gasAdjustment = RelayQuote.getGasAdjustment();
 
     if (gasAdjustment.eq(0)) return feeAmountStart;
-    return RelayQuote.getGasAdjustedAmounts(
-      feeAmountStart,
-      gasAdjustment,
-      classicQuote
-    );
+    return RelayQuote.getGasAdjustedAmounts(feeAmountStart, gasAdjustment, classicQuote);
   }
 
   static getGasAdjustedAmounts(

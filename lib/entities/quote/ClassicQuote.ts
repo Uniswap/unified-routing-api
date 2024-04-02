@@ -3,6 +3,7 @@ import { MethodParameters } from '@uniswap/smart-order-router';
 import { BigNumber } from 'ethers';
 
 import { PermitDetails, PermitSingleData, PermitTransferFromData } from '@uniswap/permit2-sdk';
+import { Trade } from '@uniswap/router-sdk';
 import { RouterTradeAdapter, V2PoolInRoute, V3PoolInRoute } from '@uniswap/universal-router-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { QuoteRequest } from '..';
@@ -11,7 +12,6 @@ import { Portion, PortionType } from '../../fetchers/PortionFetcher';
 import { createPermitData } from '../../util/permit2';
 import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
 import { IQuote, LogJSON } from './index';
-import { Trade } from '@uniswap/router-sdk';
 
 export type ClassicQuoteDataJSON = {
   requestId: string;
@@ -189,7 +189,7 @@ export class ClassicQuote implements IQuote {
   }
 
   public toRouterTrade(): Trade<Currency, Currency, TradeType> {
-    if(!this.quoteData.route) throw new Error('Route is missing from classic quote data');
+    if (!this.quoteData.route) throw new Error('Route is missing from classic quote data');
 
     return RouterTradeAdapter.fromClassicQuote({
       route: this.quoteData.route,
