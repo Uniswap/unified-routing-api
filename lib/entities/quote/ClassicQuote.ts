@@ -1,9 +1,9 @@
-import { TradeType } from '@uniswap/sdk-core';
+import { Currency, TradeType } from '@uniswap/sdk-core';
 import { MethodParameters } from '@uniswap/smart-order-router';
 import { BigNumber } from 'ethers';
 
 import { PermitDetails, PermitSingleData, PermitTransferFromData } from '@uniswap/permit2-sdk';
-import { V2PoolInRoute, V3PoolInRoute } from '@uniswap/universal-router-sdk';
+import { RouterTradeAdapter, V2PoolInRoute, V3PoolInRoute } from '@uniswap/universal-router-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { QuoteRequest } from '..';
 import { RoutingType } from '../../constants';
@@ -11,6 +11,7 @@ import { Portion, PortionType } from '../../fetchers/PortionFetcher';
 import { createPermitData } from '../../util/permit2';
 import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
 import { IQuote, LogJSON } from './index';
+import { Trade } from '@uniswap/router-sdk';
 
 export type ClassicQuoteDataJSON = {
   requestId: string;
@@ -101,7 +102,7 @@ export class ClassicQuote implements IQuote {
     };
   }
 
-  getPermitData(): PermitSingleData | undefined {
+  public getPermitData(): PermitSingleData | undefined {
     if (
       !this.request.info.swapper ||
       (this.allowanceData &&
@@ -185,5 +186,16 @@ export class ClassicQuote implements IQuote {
       recipient: this.quoteData.portionRecipient,
       type: this.request.info.portion?.type ?? PortionType.Flat,
     };
+  }
+
+  public toRouterTrade(): Trade<Currency, Currency, TradeType> {
+    if(!this.quoteData.route) throw new Error('Route is missing from classic quote data');
+
+    return RouterTradeAdapter.fromClassicQuote({
+      route: this.quoteData.route,
+      tokenIn: this.request.info.tokenIn,
+      tokenOut: this.request.info.tokenOut,
+      tradeType: this.request.info.type,
+    });
   }
 }
