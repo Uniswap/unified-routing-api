@@ -225,16 +225,6 @@ export class RelayQuote implements IQuote {
     ).calldata;
   }
 
-  // Value used only for comparing relay quotes vs. other types of quotes
-  public get amountInGasAndPortionAdjustedClassic(): BigNumber {
-    return this.classicQuote.amountInGasAndPortionAdjusted;
-  }
-
-  // Value used only for comparing relay quotes vs. other types of quotes
-  public get amountOutGasAndPortionAdjustedClassic(): BigNumber {
-    return this.classicQuote.amountOutGasAndPortionAdjusted;
-  }
-
   // The number of seconds from now that fee escalation should begin
   public get startTimeBufferSecs(): number {
     if (this.request.config.startTimeBufferSecs !== undefined) {
