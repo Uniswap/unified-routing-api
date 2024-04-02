@@ -556,8 +556,8 @@ export const RELAY_QUOTE_DATA: {
     tokenOut: TOKEN_OUT,
     amountOut: AMOUNT,
     gasToken: TOKEN_IN,
-    amountInGasTokenStart: AMOUNT,
-    amountInGasTokenEnd: AMOUNT,
+    feeAmountStart: AMOUNT,
+    feeAmountEnd: AMOUNT,
     swapper: SWAPPER,
     classicQuoteData: CLASSIC_QUOTE_DATA_WITH_ROUTE_AND_GAS_TOKEN.quote,
   },
@@ -903,7 +903,7 @@ export function createRelayQuoteWithRequest(
 }
 
 export const RELAY_QUOTE_EXACT_IN_BETTER = createRelayQuote(
-  { amountOut: AMOUNT_BETTER, amountInGasTokenStart: AMOUNT_BETTER, amountInGasTokenEnd: AMOUNT_BETTER, classicQuoteData: {
+  { amountOut: AMOUNT_BETTER, feeAmountStart: AMOUNT_BETTER, feeAmountEnd: AMOUNT_BETTER, classicQuoteData: {
     ...CLASSIC_QUOTE_DATA_WITH_ROUTE_AND_GAS_TOKEN.quote,
     quote: AMOUNT_BETTER,
     quoteGasAndPortionAdjusted: AMOUNT_BETTER,
@@ -913,8 +913,8 @@ export const RELAY_QUOTE_EXACT_IN_BETTER = createRelayQuote(
 export const RELAY_QUOTE_NATIVE_EXACT_IN_BETTER = createRelayQuoteWithRequest(
   {
     amountIn: AMOUNT_BETTER,
-    amountInGasTokenStart: AMOUNT_BETTER,
-    amountInGasTokenEnd: AMOUNT_BETTER,
+    feeAmountStart: AMOUNT_BETTER,
+    feeAmountEnd: AMOUNT_BETTER,
   },
   {
     tokenIn: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_IN_ID)].address,
@@ -925,11 +925,11 @@ export const RELAY_QUOTE_NATIVE_EXACT_IN_BETTER = createRelayQuoteWithRequest(
   }
 );
 export const RELAY_QUOTE_EXACT_IN_WORSE = createRelayQuote(
-  { amountOut: AMOUNT, amountInGasTokenStart: AMOUNT, amountInGasTokenEnd: AMOUNT },
+  { amountOut: AMOUNT, feeAmountStart: AMOUNT, feeAmountEnd: AMOUNT },
   'EXACT_INPUT'
 );
 export const RELAY_QUOTE_EXACT_OUT_BETTER = createRelayQuote(
-  { amountIn: AMOUNT, amountInGasTokenStart: AMOUNT, amountInGasTokenEnd: AMOUNT, classicQuoteData: {
+  { amountIn: AMOUNT, feeAmountStart: AMOUNT, feeAmountEnd: AMOUNT, classicQuoteData: {
     ...CLASSIC_QUOTE_DATA_WITH_ROUTE_AND_GAS_TOKEN.quote,
     quote: AMOUNT,
     quoteGasAndPortionAdjusted: AMOUNT,
@@ -938,7 +938,7 @@ export const RELAY_QUOTE_EXACT_OUT_BETTER = createRelayQuote(
   'EXACT_OUTPUT'
 );
 export const RELAY_QUOTE_EXACT_OUT_WORSE = createRelayQuote(
-  { amountIn: AMOUNT_BETTER, amountInGasTokenStart: AMOUNT_BETTER, amountInGasTokenEnd: AMOUNT_BETTER, classicQuoteData: {
+  { amountIn: AMOUNT_BETTER, feeAmountStart: AMOUNT_BETTER, feeAmountEnd: AMOUNT_BETTER, classicQuoteData: {
     ...CLASSIC_QUOTE_DATA_WITH_ROUTE_AND_GAS_TOKEN.quote,
     quote: AMOUNT_BETTER,
     quoteGasAndPortionAdjusted: AMOUNT_BETTER,

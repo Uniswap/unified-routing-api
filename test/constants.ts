@@ -368,282 +368,283 @@ export const DUTCH_LIMIT_ORDER_JSON_WITH_PORTION = {
 };
 
 export const RELAY_ORDER_JSON = {
-  "orderInfo": {
-    "chainId": 1,
-    "permit2Address": "0x000000000022d473030f116ddee9f6b43ac78ba3",
-    "reactor": "0x0000000000000000000000000000000000000000",
-    "swapper": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-    "nonce": "65277495437622379544597053445039140184959683828055940449931827006038205742848",
-    "deadline": 1710789023,
-    "universalRouterCalldata": "0x",
-    "input": {
-      "token": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
-      "amount": "1000000000000000000",
-      "recipient": "0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD"
+  orderInfo: {
+    chainId: 1,
+    permit2Address: '0x000000000022d473030f116ddee9f6b43ac78ba3',
+    reactor: '0x0000000000000000000000000000000000000000',
+    swapper: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+    nonce: '65277495437622379544597053445039140184959683828055940449931827006038205742848',
+    deadline: 1710789023,
+    universalRouterCalldata: '0x',
+    input: {
+      token: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
+      amount: '1000000000000000000',
+      recipient: '0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD',
     },
-    "fee": {
-      "token": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
-      "startAmount": "1000000000000000000",
-      "endAmount": "1000000000000087500",
-      "startTime": 1710788951,
-      "endTime": 1710789011
-    }
+    fee: {
+      token: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
+      startAmount: '1000000000000000000',
+      endAmount: '1000000000000087500',
+      startTime: 1710788951,
+      endTime: 1710789011,
+    },
   },
-  "encodedOrder": "0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee9051c0cbc978303b73d6283285f0dc56cacda690661f99bcdc72d8e769a73f000000000000000000000000000000000000000000000000000000000065f8919f0000000000000000000000001f9840a85d5af5bf1d1762f925bdaddc4201f9840000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000003fc91a3afd70395cd496c647d5a6cc9d4b2b7fad0000000000000000000000001f9840a85d5af5bf1d1762f925bdaddc4201f9840000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000000000000000000000000000000de0b6b3a76555cc0000000000000000000000000000000000000000000000000000000065f891570000000000000000000000000000000000000000000000000000000065f8919300000000000000000000000000000000000000000000000000000000000001a00000000000000000000000000000000000000000000000000000000000000000",
-  "quoteId": "85bf86b5-15e2-4fc1-b8af-8a6606d44fc7",
-  "requestId": "requestId",
-  "orderHash": "0xb5a5ec19607037bd17eebc87322e389a8ef636b0d62e0470c83b751cfb8e2082",
-  "startTimeBufferSecs": 45,
-  "auctionPeriodSecs": 60,
-  "deadlineBufferSecs": 12,
-  "slippageTolerance": "0.5",
-  "permitData": {
-    "domain": {
-      "name": "Permit2",
-      "chainId": 1,
-      "verifyingContract": "0x000000000022d473030f116ddee9f6b43ac78ba3"
+  encodedOrder:
+    '0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee9051c0cbc978303b73d6283285f0dc56cacda690661f99bcdc72d8e769a73f000000000000000000000000000000000000000000000000000000000065f8919f0000000000000000000000001f9840a85d5af5bf1d1762f925bdaddc4201f9840000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000003fc91a3afd70395cd496c647d5a6cc9d4b2b7fad0000000000000000000000001f9840a85d5af5bf1d1762f925bdaddc4201f9840000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000000000000000000000000000000de0b6b3a76555cc0000000000000000000000000000000000000000000000000000000065f891570000000000000000000000000000000000000000000000000000000065f8919300000000000000000000000000000000000000000000000000000000000001a00000000000000000000000000000000000000000000000000000000000000000',
+  quoteId: '85bf86b5-15e2-4fc1-b8af-8a6606d44fc7',
+  requestId: 'requestId',
+  orderHash: '0xb5a5ec19607037bd17eebc87322e389a8ef636b0d62e0470c83b751cfb8e2082',
+  startTimeBufferSecs: 45,
+  auctionPeriodSecs: 60,
+  deadlineBufferSecs: 12,
+  slippageTolerance: '0.5',
+  permitData: {
+    domain: {
+      name: 'Permit2',
+      chainId: 1,
+      verifyingContract: '0x000000000022d473030f116ddee9f6b43ac78ba3',
     },
-    "types": {
-      "PermitBatchWitnessTransferFrom": [
+    types: {
+      PermitBatchWitnessTransferFrom: [
         {
-          "name": "permitted",
-          "type": "TokenPermissions[]"
+          name: 'permitted',
+          type: 'TokenPermissions[]',
         },
         {
-          "name": "spender",
-          "type": "address"
+          name: 'spender',
+          type: 'address',
         },
         {
-          "name": "nonce",
-          "type": "uint256"
+          name: 'nonce',
+          type: 'uint256',
         },
         {
-          "name": "deadline",
-          "type": "uint256"
+          name: 'deadline',
+          type: 'uint256',
         },
         {
-          "name": "witness",
-          "type": "RelayOrder"
-        }
+          name: 'witness',
+          type: 'RelayOrder',
+        },
       ],
-      "TokenPermissions": [
+      TokenPermissions: [
         {
-          "name": "token",
-          "type": "address"
+          name: 'token',
+          type: 'address',
         },
         {
-          "name": "amount",
-          "type": "uint256"
-        }
+          name: 'amount',
+          type: 'uint256',
+        },
       ],
-      "RelayOrder": [
+      RelayOrder: [
         {
-          "name": "info",
-          "type": "RelayOrderInfo"
+          name: 'info',
+          type: 'RelayOrderInfo',
         },
         {
-          "name": "input",
-          "type": "Input"
+          name: 'input',
+          type: 'Input',
         },
         {
-          "name": "fee",
-          "type": "FeeEscalator"
+          name: 'fee',
+          type: 'FeeEscalator',
         },
         {
-          "name": "universalRouterCalldata",
-          "type": "bytes"
-        }
+          name: 'universalRouterCalldata',
+          type: 'bytes',
+        },
       ],
-      "RelayOrderInfo": [
+      RelayOrderInfo: [
         {
-          "name": "reactor",
-          "type": "address"
+          name: 'reactor',
+          type: 'address',
         },
         {
-          "name": "swapper",
-          "type": "address"
+          name: 'swapper',
+          type: 'address',
         },
         {
-          "name": "nonce",
-          "type": "uint256"
+          name: 'nonce',
+          type: 'uint256',
         },
         {
-          "name": "deadline",
-          "type": "uint256"
-        }
+          name: 'deadline',
+          type: 'uint256',
+        },
       ],
-      "Input": [
+      Input: [
         {
-          "name": "token",
-          "type": "address"
+          name: 'token',
+          type: 'address',
         },
         {
-          "name": "amount",
-          "type": "uint256"
+          name: 'amount',
+          type: 'uint256',
         },
         {
-          "name": "recipient",
-          "type": "address"
-        }
+          name: 'recipient',
+          type: 'address',
+        },
       ],
-      "FeeEscalator": [
+      FeeEscalator: [
         {
-          "name": "token",
-          "type": "address"
+          name: 'token',
+          type: 'address',
         },
         {
-          "name": "startAmount",
-          "type": "uint256"
+          name: 'startAmount',
+          type: 'uint256',
         },
         {
-          "name": "endAmount",
-          "type": "uint256"
+          name: 'endAmount',
+          type: 'uint256',
         },
         {
-          "name": "startTime",
-          "type": "uint256"
+          name: 'startTime',
+          type: 'uint256',
         },
         {
-          "name": "endTime",
-          "type": "uint256"
-        }
-      ]
+          name: 'endTime',
+          type: 'uint256',
+        },
+      ],
     },
-    "values": {
-      "permitted": [
+    values: {
+      permitted: [
         {
-          "token": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
-          "amount": {
-            "type": "BigNumber",
-            "hex": "0x0de0b6b3a7640000"
-          }
+          token: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
+          amount: {
+            type: 'BigNumber',
+            hex: '0x0de0b6b3a7640000',
+          },
         },
         {
-          "token": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
-          "amount": {
-            "type": "BigNumber",
-            "hex": "0x0de0b6b3a76555cc"
-          }
-        }
+          token: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
+          amount: {
+            type: 'BigNumber',
+            hex: '0x0de0b6b3a76555cc',
+          },
+        },
       ],
-      "spender": "0x0000000000000000000000000000000000000000",
-      "nonce": {
-        "type": "BigNumber",
-        "hex": "0x9051c0cbc978303b73d6283285f0dc56cacda690661f99bcdc72d8e769a73f00"
+      spender: '0x0000000000000000000000000000000000000000',
+      nonce: {
+        type: 'BigNumber',
+        hex: '0x9051c0cbc978303b73d6283285f0dc56cacda690661f99bcdc72d8e769a73f00',
       },
-      "deadline": 1710789023,
-      "witness": {
-        "info": {
-          "reactor": "0x0000000000000000000000000000000000000000",
-          "swapper": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-          "nonce": {
-            "type": "BigNumber",
-            "hex": "0x9051c0cbc978303b73d6283285f0dc56cacda690661f99bcdc72d8e769a73f00"
+      deadline: 1710789023,
+      witness: {
+        info: {
+          reactor: '0x0000000000000000000000000000000000000000',
+          swapper: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+          nonce: {
+            type: 'BigNumber',
+            hex: '0x9051c0cbc978303b73d6283285f0dc56cacda690661f99bcdc72d8e769a73f00',
           },
-          "deadline": 1710789023
+          deadline: 1710789023,
         },
-        "input": {
-          "token": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
-          "amount": {
-            "type": "BigNumber",
-            "hex": "0x0de0b6b3a7640000"
+        input: {
+          token: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
+          amount: {
+            type: 'BigNumber',
+            hex: '0x0de0b6b3a7640000',
           },
-          "recipient": "0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD"
+          recipient: '0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD',
         },
-        "fee": {
-          "token": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
-          "startAmount": {
-            "type": "BigNumber",
-            "hex": "0x0de0b6b3a7640000"
+        fee: {
+          token: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
+          startAmount: {
+            type: 'BigNumber',
+            hex: '0x0de0b6b3a7640000',
           },
-          "endAmount": {
-            "type": "BigNumber",
-            "hex": "0x0de0b6b3a76555cc"
+          endAmount: {
+            type: 'BigNumber',
+            hex: '0x0de0b6b3a76555cc',
           },
-          "startTime": 1710788951,
-          "endTime": 1710789011
+          startTime: 1710788951,
+          endTime: 1710789011,
         },
-        "universalRouterCalldata": "0x"
-      }
-    }
+        universalRouterCalldata: '0x',
+      },
+    },
   },
-  "classicQuoteData": {
-    "requestId": "requestId",
-    "quoteId": "fb410404-d6d8-4a92-833a-9e829cf9dce3",
-    "amount": "1000000000000000000",
-    "amountDecimals": "18",
-    "quote": "1000000000000000000",
-    "quoteDecimals": "18",
-    "quoteGasAdjusted": "1000000000000000000",
-    "quoteGasAdjustedDecimals": "18",
-    "gasUseEstimate": "100",
-    "gasUseEstimateQuote": "100",
-    "gasUseEstimateQuoteDecimals": "18",
-    "gasUseEstimateUSD": "100",
-    "simulationStatus": "start",
-    "gasPriceWei": "10000",
-    "blockNumber": "1234",
-    "route": [],
-    "routeString": "USD-ETH",
-    "permitNonce": "1",
-    "tradeType": "EXACT_INPUT",
-    "slippage": 0.5,
-    "portionBips": 0,
-    "portionRecipient": "0x0000000000000000000000000000000000000000",
-    "gasUseEstimateGasToken": "1000000000000000000",
-    "gasUseEstimateGasTokenDecimals": "18",
-    "permitData": {
-      "domain": {
-        "name": "Permit2",
-        "chainId": 1,
-        "verifyingContract": "0x000000000022D473030F116dDEE9F6B43aC78BA3"
+  classicQuoteData: {
+    requestId: 'requestId',
+    quoteId: 'fb410404-d6d8-4a92-833a-9e829cf9dce3',
+    amount: '1000000000000000000',
+    amountDecimals: '18',
+    quote: '1000000000000000000',
+    quoteDecimals: '18',
+    quoteGasAdjusted: '1000000000000000000',
+    quoteGasAdjustedDecimals: '18',
+    gasUseEstimate: '100',
+    gasUseEstimateQuote: '100',
+    gasUseEstimateQuoteDecimals: '18',
+    gasUseEstimateUSD: '100',
+    simulationStatus: 'start',
+    gasPriceWei: '10000',
+    blockNumber: '1234',
+    route: [],
+    routeString: 'USD-ETH',
+    permitNonce: '1',
+    tradeType: 'EXACT_INPUT',
+    slippage: 0.5,
+    portionBips: 0,
+    portionRecipient: '0x0000000000000000000000000000000000000000',
+    gasUseEstimateGasToken: '1000000000000000000',
+    gasUseEstimateGasTokenDecimals: '18',
+    permitData: {
+      domain: {
+        name: 'Permit2',
+        chainId: 1,
+        verifyingContract: '0x000000000022D473030F116dDEE9F6B43aC78BA3',
       },
-      "types": {
-        "PermitSingle": [
+      types: {
+        PermitSingle: [
           {
-            "name": "details",
-            "type": "PermitDetails"
+            name: 'details',
+            type: 'PermitDetails',
           },
           {
-            "name": "spender",
-            "type": "address"
+            name: 'spender',
+            type: 'address',
           },
           {
-            "name": "sigDeadline",
-            "type": "uint256"
-          }
+            name: 'sigDeadline',
+            type: 'uint256',
+          },
         ],
-        "PermitDetails": [
+        PermitDetails: [
           {
-            "name": "token",
-            "type": "address"
+            name: 'token',
+            type: 'address',
           },
           {
-            "name": "amount",
-            "type": "uint160"
+            name: 'amount',
+            type: 'uint160',
           },
           {
-            "name": "expiration",
-            "type": "uint48"
+            name: 'expiration',
+            type: 'uint48',
           },
           {
-            "name": "nonce",
-            "type": "uint48"
-          }
-        ]
+            name: 'nonce',
+            type: 'uint48',
+          },
+        ],
       },
-      "values": {
-        "details": {
-          "token": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
-          "amount": "1461501637330902918203684832716283019655932542975",
-          "expiration": "1713380951",
-          "nonce": "0"
+      values: {
+        details: {
+          token: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
+          amount: '1461501637330902918203684832716283019655932542975',
+          expiration: '1713380951',
+          nonce: '0',
         },
-        "spender": "0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD",
-        "sigDeadline": "1710790751"
-      }
-    }
-  }
+        spender: '0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD',
+        sigDeadline: '1710790751',
+      },
+    },
+  },
 };
 
 export const GREENLIST_TOKEN_PAIRS: Array<[Currency, Currency]> = [

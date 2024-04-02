@@ -1,18 +1,15 @@
-import { ChainId } from '@uniswap/sdk-core';
-
 import Logger from 'bunyan';
 import { ethers } from 'ethers';
 import { QuoteByKey, QuoteContext } from '.';
 import { ClassicQuote, ClassicRequest, Quote, QuoteRequest, RelayQuote } from '..';
-import { LARGE_TRADE_USD_THRESHOLD, RoutingType } from '../../constants';
-import { getQuoteSizeEstimateUSD } from '../../util/quoteMath';
+import { RoutingType } from '../../constants';
 import { RelayRequest } from '../request/RelayRequest';
 
 export type RelayQuoteContextProviders = {
   rpcProvider: ethers.providers.StaticJsonRpcProvider;
 };
 
-// manages context around a single top level classic quote request
+// manages context around a single top level relay quote request
 export class RelayQuoteContext implements QuoteContext {
   routingType: RoutingType.RELAY;
   private log: Logger;
@@ -76,19 +73,5 @@ export class RelayQuoteContext implements QuoteContext {
     // if its invalid for some reason, i.e. too much decay then return null
     if (!quote.validate()) return null;
     return quote;
-  }
-
-  // TODO: might not need, keeping for now
-  isLargeOrder(log: Logger, classicQuote: Quote): boolean {
-    // gasUseEstimateUSD on other chains seem to be unreliable
-    if (
-      classicQuote.request.info.tokenInChainId !== ChainId.MAINNET ||
-      classicQuote.request.info.tokenOutChainId !== ChainId.MAINNET
-    ) {
-      return false;
-    }
-    const quoteSizeEstimateUSD = getQuoteSizeEstimateUSD(classicQuote);
-    log.info({ quoteSize: quoteSizeEstimateUSD.toString() }, 'Quote size estimate in USD');
-    return quoteSizeEstimateUSD.gte(LARGE_TRADE_USD_THRESHOLD);
   }
 }

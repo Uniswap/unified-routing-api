@@ -1,5 +1,5 @@
 import { RelayOrder, RelayOrderBuilder, RelayOrderInfoJSON } from '@uniswap/uniswapx-sdk';
-import { RouterTradeAdapter, SwapRouter, UniswapTrade, UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
+import { SwapRouter, UniswapTrade, UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { BigNumber, ethers } from 'ethers';
 
 import { PermitBatchTransferFromData } from '@uniswap/permit2-sdk';
@@ -35,8 +35,8 @@ export type RelayQuoteJSON = {
   tokenOut: string;
   amountIn: string;
   amountOut: string;
-  amountInGasTokenStart: string;
-  amountInGasTokenEnd: string;
+  feeAmountStart: string;
+  feeAmountEnd: string;
   swapper: string;
   gasToken: string;
   // from classic quote
@@ -53,11 +53,16 @@ type RelayQuoteConstructorArgs = {
   tokenOut: string;
   amountIn: BigNumber;
   amountOut: BigNumber;
-  amountInGasTokenStart: BigNumber;
-  amountInGasTokenEnd: BigNumber;
+  feeAmountStart: BigNumber;
+  feeAmountEnd: BigNumber;
   swapper: string;
   classicQuoteData: ClassicQuoteDataJSON;
   nonce?: string;
+};
+
+type FeeStartEndAmounts = {
+  feeAmountStart: BigNumber;
+  feeAmountEnd: BigNumber;
 };
 
 export class RelayQuote implements IQuote {
@@ -77,8 +82,8 @@ export class RelayQuote implements IQuote {
   public readonly amountIn: BigNumber;
   public readonly amountOut: BigNumber;
   // Used for gas token parameterization
-  public readonly amountInGasTokenStart: BigNumber;
-  public readonly amountInGasTokenEnd: BigNumber;
+  public readonly feeAmountStart: BigNumber;
+  public readonly feeAmountEnd: BigNumber;
   public readonly swapper: string;
   // Used to compare X quotes vs Relay quotes
   public readonly classicQuoteData: ClassicQuoteDataJSON;
@@ -94,8 +99,8 @@ export class RelayQuote implements IQuote {
       tokenOut: body.tokenOut,
       amountIn: BigNumber.from(body.amountIn),
       amountOut: BigNumber.from(body.amountOut),
-      amountInGasTokenStart: BigNumber.from(body.amountInGasTokenStart),
-      amountInGasTokenEnd: BigNumber.from(body.amountInGasTokenEnd),
+      feeAmountStart: BigNumber.from(body.feeAmountStart),
+      feeAmountEnd: BigNumber.from(body.feeAmountEnd),
       swapper: body.swapper,
       classicQuoteData: body.classicQuoteData,
       nonce,
@@ -108,10 +113,13 @@ export class RelayQuote implements IQuote {
     if (!classicQuote.gasUseEstimateGasToken) {
       throw new Error('Classic quote must have gasUseEstimateGasToken');
     }
-    const amountInGasTokenStart = request.config.amountInGasTokenStartOverride
-      ? BigNumber.from(request.config.amountInGasTokenStartOverride)
+    const gasEstimateInFeeToken = request.config.feeAmountStartOverride
+      ? BigNumber.from(request.config.feeAmountStartOverride)
       : classicQuote.gasUseEstimateGasToken;
-    const amountInGasTokenEnd = this.applyGasAdjustment(amountInGasTokenStart, classicQuote);
+    const {
+      feeAmountStart,
+      feeAmountEnd,
+    } = this.applyGasAdjustment(gasEstimateInFeeToken, classicQuote);
 
     return new RelayQuote({
       createdAtMs: classicQuote.createdAtMs,
@@ -123,8 +131,8 @@ export class RelayQuote implements IQuote {
       tokenOut: request.info.tokenOut,
       amountIn: classicQuote.amountIn, // apply no gas adjustment
       amountOut: classicQuote.amountOut, // apply no gas adjustment
-      amountInGasTokenStart,
-      amountInGasTokenEnd,
+      feeAmountStart,
+      feeAmountEnd,
       swapper: request.config.swapper,
       classicQuoteData: classicQuote.toJSON(),
       nonce: generateRandomNonce(), // add a nonce
@@ -156,8 +164,6 @@ export class RelayQuote implements IQuote {
     };
   }
 
-  // Callers MUST add the calldata to the order before submitting it
-  // by default we build orders with calldata that will revert
   public toOrder(): RelayOrder {
     const orderBuilder = new RelayOrderBuilder(this.chainId);
     const feeStartTime = Math.floor(Date.now() / 1000);
@@ -177,8 +183,8 @@ export class RelayQuote implements IQuote {
       // Add the gas token input to the filler
       .fee({
         token: this.request.config.gasToken,
-        startAmount: this.amountInGasTokenStart,
-        endAmount: this.amountInGasTokenEnd,
+        startAmount: this.feeAmountStart,
+        endAmount: this.feeAmountEnd,
         startTime: feeStartTime,
         endTime: feeStartTime + this.auctionPeriodSecs,
       })
@@ -190,14 +196,13 @@ export class RelayQuote implements IQuote {
   public toLog(): LogJSON {
     return {
       ...this.classicQuote.toLog(),
-      // TODO: determine which fields to override here
       requestId: this.requestId,
       quoteId: this.quoteId,
       amountIn: this.amountIn.toString(),
       amountOut: this.amountOut.toString(),
       gasToken: this.request.config.gasToken,
-      amountInGasTokenStart: this.amountInGasTokenStart.toString(),
-      amountInGasTokenEnd: this.amountInGasTokenEnd.toString(),
+      feeAmountStart: this.feeAmountStart.toString(),
+      feeAmountEnd: this.feeAmountEnd.toString(),
       swapper: this.swapper,
       routing: RoutingType[this.routingType],
       slippage: parseFloat(this.request.info.slippageTolerance),
@@ -215,33 +220,14 @@ export class RelayQuote implements IQuote {
   }
 
   public universalRouterCalldata(deadline: number): string {
-    const route = this.classicQuote.toJSON().route;
     return SwapRouter.swapCallParameters(
-      new UniswapTrade(
-        RouterTradeAdapter.fromClassicQuote({
-          route,
-          tokenIn: this.tokenIn,
-          tokenOut: this.tokenOut,
-          tradeType: this.request.info.type,
-        }),
-        {
-          slippageTolerance: this.slippage,
-          recipient: this.swapper,
-          payerIsUser: false,
-          deadlineOrPreviousBlockhash: deadline,
-        }
-      )
+      new UniswapTrade(this.classicQuote.toRouterTrade(), {
+        slippageTolerance: this.slippage,
+        recipient: this.swapper,
+        useRouterBalance: true,
+        deadlineOrPreviousBlockhash: deadline,
+      })
     ).calldata;
-  }
-
-  // Value used only for comparing relay quotes vs. other types of quotes
-  public get amountInGasAndPortionAdjustedClassic(): BigNumber {
-    return this.classicQuote.amountInGasAndPortionAdjusted;
-  }
-
-  // Value used only for comparing relay quotes vs. other types of quotes
-  public get amountOutGasAndPortionAdjustedClassic(): BigNumber {
-    return this.classicQuote.amountOutGasAndPortionAdjusted;
   }
 
   // The number of seconds from now that fee escalation should begin
@@ -262,8 +248,6 @@ export class RelayQuote implements IQuote {
     switch (this.chainId) {
       case 1:
         return 60;
-      case 137:
-        return 60;
       default:
         return 60;
     }
@@ -278,44 +262,39 @@ export class RelayQuote implements IQuote {
     switch (this.chainId) {
       case 1:
         return 12;
-      case 137:
-        return 5;
       default:
         return 5;
     }
   }
 
   validate(): boolean {
-    // TODO:
+    // fee escalation must be strictly increasing
+    if (this.feeAmountStart.gt(this.feeAmountEnd)) return false;
     return true;
   }
 
   // static helpers
 
-  // Calculates the gas adjustment for the given quote if processed through UniswapX
-  // Swap gas adjustments are paid by the filler in the process of filling a trade
-  // and should be applied to endAmounts
-  static applyGasAdjustment(amountInGasToken: BigNumber, classicQuote: ClassicQuote): BigNumber {
+  // We want to parameterize the gas token amount to be used in the relay quote
+  // The start amount should take into consideration the base gas overhead from filling the order
+  // and the end amount should account for increasing base fees
+  static applyGasAdjustment(gasEstimateInFeeToken: BigNumber, classicQuote: ClassicQuote): FeeStartEndAmounts {
     const gasAdjustment = RelayQuote.getGasAdjustment();
-    if (gasAdjustment.eq(0)) return amountInGasToken;
-    return RelayQuote.getGasAdjustedAmounts(
-      amountInGasToken,
-      // routing api gas adjustment is already applied
-      gasAdjustment,
-      classicQuote
-    );
+    return RelayQuote.getGasAdjustedAmounts(gasEstimateInFeeToken, gasAdjustment, classicQuote);
   }
 
-  // return the amounts, with the gasAdjustment value taken out
-  // classicQuote used to get the gas price values in quote token
   static getGasAdjustedAmounts(
-    amountInGasToken: BigNumber,
+    gasEstimateInFeeToken: BigNumber,
     gasAdjustment: BigNumber,
     _classicQuote: ClassicQuote
-  ): BigNumber {
-    // TODO: naively for now just add 25% buffer
-    const amountInGasTokenEnd = amountInGasToken.add(gasAdjustment.mul(125).div(100));
-    return amountInGasTokenEnd;
+  ): FeeStartEndAmounts {
+    // TODO: add parameterization for feeAmountStart
+    const feeAmountStart = gasEstimateInFeeToken;
+    const feeAmountEnd = feeAmountStart.add(gasAdjustment.mul(125).div(100));
+    return {
+      feeAmountStart,
+      feeAmountEnd,
+    };
   }
 
   // Returns the number of gas units extra required to execute this quote through the relayer

@@ -1,4 +1,5 @@
 import { MethodParameters } from '@uniswap/smart-order-router';
+import { V2PoolInRoute, V3PoolInRoute } from '@uniswap/universal-router-sdk';
 import { RoutingType } from '../../lib/constants';
 import {
   ClassicQuote,
@@ -15,7 +16,6 @@ import {
   RelayRequest,
 } from '../../lib/entities';
 import { Portion } from '../../lib/fetchers/PortionFetcher';
-import { V2PoolInRoute, V3PoolInRoute } from '@uniswap/universal-router-sdk';
 
 type ReceivedQuoteData = DutchQuoteJSON | ClassicQuoteDataJSON;
 
