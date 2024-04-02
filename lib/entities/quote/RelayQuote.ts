@@ -60,6 +60,11 @@ type RelayQuoteConstructorArgs = {
   nonce?: string;
 };
 
+type FeeStartEndAmounts = {
+  feeAmountStart: BigNumber;
+  feeAmountEnd: BigNumber;
+};
+
 export class RelayQuote implements IQuote {
   public readonly createdAt: string;
   public routingType: RoutingType.RELAY = RoutingType.RELAY;
@@ -108,10 +113,13 @@ export class RelayQuote implements IQuote {
     if (!classicQuote.gasUseEstimateGasToken) {
       throw new Error('Classic quote must have gasUseEstimateGasToken');
     }
-    const feeAmountStart = request.config.feeAmountStartOverride
+    const gasEstimateInFeeToken = request.config.feeAmountStartOverride
       ? BigNumber.from(request.config.feeAmountStartOverride)
       : classicQuote.gasUseEstimateGasToken;
-    const feeAmountEnd = this.applyGasAdjustment(feeAmountStart, classicQuote);
+    const {
+      feeAmountStart,
+      feeAmountEnd,
+    } = this.applyGasAdjustment(gasEstimateInFeeToken, classicQuote);
 
     return new RelayQuote({
       createdAtMs: classicQuote.createdAtMs,
@@ -270,21 +278,23 @@ export class RelayQuote implements IQuote {
   // We want to parameterize the gas token amount to be used in the relay quote
   // The start amount should take into consideration the base gas overhead from filling the order
   // and the end amount should account for increasing base fees
-  static applyGasAdjustment(feeAmountStart: BigNumber, classicQuote: ClassicQuote): BigNumber {
+  static applyGasAdjustment(gasEstimateInFeeToken: BigNumber, classicQuote: ClassicQuote): FeeStartEndAmounts {
     const gasAdjustment = RelayQuote.getGasAdjustment();
-
-    if (gasAdjustment.eq(0)) return feeAmountStart;
-    return RelayQuote.getGasAdjustedAmounts(feeAmountStart, gasAdjustment, classicQuote);
+    return RelayQuote.getGasAdjustedAmounts(gasEstimateInFeeToken, gasAdjustment, classicQuote);
   }
 
   static getGasAdjustedAmounts(
-    feeAmountStart: BigNumber,
+    gasEstimateInFeeToken: BigNumber,
     gasAdjustment: BigNumber,
     _classicQuote: ClassicQuote
-  ): BigNumber {
-    // TODO: naively for now just add 25% buffer
+  ): FeeStartEndAmounts {
+    // TODO: add parameterization for feeAmountStart
+    const feeAmountStart = gasEstimateInFeeToken;
     const feeAmountEnd = feeAmountStart.add(gasAdjustment.mul(125).div(100));
-    return feeAmountEnd;
+    return {
+      feeAmountStart,
+      feeAmountEnd,
+    };
   }
 
   // Returns the number of gas units extra required to execute this quote through the relayer
