@@ -2,7 +2,7 @@ import Logger from 'bunyan';
 
 import { it } from '@jest/globals';
 import { RoutingType } from '../../../lib/constants';
-import { DutchV2Quote, LABS_COSIGNER } from '../../../lib/entities';
+import { DutchV2Quote, DEFAULT_LABS_COSIGNER } from '../../../lib/entities';
 import { ETH_IN, TOKEN_IN } from '../../constants';
 import { createDutchQuote, makeDutchV2Request } from '../../utils/fixtures';
 
@@ -40,7 +40,7 @@ describe('DutchV2Quote', () => {
       expect(orderJson.input.startAmount).toEqual(v2Quote.amountIn.toString());
       expect(orderJson.outputs.length).toEqual(1);
       expect(orderJson.outputs[0].startAmount).toEqual(v2Quote.amountOut.toString());
-      expect(orderJson.cosigner).toEqual(LABS_COSIGNER);
+      expect(orderJson.cosigner).toEqual(DEFAULT_LABS_COSIGNER);
     });
 
     it('should serialize', () => {

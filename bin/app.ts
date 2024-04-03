@@ -124,6 +124,14 @@ export class APIPipeline extends Stack {
       secretCompleteArn: 'arn:aws:secretsmanager:us-east-2:644039819003:secret:routing-api-internal-api-key-Z68NmB',
     });
 
+    const betaRfqLabsCosignerAddress = sm.Secret.fromSecretAttributes(this, 'beta-labs-cosigner-address', {
+      secretCompleteArn: 'arn:aws:secretsmanager:us-east-2:644039819003:secret:param-api/beta/cosignerAddress-gkPfRf',
+    });
+
+    const prodRfqLabsCosignerAddress = sm.Secret.fromSecretAttributes(this, 'prod-rfq-labs-cosigner-address', {
+      secretCompleteArn: 'arn:aws:secretsmanager:us-east-2:644039819003:secret:param-api/prod/cosignerAddress-tgNwAd',
+    });
+
     const parameterizationApiKeySecret = sm.Secret.fromSecretAttributes(this, 'parameterization-api-api-key', {
       secretCompleteArn:
         'arn:aws:secretsmanager:us-east-2:644039819003:secret:gouda-parameterization-api-internal-api-key-uw4sIa',
@@ -152,6 +160,7 @@ export class APIPipeline extends Stack {
         PARAMETERIZATION_API_KEY: parameterizationApiKeySecret.secretValue.toString(),
         PARAMETERIZATION_API_URL: urlSecrets.secretValueFromJson('PARAMETERIZATION_API_BETA').toString(),
         SYNTH_SWITCH_API_KEY: syntheticSwitchApiKeySecret.secretValueFromJson('AUTH_BETA').toString(),
+        RFQ_LABS_COSIGNER_ADDRESS: betaRfqLabsCosignerAddress.secretValue.toString(),
         ROUTING_API_URL: urlSecrets.secretValueFromJson('ROUTING_API_BETA').toString(),
         SERVICE_URL: urlSecrets.secretValueFromJson('GOUDA_SERVICE_BETA').toString(),
         PORTION_API_URL: urlSecrets.secretValueFromJson('PORTION_API_BETA').toString(),
@@ -179,6 +188,7 @@ export class APIPipeline extends Stack {
         PARAMETERIZATION_API_KEY: parameterizationApiKeySecret.secretValue.toString(),
         PARAMETERIZATION_API_URL: urlSecrets.secretValueFromJson('PARAMETERIZATION_API_PROD').toString(),
         SYNTH_SWITCH_API_KEY: syntheticSwitchApiKeySecret.secretValueFromJson('AUTH_PROD').toString(),
+        RFQ_LABS_COSIGNER_ADDRESS: prodRfqLabsCosignerAddress.secretValue.toString(),
         ROUTING_API_URL: urlSecrets.secretValueFromJson('ROUTING_API_PROD').toString(),
         SERVICE_URL: urlSecrets.secretValueFromJson('GOUDA_SERVICE_PROD').toString(),
         PORTION_API_URL: urlSecrets.secretValueFromJson('PORTION_API_PROD').toString(),
@@ -289,6 +299,7 @@ const envVars: { [key: string]: string } = {};
 envVars['PARAMETERIZATION_API_URL'] = process.env['PARAMETERIZATION_API_URL'] || '';
 envVars['PARAMETERIZATION_API_KEY'] = process.env['PARAMETERIZATION_API_KEY'] || '';
 envVars['SYNTH_SWITCH_API_KEY'] = process.env['SYNTH_SWITCH_API_KEY'] || '';
+envVars['RFQ_LABS_COSIGNER_ADDRESS'] = process.env['RFQ_LABS_COSIGNER_ADDRESS'] || '';
 envVars['ROUTING_API_URL'] = process.env['ROUTING_API_URL'] || '';
 envVars['SERVICE_URL'] = process.env['SERVICE_URL'] || '';
 envVars['PORTION_API_URL'] = process.env['PORTION_API_URL'] || '';
