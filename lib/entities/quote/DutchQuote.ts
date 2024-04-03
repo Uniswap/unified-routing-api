@@ -4,12 +4,14 @@ import { BigNumber, ethers } from 'ethers';
 
 import { PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { v4 as uuidv4 } from 'uuid';
-import { IQuote } from '.';
+import { IQuote, SharedOrderQuoteDataJSON } from '.';
 import { DutchRequest } from '..';
 import {
   BPS,
+  DEFAULT_AUCTION_PERIOD_SECS,
   DEFAULT_START_TIME_BUFFER_SECS,
   frontendAndUraEnablePortion,
+  DEFAULT_DEADLINE_BUFFER_SECS,
   NATIVE_ADDRESS,
   OPEN_QUOTE_START_TIME_BUFFER_SECS,
   RoutingType,
@@ -29,16 +31,11 @@ export type DutchQuoteDerived = {
   largeTrade: boolean;
 };
 
-export type DutchQuoteDataJSON = {
+export type DutchQuoteDataJSON = SharedOrderQuoteDataJSON & {
   orderInfo: DutchOrderInfoJSON;
-  quoteId: string;
-  requestId: string;
-  encodedOrder: string;
-  orderHash: string;
   startTimeBufferSecs: number;
   auctionPeriodSecs: number;
   deadlineBufferSecs: number;
-  slippageTolerance: string;
   permitData: PermitTransferFromData;
   portionBips?: number;
   portionAmount?: string;
@@ -362,9 +359,9 @@ export class DutchQuote implements IQuote {
       case 1:
         return this.derived.largeTrade ? 120 : 60;
       case 137:
-        return 60;
+        return DEFAULT_AUCTION_PERIOD_SECS;
       default:
-        return 60;
+        return DEFAULT_AUCTION_PERIOD_SECS;
     }
   }
 
@@ -376,11 +373,9 @@ export class DutchQuote implements IQuote {
 
     switch (this.chainId) {
       case 1:
-        return 12;
-      case 137:
-        return 5;
+        return DEFAULT_DEADLINE_BUFFER_SECS;
       default:
-        return 5;
+        return DEFAULT_DEADLINE_BUFFER_SECS;
     }
   }
 

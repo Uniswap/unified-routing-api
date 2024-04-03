@@ -3,7 +3,7 @@ import { TradeType } from '@uniswap/sdk-core';
 import { UnsignedV2DutchOrder, UnsignedV2DutchOrderInfoJSON, V2DutchOrderBuilder } from '@uniswap/uniswapx-sdk';
 import { BigNumber, ethers } from 'ethers';
 
-import { IQuote, LogJSON } from '.';
+import { IQuote, LogJSON, SharedOrderQuoteDataJSON } from '.';
 import { DutchV2Request } from '..';
 import { BPS, frontendAndUraEnablePortion, RoutingType } from '../../constants';
 import { Portion } from '../../fetchers/PortionFetcher';
@@ -15,14 +15,9 @@ import { DutchQuote as DutchV1Quote, getPortionAdjustedOutputs } from './DutchQu
 export const LABS_COSIGNER = '0x0000000000000000000000000000000000000000';
 
 // JSON format of a DutchV2Quote, to be returned by the API
-export type DutchV2QuoteDataJSON = {
+export type DutchV2QuoteDataJSON = SharedOrderQuoteDataJSON & {
   orderInfo: UnsignedV2DutchOrderInfoJSON;
-  quoteId: string;
-  requestId: string;
-  encodedOrder: string;
-  orderHash: string;
   deadlineBufferSecs: number;
-  slippageTolerance: string;
   permitData: PermitTransferFromData;
   portionBips?: number;
   portionAmount?: string;

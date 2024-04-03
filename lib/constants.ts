@@ -20,6 +20,8 @@ export const UNISWAPX_BASE_GAS = 275000; // base gas overhead for filling an ord
 export const RELAY_BASE_GAS = 70000; // base gas overhead for filling a relayed swap
 export const DEFAULT_START_TIME_BUFFER_SECS = 45;
 export const OPEN_QUOTE_START_TIME_BUFFER_SECS = 60;
+export const DEFAULT_AUCTION_PERIOD_SECS = 60;
+export const DEFAULT_DEADLINE_BUFFER_SECS = 12;
 
 export enum RoutingType {
   CLASSIC = 'CLASSIC',

@@ -4,8 +4,8 @@ import { BigNumber, ethers } from 'ethers';
 
 import { PermitBatchTransferFromData } from '@uniswap/permit2-sdk';
 import { Percent } from '@uniswap/sdk-core';
-import { IQuote } from '.';
-import { DEFAULT_START_TIME_BUFFER_SECS, RELAY_BASE_GAS, RoutingType } from '../../constants';
+import { IQuote, SharedOrderQuoteDataJSON } from '.';
+import { DEFAULT_AUCTION_PERIOD_SECS, DEFAULT_START_TIME_BUFFER_SECS, DEFAULT_DEADLINE_BUFFER_SECS, RELAY_BASE_GAS, RoutingType } from '../../constants';
 import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
 import { RelayRequest } from '../request/RelayRequest';
@@ -13,16 +13,11 @@ import { ClassicQuote, ClassicQuoteDataJSON } from './ClassicQuote';
 import { LogJSON } from './index';
 
 // Data returned by the API
-export type RelayQuoteDataJSON = {
+export type RelayQuoteDataJSON = SharedOrderQuoteDataJSON & {
   orderInfo: RelayOrderInfoJSON;
-  quoteId: string;
-  requestId: string;
-  encodedOrder: string;
-  orderHash: string;
   startTimeBufferSecs: number;
   auctionPeriodSecs: number;
   deadlineBufferSecs: number;
-  slippageTolerance: string;
   permitData: PermitBatchTransferFromData;
   classicQuoteData: ClassicQuoteDataJSON;
 };
@@ -247,9 +242,9 @@ export class RelayQuote implements IQuote {
 
     switch (this.chainId) {
       case 1:
-        return 60;
+        return DEFAULT_AUCTION_PERIOD_SECS;
       default:
-        return 60;
+        return DEFAULT_AUCTION_PERIOD_SECS;
     }
   }
 
@@ -261,9 +256,9 @@ export class RelayQuote implements IQuote {
 
     switch (this.chainId) {
       case 1:
-        return 12;
+        return DEFAULT_DEADLINE_BUFFER_SECS;
       default:
-        return 5;
+        return DEFAULT_DEADLINE_BUFFER_SECS;
     }
   }
 
