@@ -5,7 +5,13 @@ import { BigNumber, ethers } from 'ethers';
 import { PermitBatchTransferFromData } from '@uniswap/permit2-sdk';
 import { Percent } from '@uniswap/sdk-core';
 import { IQuote, SharedOrderQuoteDataJSON } from '.';
-import { DEFAULT_AUCTION_PERIOD_SECS, DEFAULT_START_TIME_BUFFER_SECS, DEFAULT_DEADLINE_BUFFER_SECS, RELAY_BASE_GAS, RoutingType } from '../../constants';
+import {
+  DEFAULT_AUCTION_PERIOD_SECS,
+  DEFAULT_DEADLINE_BUFFER_SECS,
+  DEFAULT_START_TIME_BUFFER_SECS,
+  RELAY_BASE_GAS,
+  RoutingType,
+} from '../../constants';
 import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
 import { RelayRequest } from '../request/RelayRequest';
@@ -111,10 +117,7 @@ export class RelayQuote implements IQuote {
     const gasEstimateInFeeToken = request.config.feeAmountStartOverride
       ? BigNumber.from(request.config.feeAmountStartOverride)
       : classicQuote.gasUseEstimateGasToken;
-    const {
-      feeAmountStart,
-      feeAmountEnd,
-    } = this.applyGasAdjustment(gasEstimateInFeeToken, classicQuote);
+    const { feeAmountStart, feeAmountEnd } = this.applyGasAdjustment(gasEstimateInFeeToken, classicQuote);
 
     return new RelayQuote({
       createdAtMs: classicQuote.createdAtMs,

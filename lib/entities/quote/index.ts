@@ -19,7 +19,7 @@ export type SharedOrderQuoteDataJSON = {
   encodedOrder: string;
   orderHash: string;
   slippageTolerance: string;
-}
+};
 
 // Superset of all possible log fields from the quote types
 export type LogJSON = {
