@@ -2,7 +2,7 @@ import Logger from 'bunyan';
 
 import { it } from '@jest/globals';
 import { RoutingType } from '../../../lib/constants';
-import { DutchV2Quote, DEFAULT_LABS_COSIGNER } from '../../../lib/entities';
+import { DEFAULT_LABS_COSIGNER, DutchV2Quote } from '../../../lib/entities';
 import { ETH_IN, TOKEN_IN } from '../../constants';
 import { createDutchQuote, makeDutchV2Request } from '../../utils/fixtures';
 
