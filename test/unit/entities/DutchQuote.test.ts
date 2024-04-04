@@ -4,7 +4,7 @@ import { BigNumber, ethers } from 'ethers';
 import * as _ from 'lodash';
 
 import { it } from '@jest/globals';
-import { BPS, DEFAULT_START_TIME_BUFFER_SECS, OPEN_QUOTE_START_TIME_BUFFER_SECS } from '../../../lib/constants';
+import { BPS, DEFAULT_AUCTION_PERIOD_SECS, DEFAULT_DEADLINE_BUFFER_SECS, DEFAULT_START_TIME_BUFFER_SECS, OPEN_QUOTE_START_TIME_BUFFER_SECS } from '../../../lib/constants';
 import { ClassicQuote, DutchQuote, DutchQuoteJSON } from '../../../lib/entities';
 import {
   AMOUNT,
@@ -265,8 +265,8 @@ describe('DutchQuote', () => {
       );
       const result = quote.toJSON();
       expect(result.startTimeBufferSecs).toEqual(DEFAULT_START_TIME_BUFFER_SECS);
-      expect(result.auctionPeriodSecs).toEqual(60);
-      expect(result.deadlineBufferSecs).toEqual(12);
+      expect(result.auctionPeriodSecs).toEqual(DEFAULT_AUCTION_PERIOD_SECS);
+      expect(result.deadlineBufferSecs).toEqual(DEFAULT_DEADLINE_BUFFER_SECS);
     });
 
     it('uses default parameters - Open', () => {
@@ -282,8 +282,8 @@ describe('DutchQuote', () => {
       );
       const result = quote.toJSON();
       expect(result.startTimeBufferSecs).toEqual(OPEN_QUOTE_START_TIME_BUFFER_SECS);
-      expect(result.auctionPeriodSecs).toEqual(60);
-      expect(result.deadlineBufferSecs).toEqual(12);
+      expect(result.auctionPeriodSecs).toEqual(DEFAULT_AUCTION_PERIOD_SECS);
+      expect(result.deadlineBufferSecs).toEqual(DEFAULT_DEADLINE_BUFFER_SECS);
     });
 
     it('uses default parameters - polygon', () => {
@@ -302,8 +302,8 @@ describe('DutchQuote', () => {
       );
       const result = quote.toJSON();
       expect(result.startTimeBufferSecs).toEqual(OPEN_QUOTE_START_TIME_BUFFER_SECS);
-      expect(result.auctionPeriodSecs).toEqual(60);
-      expect(result.deadlineBufferSecs).toEqual(5);
+      expect(result.auctionPeriodSecs).toEqual(DEFAULT_AUCTION_PERIOD_SECS);
+      expect(result.deadlineBufferSecs).toEqual(DEFAULT_DEADLINE_BUFFER_SECS);
     });
 
     it('overrides parameters in request', () => {

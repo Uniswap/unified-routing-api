@@ -3,7 +3,7 @@ import { TradeType } from '@uniswap/sdk-core';
 import { UnsignedV2DutchOrder, UnsignedV2DutchOrderInfoJSON, V2DutchOrderBuilder } from '@uniswap/uniswapx-sdk';
 import { BigNumber, ethers } from 'ethers';
 
-import { IQuote, LogJSON } from '.';
+import { IQuote, LogJSON, SharedOrderQuoteDataJSON } from '.';
 import { DutchV2Request } from '..';
 import { BPS, frontendAndUraEnablePortion, RoutingType } from '../../constants';
 import { Portion } from '../../fetchers/PortionFetcher';
@@ -11,18 +11,12 @@ import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
 import { DutchQuote as DutchV1Quote, getPortionAdjustedOutputs } from './DutchQuote';
 
-// TODO: replace with real cosigner when deployed
-export const LABS_COSIGNER = '0x0000000000000000000000000000000000000000';
+export const DEFAULT_LABS_COSIGNER = ethers.constants.AddressZero;
 
 // JSON format of a DutchV2Quote, to be returned by the API
-export type DutchV2QuoteDataJSON = {
+export type DutchV2QuoteDataJSON = SharedOrderQuoteDataJSON & {
   orderInfo: UnsignedV2DutchOrderInfoJSON;
-  quoteId: string;
-  requestId: string;
-  encodedOrder: string;
-  orderHash: string;
   deadlineBufferSecs: number;
-  slippageTolerance: string;
   permitData: PermitTransferFromData;
   portionBips?: number;
   portionAmount?: string;
@@ -108,7 +102,7 @@ export class DutchV2Quote implements IQuote {
       .deadline(deadline)
       .swapper(ethers.utils.getAddress(this.request.config.swapper))
       .nonce(BigNumber.from(nonce))
-      .cosigner(LABS_COSIGNER)
+      .cosigner(DutchV2Quote.getLabsCosigner())
       // empty cosignature so we can serialize the order
       .cosignature(ethers.constants.HashZero)
       .input({
@@ -217,5 +211,9 @@ export class DutchV2Quote implements IQuote {
     if (this.amountOutStart.lt(this.amountOutEnd)) return false;
     if (this.amountInStart.gt(this.amountInEnd)) return false;
     return true;
+  }
+
+  static getLabsCosigner(): string {
+    return process.env.RFQ_LABS_COSIGNER_ADDRESS || DEFAULT_LABS_COSIGNER;
   }
 }

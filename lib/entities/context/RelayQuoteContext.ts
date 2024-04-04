@@ -44,7 +44,7 @@ export class RelayQuoteContext implements QuoteContext {
     const classicQuote = dependencies[this.classicKey] as ClassicQuote;
     const relayQuote = dependencies[this.requestKey] as RelayQuote;
 
-    const [quote] = await Promise.all([this.getRelayQuote(relayQuote, classicQuote)]);
+    const quote = await this.getRelayQuote(relayQuote, classicQuote);
 
     if (!quote) {
       this.log.warn('No Relay quote');
@@ -68,10 +68,8 @@ export class RelayQuoteContext implements QuoteContext {
       quote = RelayQuote.fromClassicQuote(this.request, classicQuote);
     }
 
-    if (!quote) return null;
-
-    // if its invalid for some reason, i.e. too much decay then return null
-    if (!quote.validate()) return null;
+    // if there is no quote, or its invalid for some reason, i.e. too much decay then return null
+    if (!quote || !quote.validate()) return null;
     return quote;
   }
 }

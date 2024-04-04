@@ -12,6 +12,15 @@ export * from './RelayQuote';
 
 export type QuoteJSON = DutchQuoteDataJSON | DutchV2QuoteDataJSON | RelayQuoteDataJSON | ClassicQuoteDataJSON;
 
+// Shared fields between all non classic quote types
+export type SharedOrderQuoteDataJSON = {
+  quoteId: string;
+  requestId: string;
+  encodedOrder: string;
+  orderHash: string;
+  slippageTolerance: string;
+};
+
 // Superset of all possible log fields from the quote types
 export type LogJSON = {
   quoteId: string;
