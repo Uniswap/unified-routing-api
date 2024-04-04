@@ -117,8 +117,7 @@ export class FieldValidator {
     deadlineBufferSecs: FieldValidator.positiveNumber.optional(),
     slippageTolerance: FieldValidator.slippageTolerance.optional(),
     amountInGasTokenStartOverride: FieldValidator.amount.optional(),
-  })
-
+  });
 
   public static readonly dutchV2Config = Joi.object({
     routingType: Joi.string().valid('DUTCH_V2'),

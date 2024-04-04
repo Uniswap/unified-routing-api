@@ -1,6 +1,6 @@
+import { Protocol } from '@uniswap/router-sdk';
 import { ChainId, Currency, Ether, WETH9 } from '@uniswap/sdk-core';
 import { DAI_MAINNET, USDC_MAINNET, WBTC_MAINNET } from '@uniswap/smart-order-router';
-import { Protocol } from "@uniswap/router-sdk";
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import { BigNumber } from 'ethers';
 import { getAddress } from 'ethers/lib/utils';

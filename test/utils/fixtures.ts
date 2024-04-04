@@ -2,6 +2,7 @@ import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-ro
 import { BPS, NATIVE_ADDRESS, RoutingType } from '../../lib/constants';
 
 import { ChainId, WETH9 } from '@uniswap/sdk-core';
+import { PoolType, V2PoolInRoute, V3PoolInRoute } from '@uniswap/universal-router-sdk';
 import { BigNumber } from 'ethers';
 import {
   ClassicQuoteDataJSON,
@@ -37,7 +38,6 @@ import {
 } from '../constants';
 import { buildQuoteResponse } from './quoteResponse';
 import { BULLET_WHT_FOT_TAX } from './tokens';
-import { PoolType, V2PoolInRoute, V3PoolInRoute } from '@uniswap/universal-router-sdk';
 
 export const BASE_REQUEST_INFO_EXACT_IN = {
   tokenInChainId: CHAIN_IN_ID,
@@ -430,7 +430,7 @@ const GET_ROUTE = (
   amountOut: string = AMOUNT,
   tokenIn: string = TOKEN_IN,
   tokenOut: string = TOKEN_OUT
-): Array<(V3PoolInRoute | V2PoolInRoute)[]> => { 
+): Array<(V3PoolInRoute | V2PoolInRoute)[]> => {
   return [
     [
       {
@@ -455,7 +455,7 @@ const GET_ROUTE = (
             address: TOKEN_IN,
             symbol: 'UNI',
           },
-          quotient: "100000000000000000000000000000",
+          quotient: '100000000000000000000000000000',
         },
         reserve1: {
           token: {
@@ -464,14 +464,14 @@ const GET_ROUTE = (
             address: TOKEN_OUT,
             symbol: 'WETH',
           },
-          quotient: "100000000000000000000000000000",
+          quotient: '100000000000000000000000000000',
         },
         amountIn,
         amountOut,
-      }
-    ]
-  ] 
-}
+      },
+    ],
+  ];
+};
 
 export const CLASSIC_QUOTE_DATA_WITH_ROUTE_AND_GAS_TOKEN: {
   routing: RoutingType.CLASSIC;
@@ -735,10 +735,12 @@ export const CLASSIC_QUOTE_EXACT_IN_BETTER_WITH_PORTION = createClassicQuote(
   FLAT_PORTION
 );
 export const CLASSIC_QUOTE_EXACT_IN_BETTER_GAS_TOKEN = createClassicQuote(
-  { quote: AMOUNT_BETTER, quoteGasAdjusted: AMOUNT_BETTER, gasUseEstimateGasToken: AMOUNT_BETTER, route: GET_ROUTE(
-    AMOUNT_BETTER,
-    AMOUNT_BETTER
-  ) },
+  {
+    quote: AMOUNT_BETTER,
+    quoteGasAdjusted: AMOUNT_BETTER,
+    gasUseEstimateGasToken: AMOUNT_BETTER,
+    route: GET_ROUTE(AMOUNT_BETTER, AMOUNT_BETTER),
+  },
   { type: 'EXACT_INPUT' }
 );
 export const CLASSIC_QUOTE_EXACT_IN_WORSE = createClassicQuote(
@@ -857,10 +859,12 @@ export const CLASSIC_QUOTE_EXACT_OUT_WORSE_WITH_PORTION = createClassicQuote(
   { type: 'EXACT_OUTPUT' }
 );
 export const CLASSIC_QUOTE_EXACT_OUT_WORSE_GAS_TOKEN = createClassicQuote(
-  { quote: AMOUNT_BETTER, quoteGasAdjusted: AMOUNT_BETTER, gasUseEstimateGasToken: AMOUNT_BETTER, route: GET_ROUTE(
-    AMOUNT_BETTER,
-    AMOUNT_BETTER
-  ) },
+  {
+    quote: AMOUNT_BETTER,
+    quoteGasAdjusted: AMOUNT_BETTER,
+    gasUseEstimateGasToken: AMOUNT_BETTER,
+    route: GET_ROUTE(AMOUNT_BETTER, AMOUNT_BETTER),
+  },
   { type: 'EXACT_OUTPUT' }
 );
 export const CLASSIC_QUOTE_EXACT_OUT_LARGE = createClassicQuote(
@@ -906,11 +910,16 @@ export function createRelayQuoteWithRequest(
 }
 
 export const RELAY_QUOTE_EXACT_IN_BETTER = createRelayQuote(
-  { amountOut: AMOUNT_BETTER, feeAmountStart: AMOUNT_BETTER, feeAmountEnd: AMOUNT_BETTER, classicQuoteData: {
-    ...CLASSIC_QUOTE_DATA_WITH_ROUTE_AND_GAS_TOKEN.quote,
-    quote: AMOUNT_BETTER,
-    quoteGasAndPortionAdjusted: AMOUNT_BETTER,
-  } },
+  {
+    amountOut: AMOUNT_BETTER,
+    feeAmountStart: AMOUNT_BETTER,
+    feeAmountEnd: AMOUNT_BETTER,
+    classicQuoteData: {
+      ...CLASSIC_QUOTE_DATA_WITH_ROUTE_AND_GAS_TOKEN.quote,
+      quote: AMOUNT_BETTER,
+      quoteGasAndPortionAdjusted: AMOUNT_BETTER,
+    },
+  },
   'EXACT_INPUT'
 );
 export const RELAY_QUOTE_NATIVE_EXACT_IN_BETTER = createRelayQuoteWithRequest(
@@ -932,19 +941,28 @@ export const RELAY_QUOTE_EXACT_IN_WORSE = createRelayQuote(
   'EXACT_INPUT'
 );
 export const RELAY_QUOTE_EXACT_OUT_BETTER = createRelayQuote(
-  { amountIn: AMOUNT, feeAmountStart: AMOUNT, feeAmountEnd: AMOUNT, classicQuoteData: {
-    ...CLASSIC_QUOTE_DATA_WITH_ROUTE_AND_GAS_TOKEN.quote,
-    quote: AMOUNT,
-    quoteGasAndPortionAdjusted: AMOUNT,
-    } 
+  {
+    amountIn: AMOUNT,
+    feeAmountStart: AMOUNT,
+    feeAmountEnd: AMOUNT,
+    classicQuoteData: {
+      ...CLASSIC_QUOTE_DATA_WITH_ROUTE_AND_GAS_TOKEN.quote,
+      quote: AMOUNT,
+      quoteGasAndPortionAdjusted: AMOUNT,
+    },
   },
   'EXACT_OUTPUT'
 );
 export const RELAY_QUOTE_EXACT_OUT_WORSE = createRelayQuote(
-  { amountIn: AMOUNT_BETTER, feeAmountStart: AMOUNT_BETTER, feeAmountEnd: AMOUNT_BETTER, classicQuoteData: {
-    ...CLASSIC_QUOTE_DATA_WITH_ROUTE_AND_GAS_TOKEN.quote,
-    quote: AMOUNT_BETTER,
-    quoteGasAndPortionAdjusted: AMOUNT_BETTER,
-  } },
+  {
+    amountIn: AMOUNT_BETTER,
+    feeAmountStart: AMOUNT_BETTER,
+    feeAmountEnd: AMOUNT_BETTER,
+    classicQuoteData: {
+      ...CLASSIC_QUOTE_DATA_WITH_ROUTE_AND_GAS_TOKEN.quote,
+      quote: AMOUNT_BETTER,
+      quoteGasAndPortionAdjusted: AMOUNT_BETTER,
+    },
+  },
   'EXACT_OUTPUT'
 );
