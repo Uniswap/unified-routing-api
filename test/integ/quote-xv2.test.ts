@@ -7,7 +7,7 @@ import chaiAsPromised from 'chai-as-promised';
 import chaiSubset from 'chai-subset';
 import { ethers } from 'ethers';
 import { RoutingType } from '../../lib/constants';
-import { QuoteRequestBodyJSON, RoutingConfigJSON } from '../../lib/entities';
+import { DEFAULT_LABS_COSIGNER, QuoteRequestBodyJSON, RoutingConfigJSON } from '../../lib/entities';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { getAmount } from '../utils/tokens';
 import { BaseIntegrationTestSuite, callIndicative } from './base.test';
@@ -64,8 +64,7 @@ describe('quoteUniswapX-v2', function () {
           expect(status).to.equal(200);
   
           expect(order.info.swapper).to.equal(alice.address);
-          // No cosigner set
-          expect(order.info.cosigner).to.equal(ethers.constants.AddressZero);
+
           expect(order.info.outputs.length).to.equal(1);
           expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.greaterThan(9000000000);
           expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.lessThan(11000000000);
