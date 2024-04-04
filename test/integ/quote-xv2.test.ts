@@ -48,7 +48,7 @@ describe('quoteUniswapX-v2', function () {
             {
               routingType: RoutingType.DUTCH_V2,
               swapper: alice.address,
-              useSyntheticQuotes: false,
+              useSyntheticQuotes: true,
             },
           ] as RoutingConfigJSON[],
         };
