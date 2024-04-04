@@ -110,6 +110,7 @@ export class FieldValidator {
   public static readonly relayConfig = this.classicConfig.keys({
     routingType: Joi.string().valid('RELAY'),
     gasToken: FieldValidator.address.required(),
+    swapper: FieldValidator.address.optional(),
     startTimeBufferSecs: FieldValidator.positiveNumber.optional(),
     auctionPeriodSecs: FieldValidator.positiveNumber.optional(),
     deadlineBufferSecs: FieldValidator.positiveNumber.optional(),

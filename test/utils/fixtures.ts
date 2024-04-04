@@ -102,6 +102,7 @@ export const RELAY_REQUEST_BODY: QuoteRequestBodyJSON = {
   configs: [
     {
       routingType: RoutingType.RELAY,
+      protocols: ['V3', 'V2', 'MIXED'],
       swapper: SWAPPER,
       auctionPeriodSecs: 60,
       deadlineBufferSecs: 12,
@@ -115,6 +116,7 @@ export const RELAY_REQUEST_BODY_EXACT_OUT: QuoteRequestBodyJSON = {
   configs: [
     {
       routingType: RoutingType.RELAY,
+      protocols: ['V3', 'V2', 'MIXED'],
       swapper: SWAPPER,
       auctionPeriodSecs: 60,
       deadlineBufferSecs: 12,
@@ -128,6 +130,7 @@ export const RELAY_REQUEST_WITH_CLASSIC_BODY: QuoteRequestBodyJSON = {
   configs: [
     {
       routingType: RoutingType.RELAY,
+      protocols: ['V3', 'V2', 'MIXED'],
       swapper: SWAPPER,
       auctionPeriodSecs: 60,
       deadlineBufferSecs: 12,
