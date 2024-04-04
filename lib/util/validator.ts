@@ -107,6 +107,7 @@ export class FieldValidator {
     useSyntheticQuotes: Joi.boolean().optional(),
   });
 
+  // extends a classic request config, but requires a gasToken and has optional parameters for the fee auction
   public static readonly relayConfig = this.classicConfig.keys({
     routingType: Joi.string().valid('RELAY'),
     gasToken: FieldValidator.address.required(),
