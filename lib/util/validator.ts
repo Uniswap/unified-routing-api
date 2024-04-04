@@ -107,16 +107,16 @@ export class FieldValidator {
     useSyntheticQuotes: Joi.boolean().optional(),
   });
 
-  public static readonly relayConfig = Joi.object({
-    routingType: FieldValidator.routingType.required(),
+  public static readonly relayConfig = this.classicConfig.keys({
+    routingType: Joi.string().valid('RELAY'),
     gasToken: FieldValidator.address.required(),
-    swapper: FieldValidator.address.optional(),
     startTimeBufferSecs: FieldValidator.positiveNumber.optional(),
     auctionPeriodSecs: FieldValidator.positiveNumber.optional(),
     deadlineBufferSecs: FieldValidator.positiveNumber.optional(),
     slippageTolerance: FieldValidator.slippageTolerance.optional(),
     amountInGasTokenStartOverride: FieldValidator.amount.optional(),
-  });
+  })
+
 
   public static readonly dutchV2Config = Joi.object({
     routingType: Joi.string().valid('DUTCH_V2'),
