@@ -61,7 +61,7 @@ describe('quoteUniswapX-v2', function () {
 
           const order = new UnsignedV2DutchOrder((quote as any).orderInfo, 1);
           expect(status).to.equal(200);
-  
+
           expect(order.info.swapper).to.equal(alice.address);
 
           expect(order.info.outputs.length).to.equal(1);
@@ -70,11 +70,10 @@ describe('quoteUniswapX-v2', function () {
           expect(parseInt(order.info.input.startAmount.toString())).to.be.greaterThan(9000000000);
           expect(parseInt(order.info.input.startAmount.toString())).to.be.lessThan(11000000000);
         } catch (e: any) {
-          if(e instanceof AxiosError && e.response) {
+          if (e instanceof AxiosError && e.response) {
             expect(e.response.status).to.equal(404);
             expect(e.response.data.detail).to.equal('No quotes available');
-          }
-          else {
+          } else {
             // throw if not an axios error to debug
             throw e;
           }
