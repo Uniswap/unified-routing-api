@@ -1390,7 +1390,7 @@ describe('QuoteHandler', () => {
       );
       // expect to be the same
       expect(
-        RELAY_QUOTE_EXACT_IN_BETTER.amountOutGasAndPortionAdjustedClassic.eq(
+        RELAY_QUOTE_EXACT_IN_BETTER.classicQuote.amountOutGasAndPortionAdjusted.eq(
           CLASSIC_QUOTE_EXACT_IN_BETTER.amountOutGasAndPortionAdjusted
         )
       ).toBe(true);
@@ -1400,7 +1400,7 @@ describe('QuoteHandler', () => {
       );
       // expect to be the same
       expect(
-        RELAY_QUOTE_EXACT_OUT_BETTER.amountInGasAndPortionAdjustedClassic.eq(
+        RELAY_QUOTE_EXACT_OUT_BETTER.classicQuote.amountInGasAndPortionAdjusted.eq(
           CLASSIC_QUOTE_EXACT_OUT_BETTER.amountInGasAndPortionAdjusted
         )
       ).toBe(true);

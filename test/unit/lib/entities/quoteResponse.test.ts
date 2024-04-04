@@ -63,8 +63,8 @@ const RELAY_QUOTE_JSON: RelayQuoteJSON = {
   tokenOut: TOKEN_OUT,
   amountOut: AMOUNT,
   gasToken: TOKEN_IN,
-  amountInGasTokenStart: AMOUNT,
-  amountInGasTokenEnd: AMOUNT,
+  feeAmountStart: AMOUNT,
+  feeAmountEnd: AMOUNT,
   swapper: SWAPPER,
   classicQuoteData: CLASSIC_QUOTE_DATA_WITH_ROUTE_AND_GAS_TOKEN.quote,
 }
