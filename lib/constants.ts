@@ -17,12 +17,16 @@ export const WETH_UNWRAP_GAS = 36000;
 
 export const DEFAULT_EXCLUSIVITY_OVERRIDE_BPS = BigNumber.from(100); // non-exclusive fillers must override price by this much
 export const UNISWAPX_BASE_GAS = 275000; // base gas overhead for filling an order through Gouda
+export const RELAY_BASE_GAS = 70000; // base gas overhead for filling a relayed swap
 export const DEFAULT_START_TIME_BUFFER_SECS = 45;
 export const OPEN_QUOTE_START_TIME_BUFFER_SECS = 60;
+export const DEFAULT_AUCTION_PERIOD_SECS = 60;
+export const DEFAULT_DEADLINE_BUFFER_SECS = 12;
 
 export enum RoutingType {
   CLASSIC = 'CLASSIC',
   DUTCH_LIMIT = 'DUTCH_LIMIT',
+  RELAY = 'RELAY',
   DUTCH_V2 = 'DUTCH_V2',
 }
 

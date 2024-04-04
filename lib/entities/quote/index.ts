@@ -3,13 +3,25 @@ import { BigNumber } from 'ethers';
 import { DutchQuote, DutchQuoteDataJSON, DutchV2Quote, DutchV2QuoteDataJSON, QuoteRequest } from '..';
 import { RoutingType } from '../../constants';
 import { ClassicQuote, ClassicQuoteDataJSON } from './ClassicQuote';
+import { RelayQuote, RelayQuoteDataJSON } from './RelayQuote';
 
 export * from './ClassicQuote';
 export * from './DutchQuote';
 export * from './DutchV2Quote';
+export * from './RelayQuote';
 
-export type QuoteJSON = DutchQuoteDataJSON | DutchV2QuoteDataJSON | ClassicQuoteDataJSON;
+export type QuoteJSON = DutchQuoteDataJSON | DutchV2QuoteDataJSON | RelayQuoteDataJSON | ClassicQuoteDataJSON;
 
+// Shared fields between all non classic quote types
+export type SharedOrderQuoteDataJSON = {
+  quoteId: string;
+  requestId: string;
+  encodedOrder: string;
+  orderHash: string;
+  slippageTolerance: string;
+};
+
+// Superset of all possible log fields from the quote types
 export type LogJSON = {
   quoteId: string;
   requestId: string;
@@ -40,6 +52,9 @@ export type LogJSON = {
   quoteGasAndPortionAdjustedDecimals?: string;
   portionAmountOutStart?: string;
   portionAmountOutEnd?: string;
+  gasToken?: string;
+  feeAmountStart?: string;
+  feeAmountEnd?: string;
 };
 
 export interface IQuote {
@@ -51,4 +66,4 @@ export interface IQuote {
   toLog(): LogJSON;
 }
 
-export type Quote = DutchQuote | DutchV2Quote | ClassicQuote;
+export type Quote = DutchQuote | DutchV2Quote | RelayQuote | ClassicQuote;

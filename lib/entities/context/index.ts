@@ -1,17 +1,26 @@
 import { ethers } from 'ethers';
 
 import { RoutingType } from '../../constants';
-import { ClassicConfig, ClassicRequest, DutchRequest, DutchV2Request, Quote, QuoteRequest } from '../../entities';
+import {
+  ClassicConfig,
+  ClassicRequest,
+  DutchRequest,
+  DutchV2Request,
+  Quote,
+  QuoteRequest,
+  RelayRequest,
+} from '../../entities';
 
 import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
 import { SyntheticStatusProvider } from '../../providers';
 import { log } from '../../util/log';
 
-import { ClassicQuoteContext, DutchQuoteContext, DutchV2QuoteContext } from '.';
+import { ClassicQuoteContext, DutchQuoteContext, DutchV2QuoteContext, RelayQuoteContext } from '.';
 
 export * from './ClassicQuoteContext';
 export * from './DutchQuoteContext';
 export * from './DutchV2QuoteContext';
+export * from './RelayQuoteContext';
 
 export type RequestByKey = {
   [key: string]: QuoteRequest;
@@ -99,6 +108,8 @@ export function parseQuoteContexts(requests: QuoteRequest[], providers: QuoteCon
         return new DutchV2QuoteContext(log, request as DutchV2Request, providers);
       case RoutingType.CLASSIC:
         return new ClassicQuoteContext(log, request as ClassicRequest, providers);
+      case RoutingType.RELAY:
+        return new RelayQuoteContext(log, request as RelayRequest, providers);
       default:
         throw new Error(`Unsupported routing type: ${request.routingType}`);
     }
@@ -114,6 +125,8 @@ export function mergeRequests(base: QuoteRequest, layer: QuoteRequest): QuoteReq
       simulateFromAddress: baseConfig.simulateFromAddress ?? layerConfig.simulateFromAddress,
       deadline: baseConfig.deadline ?? layerConfig.deadline,
       recipient: baseConfig.recipient ?? layerConfig.recipient,
+      // if base does not specify gasToken but layer does, then we add it
+      gasToken: baseConfig.gasToken ?? layerConfig.gasToken,
       // otherwise defer to base
     });
     return ClassicRequest.fromRequest(base.info, config);

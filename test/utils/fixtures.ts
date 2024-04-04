@@ -2,11 +2,13 @@ import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-ro
 import { BPS, NATIVE_ADDRESS, RoutingType } from '../../lib/constants';
 
 import { ChainId, WETH9 } from '@uniswap/sdk-core';
+import { PoolType } from '@uniswap/universal-router-sdk';
 import { BigNumber } from 'ethers';
 import {
   ClassicQuoteDataJSON,
   ClassicRequest,
   DutchConfig,
+  DutchConfigJSON,
   DutchQuoteJSON,
   DutchRequest,
   DutchV2Config,
@@ -14,8 +16,10 @@ import {
   DutchV2Request,
   parseQuoteRequests,
   QuoteRequestBodyJSON,
+  RelayConfigJSON,
+  RelayRequest,
 } from '../../lib/entities';
-import { ClassicQuote, DutchQuote, Quote } from '../../lib/entities/quote';
+import { ClassicQuote, DutchQuote, Quote, RelayQuote, RelayQuoteJSON } from '../../lib/entities/quote';
 import { Portion } from '../../lib/fetchers/PortionFetcher';
 import {
   AMOUNT,
@@ -94,7 +98,9 @@ export const QUOTE_REQUEST_BODY_MULTI_SYNTHETIC: QuoteRequestBodyJSON = {
   ],
 };
 
-export const DL_REQUEST_BODY = {
+export const DL_REQUEST_BODY: QuoteRequestBodyJSON & {
+  configs: DutchConfigJSON[];
+} = {
   ...BASE_REQUEST_INFO_EXACT_IN,
   configs: [
     {
@@ -332,7 +338,7 @@ export const CLASSIC_QUOTE_DATA_WITH_FOX_TAX = {
     route: [
       [
         {
-          type: 'v2-pool',
+          type: PoolType.V2Pool,
           address: '0x0D0A1767da735F725f41c4315E072c63Dbc6ab3D',
           tokenIn: {
             chainId: ChainId.MAINNET,
@@ -373,6 +379,138 @@ export const CLASSIC_QUOTE_DATA_WITH_FOX_TAX = {
         },
       ],
     ],
+  },
+};
+
+export const CLASSIC_QUOTE_DATA_WITH_ROUTE_AND_GAS_TOKEN: {
+  routing: RoutingType.CLASSIC;
+  quote: ClassicQuoteDataJSON;
+} = {
+  routing: RoutingType.CLASSIC,
+  quote: {
+    requestId: 'requestId',
+    quoteId: '1',
+    amount: AMOUNT,
+    amountDecimals: '18',
+    quote: AMOUNT,
+    quoteDecimals: '18',
+    quoteGasAdjusted: AMOUNT,
+    quoteGasAdjustedDecimals: '18',
+    gasUseEstimate: '100',
+    gasUseEstimateQuote: '100',
+    gasUseEstimateQuoteDecimals: '18',
+    gasUseEstimateGasToken: AMOUNT,
+    gasUseEstimateGasTokenDecimals: '18',
+    gasUseEstimateUSD: '100',
+    simulationStatus: 'start',
+    gasPriceWei: '10000',
+    blockNumber: '1234',
+    route: [
+      [
+        {
+          type: PoolType.V2Pool,
+          address: '0x0D0A1767da735F725f41c4315E072c63Dbc6ab3D',
+          tokenIn: {
+            chainId: ChainId.MAINNET,
+            decimals: '18',
+            address: TOKEN_IN,
+            symbol: 'UNI',
+          },
+          tokenOut: {
+            chainId: ChainId.MAINNET,
+            decimals: '18',
+            address: TOKEN_OUT,
+            symbol: 'WETH',
+          },
+          reserve0: {
+            token: {
+              chainId: ChainId.MAINNET,
+              decimals: '18',
+              address: TOKEN_IN,
+              symbol: 'UNI',
+            },
+            quotient: AMOUNT,
+          },
+          reserve1: {
+            token: {
+              chainId: ChainId.MAINNET,
+              decimals: '18',
+              address: TOKEN_OUT,
+              symbol: 'WETH',
+            },
+            quotient: AMOUNT,
+          },
+          amountIn: AMOUNT,
+          amountOut: AMOUNT,
+        },
+      ],
+    ],
+    routeString: 'UNI-ETH',
+    tradeType: 'exactIn',
+    slippage: 0.5,
+    portionBips: 0, // always assume portion will get returned from routing-api
+    portionRecipient: '0x0000000000000000000000000000000000000000',
+  },
+};
+
+export function makeRelayRequest(
+  overrides: Partial<QuoteRequestBodyJSON>,
+  configOverrides?: Partial<RelayConfigJSON>
+): RelayRequest {
+  const requestInfo = Object.assign({}, BASE_REQUEST_INFO_EXACT_IN, overrides);
+
+  return parseQuoteRequests({
+    ...requestInfo,
+    configs: [
+      {
+        routingType: RoutingType.RELAY,
+        swapper: SWAPPER,
+        auctionPeriodSecs: 60,
+        deadlineBufferSecs: 12,
+        gasToken: TOKEN_IN,
+        ...configOverrides,
+      },
+    ],
+  }).quoteRequests[0] as RelayRequest;
+}
+
+export const QUOTE_REQUEST_RELAY = makeRelayRequest({});
+export const QUOTE_REQUEST_RELAY_EXACT_OUT = makeRelayRequest({ type: 'EXACT_OUTPUT' });
+export const { quoteRequests: QUOTE_REQUEST_RELAY_MULTI } = parseQuoteRequests({
+  ...BASE_REQUEST_INFO_EXACT_IN,
+  configs: [
+    {
+      routingType: RoutingType.RELAY,
+      swapper: SWAPPER,
+      auctionPeriodSecs: 60,
+      deadlineBufferSecs: 12,
+      gasToken: TOKEN_IN,
+    },
+    {
+      routingType: RoutingType.CLASSIC,
+      protocols: ['v3', 'v2', 'mixed'],
+      gasPriceWei: '12',
+    },
+  ],
+});
+export const RELAY_QUOTE_DATA: {
+  routing: RoutingType.RELAY;
+  quote: RelayQuoteJSON;
+} = {
+  routing: RoutingType.RELAY,
+  quote: {
+    chainId: 1,
+    requestId: 'requestId',
+    quoteId: 'quoteId',
+    tokenIn: TOKEN_IN,
+    amountIn: AMOUNT,
+    tokenOut: TOKEN_OUT,
+    amountOut: AMOUNT,
+    gasToken: TOKEN_IN,
+    feeAmountStart: AMOUNT,
+    feeAmountEnd: AMOUNT,
+    swapper: SWAPPER,
+    classicQuoteData: CLASSIC_QUOTE_DATA_WITH_ROUTE_AND_GAS_TOKEN.quote,
   },
 };
 
@@ -666,5 +804,59 @@ export const CLASSIC_QUOTE_NO_ROUTE_TO_NATIVE = createRouteBackToNativeQuote(
     quote: AMOUNT,
     quoteGasAdjusted: AMOUNT,
   },
+  'EXACT_OUTPUT'
+);
+
+export function createRelayQuote(overrides: Partial<RelayQuoteJSON>, type: string, nonce?: string): RelayQuote {
+  return buildQuoteResponse(
+    Object.assign({}, RELAY_QUOTE_DATA, {
+      quote: { ...RELAY_QUOTE_DATA.quote, type: RoutingType.RELAY, ...overrides },
+    }),
+    makeRelayRequest({ type }),
+    nonce
+  ) as RelayQuote;
+}
+
+export function createRelayQuoteWithRequest(
+  overrides: Partial<RelayQuoteJSON>,
+  requestOverrides: Partial<QuoteRequestBodyJSON>,
+  configOverrides?: Partial<RelayConfigJSON>
+): RelayQuote {
+  return buildQuoteResponse(
+    Object.assign({}, RELAY_QUOTE_DATA, {
+      quote: { ...RELAY_QUOTE_DATA.quote, type: RoutingType.RELAY, ...overrides },
+    }),
+    makeRelayRequest({ ...requestOverrides }, configOverrides)
+  ) as RelayQuote;
+}
+
+export const RELAY_QUOTE_EXACT_IN_BETTER = createRelayQuote(
+  { amountOut: AMOUNT_BETTER, feeAmountStart: AMOUNT_BETTER, feeAmountEnd: AMOUNT_BETTER },
+  'EXACT_INPUT'
+);
+export const RELAY_QUOTE_NATIVE_EXACT_IN_BETTER = createRelayQuoteWithRequest(
+  {
+    amountIn: AMOUNT_BETTER,
+    feeAmountStart: AMOUNT_BETTER,
+    feeAmountEnd: AMOUNT_BETTER,
+  },
+  {
+    tokenIn: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_IN_ID)].address,
+    type: 'EXACT_INPUT',
+  },
+  {
+    gasToken: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_OUT_ID)].address,
+  }
+);
+export const RELAY_QUOTE_EXACT_IN_WORSE = createRelayQuote(
+  { amountOut: AMOUNT, feeAmountStart: AMOUNT, feeAmountEnd: AMOUNT },
+  'EXACT_INPUT'
+);
+export const RELAY_QUOTE_EXACT_OUT_BETTER = createRelayQuote(
+  { amountIn: AMOUNT, feeAmountStart: AMOUNT, feeAmountEnd: AMOUNT },
+  'EXACT_OUTPUT'
+);
+export const RELAY_QUOTE_EXACT_OUT_WORSE = createRelayQuote(
+  { amountIn: AMOUNT_BETTER, feeAmountStart: AMOUNT_BETTER, feeAmountEnd: AMOUNT_BETTER },
   'EXACT_OUTPUT'
 );

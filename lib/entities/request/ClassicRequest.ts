@@ -25,6 +25,7 @@ export interface ClassicConfig {
   unicornSecret?: string;
   quoteSpeed?: string;
   enableFeeOnTransferFeeFetching?: boolean;
+  gasToken?: string;
 }
 
 export interface ClassicConfigJSON extends Omit<ClassicConfig, 'protocols' | 'permitAmount'> {
@@ -73,7 +74,7 @@ export class ClassicRequest implements QuoteRequest {
   }
 }
 
-function parseProtocol(protocol: string): Protocol {
+export function parseProtocol(protocol: string): Protocol {
   switch (protocol.toLowerCase()) {
     case 'v2':
       return Protocol.V2;
