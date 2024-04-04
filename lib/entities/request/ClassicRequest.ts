@@ -1,7 +1,7 @@
 import { Protocol } from '@uniswap/router-sdk';
 import { BigNumber } from 'ethers';
 
-import { defaultRequestKey, parseProtocol, QuoteRequest, QuoteRequestInfo } from '.';
+import { defaultRequestKey, QuoteRequest, QuoteRequestInfo } from '.';
 import { RoutingType } from '../../constants';
 import { DutchRequest } from './DutchRequest';
 
@@ -71,5 +71,18 @@ export class ClassicRequest implements QuoteRequest {
 
   public key(): string {
     return defaultRequestKey(this);
+  }
+}
+
+export function parseProtocol(protocol: string): Protocol {
+  switch (protocol.toLowerCase()) {
+    case 'v2':
+      return Protocol.V2;
+    case 'v3':
+      return Protocol.V3;
+    case 'mixed':
+      return Protocol.MIXED;
+    default:
+      throw new Error(`Invalid protocol: ${protocol}`);
   }
 }

@@ -4,7 +4,13 @@ import { BigNumber, ethers } from 'ethers';
 import * as _ from 'lodash';
 
 import { it } from '@jest/globals';
-import { BPS, DEFAULT_AUCTION_PERIOD_SECS, DEFAULT_DEADLINE_BUFFER_SECS, DEFAULT_START_TIME_BUFFER_SECS, OPEN_QUOTE_START_TIME_BUFFER_SECS } from '../../../lib/constants';
+import {
+  BPS,
+  DEFAULT_AUCTION_PERIOD_SECS,
+  DEFAULT_DEADLINE_BUFFER_SECS,
+  DEFAULT_START_TIME_BUFFER_SECS,
+  OPEN_QUOTE_START_TIME_BUFFER_SECS,
+} from '../../../lib/constants';
 import { ClassicQuote, DutchQuote, DutchQuoteJSON } from '../../../lib/entities';
 import {
   AMOUNT,
