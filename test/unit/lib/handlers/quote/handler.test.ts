@@ -80,6 +80,142 @@ import { ErrorCode } from '../../../../../lib/util/errors';
 import { setGlobalLogger } from '../../../../../lib/util/log';
 import { INELIGIBLE_TOKEN, PERMIT2_USED, PERMIT_DETAILS, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../../constants';
 
+const LOGGER_MOCK = {
+  info: jest.fn(),
+  error: jest.fn(),
+  child: () => ({
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+  }),
+};
+
+const METRICS_MOCK = {
+  putMetric: jest.fn(),
+};
+
+const requestInjectedMock: Promise<ApiRInj> = new Promise((resolve) => {
+  setGlobalLogger(LOGGER_MOCK as any);
+  resolve({
+    log: LOGGER_MOCK as unknown as Logger,
+    requestId: 'test',
+    metrics: METRICS_MOCK as unknown as MetricsLogger,
+  }) as unknown as ApiRInj;
+});
+
+const injectorPromiseMock = (
+  quoters: QuoterByRoutingType,
+  tokenFetcher: TokenFetcher,
+  portionFetcher: PortionFetcher,
+  permit2Fetcher: Permit2Fetcher,
+  syntheticStatusProvider: SyntheticStatusProvider
+): Promise<ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>> =>
+  new Promise((resolve) =>
+    resolve({
+      getContainerInjected: (): ContainerInjected => {
+        const chainIdRpcMap = new Map<ChainId, providers.StaticJsonRpcProvider>();
+        for (const chain of Object.values(ChainId)) {
+          chainIdRpcMap.set(chain as ChainId, new providers.StaticJsonRpcProvider());
+        }
+        return {
+          quoters: quoters,
+          tokenFetcher: tokenFetcher,
+          portionFetcher: portionFetcher,
+          permit2Fetcher: permit2Fetcher,
+          syntheticStatusProvider,
+          chainIdRpcMap,
+        };
+      },
+      getRequestInjected: () => requestInjectedMock,
+    } as unknown as ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>)
+  );
+
+const getQuoteHandler = (
+  quoters: QuoterByRoutingType,
+  tokenFetcher: TokenFetcher,
+  portionFetcher: PortionFetcher,
+  permit2Fetcher: Permit2Fetcher,
+  syntheticStatusProvider: SyntheticStatusProvider
+) =>
+  new QuoteHandler(
+    'quote',
+    injectorPromiseMock(quoters, tokenFetcher, portionFetcher, permit2Fetcher, syntheticStatusProvider)
+  );
+
+const RfqQuoterMock = (dlQuote: DutchQuote): Quoter => {
+  return {
+    quote: jest.fn().mockResolvedValue(dlQuote),
+  };
+};
+
+const RfqQuoterErrorMock = (axiosError: AxiosError): Quoter => {
+  return {
+    quote: jest.fn().mockReturnValue(Promise.reject(axiosError)),
+  };
+};
+
+const RelayQuoterMock = (relayQuote: RelayQuote): Quoter => {
+  return {
+    quote: jest.fn().mockResolvedValue(relayQuote),
+  };
+};
+
+const ClassicQuoterMock = (classicQuote: ClassicQuote): Quoter => {
+  return {
+    quote: jest.fn().mockResolvedValue(classicQuote),
+  };
+};
+const TokenFetcherMock = (addresses: string[], isError = false): TokenFetcher => {
+  const fetcher = {
+    resolveTokenBySymbolOrAddress: jest.fn(),
+    getTokenBySymbolOrAddress: (_chainId: number, address: string) => [TOKEN_IN, TOKEN_OUT].includes(address),
+  };
+
+  if (isError) {
+    fetcher.resolveTokenBySymbolOrAddress.mockRejectedValue(new Error('error'));
+    return fetcher as unknown as TokenFetcher;
+  }
+
+  for (const address of addresses) {
+    fetcher.resolveTokenBySymbolOrAddress.mockResolvedValueOnce(address);
+  }
+  return fetcher as unknown as TokenFetcher;
+};
+const PortionFetcherMock = (portionResponse: GetPortionResponse): PortionFetcher => {
+  const portionCache = new NodeCache({ stdTTL: 600 });
+  const portionFetcher = new PortionFetcher('https://portion.uniswap.org/', portionCache);
+  jest.spyOn(portionFetcher, 'getPortion').mockResolvedValue(portionResponse);
+  return portionFetcher;
+};
+const Permit2FetcherMock = (permitDetails: PermitDetails, isError = false): Permit2Fetcher => {
+  const fetcher = {
+    fetchAllowance: jest.fn(),
+  };
+
+  if (isError) {
+    fetcher.fetchAllowance.mockRejectedValue(new Error('error'));
+    return fetcher as unknown as Permit2Fetcher;
+  }
+
+  fetcher.fetchAllowance.mockResolvedValueOnce(permitDetails);
+  return fetcher as unknown as Permit2Fetcher;
+};
+
+const SyntheticStatusProviderMock = (syntheticEnabled: boolean): SyntheticStatusProvider => {
+  const provider = {
+    getStatus: jest.fn(),
+  };
+
+  provider.getStatus.mockResolvedValueOnce({ syntheticEnabled });
+  return provider as unknown as SyntheticStatusProvider;
+};
+
+const getEvent = (request: QuoteRequestBodyJSON, headers?: APIGatewayProxyEventHeaders): APIGatewayProxyEvent =>
+  ({
+    body: JSON.stringify(request),
+    ...(headers !== undefined && { headers: headers }),
+  } as APIGatewayProxyEvent);
+
 describe('QuoteHandler', () => {
   const OLD_ENV = process.env;
 
@@ -99,141 +235,6 @@ describe('QuoteHandler', () => {
   afterAll(() => {
     process.env = OLD_ENV; // Restore old environment
   });
-
-  const LOGGER_MOCK = {
-    info: jest.fn(),
-    error: jest.fn(),
-    child: () => ({
-      info: jest.fn(),
-      error: jest.fn(),
-      warn: jest.fn(),
-    }),
-  };
-
-  const METRICS_MOCK = {
-    putMetric: jest.fn(),
-  };
-
-  const requestInjectedMock: Promise<ApiRInj> = new Promise((resolve) => {
-    setGlobalLogger(LOGGER_MOCK as any);
-    resolve({
-      log: LOGGER_MOCK as unknown as Logger,
-      requestId: 'test',
-      metrics: METRICS_MOCK as unknown as MetricsLogger,
-    }) as unknown as ApiRInj;
-  });
-
-  const injectorPromiseMock = (
-    quoters: QuoterByRoutingType,
-    tokenFetcher: TokenFetcher,
-    portionFetcher: PortionFetcher,
-    permit2Fetcher: Permit2Fetcher,
-    syntheticStatusProvider: SyntheticStatusProvider
-  ): Promise<ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>> =>
-    new Promise((resolve) =>
-      resolve({
-        getContainerInjected: (): ContainerInjected => {
-          const chainIdRpcMap = new Map<ChainId, providers.StaticJsonRpcProvider>();
-          for (const chain of Object.values(ChainId)) {
-            chainIdRpcMap.set(chain as ChainId, new providers.StaticJsonRpcProvider());
-          }
-          return {
-            quoters: quoters,
-            tokenFetcher: tokenFetcher,
-            portionFetcher: portionFetcher,
-            permit2Fetcher: permit2Fetcher,
-            syntheticStatusProvider,
-            chainIdRpcMap,
-          };
-        },
-        getRequestInjected: () => requestInjectedMock,
-      } as unknown as ApiInjector<ContainerInjected, ApiRInj, QuoteRequestBodyJSON, void>)
-    );
-
-  const getQuoteHandler = (
-    quoters: QuoterByRoutingType,
-    tokenFetcher: TokenFetcher,
-    portionFetcher: PortionFetcher,
-    permit2Fetcher: Permit2Fetcher,
-    syntheticStatusProvider: SyntheticStatusProvider
-  ) =>
-    new QuoteHandler(
-      'quote',
-      injectorPromiseMock(quoters, tokenFetcher, portionFetcher, permit2Fetcher, syntheticStatusProvider)
-    );
-
-  const RfqQuoterMock = (dlQuote: DutchQuote): Quoter => {
-    return {
-      quote: jest.fn().mockResolvedValue(dlQuote),
-    };
-  };
-
-  const RfqQuoterErrorMock = (axiosError: AxiosError): Quoter => {
-    return {
-      quote: jest.fn().mockReturnValue(Promise.reject(axiosError)),
-    };
-  };
-
-  const RelayQuoterMock = (relayQuote: RelayQuote): Quoter => {
-    return {
-      quote: jest.fn().mockResolvedValue(relayQuote),
-    };
-  };
-
-  const ClassicQuoterMock = (classicQuote: ClassicQuote): Quoter => {
-    return {
-      quote: jest.fn().mockResolvedValue(classicQuote),
-    };
-  };
-  const TokenFetcherMock = (addresses: string[], isError = false): TokenFetcher => {
-    const fetcher = {
-      resolveTokenBySymbolOrAddress: jest.fn(),
-      getTokenBySymbolOrAddress: (_chainId: number, address: string) => [TOKEN_IN, TOKEN_OUT].includes(address),
-    };
-
-    if (isError) {
-      fetcher.resolveTokenBySymbolOrAddress.mockRejectedValue(new Error('error'));
-      return fetcher as unknown as TokenFetcher;
-    }
-
-    for (const address of addresses) {
-      fetcher.resolveTokenBySymbolOrAddress.mockResolvedValueOnce(address);
-    }
-    return fetcher as unknown as TokenFetcher;
-  };
-  const PortionFetcherMock = (portionResponse: GetPortionResponse): PortionFetcher => {
-    const portionCache = new NodeCache({ stdTTL: 600 });
-    const portionFetcher = new PortionFetcher('https://portion.uniswap.org/', portionCache);
-    jest.spyOn(portionFetcher, 'getPortion').mockResolvedValue(portionResponse);
-    return portionFetcher;
-  };
-  const Permit2FetcherMock = (permitDetails: PermitDetails, isError = false): Permit2Fetcher => {
-    const fetcher = {
-      fetchAllowance: jest.fn(),
-    };
-
-    if (isError) {
-      fetcher.fetchAllowance.mockRejectedValue(new Error('error'));
-      return fetcher as unknown as Permit2Fetcher;
-    }
-
-    fetcher.fetchAllowance.mockResolvedValueOnce(permitDetails);
-    return fetcher as unknown as Permit2Fetcher;
-  };
-
-  const SyntheticStatusProviderMock = (syntheticEnabled: boolean): SyntheticStatusProvider => {
-    const provider = {
-      getStatus: jest.fn(),
-    };
-
-    provider.getStatus.mockResolvedValueOnce({ syntheticEnabled });
-    return provider as unknown as SyntheticStatusProvider;
-  };
-  const getEvent = (request: QuoteRequestBodyJSON, headers?: APIGatewayProxyEventHeaders): APIGatewayProxyEvent =>
-    ({
-      body: JSON.stringify(request),
-      ...(headers !== undefined && { headers: headers }),
-    } as APIGatewayProxyEvent);
 
   describe('handler', () => {
     describe('handler test', () => {
