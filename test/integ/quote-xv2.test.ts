@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { ID_TO_NETWORK_NAME, USDC_MAINNET, USDT_MAINNET } from '@uniswap/smart-order-router';
 import { UnsignedV2DutchOrder } from '@uniswap/uniswapx-sdk';
-import { AxiosResponse } from 'axios';
+import { AxiosError, AxiosResponse } from 'axios';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import chaiSubset from 'chai-subset';
@@ -72,8 +72,14 @@ describe('quoteUniswapX-v2', function () {
           expect(parseInt(order.info.input.startAmount.toString())).to.be.greaterThan(9000000000);
           expect(parseInt(order.info.input.startAmount.toString())).to.be.lessThan(11000000000);
         } catch (e: any) {
-          expect(e.response.status).to.equal(404);
-          expect(e.response.data.detail).to.equal('No quotes available');
+          if(e instanceof AxiosError && e.response) {
+            expect(e.response.status).to.equal(404);
+            expect(e.response.data.detail).to.equal('No quotes available');
+          }
+          else {
+            // throw if not an axios error to debug
+            throw e;
+          }
         }
       });
     });
