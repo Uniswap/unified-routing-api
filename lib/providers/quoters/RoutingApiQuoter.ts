@@ -99,6 +99,7 @@ export class RoutingApiQuoter implements Quoter {
         ...(config.gasPriceWei !== undefined && { gasPriceWei: config.gasPriceWei }),
         ...(request.info.slippageTolerance !== undefined && { slippageTolerance: request.info.slippageTolerance }),
         ...(config.minSplits !== undefined && { minSplits: config.minSplits }),
+        ...(config.maxSplits !== undefined && { maxSplits: config.maxSplits }),
         ...(config.forceCrossProtocol !== undefined && { forceCrossProtocol: config.forceCrossProtocol }),
         ...(config.forceMixedRoutes !== undefined && { forceMixedRoutes: config.forceMixedRoutes }),
         ...(config.deadline !== undefined && { deadline: config.deadline }),
