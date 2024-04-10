@@ -66,6 +66,8 @@ export class FieldValidator {
 
   public static readonly minSplits = Joi.number().max(7);
 
+  public static readonly maxSplits = Joi.number().max(7);
+
   public static readonly forceCrossProtocol = Joi.boolean();
 
   public static readonly forceMixedRoutes = Joi.boolean();
@@ -88,6 +90,7 @@ export class FieldValidator {
     enableUniversalRouter: FieldValidator.enableUniversalRouter.optional(),
     deadline: FieldValidator.deadline.optional(),
     minSplits: FieldValidator.minSplits.optional(),
+    maxSplits: FieldValidator.maxSplits.optional(),
     forceCrossProtocol: FieldValidator.forceCrossProtocol.optional(),
     forceMixedRoutes: FieldValidator.forceMixedRoutes.optional(),
     slippageTolerance: FieldValidator.slippageTolerance.optional(),

@@ -19,6 +19,7 @@ export interface ClassicConfig {
   algorithm?: string;
   deadline?: number;
   minSplits?: number;
+  maxSplits?: number;
   forceCrossProtocol?: boolean;
   forceMixedRoutes?: boolean;
   debugRoutingConfig?: string;
