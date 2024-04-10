@@ -5,11 +5,12 @@ import axios from './helpers';
 
 import { BPS, frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { DutchQuote, DutchRequest, Quote } from '../../entities';
-import { PostQuoteResponseJoi } from '../../handlers/quote';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import { generateRandomNonce } from '../../util/nonce';
 import { Quoter, QuoterType } from './index';
+import Joi from 'joi';
+import { FieldValidator } from '../../util/validator';
 
 export class RfqQuoter implements Quoter {
   static readonly type: QuoterType.UNISWAPX_RFQ;
@@ -62,7 +63,7 @@ export class RfqQuoter implements Quoter {
       } else {
         const response = results[0].value.data;
         log.info(response, 'RfqQuoter: POST quote request success');
-        const validated = PostQuoteResponseJoi.validate(response);
+        const validated = RfqQuoterPostQuoteResponseJoi.validate(response);
         if (validated.error) {
           log.error({ validationError: validated.error }, 'RfqQuoterErr: POST quote response invalid');
           metrics.putMetric(`RfqQuoterValidationErr`, 1);
@@ -98,3 +99,15 @@ function mapNative(token: string, chainId: number): string {
   }
   return token;
 }
+
+const RfqQuoterPostQuoteResponseJoi = Joi.object({
+  chainId: FieldValidator.dutchChainId.required(),
+  quoteId: FieldValidator.uuid.required(),
+  requestId: FieldValidator.uuid.required(),
+  tokenIn: FieldValidator.address.required(),
+  amountIn: FieldValidator.amount.required(),
+  tokenOut: FieldValidator.address.required(),
+  amountOut: FieldValidator.amount.required(),
+  swapper: FieldValidator.address.required(),
+  filler: FieldValidator.address.required(),
+});

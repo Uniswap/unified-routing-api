@@ -25,14 +25,7 @@ export const PostQuoteRequestBodyJoi = Joi.object({
   intent: Joi.string().optional(),
 });
 
-export const PostQuoteResponseJoi = Joi.object({
-  chainId: FieldValidator.dutchChainId.required(),
-  quoteId: FieldValidator.uuid.required(),
-  requestId: FieldValidator.uuid.required(),
-  tokenIn: FieldValidator.address.required(),
-  amountIn: FieldValidator.amount.required(),
-  tokenOut: FieldValidator.address.required(),
-  amountOut: FieldValidator.amount.required(),
-  swapper: FieldValidator.address.required(),
-  filler: FieldValidator.address.required(),
+export const PostQuoteResponseBodyJoi = Joi.object({
+  routing: FieldValidator.routingType.required(),
+  quote: FieldValidator.quoteResponse.required()
 });

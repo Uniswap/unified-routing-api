@@ -113,4 +113,89 @@ export class FieldValidator {
     deadlineBufferSecs: FieldValidator.positiveNumber.optional(),
     useSyntheticQuotes: Joi.boolean().optional(),
   });
+
+  // quote response jois
+
+  public static readonly classicQuoteResponse = Joi.object({
+    requestId: Joi.string().required(),
+    quoteId: Joi.string().required(),
+    amount: Joi.string().required(),
+    amountDecimals: Joi.string().required(),
+    quote: Joi.string().required(),
+    quoteDecimals: Joi.string().required(),
+      quoteGasAdjusted: Joi.string().required(),
+      quoteGasAdjustedDecimals: Joi.string().required(),
+      gasUseEstimate: Joi.string().required(),
+      gasUseEstimateQuote: Joi.string().required(),
+      gasUseEstimateQuoteDecimals: Joi.string().required(),
+      gasUseEstimateGasToken: Joi.string().optional(),
+      gasUseEstimateGasTokenDecimals: Joi.string().optional(),
+      gasUseEstimateUSD: Joi.string().required(),
+      simulationError: Joi.boolean().optional(),
+      simulationStatus: Joi.string().required(),
+      gasPriceWei: Joi.string().required(),
+      blockNumber: Joi.string().required(),
+      route: Joi.array().items(Joi.array().items(Joi.object())).required(),
+      routeString: Joi.string().required(),
+      methodParameters: Joi.object().optional(),
+      permitData: Joi.object().optional(),
+      tradeType: Joi.string().required(),
+      slippage: Joi.number().required(),
+      portionBips: Joi.number().optional(),
+      portionRecipient: Joi.string().optional(),
+      portionAmount: Joi.string().optional(),
+      portionAmountDecimals: Joi.string().optional(),
+      quoteGasAndPortionAdjusted: Joi.string().optional(),
+      quoteGasAndPortionAdjustedDecimals: Joi.string().optional(),
+  })
+
+  // shared quote response fields for off chain orders
+  private static readonly _sharedOrderQuoteResponse = Joi.object({
+    quoteId: Joi.string().required(),
+    requestId: Joi.string().required(),
+    encodedOrder: Joi.string().required(),
+    orderHash: Joi.string().required(),
+    slippageTolerance: Joi.string().required()
+  })
+
+  public static readonly dutchQuoteResponse = this._sharedOrderQuoteResponse.concat(Joi.object({
+    orderInfo: Joi.object().required(),
+    // these fields have default values that must be set
+    startTimeBufferSecs: FieldValidator.positiveNumber.required(),
+    auctionPeriodSecs: FieldValidator.positiveNumber.required(),
+    deadlineBufferSecs: FieldValidator.positiveNumber.required(),
+    permitData: Joi.object().required(),
+    // optional response fields
+    portionBips: Joi.number().optional(),
+    portionAmount: Joi.string().optional(),
+    portionRecipient: Joi.string().optional(),
+  }))
+
+  public static readonly dutchV2QuoteResponse = this._sharedOrderQuoteResponse.concat(Joi.object({
+    orderInfo: Joi.object().required(),
+    // these fields have default values that must be set
+    deadlineBufferSecs: FieldValidator.positiveNumber.required(),
+    permitData: Joi.object().required(),
+    // optional response fields
+    portionBips: Joi.number().optional(),
+    portionAmount: Joi.string().optional(),
+    portionRecipient: Joi.string().optional(),
+  }))
+
+  public static readonly relayQuoteResponse = this._sharedOrderQuoteResponse.concat(Joi.object({
+    orderInfo: Joi.object().required(),
+    // these fields have default values that must be set
+    startTimeBufferSecs: FieldValidator.positiveNumber.required(),
+    auctionPeriodSecs: FieldValidator.positiveNumber.required(),
+    deadlineBufferSecs: FieldValidator.positiveNumber.required(),
+    permitData: Joi.object().required(),
+    classicQuoteData: this.classicQuoteResponse.required(),    
+  }))
+
+  public static readonly quoteResponse = Joi.valid(
+    this.classicQuoteResponse,
+    this.dutchQuoteResponse,
+    this.dutchV2QuoteResponse,
+    this.relayQuoteResponse
+  )
 }

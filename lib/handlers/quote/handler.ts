@@ -29,7 +29,7 @@ import { timestampInMstoSeconds } from '../../util/time';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
 import { ContainerInjected, QuoterByRoutingType } from './injector';
-import { PostQuoteRequestBodyJoi } from './schema';
+import { PostQuoteRequestBodyJoi, PostQuoteResponseBodyJoi } from './schema';
 
 const DISABLE_DUTCH_LIMIT_REQUESTS = false;
 
@@ -387,7 +387,7 @@ export class QuoteHandler extends APIGLambdaHandler<
   }
 
   protected responseBodySchema(): Joi.ObjectSchema | null {
-    return null;
+    return PostQuoteResponseBodyJoi;
   }
 }
 
