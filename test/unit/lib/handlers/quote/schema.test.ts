@@ -183,6 +183,14 @@ describe('Post quote request validation', () => {
       });
       expect(error).toBeDefined();
     });
+
+    it('should reject invalid maxSplits', () => {
+      const { error } = FieldValidator.classicConfig.validate({
+        ...CLASSIC_CONFIG_JSON,
+        maxSplits: 8,
+      });
+      expect(error).toBeDefined();
+    });
   });
 
   it('should validate a complete request', () => {

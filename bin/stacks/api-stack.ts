@@ -150,8 +150,8 @@ export class APIStack extends cdk.Stack {
           priority: 20,
           statement: {
             rateBasedStatement: {
-              // Limit is per 5 mins, i.e. 120 requests every 5 mins
-              limit: props.throttlingOverride ? parseInt(props.throttlingOverride) : 120,
+              // Limit is per 5 mins, i.e. 200 requests every 5 mins
+              limit: props.throttlingOverride ? parseInt(props.throttlingOverride) : 200,
               // API is of type EDGE so is fronted by Cloudfront as a proxy.
               // Use the ip set in X-Forwarded-For by Cloudfront, not the regular IP
               // which would just resolve to Cloudfronts IP.

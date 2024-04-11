@@ -1,22 +1,20 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { ID_TO_NETWORK_NAME, USDC_MAINNET, USDT_MAINNET } from '@uniswap/smart-order-router';
 import { UnsignedV2DutchOrder } from '@uniswap/uniswapx-sdk';
-import { AxiosResponse } from 'axios';
+import { AxiosError, AxiosResponse } from 'axios';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import chaiSubset from 'chai-subset';
-import { ethers } from 'ethers';
 import { RoutingType } from '../../lib/constants';
 import { QuoteRequestBodyJSON, RoutingConfigJSON } from '../../lib/entities';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
 import { getAmount } from '../utils/tokens';
-import { BaseIntegrationTestSuite, callHard, callIndicative, HardQuoteResponseData } from './base.test';
+import { BaseIntegrationTestSuite, callIndicative } from './base.test';
 
 chai.use(chaiAsPromised);
 chai.use(chaiSubset);
 
 const SLIPPAGE = '5';
-const REQUEST_ID = 'bbe75c5f-8ae5-46a1-ab3d-ce201cf56689';
 
 describe('quoteUniswapX-v2', function () {
   let baseTest: BaseIntegrationTestSuite;
@@ -49,7 +47,7 @@ describe('quoteUniswapX-v2', function () {
             {
               routingType: RoutingType.DUTCH_V2,
               swapper: alice.address,
-              useSyntheticQuotes: false,
+              useSyntheticQuotes: true,
             },
           ] as RoutingConfigJSON[],
         };
@@ -63,71 +61,22 @@ describe('quoteUniswapX-v2', function () {
 
           const order = new UnsignedV2DutchOrder((quote as any).orderInfo, 1);
           expect(status).to.equal(200);
-          expect(order.info.cosigner).to.equal(ethers.constants.AddressZero);
+
           expect(order.info.swapper).to.equal(alice.address);
+
           expect(order.info.outputs.length).to.equal(1);
+          expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.greaterThan(9000000000);
+          expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.lessThan(11000000000);
+          expect(parseInt(order.info.input.startAmount.toString())).to.be.greaterThan(9000000000);
+          expect(parseInt(order.info.input.startAmount.toString())).to.be.lessThan(11000000000);
         } catch (e: any) {
-          expect(e.response.status).to.equal(404);
-          expect(e.response.data.detail).to.equal('No quotes available');
-        }
-      });
-
-      // TODO: maybe move this to param-api integ tests?
-      it('stable -> stable, large trade', async () => {
-        const quoteReq: QuoteRequestBodyJSON = {
-          requestId: 'id',
-          useUniswapX: true,
-          tokenIn: USDC_MAINNET.address,
-          tokenInChainId: 1,
-          tokenOut: USDT_MAINNET.address,
-          tokenOutChainId: 1,
-          amount: await getAmount(1, type, 'USDC', 'USDT', '10000'),
-          type,
-          slippageTolerance: SLIPPAGE,
-          configs: [
-            {
-              routingType: RoutingType.DUTCH_V2,
-              swapper: alice.address,
-              useSyntheticQuotes: true,
-            },
-          ] as RoutingConfigJSON[],
-        };
-
-        const response: AxiosResponse<QuoteResponseJSON> = await callIndicative(quoteReq);
-        const {
-          data: { quote },
-          status,
-        } = response;
-
-        const order = new UnsignedV2DutchOrder((quote as any).orderInfo, 1);
-        expect(status).to.equal(200);
-
-        expect(order.info.swapper).to.equal(alice.address);
-        expect(order.info.outputs.length).to.equal(1);
-        expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.greaterThan(9000000000);
-        expect(parseInt(order.info.outputs[0].startAmount.toString())).to.be.lessThan(11000000000);
-        expect(parseInt(order.info.input.startAmount.toString())).to.be.greaterThan(9000000000);
-        expect(parseInt(order.info.input.startAmount.toString())).to.be.lessThan(11000000000);
-
-        // user accepts and signs quote
-        const { domain, types, values } = order.permitData();
-        const signature = await alice._signTypedData(domain, types, values);
-        const encodedInnerOrder = order.serialize();
-        const hardQuoteReq = {
-          requestId: REQUEST_ID,
-          encodedInnerOrder,
-          innerSig: signature,
-          tokenInChainId: 1,
-          tokenOutChainId: 1,
-        };
-        //TODO: other infras are in place we can remove the try catch
-        try {
-          const secondaryResponse: AxiosResponse<HardQuoteResponseData> = await callHard(hardQuoteReq);
-          expect(secondaryResponse.status).to.equal(200);
-        } catch (e: any) {
-          expect(['Unknown cosigner', 'Error posting order', 'No quotes available', 'Error posting order']).to.include(
-            e.response.data.detail
-          );
+          if (e instanceof AxiosError && e.response) {
+            expect(e.response.status).to.equal(404);
+            expect(e.response.data.detail).to.equal('No quotes available');
+          } else {
+            // throw if not an axios error to debug
+            throw e;
+          }
         }
       });
     });

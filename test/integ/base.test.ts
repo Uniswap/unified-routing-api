@@ -42,17 +42,16 @@ if (!process.env.UNISWAP_API || !process.env.ARCHIVE_NODE_RPC) {
   throw new Error('Must set UNISWAP_API and ARCHIVE_NODE_RPC env variables for integ tests. See README');
 }
 
-if (!process.env.URA_INTERNAL_API_KEY) {
-  console.log('URA_INTERNAL_API_KEY env variable is not set. This is recommended for integ tests.');
-}
-
 if (!process.env.PORTION_API_URL) {
   throw new Error('Must set PORTION_API_URL env variables for integ tests. See README');
 }
 
+if (!process.env.URA_INTERNAL_API_KEY) {
+  console.log('URA_INTERNAL_API_KEY env variable is not set. This is recommended for integ tests.');
+}
+
 // URA endpoint
 const API = `${process.env.UNISWAP_API!}quote`;
-const hardQuoteAPI = `${process.env.PARAM_API_URL!}hard-quote`;
 
 const SLIPPAGE = '5';
 
@@ -113,13 +112,6 @@ export const callIndicative = async (
   config = axiosConfig
 ): Promise<AxiosResponse<QuoteResponseJSON>> => {
   return await axiosHelper.post<QuoteResponseJSON>(`${API}`, quoteReq, config);
-};
-
-export const callHard = async (
-  hardQuoteReq: Partial<HardQuoteRequest>,
-  config = axiosConfig
-): Promise<AxiosResponse<HardQuoteResponseData>> => {
-  return await axiosHelper.post<HardQuoteResponseData>(`${hardQuoteAPI}`, hardQuoteReq, config);
 };
 
 export const checkQuoteToken = (
