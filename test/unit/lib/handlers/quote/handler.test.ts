@@ -5,6 +5,7 @@ import {
   BASE_REQUEST_INFO_EXACT_IN,
   BASE_REQUEST_INFO_EXACT_OUT,
   CLASSIC_QUOTE_EXACT_IN_BETTER,
+  CLASSIC_QUOTE_EXACT_IN_BETTER_GAS_TOKEN,
   CLASSIC_QUOTE_EXACT_IN_BETTER_WITH_PORTION,
   CLASSIC_QUOTE_EXACT_IN_WORSE,
   CLASSIC_QUOTE_EXACT_IN_WORSE_GAS_TOKEN,
@@ -494,8 +495,8 @@ describe('QuoteHandler', () => {
 
       it('returns relay quote if both relay and classic are requested', async () => {
         const quoters = {
-          [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_WORSE_GAS_TOKEN),
-          [RoutingType.RELAY]: RelayQuoterMock(RELAY_QUOTE_NATIVE_EXACT_IN_BETTER),
+          [RoutingType.CLASSIC]: ClassicQuoterMock(CLASSIC_QUOTE_EXACT_IN_BETTER_GAS_TOKEN),
+          [RoutingType.RELAY]: RelayQuoterMock(RELAY_QUOTE_EXACT_IN_BETTER),
         };
         const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
         const portionFetcher = PortionFetcherMock(GET_NO_PORTION_RESPONSE);
