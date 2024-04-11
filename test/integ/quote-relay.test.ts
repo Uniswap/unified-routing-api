@@ -56,6 +56,7 @@ describe('relayQuote', function () {
             configs: [
               {
                 routingType: RoutingType.RELAY,
+                protocols: ['V2', 'V3', 'MIXED'],
                 swapper: alice.address,
                 gasToken: USDC_MAINNET.address,
               },
@@ -79,23 +80,35 @@ describe('relayQuote', function () {
           expect(parseInt(order.info.input.amount.toString())).to.be.greaterThan(90000000);
           expect(parseInt(order.info.input.amount.toString())).to.be.lessThan(110000000);
 
-          const { tokenInBefore, tokenInAfter } = await baseTest.executeRelaySwap(
+          const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeRelaySwap(
             alice,
             filler,
             order,
-            USDC_MAINNET,
-            USDC_MAINNET,
-            USDT_MAINNET
+            USDC_MAINNET, // tokenIn
+            USDC_MAINNET, // gasToken
+            USDT_MAINNET // outputToken
           );
 
-          const netMaxAmountIn = CurrencyAmount.fromRawAmount(
+          const expectedMinAmountOut = CurrencyAmount.fromRawAmount(
+            USDT_MAINNET,
+            (quote as RelayQuoteDataJSON).classicQuoteData.quote
+          )
+            .multiply(95)
+            .divide(100); // apply slippage
+
+          const expectedMaxAmountIn = CurrencyAmount.fromRawAmount(
             USDC_MAINNET,
             parseInt(order.info.fee.endAmount.toString()) + parseInt(order.info.input.amount.toString())
           );
           // at most netMaxAmountIn of tokenIn should be spent
           expect(
-            tokenInBefore.subtract(tokenInAfter).lessThan(netMaxAmountIn) ||
-              tokenInBefore.subtract(tokenInAfter).equalTo(netMaxAmountIn)
+            tokenInBefore.subtract(tokenInAfter).lessThan(expectedMaxAmountIn) ||
+              tokenInBefore.subtract(tokenInAfter).equalTo(expectedMaxAmountIn)
+          ).to.be.true;
+          // user should have received at least expectedAmountOut of tokenOut
+          expect(
+            tokenOutAfter.subtract(tokenOutBefore).greaterThan(expectedMinAmountOut) ||
+              tokenOutAfter.subtract(tokenOutBefore).equalTo(expectedMinAmountOut)
           ).to.be.true;
         });
 
@@ -112,6 +125,7 @@ describe('relayQuote', function () {
             configs: [
               {
                 routingType: RoutingType.RELAY,
+                protocols: ['V2', 'V3', 'MIXED'],
                 swapper: alice.address,
                 gasToken: DAI_MAINNET.address,
               },
@@ -137,7 +151,7 @@ describe('relayQuote', function () {
           expect(parseInt(order.info.input.amount.toString())).to.be.greaterThan(90000000);
           expect(parseInt(order.info.input.amount.toString())).to.be.lessThan(110000000);
 
-          const { tokenInBefore, tokenInAfter, gasTokenBefore, gasTokenAfter } = await baseTest.executeRelaySwap(
+          const { tokenInBefore, tokenInAfter, gasTokenBefore, gasTokenAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeRelaySwap(
             alice,
             filler,
             order,
@@ -145,6 +159,13 @@ describe('relayQuote', function () {
             DAI_MAINNET,
             USDT_MAINNET
           );
+
+          const expectedMinAmountOut = CurrencyAmount.fromRawAmount(
+            USDT_MAINNET,
+            (quote as RelayQuoteDataJSON).classicQuoteData.quote
+          )
+            .multiply(95)
+            .divide(100); // apply slippage
 
           const tokenInMaxAmount = CurrencyAmount.fromRawAmount(
             USDC_MAINNET,
@@ -159,6 +180,11 @@ describe('relayQuote', function () {
           expect(
             gasTokenBefore.subtract(gasTokenAfter).lessThan(gasMaxAmount) ||
               gasTokenBefore.subtract(gasTokenAfter).equalTo(gasMaxAmount)
+          ).to.be.true;
+          // user should have received at least expectedAmountOut of tokenOut
+          expect(
+            tokenOutAfter.subtract(tokenOutBefore).greaterThan(expectedMinAmountOut) ||
+              tokenOutAfter.subtract(tokenOutBefore).equalTo(expectedMinAmountOut)
           ).to.be.true;
         });
       });
