@@ -77,7 +77,7 @@ describe('relayQuote', function () {
           expect(order.info.input).to.not.be.undefined;
           expect(order.info.fee).to.not.be.undefined;
           expect(order.info.universalRouterCalldata).to.not.be.undefined;
-          
+
           const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeRelaySwap(
             alice,
             filler,
@@ -146,14 +146,8 @@ describe('relayQuote', function () {
           expect(order.info.fee).to.not.be.undefined;
           expect(order.info.universalRouterCalldata).to.not.be.undefined;
 
-          const { tokenInBefore, tokenInAfter, gasTokenBefore, gasTokenAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeRelaySwap(
-            alice,
-            filler,
-            order,
-            USDC_MAINNET,
-            DAI_MAINNET,
-            USDT_MAINNET
-          );
+          const { tokenInBefore, tokenInAfter, gasTokenBefore, gasTokenAfter, tokenOutBefore, tokenOutAfter } =
+            await baseTest.executeRelaySwap(alice, filler, order, USDC_MAINNET, DAI_MAINNET, USDT_MAINNET);
 
           const expectedMinAmountOut = CurrencyAmount.fromRawAmount(
             USDT_MAINNET,

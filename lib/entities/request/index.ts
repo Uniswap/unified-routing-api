@@ -150,7 +150,7 @@ export function parseProtocol(protocol: string): Protocol {
   const protocolUpper = protocol.toUpperCase();
 
   if (protocolUpper in Protocol) {
-      return Protocol[protocolUpper as keyof typeof Protocol];
+    return Protocol[protocolUpper as keyof typeof Protocol];
   }
 
   throw new Error(`Invalid protocol: ${protocol}`);
