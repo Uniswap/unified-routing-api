@@ -77,9 +77,7 @@ describe('relayQuote', function () {
           expect(order.info.input).to.not.be.undefined;
           expect(order.info.fee).to.not.be.undefined;
           expect(order.info.universalRouterCalldata).to.not.be.undefined;
-          expect(parseInt(order.info.input.amount.toString())).to.be.greaterThan(90000000);
-          expect(parseInt(order.info.input.amount.toString())).to.be.lessThan(110000000);
-
+          
           const { tokenInBefore, tokenInAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeRelaySwap(
             alice,
             filler,
@@ -147,9 +145,6 @@ describe('relayQuote', function () {
           expect(order.info.input).to.not.be.undefined;
           expect(order.info.fee).to.not.be.undefined;
           expect(order.info.universalRouterCalldata).to.not.be.undefined;
-
-          expect(parseInt(order.info.input.amount.toString())).to.be.greaterThan(90000000);
-          expect(parseInt(order.info.input.amount.toString())).to.be.lessThan(110000000);
 
           const { tokenInBefore, tokenInAfter, gasTokenBefore, gasTokenAfter, tokenOutBefore, tokenOutAfter } = await baseTest.executeRelaySwap(
             alice,

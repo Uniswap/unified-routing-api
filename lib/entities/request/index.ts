@@ -147,14 +147,11 @@ export function defaultRequestKey(request: QuoteRequest): string {
 }
 
 export function parseProtocol(protocol: string): Protocol {
-  switch (protocol.toLowerCase()) {
-    case 'v2':
-      return Protocol.V2;
-    case 'v3':
-      return Protocol.V3;
-    case 'mixed':
-      return Protocol.MIXED;
-    default:
-      throw new Error(`Invalid protocol: ${protocol}`);
+  const protocolUpper = protocol.toUpperCase();
+
+  if (protocolUpper in Protocol) {
+      return Protocol[protocolUpper as keyof typeof Protocol];
   }
+
+  throw new Error(`Invalid protocol: ${protocol}`);
 }

@@ -113,32 +113,6 @@ describe('RelayQuoteContext', () => {
       ).toBe(null);
     });
 
-    // TODO:
-    xit('returns null if tokenIn is not in tokenlist', async () => {
-      const context = new RelayQuoteContext(logger, QUOTE_REQUEST_RELAY, makeProviders());
-      const relayQuote = createRelayQuote(
-        { tokenIn: '0x1111111111111111111111111111111111111111', amountOut: '2' },
-        'EXACT_INPUT'
-      );
-      const quote = await context.resolve({
-        [QUOTE_REQUEST_RELAY.key()]: relayQuote,
-      });
-      expect(quote).toBeNull();
-    });
-
-    // TODO:
-    xit('returns null if tokenOut is not in tokenlist', async () => {
-      const context = new RelayQuoteContext(logger, QUOTE_REQUEST_RELAY, makeProviders());
-      const relayQuote = createRelayQuote(
-        { tokenOut: '0x1111111111111111111111111111111111111111', amountOut: '2' },
-        'EXACT_INPUT'
-      );
-      const quote = await context.resolve({
-        [QUOTE_REQUEST_RELAY.key()]: relayQuote,
-      });
-      expect(quote).toBeNull();
-    });
-
     it('returns relay quote if tokenIn is NATIVE_ADDRESS', async () => {
       const context = new RelayQuoteContext(logger, QUOTE_REQUEST_RELAY, makeProviders());
       const relayQuote = createRelayQuote({ tokenIn: NATIVE_ADDRESS, amountOut: '2' }, 'EXACT_INPUT');
