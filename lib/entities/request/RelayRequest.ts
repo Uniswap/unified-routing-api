@@ -1,7 +1,15 @@
 import { Protocol } from '@uniswap/router-sdk';
 
 import { BigNumber } from 'ethers';
-import { ClassicConfig, ClassicConfigJSON, defaultRequestKey, parseProtocol, QuoteRequest, QuoteRequestInfo } from '.';
+import {
+  ClassicConfig,
+  ClassicConfigJSON,
+  defaultRequestKey,
+  parseProtocol,
+  QuoteRequest,
+  QuoteRequestHeaders,
+  QuoteRequestInfo
+} from '.';
 import { DEFAULT_SLIPPAGE_TOLERANCE, NATIVE_ADDRESS, RoutingType } from '../../constants';
 
 export * from './ClassicRequest';
@@ -53,7 +61,11 @@ export class RelayRequest implements QuoteRequest {
     );
   }
 
-  constructor(public readonly info: RelayQuoteRequestInfo, public readonly config: RelayConfig) {}
+  constructor(
+    public readonly info: RelayQuoteRequestInfo,
+    public readonly config: RelayConfig,
+    public headers: QuoteRequestHeaders = {}
+  ) {}
 
   public toJSON(): RelayConfigJSON {
     return Object.assign({}, this.config, {

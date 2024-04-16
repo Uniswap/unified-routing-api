@@ -1,7 +1,7 @@
 import { Protocol } from '@uniswap/router-sdk';
 import { BigNumber } from 'ethers';
 
-import { defaultRequestKey, QuoteRequest, QuoteRequestInfo } from '.';
+import { defaultRequestKey, QuoteRequest, QuoteRequestHeaders, QuoteRequestInfo } from '.';
 import { RoutingType } from '../../constants';
 import { DutchRequest } from './DutchRequest';
 
@@ -59,7 +59,11 @@ export class ClassicRequest implements QuoteRequest {
     });
   }
 
-  constructor(public readonly info: QuoteRequestInfo, public readonly config: ClassicConfig) {}
+  constructor(
+    public readonly info: QuoteRequestInfo,
+    public readonly config: ClassicConfig,
+    public headers: QuoteRequestHeaders = {}
+  ) {}
 
   public toJSON(): ClassicConfigJSON {
     return Object.assign({}, this.config, {

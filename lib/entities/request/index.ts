@@ -22,6 +22,10 @@ export type RequestByRoutingType = { [routingType in RoutingType]?: QuoteRequest
 export type RoutingConfig = DutchConfig | DutchV2Config | RelayConfig | ClassicConfig;
 export type RoutingConfigJSON = DutchConfigJSON | DutchV2ConfigJSON | RelayConfigJSON | ClassicConfigJSON;
 
+export interface QuoteRequestHeaders {
+  [name: string]: string | undefined;
+}
+
 // shared info for all quote requests
 export interface QuoteRequestInfo {
   requestId: string;
@@ -59,6 +63,7 @@ export interface QuoteRequest {
   routingType: RoutingType;
   info: QuoteRequestInfo;
   config: RoutingConfig;
+  headers: QuoteRequestHeaders;
 
   toJSON(): RoutingConfigJSON;
   // return a key that uniquely identifies this request
