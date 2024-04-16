@@ -1,7 +1,7 @@
 import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber } from 'ethers';
 
-import { ChainConfigManager } from '../../config/chains';
+import { ChainConfigManager } from '../../config/ChainConfigManager';
 import { DEFAULT_SLIPPAGE_TOLERANCE, RoutingType } from '../../constants';
 import { Portion } from '../../fetchers/PortionFetcher';
 import { ValidationError } from '../../util/errors';

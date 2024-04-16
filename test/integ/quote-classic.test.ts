@@ -15,7 +15,7 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import chaiSubset from 'chai-subset';
 import _ from 'lodash';
-import { ChainConfigManager } from '../../lib/config/chains';
+import { ChainConfigManager } from '../../lib/config/ChainConfigManager';
 import { RoutingType } from '../../lib/constants';
 import { ClassicQuoteDataJSON } from '../../lib/entities/quote';
 import { QuoteRequestBodyJSON } from '../../lib/entities/request';

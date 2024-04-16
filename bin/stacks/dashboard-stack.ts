@@ -4,7 +4,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as aws_cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import { Construct } from 'constructs';
 import _ from 'lodash';
-import { ChainConfigManager } from '../../lib/config/chains';
+import { ChainConfigManager } from '../../lib/config/ChainConfigManager';
 
 export const METRIC_NAMESPACE = 'Uniswap';
 export const METRIC_SERVICE_NAME = 'UnifiedRoutingAPI';

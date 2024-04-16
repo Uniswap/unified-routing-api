@@ -1,7 +1,7 @@
 import { BigNumber, ethers } from 'ethers';
 import Joi, { CustomHelpers } from 'joi';
 
-import { ChainConfigManager } from '../config/chains';
+import { ChainConfigManager } from '../config/ChainConfigManager';
 import { RoutingType } from '../constants';
 
 export class FieldValidator {

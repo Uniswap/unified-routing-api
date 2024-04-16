@@ -13,7 +13,7 @@ import { Construct } from 'constructs';
 import * as path from 'path';
 
 import _ from 'lodash';
-import { ChainConfigManager } from '../../lib/config/chains';
+import { ChainConfigManager } from '../../lib/config/ChainConfigManager';
 import { STAGE } from '../../lib/util/stage';
 import { SERVICE_NAME } from '../constants';
 import { AnalyticsStack } from './analytics-stack';

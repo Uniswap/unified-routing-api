@@ -5,7 +5,7 @@ import { ChainId } from '@uniswap/sdk-core';
 import { MetricsLogger } from 'aws-embedded-metrics';
 import { providers } from 'ethers';
 import NodeCache from 'node-cache';
-import { ChainConfigManager } from '../../config/chains';
+import { ChainConfigManager } from '../../config/ChainConfigManager';
 import { RoutingType } from '../../constants';
 import { QuoteRequestBodyJSON } from '../../entities';
 import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';

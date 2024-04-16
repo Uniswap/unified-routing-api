@@ -9,7 +9,7 @@ import dotenv from 'dotenv';
 
 import { ChainId } from '@uniswap/sdk-core';
 import { PipelineNotificationEvents } from 'aws-cdk-lib/aws-codepipeline';
-import { ChainConfigManager } from '../lib/config/chains';
+import { ChainConfigManager } from '../lib/config/ChainConfigManager';
 import { RoutingType } from '../lib/constants';
 import { STAGE } from '../lib/util/stage';
 import { SERVICE_NAME } from './constants';
