@@ -132,6 +132,7 @@ export class QuoteHandler extends APIGLambdaHandler<
 
     for (const request of requests) {
       request.info.source = requestSource;
+      request.headers = params.event.headers;
     }
 
     const beforeGetQuotes = Date.now();

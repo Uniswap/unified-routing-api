@@ -1,3 +1,4 @@
+import { APIGatewayProxyEventHeaders } from 'aws-lambda/trigger/api-gateway-proxy';
 import { defaultRequestKey, QuoteRequest, QuoteRequestInfo } from '.';
 import {
   DEFAULT_EXCLUSIVITY_OVERRIDE_BPS,
@@ -53,7 +54,11 @@ export class DutchRequest implements QuoteRequest {
     );
   }
 
-  constructor(public readonly info: DutchQuoteRequestInfo, public readonly config: DutchConfig) {}
+  constructor(
+    public readonly info: DutchQuoteRequestInfo,
+    public readonly config: DutchConfig,
+    public headers: APIGatewayProxyEventHeaders = {}
+  ) {}
 
   public toJSON(): DutchConfigJSON {
     return Object.assign({}, this.config, {

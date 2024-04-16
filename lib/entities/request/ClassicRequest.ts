@@ -1,4 +1,5 @@
 import { Protocol } from '@uniswap/router-sdk';
+import { APIGatewayProxyEventHeaders } from 'aws-lambda/trigger/api-gateway-proxy';
 import { BigNumber } from 'ethers';
 
 import { defaultRequestKey, QuoteRequest, QuoteRequestInfo } from '.';
@@ -59,7 +60,11 @@ export class ClassicRequest implements QuoteRequest {
     });
   }
 
-  constructor(public readonly info: QuoteRequestInfo, public readonly config: ClassicConfig) {}
+  constructor(
+    public readonly info: QuoteRequestInfo,
+    public readonly config: ClassicConfig,
+    public headers: APIGatewayProxyEventHeaders = {}
+  ) {}
 
   public toJSON(): ClassicConfigJSON {
     return Object.assign({}, this.config, {

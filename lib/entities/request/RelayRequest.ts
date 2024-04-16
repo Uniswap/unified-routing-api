@@ -1,4 +1,5 @@
 import { Protocol } from '@uniswap/router-sdk';
+import { APIGatewayProxyEventHeaders } from 'aws-lambda/trigger/api-gateway-proxy';
 
 import { BigNumber } from 'ethers';
 import { ClassicConfig, ClassicConfigJSON, defaultRequestKey, parseProtocol, QuoteRequest, QuoteRequestInfo } from '.';
@@ -53,7 +54,11 @@ export class RelayRequest implements QuoteRequest {
     );
   }
 
-  constructor(public readonly info: RelayQuoteRequestInfo, public readonly config: RelayConfig) {}
+  constructor(
+    public readonly info: RelayQuoteRequestInfo,
+    public readonly config: RelayConfig,
+    public headers: APIGatewayProxyEventHeaders = {}
+  ) {}
 
   public toJSON(): RelayConfigJSON {
     return Object.assign({}, this.config, {

@@ -1,5 +1,6 @@
 import { Protocol } from '@uniswap/router-sdk';
 import { TradeType } from '@uniswap/sdk-core';
+import { APIGatewayProxyEventHeaders } from 'aws-lambda/trigger/api-gateway-proxy';
 import { BigNumber } from 'ethers';
 
 import { SUPPORTED_CHAINS } from '../../config/chains';
@@ -59,6 +60,7 @@ export interface QuoteRequest {
   routingType: RoutingType;
   info: QuoteRequestInfo;
   config: RoutingConfig;
+  headers?: APIGatewayProxyEventHeaders;
 
   toJSON(): RoutingConfigJSON;
   // return a key that uniquely identifies this request

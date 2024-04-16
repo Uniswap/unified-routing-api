@@ -23,7 +23,12 @@ export class RoutingApiQuoter implements Quoter {
     try {
       const req = this.buildRequest(request);
       const now = Date.now();
-      const response = await axios.get<ClassicQuoteDataJSON>(req, { headers: { 'x-api-key': this.routingApiKey } });
+      const response = await axios.get<ClassicQuoteDataJSON>(req, {
+        headers: {
+          ...request.headers,
+          'x-api-key': this.routingApiKey
+        }
+      });
       const portionAdjustedResponse: AxiosResponse<ClassicQuoteDataJSON> = {
         ...response,
         // NOTE: important to show portion-related fields under flag on only
