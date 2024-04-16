@@ -177,9 +177,9 @@ export class DutchV2Quote implements IQuote {
 
     switch (this.chainId) {
       case 1:
-        // 10 blocks from now
+        // 25 blocks from now
         // to cover time to sign, run secondary auction, and some blocks for decay
-        return 120;
+        return 300;
       default:
         return 30;
     }
