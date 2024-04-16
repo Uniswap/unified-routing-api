@@ -4,7 +4,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as aws_cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import { Construct } from 'constructs';
 import _ from 'lodash';
-import { SUPPORTED_CHAINS } from '../../lib/config/chains';
+import { ChainConfigManager } from '../../lib/config/chains';
 
 export const METRIC_NAMESPACE = 'Uniswap';
 export const METRIC_SERVICE_NAME = 'UnifiedRoutingAPI';
@@ -230,7 +230,7 @@ export class DashboardStack extends cdk.NestedStack {
             x: 12,
             properties: {
               metrics: _.flatMap(
-                _.uniq([...SUPPORTED_CHAINS.CLASSIC, ...SUPPORTED_CHAINS.DUTCH_LIMIT]),
+                ChainConfigManager.getChainIds(),
                 (chainId: ChainId) => [
                   [
                     {
@@ -290,7 +290,7 @@ export class DashboardStack extends cdk.NestedStack {
             x: 0,
             properties: {
               metrics: _.flatMap(
-                _.uniq([...SUPPORTED_CHAINS.CLASSIC, ...SUPPORTED_CHAINS.DUTCH_LIMIT]),
+                ChainConfigManager.getChainIds(),
                 (chainId: ChainId) => [
                   [
                     {
@@ -521,7 +521,7 @@ export class DashboardStack extends cdk.NestedStack {
             x: 0,
             properties: {
               metrics: _.flatMap(
-                _.uniq([...SUPPORTED_CHAINS.CLASSIC, ...SUPPORTED_CHAINS.DUTCH_LIMIT]),
+                ChainConfigManager.getChainIds(),
                 (chainId: ChainId) => [
                   ['Uniswap', `QuoteRequestedChainId${chainId}`, 'Service', METRIC_SERVICE_NAME],
                   ['Uniswap', `QuoteResponseChainId${chainId}Status4XX`, 'Service', METRIC_SERVICE_NAME],

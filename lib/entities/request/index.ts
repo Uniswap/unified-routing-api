@@ -1,7 +1,7 @@
 import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber } from 'ethers';
 
-import { SUPPORTED_CHAINS } from '../../config/chains';
+import { ChainConfigManager } from '../../config/chains';
 import { DEFAULT_SLIPPAGE_TOLERANCE, RoutingType } from '../../constants';
 import { Portion } from '../../fetchers/PortionFetcher';
 import { ValidationError } from '../../util/errors';
@@ -88,19 +88,19 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON): {
       return ClassicRequest.fromRequestBody(info, config as ClassicConfigJSON);
     } else if (
       config.routingType == RoutingType.DUTCH_LIMIT &&
-      SUPPORTED_CHAINS[RoutingType.DUTCH_LIMIT].includes(info.tokenInChainId) &&
+      ChainConfigManager.chainSupportsRoutingType(info.tokenInChainId, RoutingType.DUTCH_LIMIT) &&
       info.tokenInChainId === info.tokenOutChainId
     ) {
       return DutchRequest.fromRequestBody(info, config as DutchConfigJSON);
     } else if (
       config.routingType == RoutingType.RELAY &&
-      SUPPORTED_CHAINS[RoutingType.RELAY].includes(info.tokenInChainId) &&
+      ChainConfigManager.chainSupportsRoutingType(info.tokenInChainId, RoutingType.RELAY) &&
       info.tokenInChainId === info.tokenOutChainId
     ) {
       return RelayRequest.fromRequestBody(info, config as RelayConfigJSON);
     } else if (
       config.routingType == RoutingType.DUTCH_V2 &&
-      SUPPORTED_CHAINS[RoutingType.DUTCH_V2].includes(info.tokenInChainId) &&
+      ChainConfigManager.chainSupportsRoutingType(info.tokenInChainId, RoutingType.DUTCH_V2) &&
       info.tokenInChainId === info.tokenOutChainId
     ) {
       return DutchV2Request.fromRequestBody(info, config as DutchV2ConfigJSON);
