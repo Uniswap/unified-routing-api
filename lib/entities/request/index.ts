@@ -1,3 +1,4 @@
+import { Protocol } from '@uniswap/router-sdk';
 import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber } from 'ethers';
 
@@ -143,4 +144,14 @@ export function defaultRequestKey(request: QuoteRequest): string {
     amount: info.amount.toString(),
     type: info.type,
   });
+}
+
+export function parseProtocol(protocol: string): Protocol {
+  const protocolUpper = protocol.toUpperCase();
+
+  if (protocolUpper in Protocol) {
+    return Protocol[protocolUpper as keyof typeof Protocol];
+  }
+
+  throw new Error(`Invalid protocol: ${protocol}`);
 }

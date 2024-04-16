@@ -19,6 +19,9 @@ import {
   QUOTE_REQUEST_DL_EXACT_OUT,
   QUOTE_REQUEST_DL_NATIVE_IN,
   QUOTE_REQUEST_DL_NATIVE_OUT,
+  QUOTE_REQUEST_RELAY,
+  QUOTE_REQUEST_RELAY_EXACT_OUT,
+  RELAY_QUOTE_EXACT_IN_BETTER,
 } from '../../../../utils/fixtures';
 
 class MockQuoteContext implements QuoteContext {
@@ -67,6 +70,14 @@ describe('QuoteContextManager', () => {
       expect(requests[0]).toMatchObject(QUOTE_REQUEST_CLASSIC);
     });
 
+    it('returns base request from single relay context', () => {
+      const context = new MockQuoteContext(QUOTE_REQUEST_RELAY);
+      const handler = new QuoteContextManager([context]);
+      const requests = handler.getRequests();
+      expect(requests.length).toEqual(1);
+      expect(requests[0]).toMatchObject(QUOTE_REQUEST_RELAY);
+    });
+
     it('returns dependency requests from a single context', () => {
       const context = new MockQuoteContext(QUOTE_REQUEST_DL);
       context.setDependencies([QUOTE_REQUEST_CLASSIC, QUOTE_REQUEST_DL_EXACT_OUT]);
@@ -78,19 +89,33 @@ describe('QuoteContextManager', () => {
       expect(requests[2]).toMatchObject(QUOTE_REQUEST_DL_EXACT_OUT);
     });
 
+    it('returns dependency requests from a single context - relay', () => {
+      const context = new MockQuoteContext(QUOTE_REQUEST_RELAY);
+      context.setDependencies([QUOTE_REQUEST_CLASSIC]);
+      const handler = new QuoteContextManager([context]);
+      const requests = handler.getRequests();
+      expect(requests.length).toEqual(2);
+      expect(requests[0]).toMatchObject(QUOTE_REQUEST_RELAY);
+      expect(requests[1]).toMatchObject(QUOTE_REQUEST_CLASSIC);
+    });
+
     it('returns dependency requests from multiple contexts in the correct order', () => {
       const context1 = new MockQuoteContext(QUOTE_REQUEST_DL);
       context1.setDependencies([QUOTE_REQUEST_DL_EXACT_OUT]);
       const context2 = new MockQuoteContext(QUOTE_REQUEST_CLASSIC);
       context2.setDependencies([QUOTE_REQUEST_DL_NATIVE_IN]);
-      const handler = new QuoteContextManager([context1, context2]);
+      const context3 = new MockQuoteContext(QUOTE_REQUEST_RELAY);
+      context3.setDependencies([QUOTE_REQUEST_RELAY_EXACT_OUT]);
+      const handler = new QuoteContextManager([context1, context2, context3]);
       const requests = handler.getRequests();
-      expect(requests.length).toEqual(4);
+      expect(requests.length).toEqual(6);
       // user defined requests go first
       expect(requests[0]).toMatchObject(QUOTE_REQUEST_DL);
       expect(requests[1]).toMatchObject(QUOTE_REQUEST_CLASSIC);
-      expect(requests[2]).toMatchObject(QUOTE_REQUEST_DL_EXACT_OUT);
-      expect(requests[3]).toMatchObject(QUOTE_REQUEST_DL_NATIVE_IN);
+      expect(requests[2]).toMatchObject(QUOTE_REQUEST_RELAY);
+      expect(requests[3]).toMatchObject(QUOTE_REQUEST_DL_EXACT_OUT);
+      expect(requests[4]).toMatchObject(QUOTE_REQUEST_DL_NATIVE_IN);
+      expect(requests[5]).toMatchObject(QUOTE_REQUEST_RELAY_EXACT_OUT);
     });
 
     it('deduplicates quote requests on info / type', () => {
@@ -98,12 +123,15 @@ describe('QuoteContextManager', () => {
       context1.setDependencies([QUOTE_REQUEST_DL_EXACT_OUT]);
       const context2 = new MockQuoteContext(QUOTE_REQUEST_CLASSIC);
       context2.setDependencies([QUOTE_REQUEST_DL_EXACT_OUT, QUOTE_REQUEST_DL_EXACT_OUT]);
-      const handler = new QuoteContextManager([context1, context2]);
+      const context3 = new MockQuoteContext(QUOTE_REQUEST_RELAY);
+      context3.setDependencies([QUOTE_REQUEST_CLASSIC]);
+      const handler = new QuoteContextManager([context1, context2, context3]);
       const requests = handler.getRequests();
-      expect(requests.length).toEqual(3);
+      expect(requests.length).toEqual(4);
       expect(requests[0]).toMatchObject(QUOTE_REQUEST_DL);
       expect(requests[1]).toMatchObject(QUOTE_REQUEST_CLASSIC);
-      expect(requests[2]).toMatchObject(QUOTE_REQUEST_DL_EXACT_OUT);
+      expect(requests[2]).toMatchObject(QUOTE_REQUEST_RELAY);
+      expect(requests[3]).toMatchObject(QUOTE_REQUEST_DL_EXACT_OUT);
     });
 
     it('deduplicates even with differing configs', () => {
@@ -147,6 +175,30 @@ describe('QuoteContextManager', () => {
       expect(requests[1]).toMatchObject(QUOTE_REQUEST_CLASSIC);
       expect((requests[1].config as ClassicConfig).simulateFromAddress).toEqual(simulateFromAddress);
       expect(requests[2]).toMatchObject(QUOTE_REQUEST_DL_EXACT_OUT);
+    });
+
+    it('merges gasToken on classic requests', () => {
+      const context1 = new MockQuoteContext(QUOTE_REQUEST_CLASSIC);
+      context1.setDependencies([]);
+      const context2 = new MockQuoteContext(QUOTE_REQUEST_RELAY);
+      const gasToken = '0x1111111111111111111111111111111111111111';
+      context2.setDependencies([
+        Object.assign({}, QUOTE_REQUEST_CLASSIC, {
+          config: {
+            routingType: RoutingType.CLASSIC,
+            protocols: ['v3'],
+            gasToken,
+          },
+          key: QUOTE_REQUEST_CLASSIC.key,
+        }),
+      ]);
+      const handler = new QuoteContextManager([context1, context2]);
+      const requests = handler.getRequests();
+      expect(requests.length).toEqual(2);
+      expect(requests[0]).toMatchObject(QUOTE_REQUEST_CLASSIC);
+      // injects simulateFromAddress into the classic request
+      expect((requests[0].config as ClassicConfig).gasToken).toEqual(gasToken);
+      expect(requests[1]).toMatchObject(QUOTE_REQUEST_RELAY);
     });
 
     it('deduplicates even with differing requestIds', () => {
@@ -236,11 +288,18 @@ describe('QuoteContextManager', () => {
     it('passes matching dependencies', async () => {
       const context = new MockQuoteContext(QUOTE_REQUEST_DL);
       context.setDependencies([CLASSIC_QUOTE_EXACT_IN_BETTER.request]);
-      const handler = new QuoteContextManager([context]);
-      await handler.resolveQuotes([DL_QUOTE_EXACT_IN_BETTER, CLASSIC_QUOTE_EXACT_IN_BETTER]);
+      const context2 = new MockQuoteContext(QUOTE_REQUEST_RELAY);
+      context2.setDependencies([RELAY_QUOTE_EXACT_IN_BETTER.request]);
+      const handler = new QuoteContextManager([context, context2]);
+      await handler.resolveQuotes([
+        DL_QUOTE_EXACT_IN_BETTER,
+        CLASSIC_QUOTE_EXACT_IN_BETTER,
+        RELAY_QUOTE_EXACT_IN_BETTER,
+      ]);
       expect(context._quoteDependencies).toEqual({
         [DL_QUOTE_EXACT_IN_BETTER.request.key()]: DL_QUOTE_EXACT_IN_BETTER,
         [CLASSIC_QUOTE_EXACT_IN_BETTER.request.key()]: CLASSIC_QUOTE_EXACT_IN_BETTER,
+        [RELAY_QUOTE_EXACT_IN_BETTER.request.key()]: RELAY_QUOTE_EXACT_IN_BETTER,
       });
     });
 
@@ -357,6 +416,31 @@ describe('QuoteContextManager', () => {
       expect(merged.key()).toEqual(QUOTE_REQUEST_CLASSIC.key());
     });
 
+    it('keeps gasToken if defined in base', () => {
+      const baseGasToken = '0x1111111111111111111111111111111111111111';
+      const layerGastoken = '0x2222222222222222222222222222222222222222';
+      const base = Object.assign({}, QUOTE_REQUEST_CLASSIC, {
+        config: {
+          routingType: RoutingType.CLASSIC,
+          protocols: ['v3'],
+          gasToken: baseGasToken,
+        },
+      });
+
+      const layer = Object.assign({}, QUOTE_REQUEST_CLASSIC, {
+        config: {
+          routingType: RoutingType.CLASSIC,
+          protocols: ['v3'],
+          gasToken: layerGastoken,
+        },
+      });
+
+      const merged = mergeRequests(base, layer);
+      expect(merged).toMatchObject(base);
+      expect((merged.config as ClassicConfig).gasToken).toEqual(baseGasToken);
+      expect(merged.key()).toEqual(QUOTE_REQUEST_CLASSIC.key());
+    });
+
     it('sets simulateFromAddress if defined in layer', () => {
       const layerSimulateAddress = '0x2222222222222222222222222222222222222222';
       const layer = Object.assign({}, QUOTE_REQUEST_CLASSIC, {
@@ -402,6 +486,22 @@ describe('QuoteContextManager', () => {
       const merged = mergeRequests(QUOTE_REQUEST_CLASSIC, layer);
       expect(merged).toMatchObject(QUOTE_REQUEST_CLASSIC);
       expect((merged.config as ClassicConfig).recipient).toEqual(layerRecipient);
+      expect(merged.key()).toEqual(QUOTE_REQUEST_CLASSIC.key());
+    });
+
+    it('sets gasToken if defined in layer', () => {
+      const layerGasToken = '0x2222222222222222222222222222222222222222';
+      const layer = Object.assign({}, QUOTE_REQUEST_CLASSIC, {
+        config: {
+          routingType: RoutingType.CLASSIC,
+          protocols: ['v3'],
+          gasToken: layerGasToken,
+        },
+      });
+
+      const merged = mergeRequests(QUOTE_REQUEST_CLASSIC, layer);
+      expect(merged).toMatchObject(QUOTE_REQUEST_CLASSIC);
+      expect((merged.config as ClassicConfig).gasToken).toEqual(layerGasToken);
       expect(merged.key()).toEqual(QUOTE_REQUEST_CLASSIC.key());
     });
   });

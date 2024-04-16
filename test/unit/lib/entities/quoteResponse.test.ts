@@ -1,7 +1,16 @@
-import { DutchOrder, parseValidation, ValidationType } from '@uniswap/uniswapx-sdk';
+import { DutchOrder, RelayOrder } from '@uniswap/uniswapx-sdk';
 import { BigNumber } from 'ethers';
 
-import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, DutchQuoteJSON, DutchRequest } from '../../../../lib/entities';
+import {
+  ClassicQuote,
+  ClassicQuoteDataJSON,
+  DutchQuote,
+  DutchQuoteJSON,
+  DutchRequest,
+  RelayQuote,
+  RelayQuoteJSON,
+} from '../../../../lib/entities';
+import { RelayRequest } from '../../../../lib/entities/request/RelayRequest';
 import {
   AMOUNT,
   CHAIN_IN_ID,
@@ -14,9 +23,11 @@ import {
   TOKEN_OUT,
 } from '../../../constants';
 import {
+  CLASSIC_QUOTE_DATA_WITH_ROUTE_AND_GAS_TOKEN,
   CLASSIC_QUOTE_EXACT_IN_BETTER,
   CLASSIC_QUOTE_EXACT_OUT_BETTER,
   QUOTE_REQUEST_DL,
+  QUOTE_REQUEST_RELAY,
 } from '../../../utils/fixtures';
 
 const DL_QUOTE_JSON: DutchQuoteJSON = {
@@ -43,6 +54,21 @@ const DL_QUOTE_JSON_RFQ: DutchQuoteJSON = {
   filler: '0x1111111111111111111111111111111111111111',
 };
 
+const RELAY_QUOTE_JSON: RelayQuoteJSON = {
+  chainId: 1,
+  requestId: 'requestId',
+  quoteId: 'quoteId',
+  tokenIn: TOKEN_IN,
+  amountIn: AMOUNT,
+  tokenOut: TOKEN_OUT,
+  amountOut: AMOUNT,
+  gasToken: TOKEN_IN,
+  feeAmountStart: AMOUNT,
+  feeAmountEnd: AMOUNT,
+  swapper: SWAPPER,
+  classicQuoteData: CLASSIC_QUOTE_DATA_WITH_ROUTE_AND_GAS_TOKEN.quote,
+};
+
 const CLASSIC_QUOTE_JSON: ClassicQuoteDataJSON = {
   requestId: '0xrequestId',
   quoteId: '0xquoteId',
@@ -67,11 +93,18 @@ const CLASSIC_QUOTE_JSON: ClassicQuoteDataJSON = {
   portionRecipient: PORTION_RECIPIENT,
 };
 
+const UNIVERSAL_ROUTER_ADDRESS = '0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD';
+
 describe('QuoteResponse', () => {
   const config: DutchRequest = QUOTE_REQUEST_DL;
+  const relayConfig: RelayRequest = QUOTE_REQUEST_RELAY;
 
   it('parses dutch limit quote from param-api properly', () => {
     expect(() => DutchQuote.fromResponseBody(config, DL_QUOTE_JSON)).not.toThrow();
+  });
+
+  it('parses relay quote properly', () => {
+    expect(() => RelayQuote.fromResponseBody(relayConfig, RELAY_QUOTE_JSON)).not.toThrow();
   });
 
   it('produces dutch limit order info from param-api response and config', () => {
@@ -99,28 +132,27 @@ describe('QuoteResponse', () => {
     expect(BigNumber.from(quote.toOrder().toJSON().nonce).gt(0)).toBeTruthy();
   });
 
-  it('produces dutch limit order info from param-api response and config without filler', () => {
-    const quote = DutchQuote.fromResponseBody(config, Object.assign({}, DL_QUOTE_JSON, { filler: undefined }));
+  it('produces relay order info from quote', () => {
+    const quote = RelayQuote.fromResponseBody(relayConfig, RELAY_QUOTE_JSON);
     expect(quote.toOrder().toJSON()).toMatchObject({
       swapper: SWAPPER,
       input: {
         token: TOKEN_IN,
+        amount: AMOUNT,
+        recipient: UNIVERSAL_ROUTER_ADDRESS,
+      },
+      fee: {
+        token: TOKEN_IN,
         startAmount: AMOUNT,
         endAmount: AMOUNT,
+        startTime: expect.any(Number),
+        endTime: expect.any(Number),
       },
-      outputs: [
-        {
-          token: TOKEN_OUT,
-          startAmount: AMOUNT,
-          endAmount: BigNumber.from(AMOUNT).mul(995).div(1000).toString(), // default 0.5% slippage
-          recipient: SWAPPER,
-        },
-      ],
+      universalRouterCalldata:
+        '0x24856bc30000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000010800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000100000000000000000000000000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee0000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000000000000000000000000000000dc46ef164c4a49e00000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000001f9840a85d5af5bf1d1762f925bdaddc4201f984000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
     });
-    const order = DutchOrder.fromJSON(quote.toOrder().toJSON(), quote.chainId);
-    const parsedValidation = parseValidation(order.info);
-    expect(parsedValidation.type).toEqual(ValidationType.None);
-    expect(BigNumber.from(quote.toOrder().toJSON().nonce).gt(0)).toBeTruthy();
+    const order = RelayOrder.fromJSON(quote.toOrder().toJSON(), quote.chainId);
+    expect(BigNumber.from(order.toJSON().nonce).gt(0)).toBeTruthy();
   });
 
   it('parses classic quote exactInput', () => {
