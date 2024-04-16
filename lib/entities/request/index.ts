@@ -1,6 +1,5 @@
 import { Protocol } from '@uniswap/router-sdk';
 import { TradeType } from '@uniswap/sdk-core';
-import { APIGatewayProxyEventHeaders } from 'aws-lambda/trigger/api-gateway-proxy';
 import { BigNumber } from 'ethers';
 
 import { SUPPORTED_CHAINS } from '../../config/chains';
