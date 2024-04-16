@@ -60,7 +60,7 @@ export interface QuoteRequest {
   routingType: RoutingType;
   info: QuoteRequestInfo;
   config: RoutingConfig;
-  headers?: APIGatewayProxyEventHeaders;
+  headers: APIGatewayProxyEventHeaders;
 
   toJSON(): RoutingConfigJSON;
   // return a key that uniquely identifies this request
