@@ -1,6 +1,5 @@
-import { APIGatewayProxyEventHeaders } from 'aws-lambda/trigger/api-gateway-proxy';
 import { ethers } from 'ethers';
-import { defaultRequestKey, QuoteRequest, QuoteRequestInfo } from '.';
+import { defaultRequestKey, QuoteRequest, QuoteRequestHeaders, QuoteRequestInfo } from '.';
 import { DEFAULT_SLIPPAGE_TOLERANCE, RoutingType } from '../../constants';
 import { DutchQuoteRequestInfo, DutchRequest as DutchV1Request } from './DutchRequest';
 
@@ -36,7 +35,7 @@ export class DutchV2Request implements QuoteRequest {
   constructor(
     public readonly info: DutchQuoteRequestInfo,
     public readonly config: DutchV2Config,
-    public headers: APIGatewayProxyEventHeaders = {}
+    public headers: QuoteRequestHeaders = {}
   ) {}
 
   public toDutchV1Request(): DutchV1Request {
