@@ -40,6 +40,7 @@ export class DutchQuoteContext implements QuoteContext {
   public routingType = RoutingType.DUTCH_LIMIT;
   private log: Logger;
   private rpcProvider: ethers.providers.StaticJsonRpcProvider;
+  private syntheticStatusProvider: SyntheticStatusProvider;
 
   public requestKey: string;
   public classicKey: string;
@@ -49,6 +50,7 @@ export class DutchQuoteContext implements QuoteContext {
   constructor(_log: Logger, public request: DutchRequest, providers: DutchQuoteContextProviders) {
     this.log = _log.child({ context: 'DutchQuoteContext' });
     this.rpcProvider = providers.rpcProvider;
+    this.syntheticStatusProvider = providers.syntheticStatusProvider;
     this.requestKey = this.request.key();
     this.needsRouteToNative = false;
   }
@@ -188,11 +190,12 @@ export class DutchQuoteContext implements QuoteContext {
       return null;
     }
 
+    const syntheticStatus = await this.syntheticStatusProvider.getStatus(this.request.info);
     const chainId = classicQuote.request.info.tokenInChainId;
     const quoteConfig = ChainConfigManager.getQuoteConfig(chainId, this.routingType);
-    // if the useSyntheticQuotes override is not set by client and we're not skipping RFQ, return null
+    // if the useSyntheticQuotes override is not set by client or server and we're not skipping RFQ, return null
     // if we are skipping RFQ, we need a synthetic quote
-    if (!this.request.config.useSyntheticQuotes && !quoteConfig.skipRFQ) {
+    if (!this.request.config.useSyntheticQuotes && !syntheticStatus.syntheticEnabled && !quoteConfig.skipRFQ) {
       this.log.info('Synthetic not enabled, skipping synthetic');
       return null;
     }

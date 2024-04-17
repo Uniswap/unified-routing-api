@@ -266,7 +266,7 @@ describe('DutchV2QuoteContext', () => {
       expect(quote?.routingType).toEqual(RoutingType.DUTCH_V2);
     });
 
-    it('uses synthetic if rfq quote is at least 300% better than clasic; EXACT_IN', async () => {
+    it('uses synthetic if rfq quote is at least 300% better than classic; EXACT_IN', async () => {
       const context = new DutchV2QuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchQuote({ amountOut: '400000000', filler }, 'EXACT_INPUT');
@@ -282,12 +282,11 @@ describe('DutchV2QuoteContext', () => {
 
       expect(quote?.routingType).toEqual(RoutingType.DUTCH_V2);
       // Synthetic starts at quoteGasAdjusted + 1bp
-      expect(quote?.amountOut.toString()).toEqual(
-        BigNumber.from(90000000).mul(BPS + DutchQuote.defaultPriceImprovementBps).div(BPS).toString()
-      );
+      const expected = BigNumber.from(90000000).mul(BPS + DutchQuote.defaultPriceImprovementBps).div(BPS).toString();
+      expect(quote?.amountOut.toString()).toEqual(expected);
     });
 
-    it('uses synthetic if rfq quote is at least 300% better than clasic; EXACT_OUT', async () => {
+    it('uses synthetic if rfq quote is at least 300% better than classic; EXACT_OUT', async () => {
       const request = makeDutchV2Request({ type: 'EXACT_OUTPUT' }, { useSyntheticQuotes: true });
       const context = new DutchV2QuoteContext(logger, request, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
@@ -304,9 +303,8 @@ describe('DutchV2QuoteContext', () => {
 
       expect(quote?.routingType).toEqual(RoutingType.DUTCH_V2);
       // Synthetic starts at quoteGasAdjusted + 1bp
-      expect(quote?.amountIn.toString()).toEqual(
-        BigNumber.from(399000000).mul(BPS - DutchQuote.defaultPriceImprovementBps).div(BPS).toString()
-      );
+      const expected = BigNumber.from(399000000).mul(BPS - DutchQuote.defaultPriceImprovementBps).div(BPS).toString();
+      expect(quote?.amountIn.toString()).toEqual(expected);
     });
 
     it('skips UniswapX if rfq quote is at least 300% better than clasic; EXACT_IN, skipSynthetic', async () => {
