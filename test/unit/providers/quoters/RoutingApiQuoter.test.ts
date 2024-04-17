@@ -167,7 +167,7 @@ describe('RoutingApiQuoter', () => {
       expect(classicQuote.toJSON().route).toStrictEqual(CLASSIC_QUOTE_DATA_WITH_FOX_TAX.quote.route);
     });
 
-    it('quote with headers', async () => {
+    it('quote with x-request-source headers', async () => {
       const request =  makeClassicRequest({});
       request.headers = {'x-request-source': 'uniswap-ios'};
       axiosMock.mockResolvedValue({ data: CLASSIC_QUOTE_DATA.quote });
@@ -178,6 +178,34 @@ describe('RoutingApiQuoter', () => {
       expect(axiosMock).toHaveBeenCalledWith(
         expect.any(String),
         { headers: expect.objectContaining({'x-request-source': 'uniswap-ios'})}
+      )
+    });
+
+    it('quote with x-request-source and x-app-version headers', async () => {
+      const request =  makeClassicRequest({});
+      request.headers = {'x-request-source': 'uniswap-ios', 'x-app-version': '1.27'};
+      axiosMock.mockResolvedValue({ data: CLASSIC_QUOTE_DATA.quote });
+      const response = await routingApiQuoter.quote(request);
+      expect(response).toBeDefined();
+      expect(response).toBeInstanceOf(ClassicQuote);
+
+      expect(axiosMock).toHaveBeenCalledWith(
+        expect.any(String),
+        { headers: expect.objectContaining({'x-request-source': 'uniswap-ios', 'x-app-version': '1.27'})}
+      )
+    });
+
+    it('quote with x-request-source, x-app-version and aws-timestamp headers, ignores aws header', async () => {
+      const request =  makeClassicRequest({});
+      request.headers = {'x-request-source': 'uniswap-ios', 'x-app-version': '1.27', 'aws-timestamp': '12345678'};
+      axiosMock.mockResolvedValue({ data: CLASSIC_QUOTE_DATA.quote });
+      const response = await routingApiQuoter.quote(request);
+      expect(response).toBeDefined();
+      expect(response).toBeInstanceOf(ClassicQuote);
+
+      expect(axiosMock).toHaveBeenCalledWith(
+        expect.any(String),
+        { headers: {'x-api-key': 'test-key', 'x-request-source': 'uniswap-ios', 'x-app-version': '1.27'}}
       )
     });
   });
