@@ -155,7 +155,10 @@ export class QuoteHandler extends APIGLambdaHandler<
     );
     log.info({ resolvedQuotes }, 'resolvedQuotes');
 
-    const uniswapXRequested = requests.filter((request) => request.routingType === RoutingType.DUTCH_LIMIT).length > 0;
+    const uniswapXRequested =
+      requests.filter(
+        (request) => request.routingType === RoutingType.DUTCH_LIMIT || request.routingType === RoutingType.DUTCH_V2
+      ).length > 0;
     const resolvedValidQuotes = resolvedQuotes.filter((q) => q !== null) as Quote[];
     const bestQuote = await getBestQuote(resolvedValidQuotes, uniswapXRequested);
     if (!bestQuote) {
