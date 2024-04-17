@@ -11,6 +11,7 @@ import {
   DEFAULT_AUCTION_PERIOD_SECS,
   DEFAULT_DEADLINE_BUFFER_SECS,
   DEFAULT_START_TIME_BUFFER_SECS,
+  QuoteType,
   frontendAndUraEnablePortion,
   NATIVE_ADDRESS,
   OPEN_QUOTE_START_TIME_BUFFER_SECS,
@@ -26,6 +27,7 @@ import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
 import { ClassicQuote } from './ClassicQuote';
 import { LogJSON } from './index';
+import { ChainConfigManager } from '../../config/ChainConfigManager';
 
 export type DutchQuoteDerived = {
   largeTrade: boolean;
@@ -64,18 +66,12 @@ export type Amounts = {
   amountOut: BigNumber;
 };
 
-export enum DutchQuoteType {
-  RFQ,
-  SYNTHETIC,
-}
-
 export class DutchQuote implements IQuote {
   public readonly createdAt: string;
   public derived: DutchQuoteDerived;
   public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
   // Add 1bps price improvmement to favor Dutch
-  public static amountOutImprovementExactIn = BigNumber.from(10001);
-  public static amountInImprovementExactOut = BigNumber.from(9999);
+  public static defaultPriceImprovementBps = 1;
 
   // build a dutch quote from an RFQ response
   public static fromResponseBody(
@@ -104,7 +100,7 @@ export class DutchQuote implements IQuote {
       amountOutStart,
       amountOutEnd,
       body.swapper,
-      DutchQuoteType.RFQ,
+      QuoteType.RFQ,
       body.filler,
       nonce,
       portion
@@ -113,9 +109,12 @@ export class DutchQuote implements IQuote {
 
   // build a synthetic dutch quote from a classic quote
   public static fromClassicQuote(request: DutchRequest, quote: ClassicQuote): DutchQuote {
+    const chainId = request.info.tokenInChainId;
+    const quoteConfig = ChainConfigManager.getQuoteConfig(chainId, request.routingType);
     const priceImprovedStartAmounts = this.applyPriceImprovement(
       { amountIn: quote.amountInGasAdjusted, amountOut: quote.amountOutGasAdjusted },
-      request.info.type
+      request.info.type,
+      quoteConfig.priceImprovementBps
     );
     const startAmounts = this.applyPreSwapGasAdjustment(priceImprovedStartAmounts, quote);
 
@@ -146,7 +145,7 @@ export class DutchQuote implements IQuote {
       startAmounts.amountOut,
       endAmounts.amountOut,
       request.config.swapper,
-      DutchQuoteType.SYNTHETIC,
+      QuoteType.SYNTHETIC,
       NATIVE_ADDRESS, // synthetic quote has no filler
       generateRandomNonce(), // synthetic quote has no nonce
       quote.portion
@@ -218,7 +217,7 @@ export class DutchQuote implements IQuote {
     public readonly amountOutStart: BigNumber,
     public readonly amountOutEnd: BigNumber,
     public readonly swapper: string,
-    public readonly quoteType: DutchQuoteType,
+    public readonly quoteType: QuoteType,
     public readonly filler?: string,
     public readonly nonce?: string,
     public portion?: Portion,
@@ -355,14 +354,12 @@ export class DutchQuote implements IQuote {
       return this.request.config.auctionPeriodSecs;
     }
 
-    switch (this.chainId) {
-      case 1:
-        return this.derived.largeTrade ? 120 : 60;
-      case 137:
-        return DEFAULT_AUCTION_PERIOD_SECS;
-      default:
-        return DEFAULT_AUCTION_PERIOD_SECS;
+    const quoteConfig = ChainConfigManager.getQuoteConfig(this.chainId, this.request.routingType);
+    if (quoteConfig.routingType == RoutingType.DUTCH_LIMIT &&
+        quoteConfig.lrgAuctionPeriodSecs && this.derived.largeTrade) {
+      return quoteConfig.lrgAuctionPeriodSecs
     }
+    return quoteConfig.stdAuctionPeriodSecs ?? DEFAULT_AUCTION_PERIOD_SECS;
   }
 
   // The number of seconds from endTime that the order should expire
@@ -370,13 +367,8 @@ export class DutchQuote implements IQuote {
     if (this.request.config.deadlineBufferSecs !== undefined) {
       return this.request.config.deadlineBufferSecs;
     }
-
-    switch (this.chainId) {
-      case 1:
-        return DEFAULT_DEADLINE_BUFFER_SECS;
-      default:
-        return DEFAULT_DEADLINE_BUFFER_SECS;
-    }
+    const quoteConfig = ChainConfigManager.getQuoteConfig(this.chainId, this.request.routingType);
+    return quoteConfig.deadlineBufferSecs ?? DEFAULT_DEADLINE_BUFFER_SECS;
   }
 
   public get portionAmountOutStart(): BigNumber {
@@ -437,12 +429,18 @@ export class DutchQuote implements IQuote {
     }
   }
 
-  static applyPriceImprovement(amounts: Amounts, type: TradeType): Amounts {
+  static applyPriceImprovement(
+    amounts: Amounts,
+    type: TradeType,
+    priceImprovementBps: number = DutchQuote.defaultPriceImprovementBps
+  ): Amounts {
     const { amountIn, amountOut } = amounts;
     if (type === TradeType.EXACT_INPUT) {
-      return { amountIn, amountOut: amountOut.mul(DutchQuote.amountOutImprovementExactIn).div(BPS) };
+      const amountOutImprovementExactIn = BigNumber.from(BPS).add(priceImprovementBps);
+      return { amountIn, amountOut: amountOut.mul(amountOutImprovementExactIn).div(BPS) };
     } else {
-      return { amountIn: amountIn.mul(DutchQuote.amountInImprovementExactOut).div(BPS), amountOut };
+      const amountInImprovementExactOut = BigNumber.from(BPS).sub(priceImprovementBps);
+      return { amountIn: amountIn.mul(amountInImprovementExactOut).div(BPS), amountOut };
     }
   }
 

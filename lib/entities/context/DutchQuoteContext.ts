@@ -22,6 +22,7 @@ import { SyntheticStatusProvider } from '../../providers';
 import { Erc20__factory } from '../../types/ext/factories/Erc20__factory';
 import { metrics } from '../../util/metrics';
 import { getQuoteSizeEstimateUSD } from '../../util/quoteMath';
+import { ChainConfigManager } from '../../config/ChainConfigManager';
 
 // if the gas is greater than this proportion of the whole trade size
 // then we will not route the order
@@ -39,7 +40,6 @@ export class DutchQuoteContext implements QuoteContext {
   public routingType = RoutingType.DUTCH_LIMIT;
   private log: Logger;
   private rpcProvider: ethers.providers.StaticJsonRpcProvider;
-  private syntheticStatusProvider: SyntheticStatusProvider;
 
   public requestKey: string;
   public classicKey: string;
@@ -49,7 +49,6 @@ export class DutchQuoteContext implements QuoteContext {
   constructor(_log: Logger, public request: DutchRequest, providers: DutchQuoteContextProviders) {
     this.log = _log.child({ context: 'DutchQuoteContext' });
     this.rpcProvider = providers.rpcProvider;
-    this.syntheticStatusProvider = providers.syntheticStatusProvider;
     this.requestKey = this.request.key();
     this.needsRouteToNative = false;
   }
@@ -130,6 +129,12 @@ export class DutchQuoteContext implements QuoteContext {
       return null;
     }
 
+    const quoteConfig = ChainConfigManager.getQuoteConfig(quote.chainId, this.routingType);
+    if (quoteConfig.skipRFQ) {
+      this.log.info('RFQ Orders are disabled in config');
+      return null;
+    }
+
     let isLargeTrade = false;
     // TODO: remove after reputation system is ready
     // drop Rfq quote if it's significantly better than classic - high chance MM will fade
@@ -183,9 +188,11 @@ export class DutchQuoteContext implements QuoteContext {
       return null;
     }
 
-    const syntheticStatus = await this.syntheticStatusProvider.getStatus(this.request.info);
-    // if the useSyntheticQuotes override is not set, and the request is not eligible for synthetic, return null
-    if (!this.request.config.useSyntheticQuotes && !syntheticStatus.syntheticEnabled) {
+    const chainId = classicQuote.request.info.tokenInChainId;
+    const quoteConfig = ChainConfigManager.getQuoteConfig(chainId, this.routingType);
+    // if the useSyntheticQuotes override is not set by client and we're not skipping RFQ, return null
+    // if we are skipping RFQ, we need a synthetic quote
+    if (!this.request.config.useSyntheticQuotes && !quoteConfig.skipRFQ) {
       this.log.info('Synthetic not enabled, skipping synthetic');
       return null;
     }

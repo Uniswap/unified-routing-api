@@ -2,15 +2,9 @@ import { Currency, CurrencyAmount, Ether, TradeType, WETH9 } from '@uniswap/sdk-
 import { DAI_MAINNET, USDC_MAINNET as USDC, USDT_MAINNET, WBTC_MAINNET } from '@uniswap/smart-order-router';
 import { BigNumber } from 'ethers';
 import { parseUnits } from 'ethers/lib/utils';
-import { NATIVE_ADDRESS } from '../constants';
+import { NATIVE_ADDRESS, QuoteType } from '../constants';
 import { log } from './log';
 import { metrics } from './metrics';
-
-export enum QuoteType {
-  CLASSIC = 'CLASSIC',
-  SYNTHETIC = 'SYNTHETIC',
-  RFQ = 'RFQ',
-}
 
 export class MetricPair {
   private INFINITY = 'X';

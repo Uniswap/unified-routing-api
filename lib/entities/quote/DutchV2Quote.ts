@@ -5,11 +5,12 @@ import { BigNumber, ethers } from 'ethers';
 
 import { IQuote, LogJSON, SharedOrderQuoteDataJSON } from '.';
 import { DutchV2Request } from '..';
-import { BPS, frontendAndUraEnablePortion, RoutingType } from '../../constants';
+import { BPS, DEFAULT_V2_DEADLINE_BUFFER_SECS, frontendAndUraEnablePortion, RoutingType } from '../../constants';
 import { Portion } from '../../fetchers/PortionFetcher';
 import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
 import { DutchQuote as DutchV1Quote, getPortionAdjustedOutputs } from './DutchQuote';
+import { ChainConfigManager } from '../../config/ChainConfigManager';
 
 export const DEFAULT_LABS_COSIGNER = ethers.constants.AddressZero;
 
@@ -175,14 +176,8 @@ export class DutchV2Quote implements IQuote {
       return this.request.config.deadlineBufferSecs;
     }
 
-    switch (this.chainId) {
-      case 1:
-        // 10 blocks from now
-        // to cover time to sign, run secondary auction, and some blocks for decay
-        return 120;
-      default:
-        return 30;
-    }
+    const quoteConfig = ChainConfigManager.getQuoteConfig(this.chainId, this.request.routingType);
+    return quoteConfig.deadlineBufferSecs ?? DEFAULT_V2_DEADLINE_BUFFER_SECS;
   }
 
   public get portionAmountOutStart(): BigNumber {

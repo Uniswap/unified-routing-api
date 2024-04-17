@@ -5,11 +5,10 @@ import { Unit } from 'aws-embedded-metrics';
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { APIGatewayProxyEventHeaders } from 'aws-lambda/trigger/api-gateway-proxy';
 import { v4 as uuidv4 } from 'uuid';
-import { frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
+import { QuoteType, frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
 import {
   ClassicQuote,
   DutchQuote,
-  DutchQuoteType,
   parseQuoteContexts,
   parseQuoteRequests,
   Quote,
@@ -24,7 +23,7 @@ import { TokenFetcher } from '../../fetchers/TokenFetcher';
 import { ErrorCode, NoQuotesAvailable, QuoteFetchError, ValidationError } from '../../util/errors';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
-import { emitUniswapXPairMetricIfTracking, QuoteType } from '../../util/metrics-pair';
+import { emitUniswapXPairMetricIfTracking } from '../../util/metrics-pair';
 import { timestampInMstoSeconds } from '../../util/time';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
@@ -284,7 +283,7 @@ export class QuoteHandler extends APIGLambdaHandler<
 
     let bestQuoteType: QuoteType;
     if (bestQuote.routingType == RoutingType.DUTCH_LIMIT) {
-      if (bestQuote.quoteType == DutchQuoteType.RFQ) {
+      if (bestQuote.quoteType == QuoteType.RFQ) {
         bestQuoteType = QuoteType.RFQ;
       } else {
         bestQuoteType = QuoteType.SYNTHETIC;

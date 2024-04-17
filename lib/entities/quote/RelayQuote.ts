@@ -17,6 +17,7 @@ import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
 import { RelayRequest } from '../request/RelayRequest';
 import { ClassicQuote, ClassicQuoteDataJSON } from './ClassicQuote';
 import { LogJSON } from './index';
+import { ChainConfigManager } from '../../config/ChainConfigManager';
 
 // Data returned by the API
 export type RelayQuoteDataJSON = SharedOrderQuoteDataJSON & {
@@ -243,12 +244,8 @@ export class RelayQuote implements IQuote {
       return this.request.config.auctionPeriodSecs;
     }
 
-    switch (this.chainId) {
-      case 1:
-        return DEFAULT_AUCTION_PERIOD_SECS;
-      default:
-        return DEFAULT_AUCTION_PERIOD_SECS;
-    }
+    const quoteConfig = ChainConfigManager.getQuoteConfig(this.chainId, this.request.routingType);
+    return quoteConfig.stdAuctionPeriodSecs ?? DEFAULT_AUCTION_PERIOD_SECS;
   }
 
   // The number of seconds from endTime that the order should expire
@@ -257,12 +254,8 @@ export class RelayQuote implements IQuote {
       return this.request.config.deadlineBufferSecs;
     }
 
-    switch (this.chainId) {
-      case 1:
-        return DEFAULT_DEADLINE_BUFFER_SECS;
-      default:
-        return DEFAULT_DEADLINE_BUFFER_SECS;
-    }
+    const quoteConfig = ChainConfigManager.getQuoteConfig(this.chainId, this.request.routingType);
+    return quoteConfig.deadlineBufferSecs ?? DEFAULT_DEADLINE_BUFFER_SECS;
   }
 
   validate(): boolean {
