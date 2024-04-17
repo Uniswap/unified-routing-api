@@ -1,7 +1,7 @@
 import { AxiosError } from 'axios';
 import NodeCache from 'node-cache';
 import { ClassicQuote } from '../../../../lib/entities';
-import { GetPortionResponse, GET_NO_PORTION_RESPONSE, PortionFetcher } from '../../../../lib/fetchers/PortionFetcher';
+import { GET_NO_PORTION_RESPONSE, GetPortionResponse, PortionFetcher } from '../../../../lib/fetchers/PortionFetcher';
 import { RoutingApiQuoter } from '../../../../lib/providers/quoters';
 import axios from '../../../../lib/providers/quoters/helpers';
 import { PORTION_BIPS, PORTION_RECIPIENT } from '../../../constants';
@@ -9,9 +9,10 @@ import {
   CLASSIC_QUOTE_DATA,
   CLASSIC_QUOTE_DATA_WITH_FOX_TAX,
   CLASSIC_QUOTE_DATA_WITH_PORTION,
+  makeClassicRequest,
   QUOTE_REQUEST_CLASSIC,
   QUOTE_REQUEST_CLASSIC_FE_ENABLE_FEE_ON_TRANSFER,
-  QUOTE_REQUEST_CLASSIC_FE_SEND_PORTION,
+  QUOTE_REQUEST_CLASSIC_FE_SEND_PORTION
 } from '../../../utils/fixtures';
 
 describe('RoutingApiQuoter', () => {
@@ -164,6 +165,20 @@ describe('RoutingApiQuoter', () => {
       // By strictly asserting the route equals the test setup route, which includes BULLET_WITH_TAX in both token out and pool reserve0,
       // we effectively assert that RoutingApiQuoter.quote now returns the FOT tax in the response payload
       expect(classicQuote.toJSON().route).toStrictEqual(CLASSIC_QUOTE_DATA_WITH_FOX_TAX.quote.route);
+    });
+
+    it('quote with headers', async () => {
+      const request =  makeClassicRequest({});
+      request.headers = {'x-request-source': 'uniswap-ios'};
+      axiosMock.mockResolvedValue({ data: CLASSIC_QUOTE_DATA.quote });
+      const response = await routingApiQuoter.quote(request);
+      expect(response).toBeDefined();
+      expect(response).toBeInstanceOf(ClassicQuote);
+
+      expect(axiosMock).toHaveBeenCalledWith(
+        expect.any(String),
+        { headers: expect.objectContaining({'x-request-source': 'uniswap-ios'})}
+      )
     });
   });
 

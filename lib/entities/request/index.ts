@@ -1,3 +1,4 @@
+import { Protocol } from '@uniswap/router-sdk';
 import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber } from 'ethers';
 
@@ -20,6 +21,10 @@ export type RequestByRoutingType = { [routingType in RoutingType]?: QuoteRequest
 // config specific to the given routing type
 export type RoutingConfig = DutchConfig | DutchV2Config | RelayConfig | ClassicConfig;
 export type RoutingConfigJSON = DutchConfigJSON | DutchV2ConfigJSON | RelayConfigJSON | ClassicConfigJSON;
+
+export interface QuoteRequestHeaders {
+  [name: string]: string | undefined;
+}
 
 // shared info for all quote requests
 export interface QuoteRequestInfo {
@@ -58,6 +63,7 @@ export interface QuoteRequest {
   routingType: RoutingType;
   info: QuoteRequestInfo;
   config: RoutingConfig;
+  headers: QuoteRequestHeaders;
 
   toJSON(): RoutingConfigJSON;
   // return a key that uniquely identifies this request
@@ -143,4 +149,14 @@ export function defaultRequestKey(request: QuoteRequest): string {
     amount: info.amount.toString(),
     type: info.type,
   });
+}
+
+export function parseProtocol(protocol: string): Protocol {
+  const protocolUpper = protocol.toUpperCase();
+
+  if (protocolUpper in Protocol) {
+    return Protocol[protocolUpper as keyof typeof Protocol];
+  }
+
+  throw new Error(`Invalid protocol: ${protocol}`);
 }

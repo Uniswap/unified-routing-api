@@ -26,6 +26,7 @@ import { RelayOrderReactor__factory } from '../../lib/types/ext';
 import { resetAndFundAtBlock } from '../utils/forkAndFund';
 import { getBalance, getBalanceAndApprove } from '../utils/getBalanceAndApprove';
 import { getAmount } from '../utils/tokens';
+import { Contract, ContractFactory } from 'ethers';
 
 const { ethers } = hre;
 
@@ -140,16 +141,6 @@ export const checkPortionRecipientToken = (
   expect(percentDiff.lessThan(new Fraction(parseInt(SLIPPAGE), 100))).to.be.true;
 };
 
-let warnedTesterPK = false;
-export const isTesterPKEnvironmentSet = (): boolean => {
-  const isSet = !!process.env.TESTER_PK;
-  if (!isSet && !warnedTesterPK) {
-    console.log('Skipping tests requiring real PK since env variables for TESTER_PK is not set.');
-    warnedTesterPK = true;
-  }
-  return isSet;
-};
-
 export class BaseIntegrationTestSuite {
   block: number;
   curNonce = 0;
@@ -208,16 +199,18 @@ export class BaseIntegrationTestSuite {
   };
 
   before = async () => {
-    const [alice, filler] = await ethers.getSigners();
+    let alice: SignerWithAddress;
+    let filler: SignerWithAddress;
+    [alice, filler] = await ethers.getSigners();
 
     // Make a dummy call to the API to get a block number to fork from.
     const quoteReq: QuoteRequestBodyJSON = {
       requestId: 'id',
       tokenIn: 'USDC',
       tokenInChainId: 1,
-      tokenOut: 'USDT',
+      tokenOut: 'DAI',
       tokenOutChainId: 1,
-      amount: await getAmount(1, 'EXACT_INPUT', 'USDC', 'USDT', '100'),
+      amount: await getAmount(1, 'EXACT_INPUT', 'USDC', 'DAI', '100'),
       type: 'EXACT_INPUT',
       configs: [
         {
@@ -234,7 +227,7 @@ export class BaseIntegrationTestSuite {
 
     this.block = parseInt(blockNumber) - 10;
 
-    await resetAndFundAtBlock(alice, this.block, [
+    alice = await resetAndFundAtBlock(alice, this.block, [
       parseAmount('80000000', USDC_MAINNET),
       parseAmount('50000000', USDT_MAINNET),
     ]);
@@ -245,5 +238,11 @@ export class BaseIntegrationTestSuite {
     }
 
     return [alice, filler];
+  };
+
+  deployContract = async (factory: ContractFactory, args: any[]): Promise<Contract> => {
+    const contract = await factory.deploy(...args);
+    await contract.deployed();
+    return contract;
   };
 }

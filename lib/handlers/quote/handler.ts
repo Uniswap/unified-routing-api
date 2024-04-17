@@ -18,6 +18,7 @@ import {
   QuoteRequest,
   QuoteRequestBodyJSON,
   QuoteRequestInfo,
+  RelayQuote,
   RequestSource,
 } from '../../entities';
 import { TokenFetcher } from '../../fetchers/TokenFetcher';
@@ -131,6 +132,7 @@ export class QuoteHandler extends APIGLambdaHandler<
 
     for (const request of requests) {
       request.info.source = requestSource;
+      request.headers = params.event.headers;
     }
 
     const beforeGetQuotes = Date.now();
@@ -451,27 +453,57 @@ export async function getBestQuote(quotes: Quote[], uniswapXRequested?: boolean)
   }, null);
 }
 
-// compares two quotes of any type and returns the best one based on tradeType
-export function compareQuotes(lhs: Quote, rhs: Quote, tradeType: TradeType): boolean {
+export const QuoteComparisonOverrides = {
+  relayAndClassic(lhs: Quote, rhs: Quote): boolean {
+    return (
+      (lhs.routingType === RoutingType.CLASSIC && rhs.routingType === RoutingType.RELAY) ||
+      (rhs.routingType === RoutingType.CLASSIC && lhs.routingType === RoutingType.RELAY)
+    );
+  },
+
+  breakTie(lhs: Quote, rhs: Quote): boolean {
+    // Prefer relay over classic if requested together
+    if (QuoteComparisonOverrides.relayAndClassic(lhs, rhs)) return lhs.routingType === RoutingType.RELAY;
+    // Otherwise, we default to keeping rhs in the case of a tie
+    return false;
+  },
+};
+
+// Compare quotes, returning true if lhs is better than rhs
+// Applies any overrides before the default comparision logic using quoted amount
+export const compareQuotes = (lhs: Quote, rhs: Quote, tradeType: TradeType): boolean => {
+  if (getQuotedAmount(lhs, tradeType).eq(getQuotedAmount(rhs, tradeType))) {
+    return QuoteComparisonOverrides.breakTie(lhs, rhs);
+  }
+
+  // Default comparison if no overrides apply
   if (tradeType === TradeType.EXACT_INPUT) {
     return getQuotedAmount(lhs, tradeType).gt(getQuotedAmount(rhs, tradeType));
   } else {
     // EXACT_OUTPUT
     return getQuotedAmount(lhs, tradeType).lt(getQuotedAmount(rhs, tradeType));
   }
-}
+};
 
 const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
   if (tradeType === TradeType.EXACT_INPUT) {
     if (quote.routingType === RoutingType.CLASSIC) {
       return (quote as ClassicQuote).amountOutGasAndPortionAdjusted;
+    } else if (quote.routingType === RoutingType.DUTCH_LIMIT) {
+      return (quote as DutchQuote).amountOutGasAndPortionAdjusted;
+    } else if (quote.routingType === RoutingType.RELAY) {
+      return (quote as RelayQuote).classicQuote.amountOutGasAndPortionAdjusted;
     }
-    return (quote as DutchQuote).amountOutGasAndPortionAdjusted;
+    throw new Error(`Invalid routing type: ${quote}`);
   } else {
     if (quote.routingType === RoutingType.CLASSIC) {
       return (quote as ClassicQuote).amountInGasAndPortionAdjusted;
+    } else if (quote.routingType === RoutingType.DUTCH_LIMIT) {
+      return (quote as DutchQuote).amountInGasAndPortionAdjusted;
+    } else if (quote.routingType === RoutingType.RELAY) {
+      return (quote as RelayQuote).classicQuote.amountInGasAndPortionAdjusted;
     }
-    return (quote as DutchQuote).amountInGasAndPortionAdjusted;
+    throw new Error(`Invalid routing type: ${quote}`);
   }
 };
 
