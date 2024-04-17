@@ -30,6 +30,7 @@ import {
   QUOTE_REQUEST_BODY_MULTI_SYNTHETIC,
   QUOTE_REQUEST_CLASSIC,
   QUOTE_REQUEST_DL,
+  QUOTE_REQUEST_DUTCH_V2,
   QUOTE_REQUEST_MULTI,
   RELAY_QUOTE_EXACT_IN_BETTER,
   RELAY_QUOTE_EXACT_IN_WORSE,
@@ -39,6 +40,8 @@ import {
   RELAY_REQUEST_BODY,
   RELAY_REQUEST_BODY_EXACT_OUT,
   RELAY_REQUEST_WITH_CLASSIC_BODY,
+  V2_QUOTE_EXACT_IN_BETTER,
+  V2_QUOTE_EXACT_IN_WORSE,
 } from '../../../../utils/fixtures';
 
 import { PermitDetails } from '@uniswap/permit2-sdk';
@@ -1418,6 +1421,19 @@ describe('QuoteHandler', () => {
       quotes = quotes.concat(await getQuotes(quoters, [QUOTE_REQUEST_DL]));
       const bestQuote = await getBestQuote(quotes);
       expect(bestQuote).toEqual(DL_QUOTE_EXACT_IN_BETTER);
+    });
+
+    it('returns the best quote among two dutch v2 quotes', async () => {
+      let quoters: QuoterByRoutingType = {
+        DUTCH_V2: quoterMock(V2_QUOTE_EXACT_IN_BETTER),
+      };
+      let quotes = await getQuotes(quoters, [QUOTE_REQUEST_DUTCH_V2]);
+      quoters = {
+        DUTCH_V2: quoterMock(V2_QUOTE_EXACT_IN_WORSE),
+      };
+      quotes = quotes.concat(await getQuotes(quoters, [QUOTE_REQUEST_DUTCH_V2]));
+      const bestQuote = await getBestQuote(quotes);
+      expect(bestQuote).toEqual(V2_QUOTE_EXACT_IN_BETTER);
     });
 
     it('returns the best quote among two dutch limit with portion quotes', async () => {

@@ -10,6 +10,7 @@ import {
   ClassicQuote,
   DutchQuote,
   DutchQuoteType,
+  DutchV2Quote,
   parseQuoteContexts,
   parseQuoteRequests,
   Quote,
@@ -491,6 +492,8 @@ const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
       return (quote as ClassicQuote).amountOutGasAndPortionAdjusted;
     } else if (quote.routingType === RoutingType.DUTCH_LIMIT) {
       return (quote as DutchQuote).amountOutGasAndPortionAdjusted;
+    } else if (quote.routingType === RoutingType.DUTCH_V2) {
+      return (quote as DutchV2Quote).amountOutGasAndPortionAdjusted;
     } else if (quote.routingType === RoutingType.RELAY) {
       return (quote as RelayQuote).classicQuote.amountOutGasAndPortionAdjusted;
     }
@@ -500,6 +503,8 @@ const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
       return (quote as ClassicQuote).amountInGasAndPortionAdjusted;
     } else if (quote.routingType === RoutingType.DUTCH_LIMIT) {
       return (quote as DutchQuote).amountInGasAndPortionAdjusted;
+    } else if (quote.routingType === RoutingType.DUTCH_V2) {
+      return (quote as DutchV2Quote).amountInGasAndPortionAdjusted;
     } else if (quote.routingType === RoutingType.RELAY) {
       return (quote as RelayQuote).classicQuote.amountInGasAndPortionAdjusted;
     }

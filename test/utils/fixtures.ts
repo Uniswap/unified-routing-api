@@ -656,6 +656,8 @@ export function createRouteBackToNativeQuote(overrides: Partial<ClassicQuoteData
   );
 }
 
+export const V2_QUOTE_EXACT_IN_BETTER = createDutchV2Quote({ amountOut: AMOUNT_BETTER }, 'EXACT_INPUT');
+export const V2_QUOTE_EXACT_IN_WORSE = createDutchV2Quote({ amountOut: AMOUNT }, 'EXACT_INPUT');
 export const DL_QUOTE_EXACT_IN_BETTER = createDutchQuote({ amountOut: AMOUNT_BETTER }, 'EXACT_INPUT');
 export const DL_QUOTE_EXACT_IN_BETTER_WITH_PORTION = createDutchQuote(
   { amountOut: AMOUNT_BETTER },
