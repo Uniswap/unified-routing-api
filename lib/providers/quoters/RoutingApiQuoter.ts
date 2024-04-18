@@ -31,8 +31,8 @@ export class RoutingApiQuoter implements Quoter {
         headers: requestHeaders
       });
 
-      const tokenOut = response.data.route[0].slice(-1)[0].tokenOut;
-      const tokenOutHasBuyFee = tokenOut.buyFeeBps !== undefined && tokenOut.buyFeeBps !== '' && tokenOut.buyFeeBps !== '0';
+      const tokenOut = response.data && response.data.route && response.data.route.length > 0 && response.data.route[0].slice(-1)[0].tokenOut;
+      const tokenOutHasBuyFee = tokenOut && tokenOut.buyFeeBps !== undefined && tokenOut.buyFeeBps !== '' && tokenOut.buyFeeBps !== '0';
 
       const portionAdjustedResponse: AxiosResponse<ClassicQuoteDataJSON> = {
         ...response,
