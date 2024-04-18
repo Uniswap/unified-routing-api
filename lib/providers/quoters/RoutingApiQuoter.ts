@@ -30,11 +30,15 @@ export class RoutingApiQuoter implements Quoter {
       const response = await axios.get<ClassicQuoteDataJSON>(req, {
         headers: requestHeaders
       });
+
+      const tokenOut = response.data.route[0].slice(-1)[0].tokenOut;
+      const tokenOutHasBuyFee = tokenOut.buyFeeBps !== undefined && tokenOut.buyFeeBps !== '' && tokenOut.buyFeeBps !== '0';
+
       const portionAdjustedResponse: AxiosResponse<ClassicQuoteDataJSON> = {
         ...response,
         // NOTE: important to show portion-related fields under flag on only
         // this is FE requirement
-        data: frontendAndUraEnablePortion(request.info.sendPortionEnabled)
+        data: !tokenOutHasBuyFee && frontendAndUraEnablePortion(request.info.sendPortionEnabled)
           ? {
               ...response.data,
               // NOTE: important for URA to return 0 bps and amount, in case of no portion.
