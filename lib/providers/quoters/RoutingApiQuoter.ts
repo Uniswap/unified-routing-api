@@ -24,8 +24,14 @@ export class RoutingApiQuoter implements Quoter {
       const req = this.buildRequest(request);
       const now = Date.now();
       const requestHeaders: QuoteRequestHeaders = {'x-api-key': this.routingApiKey};
-      if (request.headers['x-request-source']) requestHeaders['x-request-source'] = request.headers['x-request-source'];
-      if (request.headers['x-app-version']) requestHeaders['x-app-version'] = request.headers['x-app-version'];
+      if (request.headers['x-request-source']) {
+        metrics.putMetric(`RequestSource.${request.headers['x-request-source']}`, 1);
+        requestHeaders['x-request-source'] = request.headers['x-request-source'];
+      }
+      if (request.headers['x-app-version']) {
+        metrics.putMetric(`AppVersion.${request.headers['x-app-version']}`, 1);
+        requestHeaders['x-app-version'] = request.headers['x-app-version'];
+      }
 
       const response = await axios.get<ClassicQuoteDataJSON>(req, {
         headers: requestHeaders
