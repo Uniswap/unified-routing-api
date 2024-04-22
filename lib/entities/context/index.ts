@@ -4,8 +4,7 @@ import { RoutingType } from '../../constants';
 import {
   ClassicConfig,
   ClassicRequest,
-  DutchRequest,
-  DutchV2Request,
+  DutchQuoteRequest,
   Quote,
   QuoteRequest,
   RelayRequest,
@@ -15,11 +14,10 @@ import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
 import { SyntheticStatusProvider } from '../../providers';
 import { log } from '../../util/log';
 
-import { ClassicQuoteContext, DutchQuoteContext, DutchV2QuoteContext, RelayQuoteContext } from '.';
+import { ClassicQuoteContext, DutchQuoteContext, RelayQuoteContext } from '.';
 
 export * from './ClassicQuoteContext';
 export * from './DutchQuoteContext';
-export * from './DutchV2QuoteContext';
 export * from './RelayQuoteContext';
 
 export type RequestByKey = {
@@ -31,7 +29,6 @@ export type QuoteByKey = {
 };
 
 export interface QuoteContext {
-  routingType: RoutingType;
   // base request of the context
   request: QuoteRequest;
 
@@ -103,9 +100,8 @@ export function parseQuoteContexts(requests: QuoteRequest[], providers: QuoteCon
   return requests.map((request) => {
     switch (request.routingType) {
       case RoutingType.DUTCH_LIMIT:
-        return new DutchQuoteContext(log, request as DutchRequest, providers);
       case RoutingType.DUTCH_V2:
-        return new DutchV2QuoteContext(log, request as DutchV2Request, providers);
+        return new DutchQuoteContext(log, request as DutchQuoteRequest, providers);
       case RoutingType.CLASSIC:
         return new ClassicQuoteContext(log, request as ClassicRequest, providers);
       case RoutingType.RELAY:

@@ -39,6 +39,7 @@ import {
   DL_QUOTE_NATIVE_EXACT_IN_LARGE,
   DL_QUOTE_NATIVE_EXACT_IN_LARGE_WITH_PORTION,
 } from '../../utils/fixtures';
+import { DutchQuoteFactory } from '../../../lib/entities/quote/DutchQuoteFactory';
 
 describe('DutchQuote', () => {
   // silent logger in tests
@@ -119,7 +120,7 @@ describe('DutchQuote', () => {
       { title: 'does not override', largeTrade: false },
     ])('$title auctionPeriodSec if order size is considered large: $largeTrade', async (params) => {
       const classic = params.largeTrade ? CLASSIC_QUOTE_EXACT_IN_LARGE : CLASSIC_QUOTE_EXACT_IN_SMALL;
-      const reparamatrized = DutchQuote.reparameterize(DL_QUOTE_EXACT_IN_LARGE, classic, {
+      const reparamatrized = DutchQuoteFactory.reparameterizeV1(DL_QUOTE_EXACT_IN_LARGE, classic, {
         hasApprovedPermit2: true,
         largeTrade: params.largeTrade,
       });
@@ -134,7 +135,7 @@ describe('DutchQuote', () => {
       `Does not reparameterize if classic is not defined with portion flag %p`,
       async (enablePortion) => {
         const dutchLargeQuote = enablePortion ? DL_QUOTE_EXACT_IN_LARGE_WITH_PORTION : DL_QUOTE_EXACT_IN_LARGE;
-        const reparameterized = DutchQuote.reparameterize(dutchLargeQuote, undefined, undefined);
+        const reparameterized = DutchQuoteFactory.reparameterize(dutchLargeQuote, undefined, undefined);
         expect(reparameterized).toMatchObject(dutchLargeQuote);
 
         if (enablePortion) {
@@ -147,14 +148,14 @@ describe('DutchQuote', () => {
     it('only override auctionPeriodSec on mainnet', async () => {
       const classic = CLASSIC_QUOTE_EXACT_IN_LARGE;
       const dutchRequest = createDutchQuote({ amountOut: AMOUNT_LARGE, chainId: 137 }, 'EXACT_INPUT', '1');
-      const reparamatrized = DutchQuote.reparameterize(dutchRequest, classic);
+      const reparamatrized = DutchQuoteFactory.reparameterizeV1(dutchRequest, classic);
       expect(reparamatrized.auctionPeriodSecs).toEqual(60);
     });
 
     it.each([true, false])('reparameterizes with classic quote for end with portion flag %p', async (enablePortion) => {
       const classicQuote = enablePortion ? CLASSIC_QUOTE_EXACT_IN_LARGE_WITH_PORTION : CLASSIC_QUOTE_EXACT_IN_LARGE;
       const dutchQuote = enablePortion ? DL_QUOTE_EXACT_IN_LARGE_WITH_PORTION : DL_QUOTE_EXACT_IN_LARGE;
-      const reparameterized = DutchQuote.reparameterize(dutchQuote, classicQuote);
+      const reparameterized = DutchQuoteFactory.reparameterize(dutchQuote, classicQuote);
       expect(reparameterized.request).toMatchObject(dutchQuote.request);
       expect(reparameterized.amountInStart).toEqual(dutchQuote.amountInStart);
       expect(reparameterized.amountOutStart).toEqual(dutchQuote.amountOutStart);
@@ -189,7 +190,7 @@ describe('DutchQuote', () => {
       async (enablePortion) => {
         const classicQuote = enablePortion ? CLASSIC_QUOTE_EXACT_IN_LARGE_WITH_PORTION : CLASSIC_QUOTE_EXACT_IN_LARGE;
         const dutchQuote = enablePortion ? DL_QUOTE_EXACT_IN_LARGE_WITH_PORTION : DL_QUOTE_EXACT_IN_LARGE;
-        const reparameterized = DutchQuote.reparameterize(dutchQuote, classicQuote);
+        const reparameterized = DutchQuoteFactory.reparameterize(dutchQuote, classicQuote);
         expect(reparameterized.request).toMatchObject(dutchQuote.request);
 
         const { amountIn: amountInClassic, amountOut: amountOutClassic } = DutchQuote.applyGasAdjustment(
@@ -225,7 +226,7 @@ describe('DutchQuote', () => {
           enablePortion ? CLASSIC_QUOTE_EXACT_IN_NATIVE_WITH_PORTION : CLASSIC_QUOTE_EXACT_IN_NATIVE
         ) as ClassicQuote;
         const dutchQuote = enablePortion ? DL_QUOTE_NATIVE_EXACT_IN_LARGE_WITH_PORTION : DL_QUOTE_NATIVE_EXACT_IN_LARGE;
-        const reparameterized = DutchQuote.reparameterize(dutchQuote, classicQuote);
+        const reparameterized = DutchQuoteFactory.reparameterize(dutchQuote, classicQuote);
         expect(reparameterized.request).toMatchObject(dutchQuote.request);
 
         const { amountIn: amountInClassic, amountOut: amountOutClassic } = DutchQuote.applyGasAdjustment(
@@ -340,8 +341,7 @@ describe('DutchQuote', () => {
         'EXACT_INPUT'
       ) as any;
       quote.nonce = 1;
-      const dlQuote = quote as DutchQuote;
-      const result = dlQuote.getPermitData();
+      const result = quote.getPermitData();
       const expected = DL_PERMIT_RFQ;
       expect(_.isEqual(JSON.stringify(result), JSON.stringify(expected))).toBe(true);
       jest.clearAllTimers();
@@ -369,7 +369,7 @@ describe('DutchQuote', () => {
         {}
       );
       const dutchQuote = createDutchQuote({}, 'EXACT_INPUT');
-      const result = DutchQuote.fromClassicQuote(dutchQuote.request, classicQuote);
+      const result = DutchQuoteFactory.fromClassicQuote(dutchQuote.request, classicQuote);
       const firstNonce = result.toOrder().info.nonce;
       const secondNonce = result.toOrder().info.nonce;
       expect(firstNonce).toEqual(secondNonce);
@@ -391,7 +391,7 @@ describe('DutchQuote', () => {
         {}
       );
       const dutchQuote = createDutchQuote({ amountIn: amount }, 'EXACT_INPUT');
-      const result = DutchQuote.fromClassicQuote(dutchQuote.request, classicQuote);
+      const result = DutchQuoteFactory.fromClassicQuote(dutchQuote.request, classicQuote);
       const firstNonce = result.toOrder().info.nonce;
       const secondNonce = result.toOrder().info.nonce;
       expect(firstNonce).toEqual(secondNonce);
@@ -438,7 +438,7 @@ describe('DutchQuote', () => {
       };
       expect(DL_QUOTE_JSON_RFQ.amountOut).toEqual(amountOutWithPortion.toString());
 
-      const quote = DutchQuote.fromResponseBody(dutchQuote.request, DL_QUOTE_JSON_RFQ, '1', FLAT_PORTION);
+      const quote = DutchQuoteFactory.fromResponseBody(dutchQuote.request, DL_QUOTE_JSON_RFQ, '1', FLAT_PORTION);
 
       // expect the sum of outputs to be amountOutWithPortion,
       // but the first output to the swapper tob e amountOut, and the second output to be the portion to the recipient

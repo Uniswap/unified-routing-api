@@ -10,7 +10,7 @@ import {
   DutchConfig,
   DutchConfigJSON,
   DutchQuoteJSON,
-  DutchRequest,
+  DutchV1Request,
   DutchV2Config,
   DutchV2Quote,
   DutchV2Request,
@@ -19,7 +19,7 @@ import {
   RelayConfigJSON,
   RelayRequest,
 } from '../../lib/entities';
-import { ClassicQuote, DutchQuote, Quote, RelayQuote, RelayQuoteJSON } from '../../lib/entities/quote';
+import { ClassicQuote, Quote, RelayQuote, RelayQuoteJSON } from '../../lib/entities/quote';
 import { Portion } from '../../lib/fetchers/PortionFetcher';
 import {
   AMOUNT,
@@ -39,6 +39,7 @@ import {
 } from '../constants';
 import { buildQuoteResponse } from './quoteResponse';
 import { BULLET_WHT_FOT_TAX } from './tokens';
+import { DutchV1Quote } from '../../lib/entities/quote/DutchV1Quote';
 
 export const BASE_REQUEST_INFO_EXACT_IN = {
   tokenInChainId: CHAIN_IN_ID,
@@ -158,7 +159,7 @@ export function makeDutchRequest(
   overrides: Partial<QuoteRequestBodyJSON>,
   configOverrides?: Partial<DutchConfig>,
   baseRequestInfo = BASE_REQUEST_INFO_EXACT_IN
-): DutchRequest {
+): DutchV1Request {
   const requestInfo = Object.assign({}, baseRequestInfo, overrides);
   return parseQuoteRequests({
     ...requestInfo,
@@ -171,7 +172,7 @@ export function makeDutchRequest(
         ...configOverrides,
       },
     ],
-  }).quoteRequests[0] as DutchRequest;
+  }).quoteRequests[0] as DutchV1Request;
 }
 
 export function makeDutchV2Request(
@@ -520,7 +521,7 @@ export function createDutchQuote(
   nonce?: string,
   portion?: Portion,
   sendPortionEnabled?: boolean
-): DutchQuote {
+): DutchV1Quote {
   return buildQuoteResponse(
     Object.assign({}, DL_QUOTE_DATA, {
       quote: { ...DL_QUOTE_DATA.quote, type: RoutingType.DUTCH_LIMIT, ...overrides },
@@ -528,20 +529,20 @@ export function createDutchQuote(
     makeDutchRequest({ type, sendPortionEnabled }),
     nonce,
     portion
-  ) as DutchQuote;
+  ) as DutchV1Quote;
 }
 
 export function createDutchQuoteWithRequest(
   overrides: Partial<DutchQuoteJSON>,
   requestOverrides: Partial<QuoteRequestBodyJSON>,
   configOverrides?: Partial<DutchConfig>
-): DutchQuote {
+): DutchV1Quote {
   return buildQuoteResponse(
     Object.assign({}, DL_QUOTE_DATA, {
       quote: { ...DL_QUOTE_DATA.quote, type: RoutingType.DUTCH_LIMIT, ...overrides },
     }),
     makeDutchRequest({ ...requestOverrides }, configOverrides)
-  ) as DutchQuote;
+  ) as DutchV1Quote;
 }
 
 export function createDutchV2Quote(

@@ -1,7 +1,7 @@
 import { DutchOrder, parseValidation, ValidationType } from '@uniswap/uniswapx-sdk';
 import { BigNumber } from 'ethers';
 
-import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, DutchQuoteJSON, DutchRequest } from '../../../../lib/entities';
+import { ClassicQuote, ClassicQuoteDataJSON, DutchQuoteJSON, DutchV1Request } from '../../../../lib/entities';
 import {
   AMOUNT,
   CHAIN_IN_ID,
@@ -18,6 +18,8 @@ import {
   CLASSIC_QUOTE_EXACT_OUT_BETTER,
   QUOTE_REQUEST_DL,
 } from '../../../utils/fixtures';
+import { DutchQuoteFactory } from '../../../../lib/entities/quote/DutchQuoteFactory';
+import { DutchV1Quote } from '../../../../lib/entities/quote/DutchV1Quote';
 
 const DL_QUOTE_JSON: DutchQuoteJSON = {
   chainId: CHAIN_IN_ID,
@@ -68,14 +70,14 @@ const CLASSIC_QUOTE_JSON: ClassicQuoteDataJSON = {
 };
 
 describe('QuoteResponse', () => {
-  const config: DutchRequest = QUOTE_REQUEST_DL;
+  const config: DutchV1Request = QUOTE_REQUEST_DL;
 
   it('parses dutch limit quote from param-api properly', () => {
-    expect(() => DutchQuote.fromResponseBody(config, DL_QUOTE_JSON)).not.toThrow();
+    expect(() => DutchQuoteFactory.fromResponseBody(config, DL_QUOTE_JSON)).not.toThrow();
   });
 
   it('produces dutch limit order info from param-api response and config', () => {
-    const quote = DutchQuote.fromResponseBody(config, DL_QUOTE_JSON_RFQ);
+    const quote = DutchQuoteFactory.fromResponseBody(config, DL_QUOTE_JSON_RFQ);
     expect(quote.toOrder().toJSON()).toMatchObject({
       swapper: SWAPPER,
       input: {
@@ -92,7 +94,7 @@ describe('QuoteResponse', () => {
         },
       ],
     });
-    const order = DutchOrder.fromJSON(quote.toOrder().toJSON(), quote.chainId);
+    const order = DutchOrder.fromJSON((quote as DutchV1Quote).toOrder().toJSON(), quote.chainId);
     expect(order.info.exclusiveFiller).toEqual('0x1111111111111111111111111111111111111111');
     expect(order.info.exclusivityOverrideBps.toString()).toEqual('12');
 
@@ -100,7 +102,7 @@ describe('QuoteResponse', () => {
   });
 
   it('produces dutch limit order info from param-api response and config without filler', () => {
-    const quote = DutchQuote.fromResponseBody(config, Object.assign({}, DL_QUOTE_JSON, { filler: undefined }));
+    const quote = DutchQuoteFactory.fromResponseBody(config, Object.assign({}, DL_QUOTE_JSON, { filler: undefined }));
     expect(quote.toOrder().toJSON()).toMatchObject({
       swapper: SWAPPER,
       input: {
@@ -117,7 +119,7 @@ describe('QuoteResponse', () => {
         },
       ],
     });
-    const order = DutchOrder.fromJSON(quote.toOrder().toJSON(), quote.chainId);
+    const order = DutchOrder.fromJSON((quote as DutchV1Quote).toOrder().toJSON(), quote.chainId);
     const parsedValidation = parseValidation(order.info);
     expect(parsedValidation.type).toEqual(ValidationType.None);
     expect(BigNumber.from(quote.toOrder().toJSON().nonce).gt(0)).toBeTruthy();

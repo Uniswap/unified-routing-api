@@ -6,12 +6,12 @@ import { DEFAULT_SLIPPAGE_TOLERANCE, RoutingType } from '../../constants';
 import { Portion } from '../../fetchers/PortionFetcher';
 import { ValidationError } from '../../util/errors';
 import { ClassicConfig, ClassicConfigJSON, ClassicRequest } from './ClassicRequest';
-import { DutchConfig, DutchConfigJSON, DutchRequest } from './DutchRequest';
+import { DutchConfig, DutchConfigJSON, DutchV1Request } from './DutchV1Request';
 import { DutchV2Config, DutchV2ConfigJSON, DutchV2Request } from './DutchV2Request';
 import { RelayConfig, RelayConfigJSON, RelayRequest } from './RelayRequest';
 
 export * from './ClassicRequest';
-export * from './DutchRequest';
+export * from './DutchV1Request';
 export * from './DutchV2Request';
 export * from './RelayRequest';
 
@@ -19,9 +19,9 @@ export type RequestByRoutingType = { [routingType in RoutingType]?: QuoteRequest
 
 // config specific to the given routing type
 export type RoutingConfig = DutchConfig | DutchV2Config | RelayConfig | ClassicConfig;
+export type DutchRoutingConfig = DutchConfig | DutchV2Config;
 export type RoutingConfigJSON = DutchConfigJSON | DutchV2ConfigJSON | RelayConfigJSON | ClassicConfigJSON;
 
-// shared info for all quote requests
 export interface QuoteRequestInfo {
   requestId: string;
   tokenInChainId: number;
@@ -37,6 +37,10 @@ export interface QuoteRequestInfo {
   portion?: Portion;
   intent?: string;
   source?: RequestSource;
+}
+
+export interface DutchQuoteRequestInfo extends QuoteRequestInfo {
+  slippageTolerance: string;
 }
 
 export interface QuoteRequestBodyJSON extends Omit<QuoteRequestInfo, 'type' | 'amount'> {
@@ -58,6 +62,16 @@ export interface QuoteRequest {
   routingType: RoutingType;
   info: QuoteRequestInfo;
   config: RoutingConfig;
+
+  toJSON(): RoutingConfigJSON;
+  // return a key that uniquely identifies this request
+  key(): string;
+}
+
+export interface DutchQuoteRequest {
+  routingType: RoutingType;
+  info: DutchQuoteRequestInfo;
+  config: DutchRoutingConfig;
 
   toJSON(): RoutingConfigJSON;
   // return a key that uniquely identifies this request
@@ -91,7 +105,7 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON): {
       ChainConfigManager.chainSupportsRoutingType(info.tokenInChainId, RoutingType.DUTCH_LIMIT) &&
       info.tokenInChainId === info.tokenOutChainId
     ) {
-      return DutchRequest.fromRequestBody(info, config as DutchConfigJSON);
+      return DutchV1Request.fromRequestBody(info, config as DutchConfigJSON);
     } else if (
       config.routingType == RoutingType.RELAY &&
       ChainConfigManager.chainSupportsRoutingType(info.tokenInChainId, RoutingType.RELAY) &&

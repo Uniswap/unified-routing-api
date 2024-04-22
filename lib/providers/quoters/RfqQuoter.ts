@@ -4,19 +4,20 @@ import { BigNumber } from 'ethers';
 import axios from './helpers';
 
 import { BPS, frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
-import { DutchQuote, DutchRequest, Quote } from '../../entities';
+import { DutchQuoteRequest, Quote } from '../../entities';
 import { PostQuoteResponseJoi } from '../../handlers/quote';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import { generateRandomNonce } from '../../util/nonce';
 import { Quoter, QuoterType } from './index';
+import { DutchQuoteFactory } from '../../entities/quote/DutchQuoteFactory';
 
 export class RfqQuoter implements Quoter {
   static readonly type: QuoterType.UNISWAPX_RFQ;
 
   constructor(private rfqUrl: string, private serviceUrl: string, private paramApiKey: string) {}
 
-  async quote(request: DutchRequest): Promise<Quote | null> {
+  async quote(request: DutchQuoteRequest): Promise<Quote | null> {
     if (request.routingType !== RoutingType.DUTCH_LIMIT) {
       log.error(`Invalid routing config type: ${request.routingType}`);
       return null;
@@ -71,12 +72,12 @@ export class RfqQuoter implements Quoter {
             log.debug(results[1].reason, 'RfqQuoterErr: GET nonce failed');
             metrics.putMetric(`RfqQuoterLatency`, Date.now() - now);
             metrics.putMetric(`RfqQuoterNonceErr`, 1);
-            quote = DutchQuote.fromResponseBody(request, response, generateRandomNonce(), request.info.portion);
+            quote = DutchQuoteFactory.fromResponseBody(request, response, generateRandomNonce(), request.info.portion);
           } else {
             log.info(results[1].value.data, 'RfqQuoter: GET nonce success');
             metrics.putMetric(`RfqQuoterLatency`, Date.now() - now);
             metrics.putMetric(`RfqQuoterSuccess`, 1);
-            quote = DutchQuote.fromResponseBody(
+            quote = DutchQuoteFactory.fromResponseBody(
               request,
               response,
               BigNumber.from(results[1].value.data.nonce).add(1).toString(),

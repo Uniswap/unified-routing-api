@@ -40,7 +40,7 @@ import { providers } from 'ethers';
 import NodeCache from 'node-cache';
 import { RoutingType } from '../../../../../lib/constants';
 import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, Quote, RequestSource } from '../../../../../lib/entities';
-import { DutchConfigJSON, QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index';
+import { DutchConfigJSON, DutchQuoteRequest, QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index';
 import { Permit2Fetcher } from '../../../../../lib/fetchers/Permit2Fetcher';
 import {
   GetPortionResponse,
@@ -125,7 +125,7 @@ export const getQuoteHandler = (
     injectorPromiseMock(quoters, tokenFetcher, portionFetcher, permit2Fetcher, syntheticStatusProvider)
   );
 
-export const RfqQuoterMock = (dlQuote: DutchQuote): Quoter => {
+export const RfqQuoterMock = (dlQuote: DutchQuote<DutchQuoteRequest>): Quoter => {
   return {
     quote: jest.fn().mockResolvedValue(dlQuote),
   };

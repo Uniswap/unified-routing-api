@@ -3,7 +3,7 @@ import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
 
 import { BPS, NATIVE_ADDRESS, RoutingType } from '../../../../../lib/constants';
-import { DutchQuote, DutchV2QuoteContext } from '../../../../../lib/entities';
+import { DutchQuote, DutchQuoteContext } from '../../../../../lib/entities';
 import { SyntheticStatusProvider } from '../../../../../lib/providers';
 import { Erc20__factory } from '../../../../../lib/types/ext/factories/Erc20__factory';
 import {
@@ -24,7 +24,7 @@ import {
   QUOTE_REQUEST_DUTCH_V2,
 } from '../../../../utils/fixtures';
 
-describe('DutchV2QuoteContext', () => {
+describe('DutchQuoteContext', () => {
   const logger = Logger.createLogger({ name: 'test' });
   logger.level(Logger.FATAL);
   let provider: any;
@@ -68,7 +68,7 @@ describe('DutchV2QuoteContext', () => {
 
   describe('dependencies', () => {
     it('returns expected dependencies when output is weth', () => {
-      const context = new DutchV2QuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
+      const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
       const deps = context.dependencies();
       expect(deps.length).toEqual(2);
       // first is base
@@ -82,7 +82,7 @@ describe('DutchV2QuoteContext', () => {
       const request = makeDutchV2Request({
         tokenOut: '0x1111111111111111111111111111111111111111',
       });
-      const context = new DutchV2QuoteContext(logger, request, makeProviders(false));
+      const context = new DutchQuoteContext(logger, request, makeProviders(false));
       const deps = context.dependencies();
       expect(deps.length).toEqual(2);
       // first is base
@@ -95,12 +95,12 @@ describe('DutchV2QuoteContext', () => {
 
   describe('resolve', () => {
     it('returns null if no dependencies given', async () => {
-      const context = new DutchV2QuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
+      const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
       expect(await context.resolve({})).toEqual(null);
     });
 
     it('returns null if quote key is not set properly', async () => {
-      const context = new DutchV2QuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
+      const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
       expect(
         await context.resolve({
           wrong: DL_QUOTE_EXACT_IN_BETTER,
@@ -109,7 +109,7 @@ describe('DutchV2QuoteContext', () => {
     });
 
     it('returns main quote if others are null', async () => {
-      const context = new DutchV2QuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
+      const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchQuote({ amountOut: AMOUNT, filler }, 'EXACT_INPUT');
       const quote = await context.resolve({
@@ -120,7 +120,7 @@ describe('DutchV2QuoteContext', () => {
     });
 
     it('returns null if quotes have 0 amountOut', async () => {
-      const context = new DutchV2QuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
+      const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchQuote({ amountOut: '0', filler }, 'EXACT_INPUT');
       expect(
@@ -131,7 +131,7 @@ describe('DutchV2QuoteContext', () => {
     });
 
     it('returns null if tokenIn is not in tokenlist', async () => {
-      const context = new DutchV2QuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
+      const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
       const rfqQuote = createDutchQuote(
         { tokenIn: '0x1111111111111111111111111111111111111111', amountOut: '2' },
         'EXACT_INPUT'
@@ -143,7 +143,7 @@ describe('DutchV2QuoteContext', () => {
     });
 
     it('returns null if tokenOut is not in tokenlist', async () => {
-      const context = new DutchV2QuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
+      const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
       const rfqQuote = createDutchQuote(
         { tokenOut: '0x1111111111111111111111111111111111111111', amountOut: '2' },
         'EXACT_INPUT'
@@ -155,7 +155,7 @@ describe('DutchV2QuoteContext', () => {
     });
 
     it('returns rfq quote if tokenIn is NATIVE_ADDRESS', async () => {
-      const context = new DutchV2QuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
+      const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
       const rfqQuote = createDutchQuote({ tokenIn: NATIVE_ADDRESS, amountOut: '2' }, 'EXACT_INPUT');
       const quote = await context.resolve({
         [QUOTE_REQUEST_DUTCH_V2.toDutchV1Request().key()]: rfqQuote,
@@ -165,7 +165,7 @@ describe('DutchV2QuoteContext', () => {
     });
 
     it('returns rfq quote if tokenOut is NATIVE_ADDRESS', async () => {
-      const context = new DutchV2QuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
+      const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
       const rfqQuote = createDutchQuote({ tokenOut: NATIVE_ADDRESS, amountOut: '2' }, 'EXACT_INPUT');
       const quote = await context.resolve({
         [QUOTE_REQUEST_DUTCH_V2.toDutchV1Request().key()]: rfqQuote,
@@ -176,7 +176,7 @@ describe('DutchV2QuoteContext', () => {
 
     it('uses synthetic if better with useSyntheticQuotes=true and switch=false', async () => {
       const request = makeDutchV2Request({}, { useSyntheticQuotes: true });
-      const context = new DutchV2QuoteContext(logger, request, makeProviders(false));
+      const context = new DutchQuoteContext(logger, request, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchQuote({ amountOut: '1', filler }, 'EXACT_INPUT');
       expect(rfqQuote.filler).toEqual(filler);
@@ -200,7 +200,7 @@ describe('DutchV2QuoteContext', () => {
 
     it('uses synthetic if better with useSyntheticQuotes=true and switch=true', async () => {
       const request = makeDutchV2Request({}, { useSyntheticQuotes: true });
-      const context = new DutchV2QuoteContext(logger, request, makeProviders(true));
+      const context = new DutchQuoteContext(logger, request, makeProviders(true));
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchQuote({ amountOut: '1', filler }, 'EXACT_INPUT');
       expect(rfqQuote.filler).toEqual(filler);
@@ -224,7 +224,7 @@ describe('DutchV2QuoteContext', () => {
 
     it('uses synthetic if better with useSyntheticQuotes=false and switch=true', async () => {
       const request = makeDutchV2Request({}, { useSyntheticQuotes: false });
-      const context = new DutchV2QuoteContext(logger, request, makeProviders(true));
+      const context = new DutchQuoteContext(logger, request, makeProviders(true));
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchQuote({ amountOut: '1', filler }, 'EXACT_INPUT');
       expect(rfqQuote.filler).toEqual(filler);
@@ -248,7 +248,7 @@ describe('DutchV2QuoteContext', () => {
 
     it('does not use synthetic if better with useSyntheticQuotes=false and switch=false', async () => {
       const request = makeDutchV2Request({}, { useSyntheticQuotes: false });
-      const context = new DutchV2QuoteContext(logger, request, makeProviders(false));
+      const context = new DutchQuoteContext(logger, request, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchQuote({ amountOut: '9999000009', filler }, 'EXACT_INPUT');
       expect(rfqQuote.filler).toEqual(filler);
@@ -267,7 +267,7 @@ describe('DutchV2QuoteContext', () => {
     });
 
     it('uses synthetic if rfq quote is at least 300% better than classic; EXACT_IN', async () => {
-      const context = new DutchV2QuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
+      const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchQuote({ amountOut: '400000000', filler }, 'EXACT_INPUT');
       const classicQuote = createClassicQuote(
@@ -288,7 +288,7 @@ describe('DutchV2QuoteContext', () => {
 
     it('uses synthetic if rfq quote is at least 300% better than classic; EXACT_OUT', async () => {
       const request = makeDutchV2Request({ type: 'EXACT_OUTPUT' }, { useSyntheticQuotes: true });
-      const context = new DutchV2QuoteContext(logger, request, makeProviders(false));
+      const context = new DutchQuoteContext(logger, request, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchQuote({ amountIn: '100000000', filler }, 'EXACT_OUTPUT');
       const classicQuote = createClassicQuote(
@@ -309,7 +309,7 @@ describe('DutchV2QuoteContext', () => {
 
     it('skips UniswapX if rfq quote is at least 300% better than clasic; EXACT_IN, skipSynthetic', async () => {
       const request = makeDutchV2Request({}, { useSyntheticQuotes: false });
-      const context = new DutchV2QuoteContext(logger, request, makeProviders(false));
+      const context = new DutchQuoteContext(logger, request, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchQuote({ amountOut: '400000000', filler }, 'EXACT_INPUT');
       const classicQuote = createClassicQuote(
@@ -327,7 +327,7 @@ describe('DutchV2QuoteContext', () => {
 
     it('skips UniswapX if rfq quote is at least 300% better than clasic; EXACT_OUT, skipSynthetic', async () => {
       const request = makeDutchV2Request({ type: 'EXACT_OUTPUT' }, { useSyntheticQuotes: false });
-      const context = new DutchV2QuoteContext(logger, request, makeProviders(false));
+      const context = new DutchQuoteContext(logger, request, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchQuote({ amountIn: '100000000', filler }, 'EXACT_OUTPUT');
       const classicQuote = createClassicQuote(
@@ -343,7 +343,7 @@ describe('DutchV2QuoteContext', () => {
       ).toEqual(null);
     });
     it('filters out zero amountOut quotes in favor of others', async () => {
-      const context = new DutchV2QuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
+      const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchQuote({ amountOut: '0', filler }, 'EXACT_INPUT');
       expect(rfqQuote.filler).toEqual(filler);
@@ -367,7 +367,7 @@ describe('DutchV2QuoteContext', () => {
 
     it('skips synthetic if useSyntheticQuotes = false', async () => {
       const request = makeDutchV2Request({}, { useSyntheticQuotes: false });
-      const context = new DutchV2QuoteContext(logger, request, makeProviders(false));
+      const context = new DutchQuoteContext(logger, request, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchQuote({ amountOut: '1000000000000000000', filler }, 'EXACT_INPUT');
       expect(rfqQuote.filler).toEqual(filler);
@@ -387,7 +387,7 @@ describe('DutchV2QuoteContext', () => {
 
     it('skips synthetic if no route to eth', async () => {
       const request = makeDutchV2Request({});
-      const context = new DutchV2QuoteContext(logger, request, makeProviders(false));
+      const context = new DutchQuoteContext(logger, request, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchQuote({ amountOut: '1000000000000000000', filler }, 'EXACT_INPUT');
       expect(rfqQuote.filler).toEqual(filler);
@@ -410,7 +410,7 @@ describe('DutchV2QuoteContext', () => {
       const request = makeDutchV2Request({
         tokenOut: '0x1111111111111111111111111111111111111111',
       });
-      const context = new DutchV2QuoteContext(logger, request, makeProviders(false));
+      const context = new DutchQuoteContext(logger, request, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchQuote({ amountOut: '1', filler }, 'EXACT_INPUT');
       expect(rfqQuote.filler).toEqual(filler);
@@ -429,7 +429,7 @@ describe('DutchV2QuoteContext', () => {
 
     it('keeps synthetic if output is weth', async () => {
       const request = makeDutchV2Request({}, { useSyntheticQuotes: true });
-      const context = new DutchV2QuoteContext(logger, request, makeProviders(false));
+      const context = new DutchQuoteContext(logger, request, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
       const native = WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(1)].address;
       const rfqQuote = createDutchQuote({ amountOut: '1', tokenOut: native, filler }, 'EXACT_INPUT');
@@ -451,7 +451,7 @@ describe('DutchV2QuoteContext', () => {
     });
 
     it('returns no DL quotes if classic provided does not meet gas threshold', async () => {
-      const context = new DutchV2QuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
+      const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
       context.dependencies();
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchQuote({ amountOut: AMOUNT, filler }, 'EXACT_INPUT');
@@ -470,7 +470,7 @@ describe('DutchV2QuoteContext', () => {
     });
 
     it('still returns DL rfq quote if classic is not provided', async () => {
-      const context = new DutchV2QuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
+      const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
       context.dependencies();
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchQuote({ amountOut: AMOUNT, filler }, 'EXACT_INPUT');
@@ -516,7 +516,7 @@ describe('DutchV2QuoteContext', () => {
         };
       });
 
-      let context = new DutchV2QuoteContext(logger, request, makeProviders(false));
+      let context = new DutchQuoteContext(logger, request, makeProviders(false));
       context.dependencies();
 
       const nonApprovedQuote = await context.resolve({
@@ -531,7 +531,7 @@ describe('DutchV2QuoteContext', () => {
         };
       });
 
-      context = new DutchV2QuoteContext(logger, request, makeProviders(false));
+      context = new DutchQuoteContext(logger, request, makeProviders(false));
       context.dependencies();
 
       const approvedQuote = await context.resolve({
@@ -551,7 +551,7 @@ describe('DutchV2QuoteContext', () => {
   describe('hasOrderSize', () => {
     describe('exactIn', () => {
       it('returns true if quote == quoteGasAdjusted', async () => {
-        const context = new DutchV2QuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
+        const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
         const amountOut = ethers.utils.parseEther('1');
         const classicQuote = createClassicQuote(
           { quote: amountOut.toString(), quoteGasAdjusted: amountOut.toString() },
@@ -562,7 +562,7 @@ describe('DutchV2QuoteContext', () => {
       });
 
       it('returns true if amountOut * 5% == gas used', async () => {
-        const context = new DutchV2QuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
+        const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
 
         const amountOut = ethers.utils.parseEther('1');
         const fivePercent = amountOut.mul(5).div(100);
@@ -576,7 +576,7 @@ describe('DutchV2QuoteContext', () => {
       });
 
       it('returns false if amountOut * 55% == gas used', async () => {
-        const context = new DutchV2QuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
+        const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
 
         const amountOut = ethers.utils.parseEther('1');
         const gas = amountOut.mul(55).div(100);
@@ -592,7 +592,7 @@ describe('DutchV2QuoteContext', () => {
 
     describe('exactOut', () => {
       it('returns true if amountIn * 5% == gas used', async () => {
-        const context = new DutchV2QuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
+        const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
 
         const amountIn = ethers.utils.parseEther('1');
         const fivePercent = amountIn.mul(5).div(100);
@@ -606,7 +606,7 @@ describe('DutchV2QuoteContext', () => {
       });
 
       it('returns false if amountIn * 55% == gas used', async () => {
-        const context = new DutchV2QuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
+        const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
 
         const amountIn = ethers.utils.parseEther('1');
         const gas = amountIn.mul(55).div(100);
@@ -628,7 +628,7 @@ describe('DutchV2QuoteContext', () => {
         { useSyntheticQuotes: true },
         { ...BASE_REQUEST_INFO_EXACT_IN, tokenOut: NATIVE_ADDRESS }
       );
-      const context = new DutchV2QuoteContext(logger, request, makeProviders(false));
+      const context = new DutchQuoteContext(logger, request, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchQuoteWithRequest(
         { amountOut: '1', filler, tokenOut: NATIVE_ADDRESS },
@@ -658,7 +658,7 @@ describe('DutchV2QuoteContext', () => {
         { useSyntheticQuotes: true },
         { ...BASE_REQUEST_INFO_EXACT_IN, tokenOut: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_OUT_ID)].address }
       );
-      const context = new DutchV2QuoteContext(logger, request, makeProviders(false));
+      const context = new DutchQuoteContext(logger, request, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchQuoteWithRequest(
         { amountOut: '1', filler, tokenOut: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_OUT_ID)].address },

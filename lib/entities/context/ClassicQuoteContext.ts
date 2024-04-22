@@ -11,7 +11,6 @@ export type ClassicQuoteContextProviders = {
 
 // manages context around a single top level classic quote request
 export class ClassicQuoteContext implements QuoteContext {
-  routingType: RoutingType.CLASSIC;
   private log: Logger;
   private permit2Fetcher: Permit2Fetcher;
 

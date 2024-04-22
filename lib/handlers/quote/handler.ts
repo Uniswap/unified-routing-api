@@ -9,6 +9,7 @@ import { QuoteType, frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } f
 import {
   ClassicQuote,
   DutchQuote,
+  DutchQuoteRequest,
   parseQuoteContexts,
   parseQuoteRequests,
   Quote,
@@ -465,12 +466,12 @@ const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
     if (quote.routingType === RoutingType.CLASSIC) {
       return (quote as ClassicQuote).amountOutGasAndPortionAdjusted;
     }
-    return (quote as DutchQuote).amountOutGasAndPortionAdjusted;
+    return (quote as DutchQuote<DutchQuoteRequest>).amountOutGasAndPortionAdjusted;
   } else {
     if (quote.routingType === RoutingType.CLASSIC) {
       return (quote as ClassicQuote).amountInGasAndPortionAdjusted;
     }
-    return (quote as DutchQuote).amountInGasAndPortionAdjusted;
+    return (quote as DutchQuote<DutchQuoteRequest>).amountInGasAndPortionAdjusted;
   }
 };
 
