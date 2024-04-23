@@ -1,7 +1,7 @@
 import { AxiosError } from 'axios';
 import NodeCache from 'node-cache';
 import { ClassicQuote } from '../../../../lib/entities';
-import { GET_NO_PORTION_RESPONSE, GetPortionResponse, PortionFetcher } from '../../../../lib/fetchers/PortionFetcher';
+import { GetPortionResponse, GET_NO_PORTION_RESPONSE, PortionFetcher } from '../../../../lib/fetchers/PortionFetcher';
 import { RoutingApiQuoter } from '../../../../lib/providers/quoters';
 import axios from '../../../../lib/providers/quoters/helpers';
 import { PORTION_BIPS, PORTION_RECIPIENT } from '../../../constants';
@@ -12,7 +12,7 @@ import {
   makeClassicRequest,
   QUOTE_REQUEST_CLASSIC,
   QUOTE_REQUEST_CLASSIC_FE_ENABLE_FEE_ON_TRANSFER,
-  QUOTE_REQUEST_CLASSIC_FE_SEND_PORTION
+  QUOTE_REQUEST_CLASSIC_FE_SEND_PORTION,
 } from '../../../utils/fixtures';
 
 describe('RoutingApiQuoter', () => {
@@ -168,45 +168,42 @@ describe('RoutingApiQuoter', () => {
     });
 
     it('quote with x-request-source headers', async () => {
-      const request =  makeClassicRequest({});
-      request.headers = {'x-request-source': 'uniswap-ios'};
+      const request = makeClassicRequest({});
+      request.headers = { 'x-request-source': 'uniswap-ios' };
       axiosMock.mockResolvedValue({ data: CLASSIC_QUOTE_DATA.quote });
       const response = await routingApiQuoter.quote(request);
       expect(response).toBeDefined();
       expect(response).toBeInstanceOf(ClassicQuote);
 
-      expect(axiosMock).toHaveBeenCalledWith(
-        expect.any(String),
-        { headers: expect.objectContaining({'x-request-source': 'uniswap-ios'})}
-      )
+      expect(axiosMock).toHaveBeenCalledWith(expect.any(String), {
+        headers: expect.objectContaining({ 'x-request-source': 'uniswap-ios' }),
+      });
     });
 
     it('quote with x-request-source and x-app-version headers', async () => {
-      const request =  makeClassicRequest({});
-      request.headers = {'x-request-source': 'uniswap-ios', 'x-app-version': '1.27'};
+      const request = makeClassicRequest({});
+      request.headers = { 'x-request-source': 'uniswap-ios', 'x-app-version': '1.27' };
       axiosMock.mockResolvedValue({ data: CLASSIC_QUOTE_DATA.quote });
       const response = await routingApiQuoter.quote(request);
       expect(response).toBeDefined();
       expect(response).toBeInstanceOf(ClassicQuote);
 
-      expect(axiosMock).toHaveBeenCalledWith(
-        expect.any(String),
-        { headers: expect.objectContaining({'x-request-source': 'uniswap-ios', 'x-app-version': '1.27'})}
-      )
+      expect(axiosMock).toHaveBeenCalledWith(expect.any(String), {
+        headers: expect.objectContaining({ 'x-request-source': 'uniswap-ios', 'x-app-version': '1.27' }),
+      });
     });
 
     it('quote with x-request-source, x-app-version and aws-timestamp headers, ignores aws header', async () => {
-      const request =  makeClassicRequest({});
-      request.headers = {'x-request-source': 'uniswap-ios', 'x-app-version': '1.27', 'aws-timestamp': '12345678'};
+      const request = makeClassicRequest({});
+      request.headers = { 'x-request-source': 'uniswap-ios', 'x-app-version': '1.27', 'aws-timestamp': '12345678' };
       axiosMock.mockResolvedValue({ data: CLASSIC_QUOTE_DATA.quote });
       const response = await routingApiQuoter.quote(request);
       expect(response).toBeDefined();
       expect(response).toBeInstanceOf(ClassicQuote);
 
-      expect(axiosMock).toHaveBeenCalledWith(
-        expect.any(String),
-        { headers: {'x-api-key': 'test-key', 'x-request-source': 'uniswap-ios', 'x-app-version': '1.27'}}
-      )
+      expect(axiosMock).toHaveBeenCalledWith(expect.any(String), {
+        headers: { 'x-api-key': 'test-key', 'x-request-source': 'uniswap-ios', 'x-app-version': '1.27' },
+      });
     });
   });
 
