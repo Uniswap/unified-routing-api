@@ -112,6 +112,8 @@ export class QuoteHandler extends APIGLambdaHandler<
 
     log.info({ requestBody: request }, 'request');
     const parsedRequests = parseQuoteRequests(requestWithTokenAddresses);
+    log.info({ parsedRequests }, 'parsedRequests');
+
     const { quoteInfo } = parsedRequests;
     let { quoteRequests } = parsedRequests;
     await this.emitQuoteRequestedMetrics(tokenFetcher, quoteInfo, quoteRequests, startTime);
@@ -406,7 +408,9 @@ export async function getQuotes(quoterByRoutingType: QuoterByRoutingType, reques
         return null;
       }
       const beforeQuote = Date.now();
+      log.error({ request }, "Requesting quote...");
       const res = await quoter.quote(request);
+      log.error({ request, res, quoter }, "Quote response...");
       metrics.putMetric(
         `Latency-Quote-${request.routingType}-ChainId${request.info.tokenInChainId}`,
         Date.now() - beforeQuote,

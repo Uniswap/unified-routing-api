@@ -87,6 +87,7 @@ export class RfqQuoter implements Quoter {
       }
     });
 
+    log.error({ quote }, 'RfqQuoter: quote');
     return quote;
   }
 }

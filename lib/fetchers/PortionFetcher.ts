@@ -71,22 +71,25 @@ export class PortionFetcher {
 
     // We bypass the cache if `forcePortion` is true.
     // We do it to avoid cache conflicts since `forcePortion` is only for testing purposes.
-    const portionFromCache =
-      !forcePortion &&
-      this.portionCache.get<GetPortionResponse>(
-        PortionFetcher.PORTION_CACHE_KEY(
-          tokenInChainId,
-          tokenInAddress,
-          tokenOutChainId,
-          tokenOutAddress,
-          requestSource
-        )
-      );
+    /*
 
-    if (portionFromCache) {
-      metrics.putMetric(`PortionFetcherCacheHit`, 1);
-      return portionFromCache;
-    }
+const portionFromCache =
+  !forcePortion &&
+  this.portionCache.get<GetPortionResponse>(
+    PortionFetcher.PORTION_CACHE_KEY(
+      tokenInChainId,
+      tokenInAddress,
+      tokenOutChainId,
+      tokenOutAddress,
+      requestSource
+    )
+  );
+
+if (portionFromCache) {
+  metrics.putMetric(`PortionFetcherCacheHit`, 1);
+  return portionFromCache;
+}
+*/
 
     try {
       const beforeGetPortion = Date.now();
@@ -99,6 +102,12 @@ export class PortionFetcher {
           requestSource: requestSource,
         },
       });
+
+      log.error({ tokenInChainId: tokenInChainId,
+        tokenInAddress: tokenInAddress,
+        tokenOutChainId: tokenOutChainId,
+        tokenOutAddress: tokenOutAddress,
+        requestSource: requestSource, }, `PortionFetcherResponse with full path ${this.getPortionFullPath} response ${JSON.stringify(portionResponse.data)}`);
 
       // TODO: ROUTE-96 - add dashboard for URA <-> portion integration monitoring
       metrics.putMetric(`Latency-GetPortion`, Date.now() - beforeGetPortion, Unit.Milliseconds);
