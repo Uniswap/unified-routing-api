@@ -3,7 +3,7 @@ import Logger from 'bunyan';
 import { it } from '@jest/globals';
 import { DEFAULT_LABS_COSIGNER } from '../../../lib/entities';
 import { ETH_IN, TOKEN_IN } from '../../constants';
-import { createDutchV2QuoteWithRequest } from '../../utils/fixtures';
+import { createDutchV2QuoteWithRequestOverrides } from '../../utils/fixtures';
 
 describe('DutchV2Quote', () => {
   // silent logger in tests
@@ -12,7 +12,7 @@ describe('DutchV2Quote', () => {
 
   describe('toOrder', () => {
     it('should have proper json form', () => {
-      const v2Quote = createDutchV2QuoteWithRequest({}, {
+      const v2Quote = createDutchV2QuoteWithRequestOverrides({}, {
         tokenIn: ETH_IN,
         tokenOut: TOKEN_IN,
         type: 'EXACT_INPUT'
@@ -27,7 +27,7 @@ describe('DutchV2Quote', () => {
     });
 
     it('should serialize', () => {
-      const v2Quote = createDutchV2QuoteWithRequest({}, {
+      const v2Quote = createDutchV2QuoteWithRequestOverrides({}, {
         tokenIn: ETH_IN,
         tokenOut: TOKEN_IN,
         type: 'EXACT_INPUT'
@@ -39,7 +39,7 @@ describe('DutchV2Quote', () => {
     });
 
     it('should hash for signing', () => {
-      const v2Quote = createDutchV2QuoteWithRequest({}, {
+      const v2Quote = createDutchV2QuoteWithRequestOverrides({}, {
         tokenIn: ETH_IN,
         tokenOut: TOKEN_IN,
         type: 'EXACT_INPUT'

@@ -9,7 +9,7 @@ import {
   CLASSIC_QUOTE_DATA_WITH_ROUTE_AND_GAS_TOKEN,
   createClassicQuote,
   createRelayQuote,
-  createRelayQuoteWithRequest,
+  createRelayQuoteWithRequestOverrides,
   makeRelayRequest,
   QUOTE_REQUEST_RELAY,
   RELAY_QUOTE_DATA,
@@ -22,7 +22,7 @@ describe('RelayQuote', () => {
 
   describe('decay parameters', () => {
     it('uses default parameters', () => {
-      const quote = createRelayQuoteWithRequest(
+      const quote = createRelayQuoteWithRequestOverrides(
         {},
         {},
         {
@@ -39,7 +39,7 @@ describe('RelayQuote', () => {
     });
 
     it('overrides parameters in request', () => {
-      const quote = createRelayQuoteWithRequest(
+      const quote = createRelayQuoteWithRequestOverrides(
         {},
         {},
         {

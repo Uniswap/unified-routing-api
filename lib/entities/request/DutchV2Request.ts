@@ -33,13 +33,6 @@ export class DutchV2Request implements QuoteRequest {
 
   constructor(public readonly info: DutchQuoteRequestInfo, public readonly config: DutchV2Config) {}
 
-  public toDutchV1Request(): DutchV1Request {
-    return new DutchV1Request(this.info, {
-      ...this.config,
-      exclusivityOverrideBps: 0,
-    });
-  }
-
   public toJSON(): DutchV2ConfigJSON {
     return Object.assign({}, this.config, {
       routingType: RoutingType.DUTCH_V2 as RoutingType.DUTCH_V2,

@@ -20,7 +20,7 @@ import {
   BASE_REQUEST_INFO_EXACT_IN,
   createClassicQuote,
   createDutchQuote,
-  createDutchQuoteWithRequest,
+  createDutchQuoteWithRequestOverrides,
   DL_QUOTE_EXACT_IN_BETTER,
   makeDutchRequest,
   QUOTE_REQUEST_DL,
@@ -561,7 +561,7 @@ describe('DutchQuoteContext', () => {
       });
 
       const filler = '0x1111111111111111111111111111111111111111';
-      const rfqQuote = createDutchQuoteWithRequest(
+      const rfqQuote = createDutchQuoteWithRequestOverrides(
         { tokenIn: ETH_IN, tokenOut: TOKEN_IN, amountOut: AMOUNT, filler },
         {
           tokenIn: ETH_IN,
@@ -733,7 +733,7 @@ describe('DutchQuoteContext', () => {
       );
       const context = new DutchQuoteContext(logger, request, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
-      const rfqQuote = createDutchQuoteWithRequest(
+      const rfqQuote = createDutchQuoteWithRequestOverrides(
         { amountOut: '1', filler, tokenOut: NATIVE_ADDRESS },
         { type: 'EXACT_INPUT' }
       );
@@ -766,7 +766,7 @@ describe('DutchQuoteContext', () => {
       );
       const context = new DutchQuoteContext(logger, request, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
-      const rfqQuote = createDutchQuoteWithRequest(
+      const rfqQuote = createDutchQuoteWithRequestOverrides(
         { amountOut: '1', filler, tokenOut: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_OUT_ID)].address },
         { type: 'EXACT_INPUT' }
       );

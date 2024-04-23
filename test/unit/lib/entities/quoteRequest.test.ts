@@ -170,21 +170,6 @@ describe('QuoteRequest', () => {
 
           expect(classicRequest.toJSON()).toEqual(CLASSIC_CONFIG_JSON);
         });
-
-        it('converts to dutch v1 request', () => {
-          const { quoteRequests: requests } = parseQuoteRequests(request);
-          const dutchRequest = requests[0] as DutchV2Request;
-          const converted = dutchRequest.toDutchV1Request();
-
-          expect(converted.routingType === RoutingType.DUTCH_LIMIT);
-          expect(converted.toJSON()).toEqual({
-            routingType: RoutingType.DUTCH_LIMIT,
-            exclusivityOverrideBps: 0,
-            swapper: SWAPPER,
-            deadlineBufferSecs: 12,
-            useSyntheticQuotes: false,
-          });
-        });
       });
     }
   });

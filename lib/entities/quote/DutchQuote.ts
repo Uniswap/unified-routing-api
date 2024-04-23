@@ -84,7 +84,7 @@ export abstract class DutchQuote<T extends DutchQuoteRequest> implements IQuote 
   public readonly createdAt: string;
   public derived: DutchQuoteDerived;
   public routingType: RoutingType.DUTCH_LIMIT | RoutingType.DUTCH_V2;
-  public readonly defaultDeadlienBufferInSecs: number;
+  public abstract readonly defaultDeadlienBufferInSecs: number;
   // Add 1bps price improvmement to favor Dutch
   public static defaultPriceImprovementBps = 1;
 
@@ -108,7 +108,7 @@ export abstract class DutchQuote<T extends DutchQuoteRequest> implements IQuote 
   public constructor(args: DutchQuoteConstructorArgs) {
     Object.assign(this, args, {
       createdAtMs: args.createdAtMs || currentTimestampInMs(),
-      createdAt: timestampInMstoSeconds(parseInt(this.createdAtMs)),
+      createdAt: timestampInMstoSeconds(parseInt(args.createdAtMs || currentTimestampInMs())),
       derived: args.derived || { largeTrade: false }
     });
   }

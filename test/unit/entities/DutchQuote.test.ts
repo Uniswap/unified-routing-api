@@ -32,7 +32,7 @@ import {
   CLASSIC_QUOTE_EXACT_OUT_LARGE,
   createClassicQuote,
   createDutchQuote,
-  createDutchQuoteWithRequest,
+  createDutchQuoteWithRequestOverrides,
   DL_QUOTE_EXACT_IN_LARGE,
   DL_QUOTE_EXACT_IN_LARGE_WITH_PORTION,
   DL_QUOTE_EXACT_OUT_LARGE,
@@ -40,6 +40,7 @@ import {
   DL_QUOTE_NATIVE_EXACT_IN_LARGE_WITH_PORTION,
 } from '../../utils/fixtures';
 import { DutchQuoteFactory } from '../../../lib/entities/quote/DutchQuoteFactory';
+import { DutchV1Quote } from '../../../lib/entities/quote/DutchV1Quote';
 
 describe('DutchQuote', () => {
   // silent logger in tests
@@ -120,10 +121,10 @@ describe('DutchQuote', () => {
       { title: 'does not override', largeTrade: false },
     ])('$title auctionPeriodSec if order size is considered large: $largeTrade', async (params) => {
       const classic = params.largeTrade ? CLASSIC_QUOTE_EXACT_IN_LARGE : CLASSIC_QUOTE_EXACT_IN_SMALL;
-      const reparamatrized = DutchQuoteFactory.reparameterizeV1(DL_QUOTE_EXACT_IN_LARGE, classic, {
+      const reparamatrized = DutchQuoteFactory.reparameterize(DL_QUOTE_EXACT_IN_LARGE, classic, {
         hasApprovedPermit2: true,
         largeTrade: params.largeTrade,
-      });
+      }) as DutchV1Quote;
       if (params.largeTrade) {
         expect(reparamatrized.auctionPeriodSecs).toEqual(120);
       } else {
@@ -148,7 +149,7 @@ describe('DutchQuote', () => {
     it('only override auctionPeriodSec on mainnet', async () => {
       const classic = CLASSIC_QUOTE_EXACT_IN_LARGE;
       const dutchRequest = createDutchQuote({ amountOut: AMOUNT_LARGE, chainId: 137 }, 'EXACT_INPUT', '1');
-      const reparamatrized = DutchQuoteFactory.reparameterizeV1(dutchRequest, classic);
+      const reparamatrized = DutchQuoteFactory.reparameterize(dutchRequest, classic) as DutchV1Quote;
       expect(reparamatrized.auctionPeriodSecs).toEqual(60);
     });
 
@@ -260,7 +261,7 @@ describe('DutchQuote', () => {
 
   describe('decay parameters', () => {
     it('uses default parameters - RFQ', () => {
-      const quote = createDutchQuoteWithRequest(
+      const quote = createDutchQuoteWithRequestOverrides(
         { filler: '0x1111111111111111111111111111111111111111' },
         {},
         {
@@ -277,7 +278,7 @@ describe('DutchQuote', () => {
     });
 
     it('uses default parameters - Open', () => {
-      const quote = createDutchQuoteWithRequest(
+      const quote = createDutchQuoteWithRequestOverrides(
         { filler: '0x0000000000000000000000000000000000000000' },
         {},
         {
@@ -294,7 +295,7 @@ describe('DutchQuote', () => {
     });
 
     it('uses default parameters - polygon', () => {
-      const quote = createDutchQuoteWithRequest(
+      const quote = createDutchQuoteWithRequestOverrides(
         { filler: '0x0000000000000000000000000000000000000000', chainId: 137 },
         {
           tokenInChainId: 137,
@@ -314,7 +315,7 @@ describe('DutchQuote', () => {
     });
 
     it('overrides parameters in request', () => {
-      const quote = createDutchQuoteWithRequest(
+      const quote = createDutchQuoteWithRequestOverrides(
         { filler: '0x1111111111111111111111111111111111111111' },
         {},
         {

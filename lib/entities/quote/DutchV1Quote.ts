@@ -15,8 +15,6 @@ import { generateRandomNonce } from '../../util/nonce';
 import { ChainConfigManager } from '../../config/ChainConfigManager';
 
 export class DutchV1Quote extends DutchQuote<DutchV1Request> implements IQuote {
-  public readonly createdAt: string;
-  public derived: DutchQuoteDerived;
   public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
   public readonly defaultDeadlienBufferInSecs: number = DEFAULT_DEADLINE_BUFFER_SECS;
   // Add 1bps price improvmement to favor Dutch

@@ -3,7 +3,7 @@ import { ChainConfigManager } from "../../../../lib/config/ChainConfigManager";
 import { BPS, NATIVE_ADDRESS, QuoteType, RoutingType } from "../../../../lib/constants";
 import { SyntheticStatusProvider } from "../../../../lib/providers";
 import { AMOUNT_LARGE, AMOUNT_LARGE_GAS_ADJUSTED } from "../../../constants";
-import { makeDutchRequest, createClassicQuote, createDutchQuote, makeDutchV2Request, makeRelayRequest, createDutchV2Quote, createRelayQuote } from "../../../utils/fixtures";
+import { makeDutchRequest, createClassicQuote, createDutchQuote, makeDutchV2Request, makeRelayRequest, createDutchV2QuoteWithRequest, createDutchQuoteWithRequest, createRelayQuoteWithRequest } from "../../../utils/fixtures";
 import { DutchQuote, DutchQuoteContext, RelayQuoteContext } from "../../../../lib/entities";
 import Logger from "bunyan";
 import { Erc20__factory } from "../../../../lib/types/ext";
@@ -539,7 +539,6 @@ describe('ChainConfigManager', () => {
         it('deadlineBufferSecs is used when set', async () => {
             const routingTypes = [RoutingType.DUTCH_LIMIT, RoutingType.DUTCH_V2, RoutingType.RELAY];
             for (const routingType of routingTypes) {
-
                 Object.defineProperty(ChainConfigManager, 'chainConfigs', 
                 { value: 
                     {
@@ -561,30 +560,27 @@ describe('ChainConfigManager', () => {
                     case RoutingType.DUTCH_LIMIT: {
                         req = makeDutchRequest({ tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET }, { useSyntheticQuotes: true, deadlineBufferSecs: undefined });
                         context = new DutchQuoteContext(logger, req, makeProviders(false));
-                        rfqQuote = createDutchQuote(
+                        rfqQuote = createDutchQuoteWithRequest(
                             { amountOut: AMOUNT_LARGE, tokenIn: NATIVE_ADDRESS, tokenOut: NATIVE_ADDRESS, chainId: ChainId.MAINNET },
-                            'EXACT_INPUT',
-                            '1'
+                            req
                         );
                         break;
                     }
                     case RoutingType.DUTCH_V2: {
                         req = makeDutchV2Request({ tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET }, { useSyntheticQuotes: true, deadlineBufferSecs: undefined });
                         context = new DutchQuoteContext(logger, req, makeProviders(false));
-                        rfqQuote = createDutchV2Quote(
+                        rfqQuote = createDutchV2QuoteWithRequest(
                             { amountOut: AMOUNT_LARGE, tokenIn: NATIVE_ADDRESS, tokenOut: NATIVE_ADDRESS, chainId: ChainId.MAINNET },
-                            'EXACT_INPUT',
-                            '1'
+                            req
                         );
                         break;
                     }
                     case RoutingType.RELAY: {
                         req = makeRelayRequest({ tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET }, { deadlineBufferSecs: undefined });
                         context = new RelayQuoteContext(logger, req, makeProviders(false));
-                        rfqQuote = createRelayQuote(
+                        rfqQuote = createRelayQuoteWithRequest(
                             { amountOut: AMOUNT_LARGE, tokenIn: NATIVE_ADDRESS, tokenOut: NATIVE_ADDRESS, chainId: ChainId.MAINNET },
-                            'EXACT_INPUT',
-                            '1'
+                            req
                         );
                         break;
                     }
@@ -600,7 +596,7 @@ describe('ChainConfigManager', () => {
                     [req.key()]: rfqQuote,
                     [context.classicKey]: classicQuote,
                 });
-                if (quote?.routingType != RoutingType.DUTCH_LIMIT) {
+                if (quote?.routingType != routingType) {
                     throw new Error(`Unexpected routing type in quote ${quote?.routingType}`);
                 }
                 expect(quote.deadlineBufferSecs).toEqual(9999);

@@ -112,22 +112,6 @@ export class DutchQuoteFactory {
     throw new Error(`Unexpected request type ${typeof(request)}`);
   }
 
-  public static reparameterizeV1(
-    quote: DutchV1Quote,
-    classic?: ClassicQuote,
-    options?: ParameterizationOptions
-  ): DutchV1Quote {
-    return DutchQuoteFactory.reparameterize(quote, classic, options) as DutchV1Quote;
-  }
-
-  public static reparameterizeV2(
-    quote: DutchV1Quote,
-    classic?: ClassicQuote,
-    options?: ParameterizationOptions
-  ): DutchV2Quote {
-    return DutchQuoteFactory.reparameterize(quote, classic, options) as DutchV2Quote;
-  }
-
   // reparameterize an RFQ quote with awareness of classic
   public static reparameterize(
     quote: DutchQuote<DutchQuoteRequest>,
