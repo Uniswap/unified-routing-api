@@ -3,7 +3,7 @@ import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
 
 import { NATIVE_ADDRESS, RoutingType } from '../../../../../lib/constants';
-import { DutchQuote, DutchQuoteContext, DutchQuoteDataJSON } from '../../../../../lib/entities';
+import { ClassicConfig, DutchQuote, DutchQuoteContext, DutchQuoteDataJSON } from '../../../../../lib/entities';
 import { SyntheticStatusProvider } from '../../../../../lib/providers';
 import { Erc20__factory } from '../../../../../lib/types/ext/factories/Erc20__factory';
 import {
@@ -23,6 +23,7 @@ import {
   createDutchQuoteWithRequest,
   DL_QUOTE_EXACT_IN_BETTER,
   makeDutchRequest,
+  QUOTE_REQUEST_CLASSIC,
   QUOTE_REQUEST_DL,
 } from '../../../../utils/fixtures';
 
@@ -78,6 +79,8 @@ describe('DutchQuoteContext', () => {
       // second is classic
       expect(deps[1].info).toEqual(QUOTE_REQUEST_DL.info);
       expect(deps[1].routingType).toEqual(RoutingType.CLASSIC);
+      const classicRequestConfig = deps[1].config as ClassicConfig;
+      expect(classicRequestConfig.enableUniversalRouter).toEqual(QUOTE_REQUEST_CLASSIC.config.enableUniversalRouter);
     });
 
     it('returns expected dependencies when output is not weth', () => {
@@ -92,6 +95,8 @@ describe('DutchQuoteContext', () => {
       // second is classic
       expect(deps[1].info).toEqual(request.info);
       expect(deps[1].routingType).toEqual(RoutingType.CLASSIC);
+      const classicRequestConfig = deps[1].config as ClassicConfig;
+      expect(classicRequestConfig.enableUniversalRouter).toEqual(QUOTE_REQUEST_CLASSIC.config.enableUniversalRouter);
     });
   });
 
