@@ -166,6 +166,17 @@ export const DL_REQUEST_BODY: QuoteRequestBodyJSON = {
   ],
 };
 
+export const V2_REQUEST_BODY: QuoteRequestBodyJSON = {
+  ...BASE_REQUEST_INFO_EXACT_IN,
+  configs: [
+    {
+      routingType: RoutingType.DUTCH_V2,
+      swapper: SWAPPER,
+      deadlineBufferSecs: 12,
+    },
+  ],
+};
+
 export function makeClassicRequest(overrides: Partial<QuoteRequestBodyJSON>): ClassicRequest {
   const requestInfo = Object.assign({}, BASE_REQUEST_INFO_EXACT_IN, overrides);
 

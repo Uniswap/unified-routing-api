@@ -215,6 +215,7 @@ describe('RfqQuoter test', () => {
           requestId: 'requestId',
           type: 'EXACT_INPUT',
           numOutputs: 2,
+          protocol: 'v1',
         },
         { headers: { 'x-api-key': 'test-api-key' } }
       );
@@ -259,6 +260,7 @@ describe('RfqQuoter test', () => {
           requestId: 'requestId',
           type: 'EXACT_OUTPUT',
           numOutputs: 2,
+          protocol: 'v1',
         },
         { headers: { 'x-api-key': 'test-api-key' } }
       );

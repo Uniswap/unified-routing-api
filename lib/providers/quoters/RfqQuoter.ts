@@ -47,6 +47,7 @@ export class RfqQuoter implements Quoter {
           requestId: request.info.requestId,
           type: TradeType[request.info.type],
           numOutputs: portionEnabled ? 2 : 1,
+          protocol: request.routingType === RoutingType.DUTCH_LIMIT ? 'v1' : 'v2',
         },
         { headers: { 'x-api-key': this.paramApiKey } }
       ),

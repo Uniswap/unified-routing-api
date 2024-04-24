@@ -37,7 +37,7 @@ export type DutchQuoteContextProviders = {
 // manages context around a single top level classic quote request
 export class DutchQuoteContext implements QuoteContext {
   public routingType = RoutingType.DUTCH_LIMIT;
-  private log: Logger;
+  protected log: Logger;
   private rpcProvider: ethers.providers.StaticJsonRpcProvider;
   private syntheticStatusProvider: SyntheticStatusProvider;
 

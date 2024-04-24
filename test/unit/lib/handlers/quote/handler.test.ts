@@ -42,6 +42,7 @@ import {
   RELAY_REQUEST_WITH_CLASSIC_BODY,
   V2_QUOTE_EXACT_IN_BETTER,
   V2_QUOTE_EXACT_IN_WORSE,
+  V2_REQUEST_BODY,
 } from '../../../../utils/fixtures';
 
 import { PermitDetails } from '@uniswap/permit2-sdk';
@@ -57,6 +58,8 @@ import {
   ClassicQuote,
   ClassicQuoteDataJSON,
   DutchQuote,
+  DutchV2Quote,
+  DutchV2QuoteDataJSON,
   Quote,
   RelayQuote,
   RequestSource,
@@ -146,9 +149,10 @@ const getQuoteHandler = (
     injectorPromiseMock(quoters, tokenFetcher, portionFetcher, permit2Fetcher, syntheticStatusProvider)
   );
 
-const RfqQuoterMock = (dlQuote: DutchQuote): Quoter => {
+const quoteMock = jest.fn();
+const RfqQuoterMock = (dlQuote: DutchQuote | DutchV2Quote): Quoter => {
   return {
-    quote: jest.fn().mockResolvedValue(dlQuote),
+    quote: quoteMock.mockResolvedValueOnce(dlQuote),
   };
 };
 
@@ -443,6 +447,31 @@ describe('QuoteHandler', () => {
         ).handler(getEvent(request), {} as unknown as Context);
         const quoteJSON = JSON.parse(res.body).quote.orderInfo as DutchOrderInfoJSON;
         expect(quoteJSON.input.startAmount).toBe(DL_QUOTE_EXACT_OUT_BETTER.amountIn.toString());
+      });
+
+      it('handles v2 requests', async () => {
+        const v2QuoterMock = RfqQuoterMock(V2_QUOTE_EXACT_IN_BETTER);
+        const quoters = { [RoutingType.DUTCH_V2]: v2QuoterMock };
+        const tokenFetcher = TokenFetcherMock([TOKEN_IN, TOKEN_OUT]);
+        const portionFetcher = PortionFetcherMock(GET_NO_PORTION_RESPONSE);
+        const permit2Fetcher = Permit2FetcherMock(PERMIT_DETAILS);
+        const syntheticStatusProvider = SyntheticStatusProviderMock(false);
+
+        const res = await getQuoteHandler(
+          quoters,
+          tokenFetcher,
+          portionFetcher,
+          permit2Fetcher,
+          syntheticStatusProvider
+        ).handler(getEvent(V2_REQUEST_BODY), {} as unknown as Context);
+
+        expect(quoteMock).toBeCalledWith(
+          expect.objectContaining({
+            routingType: RoutingType.DUTCH_V2,
+          })
+        );
+        const quoteJSON = JSON.parse(res.body).quote as DutchV2QuoteDataJSON;
+        expect(quoteJSON.orderInfo.input.startAmount).toEqual(V2_QUOTE_EXACT_IN_BETTER.amountIn.toString());
       });
 
       it('sets the DL quote endAmount using classic quote', async () => {

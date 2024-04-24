@@ -211,7 +211,7 @@ describe('QuoteRequest', () => {
 
           expect(converted.routingType === RoutingType.DUTCH_LIMIT);
           expect(converted.toJSON()).toEqual({
-            routingType: RoutingType.DUTCH_LIMIT,
+            routingType: RoutingType.DUTCH_V2,
             exclusivityOverrideBps: 0,
             swapper: SWAPPER,
             deadlineBufferSecs: 12,
