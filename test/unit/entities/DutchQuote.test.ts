@@ -145,8 +145,8 @@ describe('DutchQuote', () => {
     );
 
     it('uses portion from original', async () => {
-      const dutchQuoteNoPortion = createDutchQuote({ amountOut: AMOUNT_LARGE }, 'EXACT_INPUT', '1', FLAT_PORTION, true);
-      const reparameterized = DutchQuote.reparameterize(dutchQuoteNoPortion, CLASSIC_QUOTE_EXACT_IN_LARGE, undefined);
+      const dutchQuotePortion = createDutchQuote({ amountOut: AMOUNT_LARGE }, 'EXACT_INPUT', '1', FLAT_PORTION, true);
+      const reparameterized = DutchQuote.reparameterize(dutchQuotePortion, CLASSIC_QUOTE_EXACT_IN_LARGE, undefined);
       expect(reparameterized.portion?.bips).toEqual(PORTION_BIPS);
       expect(reparameterized.toOrder().toJSON().outputs.length).toEqual(2);
     });
