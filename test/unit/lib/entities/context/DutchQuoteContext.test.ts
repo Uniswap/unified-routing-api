@@ -95,6 +95,8 @@ describe('DutchQuoteContext', () => {
       // second is classic
       expect(deps[1].info).toEqual(request.info);
       expect(deps[1].routingType).toEqual(RoutingType.CLASSIC);
+      const classicRequestConfig = deps[1].config as ClassicConfig;
+      expect(classicRequestConfig.enableUniversalRouter).toEqual(QUOTE_REQUEST_CLASSIC.config.enableUniversalRouter);
     });
   });
 
