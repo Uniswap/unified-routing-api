@@ -1,8 +1,7 @@
-import { Protocol } from '@uniswap/router-sdk';
 import Logger from 'bunyan';
 import { DutchQuoteContext, DutchQuoteContextProviders, QuoteByKey } from '.';
-import { DEFAULT_ROUTING_API_DEADLINE, RoutingType } from '../../constants';
-import { ClassicRequest, DutchQuote, DutchV2Quote, DutchV2Request, Quote, QuoteRequest } from '../../entities';
+import { RoutingType } from '../../constants';
+import { DutchQuote, DutchV2Quote, DutchV2Request, Quote } from '../../entities';
 
 // use all standard quote generation logic from v1
 // but rebuild order in v2 format
