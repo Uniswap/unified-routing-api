@@ -207,7 +207,7 @@ describe('QuoteRequest', () => {
         it('converts to dutch v1 request', () => {
           const { quoteRequests: requests } = parseQuoteRequests(request);
           const dutchRequest = requests[0] as DutchV2Request;
-          const converted = dutchRequest.toDutchV1Request();
+          const converted = dutchRequest.toDutchRequest();
 
           expect(converted.routingType === RoutingType.DUTCH_LIMIT);
           expect(converted.toJSON()).toEqual({

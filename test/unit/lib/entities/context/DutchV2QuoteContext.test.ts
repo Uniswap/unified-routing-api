@@ -72,7 +72,7 @@ describe('DutchV2QuoteContext', () => {
       const deps = context.dependencies();
       expect(deps.length).toEqual(2);
       // first is base
-      expect(deps[0]).toEqual(QUOTE_REQUEST_DUTCH_V2.toDutchV1Request());
+      expect(deps[0]).toEqual(QUOTE_REQUEST_DUTCH_V2.toDutchRequest());
       // second is classic
       expect(deps[1].info).toEqual(QUOTE_REQUEST_DUTCH_V2.info);
       expect(deps[1].routingType).toEqual(RoutingType.CLASSIC);
@@ -86,7 +86,7 @@ describe('DutchV2QuoteContext', () => {
       const deps = context.dependencies();
       expect(deps.length).toEqual(2);
       // first is base
-      expect(deps[0]).toEqual(request.toDutchV1Request());
+      expect(deps[0]).toEqual(request.toDutchRequest());
       // second is classic
       expect(deps[1].info).toEqual(request.info);
       expect(deps[1].routingType).toEqual(RoutingType.CLASSIC);
@@ -113,7 +113,7 @@ describe('DutchV2QuoteContext', () => {
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchQuote({ amountOut: AMOUNT, filler }, 'EXACT_INPUT');
       const quote = await context.resolve({
-        [QUOTE_REQUEST_DUTCH_V2.toDutchV1Request().key()]: rfqQuote,
+        [QUOTE_REQUEST_DUTCH_V2.toDutchRequest().key()]: rfqQuote,
       });
       expect(quote?.routingType).toEqual(RoutingType.DUTCH_V2);
       expect(quote?.amountOut).toEqual(rfqQuote.amountOut);
@@ -125,7 +125,7 @@ describe('DutchV2QuoteContext', () => {
       const rfqQuote = createDutchQuote({ amountOut: '0', filler }, 'EXACT_INPUT');
       expect(
         await context.resolve({
-          [QUOTE_REQUEST_DUTCH_V2.toDutchV1Request().key()]: rfqQuote,
+          [QUOTE_REQUEST_DUTCH_V2.toDutchRequest().key()]: rfqQuote,
         })
       ).toBe(null);
     });
@@ -137,7 +137,7 @@ describe('DutchV2QuoteContext', () => {
         'EXACT_INPUT'
       );
       const quote = await context.resolve({
-        [QUOTE_REQUEST_DUTCH_V2.toDutchV1Request().key()]: rfqQuote,
+        [QUOTE_REQUEST_DUTCH_V2.toDutchRequest().key()]: rfqQuote,
       });
       expect(quote).toBeNull();
     });
@@ -149,7 +149,7 @@ describe('DutchV2QuoteContext', () => {
         'EXACT_INPUT'
       );
       const quote = await context.resolve({
-        [QUOTE_REQUEST_DUTCH_V2.toDutchV1Request().key()]: rfqQuote,
+        [QUOTE_REQUEST_DUTCH_V2.toDutchRequest().key()]: rfqQuote,
       });
       expect(quote).toBeNull();
     });
@@ -158,7 +158,7 @@ describe('DutchV2QuoteContext', () => {
       const context = new DutchV2QuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
       const rfqQuote = createDutchQuote({ tokenIn: NATIVE_ADDRESS, amountOut: '2' }, 'EXACT_INPUT');
       const quote = await context.resolve({
-        [QUOTE_REQUEST_DUTCH_V2.toDutchV1Request().key()]: rfqQuote,
+        [QUOTE_REQUEST_DUTCH_V2.toDutchRequest().key()]: rfqQuote,
       });
       expect(quote?.routingType).toEqual(RoutingType.DUTCH_V2);
       expect(quote?.amountOut.toString()).toEqual('2');
@@ -168,7 +168,7 @@ describe('DutchV2QuoteContext', () => {
       const context = new DutchV2QuoteContext(logger, QUOTE_REQUEST_DUTCH_V2, makeProviders(false));
       const rfqQuote = createDutchQuote({ tokenOut: NATIVE_ADDRESS, amountOut: '2' }, 'EXACT_INPUT');
       const quote = await context.resolve({
-        [QUOTE_REQUEST_DUTCH_V2.toDutchV1Request().key()]: rfqQuote,
+        [QUOTE_REQUEST_DUTCH_V2.toDutchRequest().key()]: rfqQuote,
       });
       expect(quote?.routingType).toEqual(RoutingType.DUTCH_V2);
       expect(quote?.amountOut.toString()).toEqual('2');
@@ -275,7 +275,7 @@ describe('DutchV2QuoteContext', () => {
         { type: 'EXACT_INPUT' }
       );
       const quote = await context.resolve({
-        [QUOTE_REQUEST_DUTCH_V2.toDutchV1Request().key()]: rfqQuote,
+        [QUOTE_REQUEST_DUTCH_V2.toDutchRequest().key()]: rfqQuote,
         [context.classicKey]: classicQuote,
         [context.routeToNativeKey]: classicQuote,
       });
@@ -297,7 +297,7 @@ describe('DutchV2QuoteContext', () => {
         { type: 'EXACT_OUTPUT' }
       );
       const quote = await context.resolve({
-        [QUOTE_REQUEST_DUTCH_V2.toDutchV1Request().key()]: rfqQuote,
+        [QUOTE_REQUEST_DUTCH_V2.toDutchRequest().key()]: rfqQuote,
         [context.classicKey]: classicQuote,
         [context.routeToNativeKey]: classicQuote,
       });
@@ -320,7 +320,7 @@ describe('DutchV2QuoteContext', () => {
       );
       expect(
         await context.resolve({
-          [QUOTE_REQUEST_DUTCH_V2.toDutchV1Request().key()]: rfqQuote,
+          [QUOTE_REQUEST_DUTCH_V2.toDutchRequest().key()]: rfqQuote,
           [context.classicKey]: classicQuote,
           [context.routeToNativeKey]: classicQuote,
         })
@@ -338,7 +338,7 @@ describe('DutchV2QuoteContext', () => {
       );
       expect(
         await context.resolve({
-          [QUOTE_REQUEST_DUTCH_V2.toDutchV1Request().key()]: rfqQuote,
+          [QUOTE_REQUEST_DUTCH_V2.toDutchRequest().key()]: rfqQuote,
           [context.classicKey]: classicQuote,
           [context.routeToNativeKey]: classicQuote,
         })

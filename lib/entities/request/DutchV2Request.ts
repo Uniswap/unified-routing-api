@@ -38,7 +38,7 @@ export class DutchV2Request implements QuoteRequest {
     public headers: QuoteRequestHeaders = {}
   ) {}
 
-  public toDutchV1Request(): DutchRequest {
+  public toDutchRequest(): DutchRequest {
     return new DutchRequest(
       this.info,
       {

@@ -63,7 +63,7 @@ function parseQuote(
       return DutchV2Quote.fromV1Quote(
         request as DutchV2Request,
         DutchQuote.fromResponseBody(
-          (request as DutchV2Request).toDutchV1Request(),
+          (request as DutchV2Request).toDutchRequest(),
           quote as DutchQuoteJSON,
           nonce,
           portion
