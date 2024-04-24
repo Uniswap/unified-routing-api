@@ -148,7 +148,7 @@ export class DutchQuoteFactory {
         amountInEnd,
         amountOutStart,
         amountOutEnd,
-        portion: classic.portion,
+        portion: quote.portion ?? classic.portion,
         derived: {
           largeTrade: options?.largeTrade ?? false,
        }

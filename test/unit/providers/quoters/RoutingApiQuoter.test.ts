@@ -9,6 +9,7 @@ import {
   CLASSIC_QUOTE_DATA,
   CLASSIC_QUOTE_DATA_WITH_FOX_TAX,
   CLASSIC_QUOTE_DATA_WITH_PORTION,
+  makeClassicRequest,
   QUOTE_REQUEST_CLASSIC,
   QUOTE_REQUEST_CLASSIC_FE_ENABLE_FEE_ON_TRANSFER,
   QUOTE_REQUEST_CLASSIC_FE_SEND_PORTION,
@@ -164,6 +165,45 @@ describe('RoutingApiQuoter', () => {
       // By strictly asserting the route equals the test setup route, which includes BULLET_WITH_TAX in both token out and pool reserve0,
       // we effectively assert that RoutingApiQuoter.quote now returns the FOT tax in the response payload
       expect(classicQuote.toJSON().route).toStrictEqual(CLASSIC_QUOTE_DATA_WITH_FOX_TAX.quote.route);
+    });
+
+    it('quote with x-request-source headers', async () => {
+      const request = makeClassicRequest({});
+      request.headers = { 'x-request-source': 'uniswap-ios' };
+      axiosMock.mockResolvedValue({ data: CLASSIC_QUOTE_DATA.quote });
+      const response = await routingApiQuoter.quote(request);
+      expect(response).toBeDefined();
+      expect(response).toBeInstanceOf(ClassicQuote);
+
+      expect(axiosMock).toHaveBeenCalledWith(expect.any(String), {
+        headers: expect.objectContaining({ 'x-request-source': 'uniswap-ios' }),
+      });
+    });
+
+    it('quote with x-request-source and x-app-version headers', async () => {
+      const request = makeClassicRequest({});
+      request.headers = { 'x-request-source': 'uniswap-ios', 'x-app-version': '1.27' };
+      axiosMock.mockResolvedValue({ data: CLASSIC_QUOTE_DATA.quote });
+      const response = await routingApiQuoter.quote(request);
+      expect(response).toBeDefined();
+      expect(response).toBeInstanceOf(ClassicQuote);
+
+      expect(axiosMock).toHaveBeenCalledWith(expect.any(String), {
+        headers: expect.objectContaining({ 'x-request-source': 'uniswap-ios', 'x-app-version': '1.27' }),
+      });
+    });
+
+    it('quote with x-request-source, x-app-version and aws-timestamp headers, ignores aws header', async () => {
+      const request = makeClassicRequest({});
+      request.headers = { 'x-request-source': 'uniswap-ios', 'x-app-version': '1.27', 'aws-timestamp': '12345678' };
+      axiosMock.mockResolvedValue({ data: CLASSIC_QUOTE_DATA.quote });
+      const response = await routingApiQuoter.quote(request);
+      expect(response).toBeDefined();
+      expect(response).toBeInstanceOf(ClassicQuote);
+
+      expect(axiosMock).toHaveBeenCalledWith(expect.any(String), {
+        headers: { 'x-api-key': 'test-key', 'x-request-source': 'uniswap-ios', 'x-app-version': '1.27' },
+      });
     });
   });
 

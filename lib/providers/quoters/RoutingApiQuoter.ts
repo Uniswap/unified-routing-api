@@ -4,7 +4,7 @@ import { AxiosError, AxiosResponse } from 'axios';
 import querystring from 'querystring';
 
 import { frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
-import { ClassicQuote, ClassicQuoteDataJSON, ClassicRequest, Quote } from '../../entities';
+import { ClassicQuote, ClassicQuoteDataJSON, ClassicRequest, Quote, QuoteRequestHeaders } from '../../entities';
 import { metrics } from '../../util/metrics';
 import axios from './helpers';
 import { Quoter, QuoterType } from './index';
@@ -23,7 +23,13 @@ export class RoutingApiQuoter implements Quoter {
     try {
       const req = this.buildRequest(request);
       const now = Date.now();
-      const response = await axios.get<ClassicQuoteDataJSON>(req, { headers: { 'x-api-key': this.routingApiKey } });
+      const requestHeaders: QuoteRequestHeaders = { 'x-api-key': this.routingApiKey };
+      if (request.headers['x-request-source']) requestHeaders['x-request-source'] = request.headers['x-request-source'];
+      if (request.headers['x-app-version']) requestHeaders['x-app-version'] = request.headers['x-app-version'];
+
+      const response = await axios.get<ClassicQuoteDataJSON>(req, {
+        headers: requestHeaders,
+      });
       const portionAdjustedResponse: AxiosResponse<ClassicQuoteDataJSON> = {
         ...response,
         // NOTE: important to show portion-related fields under flag on only

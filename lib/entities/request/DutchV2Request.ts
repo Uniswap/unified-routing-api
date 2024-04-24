@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { defaultRequestKey, QuoteRequest, QuoteRequestInfo } from '.';
+import { defaultRequestKey, QuoteRequest, QuoteRequestHeaders, QuoteRequestInfo } from '.';
 import { DEFAULT_SLIPPAGE_TOLERANCE, RoutingType } from '../../constants';
 import { DutchQuoteRequestInfo } from './DutchV1Request';
 export interface DutchV2Config {
@@ -31,7 +31,11 @@ export class DutchV2Request implements QuoteRequest {
     );
   }
 
-  constructor(public readonly info: DutchQuoteRequestInfo, public readonly config: DutchV2Config) {}
+  constructor(
+    public readonly info: DutchQuoteRequestInfo,
+    public readonly config: DutchV2Config,
+    public headers: QuoteRequestHeaders = {}
+  ) {}
 
   public toJSON(): DutchV2ConfigJSON {
     return Object.assign({}, this.config, {

@@ -39,7 +39,7 @@ export class FieldValidator {
 
   public static readonly tradeType = Joi.string().valid('EXACT_INPUT', 'EXACT_OUTPUT');
 
-  public static readonly routingType = Joi.string().valid('CLASSIC', 'DUTCH_LIMIT', 'DUTCH_V2').messages({
+  public static readonly routingType = Joi.string().valid('CLASSIC', 'DUTCH_LIMIT', 'DUTCH_V2', 'RELAY').messages({
     'any.only': 'Invalid routingType',
   });
 
@@ -109,6 +109,18 @@ export class FieldValidator {
     deadlineBufferSecs: FieldValidator.positiveNumber.optional(),
     slippageTolerance: FieldValidator.slippageTolerance.optional(),
     useSyntheticQuotes: Joi.boolean().optional(),
+  });
+
+  // extends a classic request config, but requires a gasToken and has optional parameters for the fee auction
+  public static readonly relayConfig = this.classicConfig.keys({
+    routingType: Joi.string().valid('RELAY'),
+    gasToken: FieldValidator.address.required(),
+    swapper: FieldValidator.address.optional(),
+    startTimeBufferSecs: FieldValidator.positiveNumber.optional(),
+    auctionPeriodSecs: FieldValidator.positiveNumber.optional(),
+    deadlineBufferSecs: FieldValidator.positiveNumber.optional(),
+    slippageTolerance: FieldValidator.slippageTolerance.optional(),
+    amountInGasTokenStartOverride: FieldValidator.amount.optional(),
   });
 
   public static readonly dutchV2Config = Joi.object({

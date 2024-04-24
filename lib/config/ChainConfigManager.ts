@@ -52,9 +52,9 @@ export abstract class ChainConfigManager {
         },
         {
           routingType: RoutingType.DUTCH_V2,
-          // 10 blocks from now
+          // 25 blocks from now
           // to cover time to sign, run secondary auction, and some blocks for decay
-          deadlineBufferSecs: 120
+          deadlineBufferSecs: 300
         }
       ],
       alarmEnabled: true

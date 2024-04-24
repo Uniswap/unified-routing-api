@@ -1,3 +1,4 @@
+import { Protocol } from '@uniswap/router-sdk';
 import { ChainId, Currency, Ether, WETH9 } from '@uniswap/sdk-core';
 import { DAI_MAINNET, USDC_MAINNET, WBTC_MAINNET } from '@uniswap/smart-order-router';
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
@@ -51,7 +52,15 @@ export const DUTCH_V2_CONFIG = {
 
 export const CLASSIC_CONFIG = {
   routingType: RoutingType.CLASSIC,
-  protocols: ['V2', 'V3', 'MIXED'],
+  protocols: [Protocol.V2, Protocol.V3, Protocol.MIXED],
+};
+
+export const RELAY_CONFIG = {
+  routingType: RoutingType.RELAY,
+  protocols: [Protocol.V2, Protocol.V3, Protocol.MIXED],
+  swapper: SWAPPER,
+  auctionPeriodSecs: 60,
+  gasToken: TOKEN_IN,
 };
 
 export const PERMIT2_USED = {

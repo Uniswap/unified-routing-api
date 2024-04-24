@@ -146,6 +146,13 @@ describe('DutchQuote', () => {
       }
     );
 
+    it('uses portion from original', async () => {
+      const dutchQuotePortion = createDutchQuote({ amountOut: AMOUNT_LARGE }, 'EXACT_INPUT', '1', FLAT_PORTION, true);
+      const reparameterized = DutchQuoteFactory.reparameterize(dutchQuotePortion, CLASSIC_QUOTE_EXACT_IN_LARGE, undefined);
+      expect(reparameterized.portion?.bips).toEqual(PORTION_BIPS);
+      expect(reparameterized.toOrder().toJSON().outputs.length).toEqual(2);
+    });
+
     it('only override auctionPeriodSec on mainnet', async () => {
       const classic = CLASSIC_QUOTE_EXACT_IN_LARGE;
       const dutchRequest = createDutchQuote({ amountOut: AMOUNT_LARGE, chainId: 137 }, 'EXACT_INPUT', '1');
