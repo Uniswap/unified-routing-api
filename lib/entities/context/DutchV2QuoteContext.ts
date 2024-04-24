@@ -19,20 +19,4 @@ export class DutchV2QuoteContext extends DutchQuoteContext {
     if (!quote) return null;
     return DutchV2Quote.fromV1Quote(this.originalRequest, quote as DutchQuote);
   }
-
-  // Dutch quotes have two external dependencies:
-  // - classic request to compare with
-  // - classic request to check for route back to ETH
-  dependencies(): QuoteRequest[] {
-    const classicRequest = new ClassicRequest(this.request.info, {
-      protocols: [Protocol.MIXED, Protocol.V2, Protocol.V3],
-      simulateFromAddress: this.request.config.swapper,
-      deadline: DEFAULT_ROUTING_API_DEADLINE,
-      recipient: this.request.config.swapper,
-    });
-    this.classicKey = classicRequest.key();
-    this.log.info({ classicRequest: classicRequest.info }, 'Adding synthetic classic request');
-
-    return [this.request, classicRequest];
-  }
 }
