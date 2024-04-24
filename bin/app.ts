@@ -141,10 +141,6 @@ export class APIPipeline extends Stack {
       secretCompleteArn: 'arn:aws:secretsmanager:us-east-2:644039819003:secret:UniswapX/ParamApi/ApiKeys-hYyUt1',
     });
 
-    const portionFlagSecret = sm.Secret.fromSecretAttributes(this, 'portion-flag', {
-      secretCompleteArn: 'arn:aws:secretsmanager:us-east-2:644039819003:secret:portion-flag-yR0VGr',
-    });
-
     // Beta us-east-2
     const betaUsEast2Stage = new APIStage(this, 'beta-us-east-2', {
       env: { account: '665191769009', region: 'us-east-2' },
