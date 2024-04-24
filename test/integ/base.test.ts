@@ -42,13 +42,13 @@ if (!process.env.UNISWAP_API || !process.env.ARCHIVE_NODE_RPC) {
   throw new Error('Must set UNISWAP_API and ARCHIVE_NODE_RPC env variables for integ tests. See README');
 }
 
-if (!process.env.PORTION_API_URL) {
-  throw new Error('Must set PORTION_API_URL env variables for integ tests. See README');
-}
+// if (!process.env.PORTION_API_URL) {
+//   throw new Error('Must set PORTION_API_URL env variables for integ tests. See README');
+// }
 
-if (!process.env.URA_INTERNAL_API_KEY) {
-  console.log('URA_INTERNAL_API_KEY env variable is not set. This is recommended for integ tests.');
-}
+// if (!process.env.URA_INTERNAL_API_KEY) {
+//   console.log('URA_INTERNAL_API_KEY env variable is not set. This is recommended for integ tests.');
+// }
 
 // URA endpoint
 const API = `${process.env.UNISWAP_API!}quote`;

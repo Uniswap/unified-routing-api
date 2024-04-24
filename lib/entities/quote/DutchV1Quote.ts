@@ -1,7 +1,7 @@
 import { DutchOrder, DutchOrderBuilder } from '@uniswap/uniswapx-sdk';
 import { BigNumber, ethers } from 'ethers';
 
-import { DutchQuote, DutchQuoteDataJSON, DutchQuoteDerived, IQuote, getPortionAdjustedOutputs } from '.';
+import { DutchQuote, DutchQuoteDataJSON, IQuote, getPortionAdjustedOutputs } from '.';
 import { DutchV1Request } from '..';
 import {
   DEFAULT_AUCTION_PERIOD_SECS,
