@@ -23,12 +23,12 @@ export class RoutingApiQuoter implements Quoter {
     try {
       const req = this.buildRequest(request);
       const now = Date.now();
-      const requestHeaders: QuoteRequestHeaders = {'x-api-key': this.routingApiKey};
+      const requestHeaders: QuoteRequestHeaders = { 'x-api-key': this.routingApiKey };
       if (request.headers['x-request-source']) requestHeaders['x-request-source'] = request.headers['x-request-source'];
       if (request.headers['x-app-version']) requestHeaders['x-app-version'] = request.headers['x-app-version'];
 
       const response = await axios.get<ClassicQuoteDataJSON>(req, {
-        headers: requestHeaders
+        headers: requestHeaders,
       });
       const portionAdjustedResponse: AxiosResponse<ClassicQuoteDataJSON> = {
         ...response,

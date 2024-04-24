@@ -198,7 +198,7 @@ export class DutchQuote implements IQuote {
       quote.quoteType,
       quote.filler,
       quote.nonce,
-      classic.portion,
+      quote.portion === undefined ? classic.portion : quote.portion,
       {
         largeTrade: options?.largeTrade ?? false,
       }

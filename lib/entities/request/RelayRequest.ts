@@ -8,7 +8,7 @@ import {
   parseProtocol,
   QuoteRequest,
   QuoteRequestHeaders,
-  QuoteRequestInfo
+  QuoteRequestInfo,
 } from '.';
 import { DEFAULT_SLIPPAGE_TOLERANCE, NATIVE_ADDRESS, RoutingType } from '../../constants';
 
