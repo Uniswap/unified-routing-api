@@ -164,7 +164,6 @@ export class APIPipeline extends Stack {
         ROUTING_API_URL: urlSecrets.secretValueFromJson('ROUTING_API_BETA').toString(),
         SERVICE_URL: urlSecrets.secretValueFromJson('GOUDA_SERVICE_BETA').toString(),
         PORTION_API_URL: urlSecrets.secretValueFromJson('PORTION_API_BETA').toString(),
-        ENABLE_PORTION: portionFlagSecret.secretValueFromJson('ENABLE_PORTION_BETA').toString(),
         REQUEST_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_REQUEST_DESTINATION_BETA').toString(),
         RESPONSE_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_RESPONSE_DESTINATION_BETA').toString(),
         FORCE_PORTION_STRING: portionFlagSecret.secretValueFromJson('FORCE_PORTION_STRING').toString(),
@@ -192,7 +191,6 @@ export class APIPipeline extends Stack {
         ROUTING_API_URL: urlSecrets.secretValueFromJson('ROUTING_API_PROD').toString(),
         SERVICE_URL: urlSecrets.secretValueFromJson('GOUDA_SERVICE_PROD').toString(),
         PORTION_API_URL: urlSecrets.secretValueFromJson('PORTION_API_PROD').toString(),
-        ENABLE_PORTION: portionFlagSecret.secretValueFromJson('ENABLE_PORTION_PROD').toString(),
         REQUEST_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_REQUEST_DESTINATION_PROD').toString(),
         RESPONSE_DESTINATION_ARN: arnSecrects.secretValueFromJson('URA_RESPONSE_DESTINATION_PROD').toString(),
         FORCE_PORTION_STRING: portionFlagSecret.secretValueFromJson('FORCE_PORTION_STRING').toString(),
@@ -303,7 +301,6 @@ envVars['RFQ_LABS_COSIGNER_ADDRESS'] = process.env['RFQ_LABS_COSIGNER_ADDRESS'] 
 envVars['ROUTING_API_URL'] = process.env['ROUTING_API_URL'] || '';
 envVars['SERVICE_URL'] = process.env['SERVICE_URL'] || '';
 envVars['PORTION_API_URL'] = process.env['PORTION_API_URL'] || '';
-envVars['ENABLE_PORTION'] = process.env['ENABLE_PORTION'] || '';
 envVars['REQUEST_DESTINATION_ARN'] = process.env['REQUEST_DESTINATION_ARN'] || '';
 envVars['RESPONSE_DESTINATION_ARN'] = process.env['RESPONSE_DESTINATION_ARN'] || '';
 envVars['ROUTING_API_KEY'] = process.env['ROUTING_API_KEY'] || 'test-api-key';

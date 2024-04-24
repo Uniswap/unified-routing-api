@@ -59,7 +59,6 @@ describe('RoutingApiQuoter', () => {
     });
 
     it('quote with portion with FE portion flag and BE portion flag', async () => {
-      process.env.ENABLE_PORTION = 'true';
       axiosMock.mockResolvedValue({ data: CLASSIC_QUOTE_DATA_WITH_PORTION.quote });
       const response = await routingApiQuoter.quote(QUOTE_REQUEST_CLASSIC_FE_SEND_PORTION);
       expect(response).toBeDefined();
@@ -72,22 +71,8 @@ describe('RoutingApiQuoter', () => {
     });
 
     it('quote with portion no FE flag', async () => {
-      process.env.ENABLE_PORTION = 'true';
       axiosMock.mockResolvedValue({ data: CLASSIC_QUOTE_DATA.quote });
       const response = await routingApiQuoter.quote(QUOTE_REQUEST_CLASSIC);
-      expect(response).toBeDefined();
-      expect(response).toBeInstanceOf(ClassicQuote);
-
-      const classicQuote = response as ClassicQuote;
-
-      expect(classicQuote.toJSON().portionBips).toBeUndefined;
-      expect(classicQuote.toJSON().portionRecipient).toBeUndefined;
-    });
-
-    it('quote with portion no BE flag', async () => {
-      process.env.ENABLE_PORTION = 'false';
-      axiosMock.mockResolvedValue({ data: CLASSIC_QUOTE_DATA.quote });
-      const response = await routingApiQuoter.quote(QUOTE_REQUEST_CLASSIC_FE_SEND_PORTION);
       expect(response).toBeDefined();
       expect(response).toBeInstanceOf(ClassicQuote);
 
@@ -104,7 +89,6 @@ describe('RoutingApiQuoter', () => {
       jest.spyOn(portionFetcher, 'getPortion').mockResolvedValue(portionResponse);
       const routingApiQuoter = new RoutingApiQuoter('https://api.uniswap.org/', 'test-key');
 
-      process.env.ENABLE_PORTION = 'true';
       axiosMock.mockResolvedValue({ data: CLASSIC_QUOTE_DATA.quote });
       const response = await routingApiQuoter.quote(QUOTE_REQUEST_CLASSIC_FE_SEND_PORTION);
       expect(response).toBeDefined();
@@ -123,28 +107,8 @@ describe('RoutingApiQuoter', () => {
       jest.spyOn(portionFetcher, 'getPortion').mockResolvedValue(portionResponse);
       const routingApiQuoter = new RoutingApiQuoter('https://api.uniswap.org/', 'test-key');
 
-      process.env.ENABLE_PORTION = 'true';
       axiosMock.mockResolvedValue({ data: CLASSIC_QUOTE_DATA.quote });
       const response = await routingApiQuoter.quote(QUOTE_REQUEST_CLASSIC);
-      expect(response).toBeDefined();
-      expect(response).toBeInstanceOf(ClassicQuote);
-
-      const classicQuote = response as ClassicQuote;
-
-      expect(classicQuote.toJSON().portionBips).toBeUndefined;
-      expect(classicQuote.toJSON().portionRecipient).toBeUndefined;
-    });
-
-    it('quote with portion no bips no BE flag', async () => {
-      const portionResponse: GetPortionResponse = GET_NO_PORTION_RESPONSE;
-      const portionCache = new NodeCache({ stdTTL: 600 });
-      const portionFetcher = new PortionFetcher('https://portion.uniswap.org/', portionCache);
-      jest.spyOn(portionFetcher, 'getPortion').mockResolvedValue(portionResponse);
-      const routingApiQuoter = new RoutingApiQuoter('https://api.uniswap.org/', 'test-key');
-
-      process.env.ENABLE_PORTION = 'false';
-      axiosMock.mockResolvedValue({ data: CLASSIC_QUOTE_DATA.quote });
-      const response = await routingApiQuoter.quote(QUOTE_REQUEST_CLASSIC_FE_SEND_PORTION);
       expect(response).toBeDefined();
       expect(response).toBeInstanceOf(ClassicQuote);
 
@@ -215,24 +179,12 @@ describe('RoutingApiQuoter', () => {
     });
 
     it('properly builds query string with FE portion flag and BE portion flag', () => {
-      process.env.ENABLE_PORTION = 'true';
-
       expect(routingApiQuoter.buildRequest(QUOTE_REQUEST_CLASSIC_FE_SEND_PORTION)).toEqual(
         `https://api.uniswap.org/quote?tokenInAddress=0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984&tokenInChainId=1&tokenOutAddress=0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2&tokenOutChainId=1&amount=1000000000000000000&type=exactIn&protocols=v3&gasPriceWei=12&slippageTolerance=0.5&portionBips=${PORTION_BIPS}&portionRecipient=${PORTION_RECIPIENT}`
       );
     });
 
-    it('properly builds query string with only FE portion flag', () => {
-      process.env.ENABLE_PORTION = 'false';
-
-      expect(routingApiQuoter.buildRequest(QUOTE_REQUEST_CLASSIC_FE_SEND_PORTION)).toEqual(
-        `https://api.uniswap.org/quote?tokenInAddress=0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984&tokenInChainId=1&tokenOutAddress=0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2&tokenOutChainId=1&amount=1000000000000000000&type=exactIn&protocols=v3&gasPriceWei=12&slippageTolerance=0.5`
-      );
-    });
-
     it('properly builds query string with only BE portion flag', () => {
-      process.env.ENABLE_PORTION = 'true';
-
       expect(routingApiQuoter.buildRequest(QUOTE_REQUEST_CLASSIC)).toEqual(
         `https://api.uniswap.org/quote?tokenInAddress=0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984&tokenInChainId=1&tokenOutAddress=0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2&tokenOutChainId=1&amount=1000000000000000000&type=exactIn&protocols=v3&gasPriceWei=12&slippageTolerance=0.5`
       );

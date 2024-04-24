@@ -378,7 +378,6 @@ export class BaseIntegrationTestSuite {
       parseAmount('700000', BULLET),
     ]);
 
-    process.env.ENABLE_PORTION = 'true';
     if (process.env.PORTION_API_URL) {
       this.portionFetcher = new PortionFetcher(process.env.PORTION_API_URL, new NodeCache());
     }

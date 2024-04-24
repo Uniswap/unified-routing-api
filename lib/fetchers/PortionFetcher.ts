@@ -2,7 +2,7 @@ import { Unit } from 'aws-embedded-metrics';
 import * as http from 'http';
 import * as https from 'https';
 import NodeCache from 'node-cache';
-import { DEFAULT_NEGATIVE_CACHE_ENTRY_TTL, DEFAULT_POSITIVE_CACHE_ENTRY_TTL, uraEnablePortion } from '../constants';
+import { DEFAULT_NEGATIVE_CACHE_ENTRY_TTL, DEFAULT_POSITIVE_CACHE_ENTRY_TTL } from '../constants';
 import { RequestSource } from '../entities';
 import axios from '../providers/quoters/helpers';
 import { log } from '../util/log';
@@ -61,13 +61,6 @@ export class PortionFetcher {
     requestSource: RequestSource
   ): Promise<GetPortionResponse> {
     metrics.putMetric(`PortionFetcherRequest`, 1);
-
-    // we check ENABLE_PORTION for every request, so that the update to the lambda env var gets reflected
-    // in real time
-    if (!uraEnablePortion()) {
-      metrics.putMetric(`PortionFetcherFlagDisabled`, 1);
-      return GET_NO_PORTION_RESPONSE;
-    }
 
     // We bypass the cache if `forcePortion` is true.
     // We do it to avoid cache conflicts since `forcePortion` is only for testing purposes.

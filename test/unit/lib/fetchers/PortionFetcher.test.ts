@@ -2,9 +2,9 @@ import { AxiosInstance } from 'axios';
 import NodeCache from 'node-cache';
 import { DEFAULT_NEGATIVE_CACHE_ENTRY_TTL, DEFAULT_POSITIVE_CACHE_ENTRY_TTL } from '../../../../lib/constants';
 import { RequestSource } from '../../../../lib/entities';
-import { GetPortionResponse, GET_NO_PORTION_RESPONSE, PortionFetcher } from '../../../../lib/fetchers/PortionFetcher';
+import { GET_NO_PORTION_RESPONSE, GetPortionResponse, PortionFetcher } from '../../../../lib/fetchers/PortionFetcher';
 import axios from '../../../../lib/providers/quoters/helpers';
-import { forcePortion, setGlobalForcePortion } from '../../../../lib/util/portion';
+import { forcePortion } from '../../../../lib/util/portion';
 import { FLAT_PORTION } from '../../../constants';
 
 function testPortion() {
@@ -160,27 +160,5 @@ function testPortion() {
 }
 
 describe('PortionFetcher Unit Tests', () => {
-  describe('with ENABLE_PORTION flag', () => {
-    beforeEach(() => {
-      process.env.ENABLE_PORTION = 'true';
-      setGlobalForcePortion(false);
-    });
-
-    afterEach(() => {
-      process.env.ENABLE_PORTION = undefined;
-    });
     testPortion();
-  });
-
-  describe('with forcePortion global', () => {
-    beforeEach(() => {
-      process.env.ENABLE_PORTION = undefined;
-      setGlobalForcePortion(true);
-    });
-
-    afterEach(() => {
-      setGlobalForcePortion(false);
-    });
-    testPortion();
-  });
 });
