@@ -4,7 +4,6 @@ import { DEFAULT_NEGATIVE_CACHE_ENTRY_TTL, DEFAULT_POSITIVE_CACHE_ENTRY_TTL } fr
 import { RequestSource } from '../../../../lib/entities';
 import { GET_NO_PORTION_RESPONSE, GetPortionResponse, PortionFetcher } from '../../../../lib/fetchers/PortionFetcher';
 import axios from '../../../../lib/providers/quoters/helpers';
-import { forcePortion } from '../../../../lib/util/portion';
 import { FLAT_PORTION } from '../../../constants';
 
 function testPortion() {
@@ -54,31 +53,27 @@ function testPortion() {
         )
       );
 
-      if (!forcePortion) {
-        expect(cachedPortionData).toBeDefined;
-        expect(cachedPortionData?.portion).toBeDefined;
-        expect(cachedPortionData?.hasPortion).toEqual(true);
-        expect(cachedPortionData?.portion).toStrictEqual(portionResponse.portion);
+      expect(cachedPortionData).toBeDefined;
+      expect(cachedPortionData?.portion).toBeDefined;
+      expect(cachedPortionData?.hasPortion).toEqual(true);
+      expect(cachedPortionData?.portion).toStrictEqual(portionResponse.portion);
 
-        const ttlUpperBoundBuffer = 1; // in seconds
-        const ttl = portionCache.getTtl(
-          PortionFetcher.PORTION_CACHE_KEY(
-            tokenInChainId,
-            tokenInAddress,
-            tokenOutChainId,
-            tokenOutAddress,
-            requestSource
-          )
-        );
-        expect(Math.floor((ttl ?? 0) / 1000)).toBeGreaterThanOrEqual(
-          currentEpochTimeInSeconds + DEFAULT_POSITIVE_CACHE_ENTRY_TTL
-        );
-        expect(Math.floor((ttl ?? 0) / 1000)).toBeLessThanOrEqual(
-          currentEpochTimeInSeconds + DEFAULT_POSITIVE_CACHE_ENTRY_TTL + ttlUpperBoundBuffer
-        );
-      } else {
-        expect(cachedPortionData).toBeUndefined;
-      }
+      const ttlUpperBoundBuffer = 1; // in seconds
+      const ttl = portionCache.getTtl(
+        PortionFetcher.PORTION_CACHE_KEY(
+          tokenInChainId,
+          tokenInAddress,
+          tokenOutChainId,
+          tokenOutAddress,
+          requestSource
+        )
+      );
+      expect(Math.floor((ttl ?? 0) / 1000)).toBeGreaterThanOrEqual(
+        currentEpochTimeInSeconds + DEFAULT_POSITIVE_CACHE_ENTRY_TTL
+      );
+      expect(Math.floor((ttl ?? 0) / 1000)).toBeLessThanOrEqual(
+        currentEpochTimeInSeconds + DEFAULT_POSITIVE_CACHE_ENTRY_TTL + ttlUpperBoundBuffer
+      );
     }
   });
 
@@ -107,29 +102,25 @@ function testPortion() {
       PortionFetcher.PORTION_CACHE_KEY(tokenInChainId, tokenInAddress, tokenOutChainId, tokenOutAddress, requestSource)
     );
 
-    if (!forcePortion) {
-      expect(cachedPortionData).toBeDefined;
-      expect(cachedPortionData?.hasPortion).toEqual(GET_NO_PORTION_RESPONSE.hasPortion);
+    expect(cachedPortionData).toBeDefined;
+    expect(cachedPortionData?.hasPortion).toEqual(GET_NO_PORTION_RESPONSE.hasPortion);
 
-      const ttlUpperBoundBuffer = 1; // in seconds
-      const ttl = portionCache.getTtl(
-        PortionFetcher.PORTION_CACHE_KEY(
-          tokenInChainId,
-          tokenInAddress,
-          tokenOutChainId,
-          tokenOutAddress,
-          requestSource
-        )
-      );
-      expect(Math.floor((ttl ?? 0) / 1000)).toBeGreaterThanOrEqual(
-        currentEpochTimeInSeconds + DEFAULT_NEGATIVE_CACHE_ENTRY_TTL
-      );
-      expect(Math.floor((ttl ?? 0) / 1000)).toBeLessThanOrEqual(
-        currentEpochTimeInSeconds + DEFAULT_NEGATIVE_CACHE_ENTRY_TTL + ttlUpperBoundBuffer
-      );
-    } else {
-      expect(cachedPortionData).toBeUndefined;
-    }
+    const ttlUpperBoundBuffer = 1; // in seconds
+    const ttl = portionCache.getTtl(
+      PortionFetcher.PORTION_CACHE_KEY(
+        tokenInChainId,
+        tokenInAddress,
+        tokenOutChainId,
+        tokenOutAddress,
+        requestSource
+      )
+    );
+    expect(Math.floor((ttl ?? 0) / 1000)).toBeGreaterThanOrEqual(
+      currentEpochTimeInSeconds + DEFAULT_NEGATIVE_CACHE_ENTRY_TTL
+    );
+    expect(Math.floor((ttl ?? 0) / 1000)).toBeLessThanOrEqual(
+      currentEpochTimeInSeconds + DEFAULT_NEGATIVE_CACHE_ENTRY_TTL + ttlUpperBoundBuffer
+    );
   });
 
   it('Portion Service encounters runtime error', async () => {

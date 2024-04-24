@@ -7,7 +7,6 @@ import { RequestSource } from '../entities';
 import axios from '../providers/quoters/helpers';
 import { log } from '../util/log';
 import { metrics } from '../util/metrics';
-import { forcePortion } from '../util/portion';
 
 export enum PortionType {
   Flat = 'flat',
@@ -62,10 +61,7 @@ export class PortionFetcher {
   ): Promise<GetPortionResponse> {
     metrics.putMetric(`PortionFetcherRequest`, 1);
 
-    // We bypass the cache if `forcePortion` is true.
-    // We do it to avoid cache conflicts since `forcePortion` is only for testing purposes.
     const portionFromCache =
-      !forcePortion &&
       this.portionCache.get<GetPortionResponse>(
         PortionFetcher.PORTION_CACHE_KEY(
           tokenInChainId,
@@ -98,21 +94,17 @@ export class PortionFetcher {
       metrics.putMetric(`PortionFetcherSuccess`, 1);
       metrics.putMetric(`PortionFetcherCacheMiss`, 1);
 
-      // We bypass the cache if `forcePortion` is true.
-      // We do it to avoid cache conflicts since `forcePortion` is only for testing purposes.
-      if (!forcePortion) {
-        this.portionCache.set<GetPortionResponse>(
-          PortionFetcher.PORTION_CACHE_KEY(
-            tokenInChainId,
-            tokenInAddress,
-            tokenOutChainId,
-            tokenOutAddress,
-            requestSource
-          ),
-          portionResponse.data,
-          portionResponse.data.portion ? this.positiveCacheEntryTtl : this.negativeCacheEntryTtl
-        );
-      }
+      this.portionCache.set<GetPortionResponse>(
+        PortionFetcher.PORTION_CACHE_KEY(
+          tokenInChainId,
+          tokenInAddress,
+          tokenOutChainId,
+          tokenOutAddress,
+          requestSource
+        ),
+        portionResponse.data,
+        portionResponse.data.portion ? this.positiveCacheEntryTtl : this.negativeCacheEntryTtl
+      );
 
       return portionResponse.data;
     } catch (e) {
