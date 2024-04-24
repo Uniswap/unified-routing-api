@@ -26,7 +26,18 @@ type ChainConfig = {
 
 export abstract class ChainConfigManager {
 
-  public static readonly chainConfigs: { [chainId:number] : ChainConfig } = {
+  // Represents the other route dependencies for each route type
+  // If a route is added in to the supported routingTypes for a chain,
+  // all dependencies will also be supported
+  private static readonly _routeDependencies: { [routingType: string] : RoutingType[] } = {
+    [RoutingType.DUTCH_LIMIT]: [
+      RoutingType.CLASSIC
+    ],
+    [RoutingType.DUTCH_V2]: [
+      RoutingType.CLASSIC
+    ]
+  }
+  private static readonly _chainConfigs: { [chainId:number] : ChainConfig } = {
     [ChainId.MAINNET]: {
       routingTypes: [
         {
@@ -178,11 +189,60 @@ export abstract class ChainConfigManager {
     },
   };
 
+  private static _chainConfigsWithDependencies: { [chainId:number] : ChainConfig };
+  private static _reverseConfigs: { [routeType:string] : number[] };
+  
+  /**
+   * Lazy load the full list
+   * Adds dependencies if they don't already exist
+   */
+  static get chainConfigsWithDependencies(): { [chainId:number] : ChainConfig } {
+    if (ChainConfigManager._chainConfigsWithDependencies) {
+      return ChainConfigManager._chainConfigsWithDependencies;
+    }
+    ChainConfigManager._chainConfigsWithDependencies = ChainConfigManager._chainConfigs;
+    for (const dependencyMapping in ChainConfigManager._routeDependencies) {
+      for (const dependency of ChainConfigManager._routeDependencies[dependencyMapping]) {
+        for (const chainId in ChainConfigManager._chainConfigs) {
+          let dependentPresent = false;
+          let dependencyPresent = false;
+          for (const supportedRoutingType of ChainConfigManager._chainConfigs[chainId].routingTypes) {
+            dependentPresent = dependentPresent || supportedRoutingType.routingType == dependencyMapping;
+            dependencyPresent = dependencyPresent || supportedRoutingType.routingType == dependency;
+          }
+          // If we have the dependent but not the dependency, add it
+          if (dependentPresent && !dependencyPresent) {
+            ChainConfigManager._chainConfigsWithDependencies[chainId].routingTypes.push({
+              routingType: dependency as RoutingType
+            });
+          }
+        }
+      }
+    }
+    return ChainConfigManager._chainConfigsWithDependencies;
+  }
+
+  static get reverseConfigs(): { [routeType:string] : number[] } {
+    if (ChainConfigManager._reverseConfigs) {
+      return ChainConfigManager._reverseConfigs;
+    }
+    ChainConfigManager._reverseConfigs = {};
+    for (const chainId in ChainConfigManager.chainConfigsWithDependencies) {
+      for (const supportedRoutingType of ChainConfigManager.chainConfigsWithDependencies[chainId].routingTypes) {
+        if (!ChainConfigManager._reverseConfigs[supportedRoutingType.routingType]) {
+          ChainConfigManager._reverseConfigs[supportedRoutingType.routingType] = [];
+        }
+        ChainConfigManager._reverseConfigs[supportedRoutingType.routingType].push(parseInt(chainId))
+      }
+    }
+    return ChainConfigManager._reverseConfigs;
+  }
+
   /**
    * @returns all ChainIds
    */
   public static getChainIds(): ChainId[] {
-    return Object.keys(ChainConfigManager.chainConfigs).map(c => Number.parseInt(c));
+    return Object.keys(ChainConfigManager.chainConfigsWithDependencies).map(c => Number.parseInt(c));
   }
 
   /**
@@ -190,15 +250,7 @@ export abstract class ChainConfigManager {
    * @returns all chains that support given RoutingType
    */
   public static getChainIdsByRoutingType(routingType: RoutingType): ChainId[] {
-    const chainIds: ChainId[] = [];
-    for (const chainId in ChainConfigManager.chainConfigs) {
-      for (const supportedRoutingType of ChainConfigManager.chainConfigs[chainId].routingTypes) {
-        if (supportedRoutingType.routingType == routingType) {
-          chainIds.push(Number.parseInt(chainId));
-        }
-      }
-    }
-    return chainIds;
+    return ChainConfigManager.reverseConfigs[routingType] || [];
   }
 
   /**
@@ -207,8 +259,8 @@ export abstract class ChainConfigManager {
    */
   public static getChainIdsByAlarmSetting(alarmEnabled: boolean): ChainId[] {
     const chainIds: ChainId[] = [];
-    for (const chainId in ChainConfigManager.chainConfigs) {
-      if (ChainConfigManager.chainConfigs[chainId].alarmEnabled == alarmEnabled) {
+    for (const chainId in ChainConfigManager.chainConfigsWithDependencies) {
+      if (ChainConfigManager.chainConfigsWithDependencies[chainId].alarmEnabled == alarmEnabled) {
         chainIds.push(Number.parseInt(chainId));
       }
     }
@@ -221,8 +273,8 @@ export abstract class ChainConfigManager {
    * @returns true when ChainId supports provided RoutingType
    */
   public static chainSupportsRoutingType(chainId: ChainId, routingType: RoutingType) {
-    return chainId in ChainConfigManager.chainConfigs && 
-      ChainConfigManager.chainConfigs[chainId].routingTypes.some(r => r.routingType == routingType);
+    return chainId in ChainConfigManager.chainConfigsWithDependencies && 
+      ChainConfigManager.chainConfigsWithDependencies[chainId].routingTypes.some(r => r.routingType == routingType);
   }
 
   /**
@@ -231,11 +283,11 @@ export abstract class ChainConfigManager {
    * @returns the QuoteConfig for the provided ChainId and RoutingType
    */
   public static getQuoteConfig(chainId: ChainId, routingType: RoutingType) {
-    if (!(chainId in ChainConfigManager.chainConfigs)) {
+    if (!(chainId in ChainConfigManager.chainConfigsWithDependencies)) {
       throw new Error(`Unexpected chainId ${chainId}`);
     }
     // Should only return one element if exists
-    const quoteConfig = ChainConfigManager.chainConfigs[chainId].routingTypes.filter(r => r.routingType == routingType);
+    const quoteConfig = ChainConfigManager.chainConfigsWithDependencies[chainId].routingTypes.filter(r => r.routingType == routingType);
     if (quoteConfig.length == 0) {
       throw new Error(`Routing type ${routingType} not supported on chain ${chainId}`);
     }

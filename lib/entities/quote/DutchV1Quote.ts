@@ -17,8 +17,6 @@ import { ChainConfigManager } from '../../config/ChainConfigManager';
 export class DutchV1Quote extends DutchQuote<DutchV1Request> implements IQuote {
   public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
   public readonly defaultDeadlienBufferInSecs: number = DEFAULT_DEADLINE_BUFFER_SECS;
-  // Add 1bps price improvmement to favor Dutch
-  public static defaultPriceImprovementBps = 1;
 
   public toJSON(): DutchQuoteDataJSON {
     return {

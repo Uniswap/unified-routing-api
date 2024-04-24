@@ -3,7 +3,7 @@ import { ChainConfigManager } from "../../../../lib/config/ChainConfigManager";
 import { BPS, NATIVE_ADDRESS, QuoteType, RoutingType } from "../../../../lib/constants";
 import { SyntheticStatusProvider } from "../../../../lib/providers";
 import { AMOUNT_LARGE, AMOUNT_LARGE_GAS_ADJUSTED } from "../../../constants";
-import { makeDutchRequest, createClassicQuote, createDutchQuote, makeDutchV2Request, makeRelayRequest, createDutchV2QuoteWithRequest, createDutchQuoteWithRequest, createRelayQuoteWithRequest } from "../../../utils/fixtures";
+import { makeDutchRequest, createClassicQuote, createDutchQuote, makeDutchV2Request, makeRelayRequest, createDutchV2QuoteWithRequest, createDutchQuoteWithRequest, createRelayQuoteWithRequest, makeClassicRequest } from "../../../utils/fixtures";
 import { DutchQuote, DutchQuoteContext, RelayQuoteContext } from "../../../../lib/entities";
 import Logger from "bunyan";
 import { Erc20__factory } from "../../../../lib/types/ext";
@@ -39,6 +39,35 @@ describe('ChainConfigManager', () => {
         provider = jest.fn();
     });
 
+    beforeEach(() => {
+        setChainConfigManager();
+    });
+
+    // Reset ChainConfigManager lazy loading to test changes for each test case
+    // Necessary whenever we're changing _chainConfigs or _routeDependencies
+    function setChainConfigManager(chainConfigs?: any, routeDependencies?: any) {
+        Object.defineProperty(ChainConfigManager, '_reverseConfigs', 
+        { value: 
+            undefined
+        });
+        Object.defineProperty(ChainConfigManager, '_chainConfigsWithDependencies', 
+        { value: 
+            undefined
+        });
+        if (chainConfigs) {
+            Object.defineProperty(ChainConfigManager, '_chainConfigs', 
+            { value: 
+                chainConfigs
+            });
+        }
+        if (routeDependencies) {
+            Object.defineProperty(ChainConfigManager, '_routeDependencies', 
+            { value: 
+                routeDependencies
+            });
+        }
+    }
+
     function makeProviders(syntheticEnabled: boolean) {
         return {
             rpcProvider: provider,
@@ -48,8 +77,7 @@ describe('ChainConfigManager', () => {
 
     describe('ChainConfigManager interface', () => {
         it('getChainIds returns all chains', () => {
-            Object.defineProperty(ChainConfigManager, 'chainConfigs', 
-            { value: 
+            setChainConfigManager(
                 {
                     [ChainId.MAINNET]: {
                     routingTypes: [],
@@ -60,16 +88,52 @@ describe('ChainConfigManager', () => {
                     alarmEnabled: false
                     }
                 }
-            });
+            );
             const chainIds = ChainConfigManager.getChainIds();
             expect(chainIds.length == 2).toBeTruthy();
             expect(chainIds.includes(ChainId.MAINNET)).toBeTruthy();
             expect(chainIds.includes(ChainId.OPTIMISM_GOERLI)).toBeTruthy();
         });
 
+        it('getChainIds includes routeDependencies', () => {
+            setChainConfigManager(
+                {
+                    [ChainId.MAINNET]: {
+                    routingTypes: [
+                        {
+                            routingType: RoutingType.DUTCH_V2
+                        }
+                    ],
+                    alarmEnabled: false
+                    },
+                    [ChainId.OPTIMISM_GOERLI]: {
+                    routingTypes: [
+                        {
+                            routingType: RoutingType.DUTCH_LIMIT
+                        }
+                    ],
+                    alarmEnabled: false
+                    }
+                },
+                {
+                    [RoutingType.DUTCH_LIMIT]: [
+                      RoutingType.CLASSIC
+                    ],
+                    [RoutingType.DUTCH_V2]: [
+                      RoutingType.CLASSIC
+                    ]
+                }
+            );
+            // chainConfigs doesn't contain Mainnet but it should still
+            // show in getChainIdsByRoutingType since it's listed as a dependency
+            let chainIds = ChainConfigManager.getChainIdsByRoutingType(RoutingType.CLASSIC);
+            expect(chainIds.length == 2).toBeTruthy();
+            expect(chainIds.includes(ChainId.MAINNET)).toBeTruthy();
+            expect(chainIds.includes(ChainId.OPTIMISM_GOERLI)).toBeTruthy();
+        });
+
         it('getChainIdsByRoutingType returns all chains by routing type', () => {
-            Object.defineProperty(ChainConfigManager, 'chainConfigs', 
-            { value: 
+            setChainConfigManager(
                 {
                     [ChainId.MAINNET]: {
                     routingTypes: [
@@ -90,8 +154,11 @@ describe('ChainConfigManager', () => {
                     ],
                     alarmEnabled: false
                     }
+                },
+                {
+                    // no dependencies
                 }
-            });
+            );
             let chainIds = ChainConfigManager.getChainIdsByRoutingType(RoutingType.CLASSIC);
             expect(chainIds.length == 1).toBeTruthy();
             expect(chainIds.includes(ChainId.MAINNET)).toBeTruthy();
@@ -106,8 +173,7 @@ describe('ChainConfigManager', () => {
         });
 
         it('getChainIdsByAlarmSetting returns all chains by alarm setting', () => {
-            Object.defineProperty(ChainConfigManager, 'chainConfigs', 
-            { value: 
+            setChainConfigManager( 
                 {
                     [ChainId.MAINNET]: {
                     routingTypes: [],
@@ -118,7 +184,7 @@ describe('ChainConfigManager', () => {
                     alarmEnabled: false
                     }
                 }
-            });
+            );
             let chainIds = ChainConfigManager.getChainIdsByAlarmSetting(true);
             expect(chainIds.length == 1).toBeTruthy();
             expect(chainIds.includes(ChainId.MAINNET)).toBeTruthy();
@@ -129,8 +195,7 @@ describe('ChainConfigManager', () => {
         });
 
         it('chainSupportsRoutingType returns true when chainId support routingType', () => {
-            Object.defineProperty(ChainConfigManager, 'chainConfigs', 
-            { value: 
+            setChainConfigManager( 
                 {
                     [ChainId.MAINNET]: {
                     routingTypes: [
@@ -148,7 +213,7 @@ describe('ChainConfigManager', () => {
                     alarmEnabled: false
                     }
                 }
-            });
+            );
             expect(ChainConfigManager.chainSupportsRoutingType(ChainId.MAINNET, RoutingType.CLASSIC)).toBeTruthy();
             expect(ChainConfigManager.chainSupportsRoutingType(ChainId.MAINNET, RoutingType.DUTCH_LIMIT)).toBeTruthy();
             expect(ChainConfigManager.chainSupportsRoutingType(ChainId.MAINNET, RoutingType.DUTCH_V2)).toBeFalsy();
@@ -157,27 +222,26 @@ describe('ChainConfigManager', () => {
         });
 
         it('getQuoteConfig returns the QuoteConfig for the provided chainId and routingType', () => {
-            Object.defineProperty(ChainConfigManager, 'chainConfigs', 
-                { value: 
-                    {
-                        [ChainId.MAINNET]: {
-                            routingTypes: [
-                                {
-                                    routingType: RoutingType.CLASSIC,
-                                    stdAuctionPeriodSecs: 99
-                                },
-                                {
-                                    routingType: RoutingType.DUTCH_LIMIT
-                                }
-                            ],
-                            alarmEnabled: false
-                        },
-                        [ChainId.OPTIMISM_GOERLI]: {
-                            routingTypes: [],
-                            alarmEnabled: false
-                        }
+            setChainConfigManager( 
+                {
+                    [ChainId.MAINNET]: {
+                        routingTypes: [
+                            {
+                                routingType: RoutingType.CLASSIC,
+                                stdAuctionPeriodSecs: 99
+                            },
+                            {
+                                routingType: RoutingType.DUTCH_LIMIT
+                            }
+                        ],
+                        alarmEnabled: false
+                    },
+                    [ChainId.OPTIMISM_GOERLI]: {
+                        routingTypes: [],
+                        alarmEnabled: false
                     }
-                });
+                }
+            );
             let quoteConfig = ChainConfigManager.getQuoteConfig(ChainId.MAINNET, RoutingType.CLASSIC);
             expect(quoteConfig.stdAuctionPeriodSecs).toEqual(99);
             quoteConfig = ChainConfigManager.getQuoteConfig(ChainId.MAINNET, RoutingType.DUTCH_LIMIT);
@@ -188,9 +252,27 @@ describe('ChainConfigManager', () => {
     });
 
     describe('ChainConfigManager in URA', () => {
-        it('Missing chainId cannot be used', () => {
-            Object.defineProperty(ChainConfigManager, 'chainConfigs', 
-            { value: 
+        it('Missing chainId cannot be used with Classic', () => {
+            setChainConfigManager( 
+                {
+                    [ChainId.MAINNET]: {
+                    routingTypes: [
+                        {
+                            routingType: RoutingType.CLASSIC
+                        }
+                    ],
+                    alarmEnabled: false
+                    }
+                }
+            );
+            let req = makeClassicRequest({ tokenInChainId: ChainId.OPTIMISM, tokenOutChainId: ChainId.OPTIMISM });
+            expect(req).toBeUndefined();
+            req = makeClassicRequest({ tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET });
+            expect(req).toBeDefined();
+        });
+
+        it('Missing chainId cannot be used with Dutch', () => {
+            setChainConfigManager( 
                 {
                     [ChainId.MAINNET]: {
                     routingTypes: [
@@ -201,27 +283,64 @@ describe('ChainConfigManager', () => {
                     alarmEnabled: false
                     }
                 }
-            });
+            );
             let req = makeDutchRequest({ tokenInChainId: ChainId.OPTIMISM, tokenOutChainId: ChainId.OPTIMISM }, { useSyntheticQuotes: true });
             expect(req).toBeUndefined();
             req = makeDutchRequest({ tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET }, { useSyntheticQuotes: true });
             expect(req).toBeDefined();
         });
 
+        it('Missing chainId cannot be used with Dutchv2', () => {
+            setChainConfigManager( 
+                {
+                    [ChainId.MAINNET]: {
+                    routingTypes: [
+                        {
+                            routingType: RoutingType.DUTCH_V2
+                        }
+                    ],
+                    alarmEnabled: false
+                    }
+                }
+            );
+            let req = makeDutchV2Request({ tokenInChainId: ChainId.OPTIMISM, tokenOutChainId: ChainId.OPTIMISM }, { useSyntheticQuotes: true });
+            expect(req).toBeUndefined();
+            req = makeDutchV2Request({ tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET }, { useSyntheticQuotes: true });
+            expect(req).toBeDefined();
+        });
+
+        it('Missing chainId cannot be used with Relay', () => {
+            setChainConfigManager( 
+                {
+                    [ChainId.MAINNET]: {
+                    routingTypes: [
+                        {
+                            routingType: RoutingType.RELAY
+                        }
+                    ],
+                    alarmEnabled: false
+                    }
+                }
+            );
+            let req = makeRelayRequest({ tokenInChainId: ChainId.OPTIMISM, tokenOutChainId: ChainId.OPTIMISM });
+            expect(req).toBeUndefined();
+            req = makeRelayRequest({ tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET });
+            expect(req).toBeDefined();
+        });
+
         it('Missing routingType cannot be used with chain', () => {
-            Object.defineProperty(ChainConfigManager, 'chainConfigs', 
-            { value: 
+            setChainConfigManager(
                 {
                     [ChainId.MAINNET]: {
                     routingTypes: [],
                     alarmEnabled: false
                     }
                 }
-            });
+            );
             let req = makeDutchRequest({ tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET }, { useSyntheticQuotes: true });
             expect(req).toBeUndefined();
-            Object.defineProperty(ChainConfigManager, 'chainConfigs', 
-            { value: 
+
+            setChainConfigManager( 
                 {
                     [ChainId.MAINNET]: {
                     routingTypes: [
@@ -232,176 +351,272 @@ describe('ChainConfigManager', () => {
                     alarmEnabled: false
                     }
                 }
-            });
+            );
             req = makeDutchRequest({ tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET }, { useSyntheticQuotes: true });
             expect(req).toBeDefined();
         });
 
         it('skipRFQ prevents RFQ from running', async () => {
-            // First show that RFQ is used by default
-            Object.defineProperty(ChainConfigManager, 'chainConfigs', 
-            { value: 
-                {
-                    [ChainId.MAINNET]: {
-                    routingTypes: [
-                        {
-                            routingType: RoutingType.DUTCH_LIMIT,
+            const routingTypes = [RoutingType.DUTCH_LIMIT, RoutingType.DUTCH_V2];
+            for (const routingType of routingTypes) {
+                // First show that RFQ is used by default
+                setChainConfigManager( 
+                    {
+                        [ChainId.MAINNET]: {
+                        routingTypes: [
+                            {
+                                routingType: routingType,
+                            }
+                        ],
+                        alarmEnabled: false
                         }
-                    ],
-                    alarmEnabled: false
+                    },
+                    {
+                        [RoutingType.DUTCH_LIMIT]: [
+                            RoutingType.CLASSIC
+                        ],
+                        [RoutingType.DUTCH_V2]: [
+                            RoutingType.CLASSIC
+                        ]
                     }
+                );
+
+                let req, context, rfqQuote;
+                switch (routingType) {
+                    case RoutingType.DUTCH_LIMIT: {
+                        req = makeDutchRequest({ tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET }, { useSyntheticQuotes: false, deadlineBufferSecs: undefined });
+                        context = new DutchQuoteContext(logger, req, makeProviders(false));
+                        rfqQuote = createDutchQuoteWithRequest(
+                            { amountOut: AMOUNT_LARGE, tokenIn: NATIVE_ADDRESS, tokenOut: NATIVE_ADDRESS, chainId: ChainId.MAINNET },
+                            req
+                        );
+                        break;
+                    }
+                    case RoutingType.DUTCH_V2: {
+                        req = makeDutchV2Request({ tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET }, { useSyntheticQuotes: false, deadlineBufferSecs: undefined });
+                        context = new DutchQuoteContext(logger, req, makeProviders(false));
+                        rfqQuote = createDutchV2QuoteWithRequest(
+                            { amountOut: AMOUNT_LARGE, tokenIn: NATIVE_ADDRESS, tokenOut: NATIVE_ADDRESS, chainId: ChainId.MAINNET },
+                            req
+                        );
+                        break;
+                    }
+                    default:
+                        throw new Error("Unknown routing type");
                 }
-            });
-            const req = makeDutchRequest({ tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET }, { useSyntheticQuotes: true });
-            const context = new DutchQuoteContext(logger, req, makeProviders(false));
-            const rfqQuote = createDutchQuote(
-              { amountOut: AMOUNT_LARGE, tokenIn: NATIVE_ADDRESS, tokenOut: NATIVE_ADDRESS, chainId: ChainId.MAINNET },
-              'EXACT_INPUT',
-              '1'
-            );
-            const classicQuote = createClassicQuote(
-              { quote: AMOUNT_LARGE, quoteGasAdjusted: AMOUNT_LARGE_GAS_ADJUSTED },
-              { type: 'EXACT_INPUT', tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET }
-            );
-            let quote = await context.resolve({
+                
+                const classicQuote = createClassicQuote(
+                { quote: AMOUNT_LARGE, quoteGasAdjusted: AMOUNT_LARGE_GAS_ADJUSTED },
+                { type: 'EXACT_INPUT', tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET }
+                );
+                let quote = await context.resolve({
+                    [req.key()]: rfqQuote,
+                    [context.classicKey]: classicQuote,
+                });
+                if (quote?.routingType != routingType) {
+                    throw new Error(`Unexpected routing type in quote ${quote?.routingType}`);
+                }
+                expect(quote.quoteType).toEqual(QuoteType.RFQ);
+
+                // Now show that the Synthetic quote is used
+                setChainConfigManager( 
+                    {
+                        [ChainId.MAINNET]: {
+                        routingTypes: [
+                            {
+                                routingType: routingType,
+                                skipRFQ: true
+                            }
+                        ],
+                        alarmEnabled: false
+                        }
+                    },
+                    {
+                        [RoutingType.DUTCH_LIMIT]: [
+                            RoutingType.CLASSIC
+                        ],
+                        [RoutingType.DUTCH_V2]: [
+                            RoutingType.CLASSIC
+                        ]
+                    }
+                );
+                quote = await context.resolve({
                 [req.key()]: rfqQuote,
                 [context.classicKey]: classicQuote,
-              });
-              if (quote?.routingType != RoutingType.DUTCH_LIMIT) {
-                  throw new Error(`Unexpected routing type in quote ${quote?.routingType}`);
-              }
-              expect(quote.quoteType).toEqual(QuoteType.RFQ);
-
-            // Now show that the Synthetic quote is used
-            Object.defineProperty(ChainConfigManager, 'chainConfigs', 
-            { value: 
-                {
-                    [ChainId.MAINNET]: {
-                    routingTypes: [
-                        {
-                            routingType: RoutingType.DUTCH_LIMIT,
-                            skipRFQ: true
-                        }
-                    ],
-                    alarmEnabled: false
-                    }
+                });
+                if (quote?.routingType != routingType) {
+                    throw new Error(`Unexpected routing type in quote ${quote?.routingType}`);
                 }
-            });
-            quote = await context.resolve({
-              [req.key()]: rfqQuote,
-              [context.classicKey]: classicQuote,
-            });
-            if (quote?.routingType != RoutingType.DUTCH_LIMIT) {
-                throw new Error(`Unexpected routing type in quote ${quote?.routingType}`);
+                expect(quote.quoteType).toEqual(QuoteType.SYNTHETIC);
             }
-            expect(quote.quoteType).toEqual(QuoteType.SYNTHETIC);
         });
 
         it('skipRFQ forces synthetic quote', async () => {
-            Object.defineProperty(ChainConfigManager, 'chainConfigs', 
-            { value: 
-                {
-                    [ChainId.MAINNET]: {
-                    routingTypes: [
-                        {
-                            routingType: RoutingType.DUTCH_LIMIT,
-                            skipRFQ: true
+            const routingTypes = [RoutingType.DUTCH_LIMIT, RoutingType.DUTCH_V2];
+            for (const routingType of routingTypes) {
+                setChainConfigManager( 
+                    {
+                        [ChainId.MAINNET]: {
+                        routingTypes: [
+                            {
+                                routingType: routingType,
+                                skipRFQ: true
+                            }
+                        ],
+                        alarmEnabled: false
                         }
-                    ],
-                    alarmEnabled: false
+                    },
+                    {
+                        [RoutingType.DUTCH_LIMIT]: [
+                            RoutingType.CLASSIC
+                        ],
+                        [RoutingType.DUTCH_V2]: [
+                            RoutingType.CLASSIC
+                        ]
                     }
+                );
+                // Setting useSyntheticQuotes: false should be overridden by skipRFQ
+                let req, context, rfqQuote;
+                switch (routingType) {
+                    case RoutingType.DUTCH_LIMIT: {
+                        req = makeDutchRequest({ tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET }, { useSyntheticQuotes: true, deadlineBufferSecs: undefined });
+                        context = new DutchQuoteContext(logger, req, makeProviders(false));
+                        rfqQuote = createDutchQuoteWithRequest(
+                            { amountOut: AMOUNT_LARGE, tokenIn: NATIVE_ADDRESS, tokenOut: NATIVE_ADDRESS, chainId: ChainId.MAINNET },
+                            req
+                        );
+                        break;
+                    }
+                    case RoutingType.DUTCH_V2: {
+                        req = makeDutchV2Request({ tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET }, { useSyntheticQuotes: true, deadlineBufferSecs: undefined });
+                        context = new DutchQuoteContext(logger, req, makeProviders(false));
+                        rfqQuote = createDutchV2QuoteWithRequest(
+                            { amountOut: AMOUNT_LARGE, tokenIn: NATIVE_ADDRESS, tokenOut: NATIVE_ADDRESS, chainId: ChainId.MAINNET },
+                            req
+                        );
+                        break;
+                    }
+                    default:
+                        throw new Error("Unknown routing type");
                 }
-            });
-            // Setting useSyntheticQuotes: false should be overridden by skipRFQ
-            const req = makeDutchRequest({ tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET }, { useSyntheticQuotes: false });
-            const context = new DutchQuoteContext(logger, req, makeProviders(false));
-            const rfqQuote = createDutchQuote(
-              { amountOut: AMOUNT_LARGE, tokenIn: NATIVE_ADDRESS, tokenOut: NATIVE_ADDRESS, chainId: ChainId.MAINNET },
-              'EXACT_INPUT',
-              '1'
-            );
-            const classicQuote = createClassicQuote(
-              { quote: AMOUNT_LARGE, quoteGasAdjusted: AMOUNT_LARGE_GAS_ADJUSTED },
-              { type: 'EXACT_INPUT', tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET }
-            );
-            let quote = await context.resolve({
-                [req.key()]: rfqQuote,
-                [context.classicKey]: classicQuote,
-              });
-              if (quote?.routingType != RoutingType.DUTCH_LIMIT) {
-                  throw new Error(`Unexpected routing type in quote ${quote?.routingType}`);
-              }
-              expect(quote.quoteType).toEqual(QuoteType.SYNTHETIC);
+
+                const classicQuote = createClassicQuote(
+                { quote: AMOUNT_LARGE, quoteGasAdjusted: AMOUNT_LARGE_GAS_ADJUSTED },
+                { type: 'EXACT_INPUT', tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET }
+                );
+                let quote = await context.resolve({
+                    [req.key()]: rfqQuote,
+                    [context.classicKey]: classicQuote,
+                });
+                if (quote?.routingType != routingType) {
+                    throw new Error(`Unexpected routing type in quote ${quote?.routingType}`);
+                }
+                expect(quote.quoteType).toEqual(QuoteType.SYNTHETIC);
+            }
         });
 
         it('BPS override is used when set', async () => {
-            Object.defineProperty(ChainConfigManager, 'chainConfigs', 
-            { value: 
-                {
-                    [ChainId.MAINNET]: {
-                    routingTypes: [
-                        {
-                            routingType: RoutingType.DUTCH_LIMIT,
-                            priceImprovementBps: 1,
-                            skipRFQ: true
+            const routingTypes = [RoutingType.DUTCH_LIMIT, RoutingType.DUTCH_V2];
+            for (const routingType of routingTypes) {
+                setChainConfigManager( 
+                    {
+                        [ChainId.MAINNET]: {
+                        routingTypes: [
+                            {
+                                routingType: routingType,
+                                priceImprovementBps: 1,
+                                skipRFQ: true
+                            }
+                        ],
+                        alarmEnabled: false
                         }
-                    ],
-                    alarmEnabled: false
+                    },
+                    {
+                        [RoutingType.DUTCH_LIMIT]: [
+                            RoutingType.CLASSIC
+                        ],
+                        [RoutingType.DUTCH_V2]: [
+                            RoutingType.CLASSIC
+                        ]
                     }
-                }
-            });
-            // Force synthetic
-            const req = makeDutchRequest({ tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET }, { useSyntheticQuotes: true });
-            const context = new DutchQuoteContext(logger, req, makeProviders(false));
-            const rfqQuote = createDutchQuote(
-              { amountOut: AMOUNT_LARGE, tokenIn: NATIVE_ADDRESS, tokenOut: NATIVE_ADDRESS, chainId: ChainId.MAINNET },
-              'EXACT_INPUT',
-              '1'
-            );
-            const classicQuote = createClassicQuote(
-              { quote: AMOUNT_LARGE, quoteGasAdjusted: AMOUNT_LARGE_GAS_ADJUSTED },
-              { type: 'EXACT_INPUT', tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET }
-            );
-            const firstQuote = await context.resolve({
-                [req.key()]: rfqQuote,
-                [context.classicKey]: classicQuote,
-              });
-            if (firstQuote?.routingType != RoutingType.DUTCH_LIMIT) {
-                throw new Error(`Unexpected routing type in quote ${firstQuote?.routingType}`);
-            }
-            expect(firstQuote.quoteType).toEqual(QuoteType.SYNTHETIC);
+                );
 
-            // Now get a second quote with custom price improvement
-            Object.defineProperty(ChainConfigManager, 'chainConfigs', 
-            { value: 
-                {
-                    [ChainId.MAINNET]: {
-                    routingTypes: [
-                        {
-                            routingType: RoutingType.DUTCH_LIMIT,
-                            priceImprovementBps: 10,
-                            skipRFQ: true
+                let req, context, rfqQuote;
+                switch (routingType) {
+                    case RoutingType.DUTCH_LIMIT: {
+                        req = makeDutchRequest({ tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET }, { useSyntheticQuotes: true, deadlineBufferSecs: undefined });
+                        context = new DutchQuoteContext(logger, req, makeProviders(false));
+                        rfqQuote = createDutchQuoteWithRequest(
+                            { amountOut: AMOUNT_LARGE, tokenIn: NATIVE_ADDRESS, tokenOut: NATIVE_ADDRESS, chainId: ChainId.MAINNET },
+                            req
+                        );
+                        break;
+                    }
+                    case RoutingType.DUTCH_V2: {
+                        req = makeDutchV2Request({ tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET }, { useSyntheticQuotes: true, deadlineBufferSecs: undefined });
+                        context = new DutchQuoteContext(logger, req, makeProviders(false));
+                        rfqQuote = createDutchV2QuoteWithRequest(
+                            { amountOut: AMOUNT_LARGE, tokenIn: NATIVE_ADDRESS, tokenOut: NATIVE_ADDRESS, chainId: ChainId.MAINNET },
+                            req
+                        );
+                        break;
+                    }
+                    default:
+                        throw new Error("Unknown routing type");
+                }
+
+                const classicQuote = createClassicQuote(
+                    { quote: AMOUNT_LARGE, quoteGasAdjusted: AMOUNT_LARGE_GAS_ADJUSTED },
+                    { type: 'EXACT_INPUT', tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET }
+                );
+                const firstQuote = await context.resolve({
+                    [req.key()]: rfqQuote,
+                    [context.classicKey]: classicQuote,
+                });
+                if (firstQuote?.routingType != routingType) {
+                    throw new Error(`Unexpected routing type in quote ${firstQuote?.routingType}`);
+                }
+
+                 expect(firstQuote.quoteType).toEqual(QuoteType.SYNTHETIC);
+
+                // Now get a second quote with custom price improvement
+                setChainConfigManager(
+                    {
+                        [ChainId.MAINNET]: {
+                        routingTypes: [
+                            {
+                                routingType: routingType,
+                                priceImprovementBps: 10,
+                                skipRFQ: true
+                            }
+                        ],
+                        alarmEnabled: false
                         }
-                    ],
-                    alarmEnabled: false
+                    },
+                    {
+                        [RoutingType.DUTCH_LIMIT]: [
+                            RoutingType.CLASSIC
+                        ],
+                        [RoutingType.DUTCH_V2]: [
+                            RoutingType.CLASSIC
+                        ]
                     }
-                }
-            });
+                );
 
-            const secQuote = await context.resolve({
-                [req.key()]: rfqQuote,
-                [context.classicKey]: classicQuote,
-              });
-            if (secQuote?.routingType != RoutingType.DUTCH_LIMIT) {
-                throw new Error(`Unexpected routing type in quote ${secQuote?.routingType}`);
+                const secQuote = await context.resolve({
+                    [req.key()]: rfqQuote,
+                    [context.classicKey]: classicQuote,
+                });
+                if (secQuote?.routingType != routingType) {
+                    throw new Error(`Unexpected routing type in quote ${secQuote?.routingType}`);
+                }
+                expect(secQuote.quoteType).toEqual(QuoteType.SYNTHETIC);
+                expect(secQuote.amountOutStart.gt(firstQuote.amountOutStart)).toBeTruthy();
             }
-            expect(secQuote.quoteType).toEqual(QuoteType.SYNTHETIC);
-            expect(secQuote.amountOutStart.gt(firstQuote.amountOutStart)).toBeTruthy();
         });
 
         it('Default BPS is used when BPS override is not present', async () => {
-            Object.defineProperty(ChainConfigManager, 'chainConfigs', 
-            { value: 
+            setChainConfigManager( 
                 {
                     [ChainId.MAINNET]: {
                     routingTypes: [
@@ -412,8 +627,16 @@ describe('ChainConfigManager', () => {
                     ],
                     alarmEnabled: false
                     }
+                },
+                {
+                    [RoutingType.DUTCH_LIMIT]: [
+                        RoutingType.CLASSIC
+                    ],
+                    [RoutingType.DUTCH_V2]: [
+                        RoutingType.CLASSIC
+                    ]
                 }
-            });
+            );
             // Force synthetic
             const req = makeDutchRequest({ tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET }, { useSyntheticQuotes: true });
             const context = new DutchQuoteContext(logger, req, makeProviders(false));
@@ -440,8 +663,7 @@ describe('ChainConfigManager', () => {
         });
 
         it('stdAuctionPeriodSecs is used when set', async () => {
-            Object.defineProperty(ChainConfigManager, 'chainConfigs', 
-            { value: 
+            setChainConfigManager( 
                 {
                     [ChainId.MAINNET]: {
                     routingTypes: [
@@ -452,8 +674,16 @@ describe('ChainConfigManager', () => {
                     ],
                     alarmEnabled: false
                     }
+                },
+                {
+                    [RoutingType.DUTCH_LIMIT]: [
+                        RoutingType.CLASSIC
+                    ],
+                    [RoutingType.DUTCH_V2]: [
+                        RoutingType.CLASSIC
+                    ]
                 }
-            });
+            );
 
             const req = makeDutchRequest({ tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET }, { useSyntheticQuotes: true });
             const context = new DutchQuoteContext(logger, req, makeProviders(false));
@@ -477,8 +707,7 @@ describe('ChainConfigManager', () => {
         });
 
         it('DutchLimit lrgAuctionPeriodSecs is used only for large orders', async () => {
-            Object.defineProperty(ChainConfigManager, 'chainConfigs', 
-            { value: 
+            setChainConfigManager( 
                 {
                     [ChainId.MAINNET]: {
                     routingTypes: [
@@ -490,8 +719,16 @@ describe('ChainConfigManager', () => {
                     ],
                     alarmEnabled: false
                     }
+                },
+                {
+                    [RoutingType.DUTCH_LIMIT]: [
+                        RoutingType.CLASSIC
+                    ],
+                    [RoutingType.DUTCH_V2]: [
+                        RoutingType.CLASSIC
+                    ]
                 }
-            });
+            );
 
             const req = makeDutchRequest({ tokenInChainId: ChainId.MAINNET, tokenOutChainId: ChainId.MAINNET }, { useSyntheticQuotes: true });
             const context = new DutchQuoteContext(logger, req, makeProviders(false));
@@ -539,8 +776,7 @@ describe('ChainConfigManager', () => {
         it('deadlineBufferSecs is used when set', async () => {
             const routingTypes = [RoutingType.DUTCH_LIMIT, RoutingType.DUTCH_V2, RoutingType.RELAY];
             for (const routingType of routingTypes) {
-                Object.defineProperty(ChainConfigManager, 'chainConfigs', 
-                { value: 
+                setChainConfigManager(
                     {
                         [ChainId.MAINNET]: {
                         routingTypes: [
@@ -552,8 +788,16 @@ describe('ChainConfigManager', () => {
                         ],
                         alarmEnabled: false
                         }
+                    },
+                    {
+                        [RoutingType.DUTCH_LIMIT]: [
+                            RoutingType.CLASSIC
+                        ],
+                        [RoutingType.DUTCH_V2]: [
+                            RoutingType.CLASSIC
+                        ]
                     }
-                });
+                );
 
                 let req, context, rfqQuote;
                 switch (routingType) {

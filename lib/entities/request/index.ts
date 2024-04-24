@@ -98,7 +98,10 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON): {
   };
 
   const requests = body.configs.flatMap((config) => {
-    if (config.routingType == RoutingType.CLASSIC) {
+    if (
+      config.routingType == RoutingType.CLASSIC &&
+      ChainConfigManager.chainSupportsRoutingType(info.tokenInChainId, RoutingType.CLASSIC)
+    ) {
       return ClassicRequest.fromRequestBody(info, config as ClassicConfigJSON);
     } else if (
       config.routingType == RoutingType.DUTCH_LIMIT &&
