@@ -65,6 +65,7 @@ export class DutchQuoteContext implements QuoteContext {
       simulateFromAddress: this.request.config.swapper,
       deadline: DEFAULT_ROUTING_API_DEADLINE,
       recipient: this.request.config.swapper,
+      enableUniversalRouter: true
     });
     this.classicKey = classicRequest.key();
     this.log.info({ classicRequest: classicRequest.info }, 'Adding synthetic classic request');

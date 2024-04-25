@@ -177,6 +177,7 @@ export function makeClassicRequest(overrides: Partial<QuoteRequestBodyJSON>): Cl
         routingType: RoutingType.CLASSIC,
         protocols: ['v3'],
         gasPriceWei: '12',
+        enableUniversalRouter: true
       },
     ],
   }).quoteRequests[0] as ClassicRequest;
