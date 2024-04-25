@@ -161,7 +161,7 @@ describe('ChainConfigManager', () => {
       expect(chainIds.length == 0).toBeTruthy();
     });
 
-    it('getChainIdsByAlarmSetting returns all chains by alarm setting', () => {
+    it('getAlarmedChainIds returns all chains by alarm setting', () => {
       setChainConfigManager({
         [ChainId.MAINNET]: {
           routingTypes: [],
@@ -172,13 +172,9 @@ describe('ChainConfigManager', () => {
           alarmEnabled: false,
         },
       });
-      let chainIds = ChainConfigManager.getChainIdsByAlarmSetting(true);
+      let chainIds = ChainConfigManager.getAlarmedChainIds();
       expect(chainIds.length == 1).toBeTruthy();
       expect(chainIds.includes(ChainId.MAINNET)).toBeTruthy();
-
-      chainIds = ChainConfigManager.getChainIdsByAlarmSetting(false);
-      expect(chainIds.length == 1).toBeTruthy();
-      expect(chainIds.includes(ChainId.OPTIMISM_GOERLI)).toBeTruthy();
     });
 
     it('chainSupportsRoutingType returns true when chainId support routingType', () => {
@@ -695,7 +691,7 @@ describe('ChainConfigManager', () => {
       expect((quote as DutchV1Quote).auctionPeriodSecs).toEqual(9999);
     });
 
-    it('DutchLimit lrgAuctionPeriodSecs is used only for large orders', async () => {
+    it('DutchLimit largeAuctionPeriodSecs is used only for large orders', async () => {
       setChainConfigManager(
         {
           [ChainId.MAINNET]: {
@@ -703,7 +699,7 @@ describe('ChainConfigManager', () => {
               {
                 routingType: RoutingType.DUTCH_LIMIT,
                 stdAuctionPeriodSecs: 1,
-                lrgAuctionPeriodSecs: 9999,
+                largeAuctionPeriodSecs: 9999,
               },
             ],
             alarmEnabled: false,

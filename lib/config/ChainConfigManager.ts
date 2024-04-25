@@ -1,22 +1,29 @@
 import { ChainId } from '@uniswap/sdk-core';
 import { RoutingType } from '../constants';
 
+type CommonConfig = {
+  routingType: RoutingType;
+  priceImprovementBps?: number;
+  stdAuctionPeriodSecs?: number;
+  deadlineBufferSecs?: number;
+}
+
+export type DutchConfig = CommonConfig & {
+  routingType: RoutingType.DUTCH_LIMIT | RoutingType.DUTCH_V2;
+  skipRFQ?: boolean;
+}
+
 type ChainConfig = {
   routingTypes: (
-    | {
-        routingType: RoutingType.CLASSIC | RoutingType.DUTCH_V2 | RoutingType.RELAY;
-        skipRFQ?: boolean;
-        priceImprovementBps?: number;
-        stdAuctionPeriodSecs?: number;
-        deadlineBufferSecs?: number;
+    | CommonConfig & {
+        routingType: RoutingType.CLASSIC | RoutingType.RELAY;
       }
-    | {
+    | DutchConfig & {
+        routingType: RoutingType.DUTCH_V2;
+      }
+    | DutchConfig & {
         routingType: RoutingType.DUTCH_LIMIT;
-        skipRFQ?: boolean;
-        priceImprovementBps?: number;
-        stdAuctionPeriodSecs?: number;
-        lrgAuctionPeriodSecs?: number;
-        deadlineBufferSecs?: number;
+        largeAuctionPeriodSecs?: number;
       }
   )[];
   alarmEnabled: boolean;
@@ -38,7 +45,7 @@ export abstract class ChainConfigManager {
         },
         {
           routingType: RoutingType.DUTCH_LIMIT,
-          lrgAuctionPeriodSecs: 120,
+          largeAuctionPeriodSecs: 120,
         },
         {
           routingType: RoutingType.RELAY,
@@ -250,10 +257,10 @@ export abstract class ChainConfigManager {
    * @param alarmEnabled Alarms set or not
    * @returns all chains that have the given alarm setting
    */
-  public static getChainIdsByAlarmSetting(alarmEnabled: boolean): ChainId[] {
+  public static getAlarmedChainIds(): ChainId[] {
     const chainIds: ChainId[] = [];
     for (const chainId in ChainConfigManager.chainConfigsWithDependencies) {
-      if (ChainConfigManager.chainConfigsWithDependencies[chainId].alarmEnabled == alarmEnabled) {
+      if (ChainConfigManager.chainConfigsWithDependencies[chainId].alarmEnabled) {
         chainIds.push(Number.parseInt(chainId));
       }
     }
@@ -282,12 +289,12 @@ export abstract class ChainConfigManager {
       throw new Error(`Unexpected chainId ${chainId}`);
     }
     // Should only return one element if exists
-    const quoteConfig = ChainConfigManager.chainConfigsWithDependencies[chainId].routingTypes.filter(
+    const quoteConfig = ChainConfigManager.chainConfigsWithDependencies[chainId].routingTypes.find(
       (r) => r.routingType == routingType
     );
-    if (quoteConfig.length == 0) {
+    if (!quoteConfig) {
       throw new Error(`Routing type ${routingType} not supported on chain ${chainId}`);
     }
-    return quoteConfig[0];
+    return quoteConfig;
   }
 }

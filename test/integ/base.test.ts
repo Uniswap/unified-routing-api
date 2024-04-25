@@ -42,6 +42,10 @@ if (!process.env.UNISWAP_API || !process.env.ARCHIVE_NODE_RPC) {
   throw new Error('Must set UNISWAP_API and ARCHIVE_NODE_RPC env variables for integ tests. See README');
 }
 
+if (!process.env.PORTION_API_URL) {
+  throw new Error('Must set PORTION_API_URL env variables for integ tests. See README');
+}
+
 // URA endpoint
 const API = `${process.env.UNISWAP_API!}quote`;
 

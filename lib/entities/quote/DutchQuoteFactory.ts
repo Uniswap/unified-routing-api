@@ -3,7 +3,7 @@ import { log } from '@uniswap/smart-order-router';
 import { BigNumber } from 'ethers';
 import { v4 as uuidv4 } from 'uuid';
 import { ChainConfigManager } from '../../config/ChainConfigManager';
-import { NATIVE_ADDRESS, QuoteType } from '../../constants';
+import { NATIVE_ADDRESS, QuoteType, RoutingType } from '../../constants';
 import { Portion } from '../../fetchers/PortionFetcher';
 import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInMs } from '../../util/time';
@@ -31,7 +31,8 @@ export class DutchQuoteFactory {
     const args: DutchQuoteConstructorArgs = {
       createdAtMs: currentTimestampInMs(),
       request,
-      chainId: body.chainId,
+      tokenInChainId: body.chainId,
+      tokenOutChainId: body.chainId,
       requestId: body.requestId,
       quoteId: body.quoteId,
       tokenIn: body.tokenIn,
@@ -83,7 +84,8 @@ export class DutchQuoteFactory {
     const args: DutchQuoteConstructorArgs = {
       createdAtMs: quote.createdAtMs,
       request,
-      chainId: request.info.tokenInChainId,
+      tokenInChainId: request.info.tokenInChainId,
+      tokenOutChainId: request.info.tokenInChainId,
       requestId: request.info.requestId,
       quoteId: uuidv4(), // synthetic quote doesn't receive a quoteId from RFQ api, so generate one
       tokenIn: request.info.tokenIn,
@@ -98,10 +100,10 @@ export class DutchQuoteFactory {
       nonce: generateRandomNonce(), // synthetic quote has no nonce
       portion: quote.portion,
     };
-    if (request instanceof DutchV1Request) {
+    if (request.routingType == RoutingType.DUTCH_LIMIT) {
       return new DutchV1Quote(args);
     }
-    if (request instanceof DutchV2Request) {
+    if (request.routingType == RoutingType.DUTCH_V2) {
       return new DutchV2Quote(args);
     }
     throw new Error(`Unexpected request type ${typeof request}`);
@@ -138,6 +140,8 @@ export class DutchQuoteFactory {
 
     const args: DutchQuoteConstructorArgs = {
       ...quote,
+      tokenInChainId: quote.chainId,
+      tokenOutChainId: quote.chainId,
       amountInStart,
       amountInEnd,
       amountOutStart,
@@ -147,10 +151,10 @@ export class DutchQuoteFactory {
         largeTrade: options?.largeTrade ?? false,
       },
     };
-    if (quote.request instanceof DutchV1Request) {
+    if (quote.request.routingType == RoutingType.DUTCH_LIMIT) {
       return new DutchV1Quote(args);
     }
-    if (quote.request instanceof DutchV2Request) {
+    if (quote.request.routingType == RoutingType.DUTCH_V2) {
       return new DutchV2Quote(args);
     }
     throw new Error(`Unexpected request type ${typeof quote.request}`);

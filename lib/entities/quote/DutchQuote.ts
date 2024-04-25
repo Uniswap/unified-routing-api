@@ -62,7 +62,8 @@ export type Amounts = {
 export type DutchQuoteConstructorArgs = {
   createdAtMs?: string;
   request: DutchQuoteRequest;
-  chainId: number;
+  tokenInChainId: number;
+  tokenOutChainId: number;
   requestId: string;
   quoteId: string;
   tokenIn: string;
@@ -107,6 +108,7 @@ export abstract class DutchQuote<T extends DutchQuoteRequest> implements IQuote 
 
   public constructor(args: DutchQuoteConstructorArgs) {
     Object.assign(this, args, {
+      chainId: args.tokenInChainId,
       createdAtMs: args.createdAtMs || currentTimestampInMs(),
       createdAt: timestampInMstoSeconds(parseInt(args.createdAtMs || currentTimestampInMs())),
       derived: args.derived || { largeTrade: false },

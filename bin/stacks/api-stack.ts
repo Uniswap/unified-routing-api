@@ -20,7 +20,7 @@ import { AnalyticsStack } from './analytics-stack';
 import { DashboardStack } from './dashboard-stack';
 import { XPairDashboardStack } from './pair-dashboard-stack';
 
-const ALL_ALARMED_CHAINS = ChainConfigManager.getChainIdsByAlarmSetting(true)
+const ALL_ALARMED_CHAINS = ChainConfigManager.getAlarmedChainIds();
 
 export class APIStack extends cdk.Stack {
   public readonly url: CfnOutput;
