@@ -50,8 +50,9 @@ export class APIPipeline extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const code = CodePipelineSource.gitHub('Uniswap/unified-routing-api', 'main', {
-      authentication: SecretValue.secretsManager('github-token-2'),
+    const code = CodePipelineSource.connection('Uniswap/unified-routing-api', 'main', {
+      connectionArn:
+        'arn:aws:codestar-connections:us-east-2:644039819003:connection/4806faf1-c31e-4ea2-a5bf-c6fc1fa79487',
     });
 
     const synthStep = new CodeBuildStep('Synth', {
@@ -63,18 +64,13 @@ export class APIPipeline extends Stack {
             value: 'npm-private-repo-access-token',
             type: BuildEnvironmentVariableType.SECRETS_MANAGER,
           },
-          GH_TOKEN: {
-            value: 'github-token-2',
-            type: BuildEnvironmentVariableType.SECRETS_MANAGER,
-          },
           VERSION: {
-            value: '1',
+            value: '2',
             type: BuildEnvironmentVariableType.PLAINTEXT,
           },
         },
       },
       commands: [
-        'git config --global url."https://${GH_TOKEN}@github.com/".insteadOf ssh://git@github.com/',
         'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc && yarn install --frozen-lockfile --network-concurrency 1',
         'yarn build',
         'npx cdk synth --verbose',
@@ -234,10 +230,6 @@ export class APIPipeline extends Stack {
             value: 'npm-private-repo-access-token',
             type: BuildEnvironmentVariableType.SECRETS_MANAGER,
           },
-          GH_TOKEN: {
-            value: 'github-token-2',
-            type: BuildEnvironmentVariableType.SECRETS_MANAGER,
-          },
           ARCHIVE_NODE_RPC: {
             value: 'archive-node-rpc-url-default-kms',
             type: BuildEnvironmentVariableType.SECRETS_MANAGER,
@@ -265,7 +257,6 @@ export class APIPipeline extends Stack {
         },
       },
       commands: [
-        'git config --global url."https://${GH_TOKEN}@github.com/".insteadOf ssh://git@github.com/',
         'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc',
         'echo "UNISWAP_API=${UNISWAP_API}" >> .env',
         'echo "ROUTING_API_URL=${ROUTING_API}" >> .env',
