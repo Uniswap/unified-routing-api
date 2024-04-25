@@ -23,7 +23,7 @@ export interface DutchQuoteRequestInfo extends QuoteRequestInfo {
 }
 
 export interface DutchConfigJSON {
-  routingType: RoutingType.DUTCH_LIMIT;
+  routingType: RoutingType.DUTCH_LIMIT | RoutingType.DUTCH_V2;
   swapper?: string;
   exclusivityOverrideBps?: number;
   startTimeBufferSecs?: number;
@@ -61,7 +61,7 @@ export class DutchV1Request implements QuoteRequest {
 
   public toJSON(): DutchConfigJSON {
     return Object.assign({}, this.config, {
-      routingType: RoutingType.DUTCH_LIMIT as RoutingType.DUTCH_LIMIT,
+      routingType: this.routingType as RoutingType.DUTCH_LIMIT | RoutingType.DUTCH_V2,
     });
   }
 

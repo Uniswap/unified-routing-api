@@ -48,6 +48,7 @@ export class RfqQuoter implements Quoter {
           requestId: request.info.requestId,
           type: TradeType[request.info.type],
           numOutputs: portionEnabled ? 2 : 1,
+          protocol: routingTypeToProtocolVersion(request.routingType),
         },
         { headers: { 'x-api-key': this.paramApiKey } }
       ),
@@ -98,4 +99,15 @@ function mapNative(token: string, chainId: number): string {
     return wrapped;
   }
   return token;
+}
+
+function routingTypeToProtocolVersion(routingType: RoutingType): string {
+  switch (routingType) {
+    case RoutingType.DUTCH_LIMIT:
+      return 'v1';
+    case RoutingType.DUTCH_V2:
+      return 'v2';
+    default:
+      throw new Error(`Invalid routing type: ${routingType}`);
+  }
 }
