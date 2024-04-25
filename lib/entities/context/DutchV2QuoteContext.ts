@@ -9,7 +9,7 @@ export class DutchV2QuoteContext extends DutchQuoteContext {
   public routingType = RoutingType.DUTCH_V2;
 
   constructor(_log: Logger, public originalRequest: DutchV2Request, providers: DutchQuoteContextProviders) {
-    super(_log, originalRequest.toDutchV1Request(), providers);
+    super(_log, originalRequest.toDutchRequest(), providers);
   }
 
   // return either the rfq quote or a synthetic quote from the classic dependency
