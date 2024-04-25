@@ -1,21 +1,19 @@
-import { TradeType } from "@uniswap/sdk-core";
-import { log } from "@uniswap/smart-order-router";
-import { BigNumber } from "ethers";
-import { ChainConfigManager } from "../../config/ChainConfigManager";
-import { QuoteType, NATIVE_ADDRESS } from "../../constants";
-import { Portion } from "../../fetchers/PortionFetcher";
-import { generateRandomNonce } from "../../util/nonce";
-import { currentTimestampInMs } from "../../util/time";
-import { DutchQuoteRequest, DutchV1Request, DutchV2Request } from "../request";
-import { ClassicQuote } from "./ClassicQuote";
-import { DutchQuoteJSON, DutchQuote, ParameterizationOptions, DutchQuoteConstructorArgs } from "./DutchQuote";
-import { DutchV1Quote } from "./DutchV1Quote";
-import { DutchV2Quote } from "./DutchV2Quote";
+import { TradeType } from '@uniswap/sdk-core';
+import { log } from '@uniswap/smart-order-router';
+import { BigNumber } from 'ethers';
 import { v4 as uuidv4 } from 'uuid';
-
+import { ChainConfigManager } from '../../config/ChainConfigManager';
+import { NATIVE_ADDRESS, QuoteType } from '../../constants';
+import { Portion } from '../../fetchers/PortionFetcher';
+import { generateRandomNonce } from '../../util/nonce';
+import { currentTimestampInMs } from '../../util/time';
+import { DutchQuoteRequest, DutchV1Request, DutchV2Request } from '../request';
+import { ClassicQuote } from './ClassicQuote';
+import { DutchQuote, DutchQuoteConstructorArgs, DutchQuoteJSON, ParameterizationOptions } from './DutchQuote';
+import { DutchV1Quote } from './DutchV1Quote';
+import { DutchV2Quote } from './DutchV2Quote';
 
 export class DutchQuoteFactory {
-
   // build a dutch quote from an RFQ response
   public static fromResponseBody(
     request: DutchQuoteRequest,
@@ -31,37 +29,34 @@ export class DutchQuoteFactory {
       request
     );
     const args: DutchQuoteConstructorArgs = {
-        createdAtMs: currentTimestampInMs(),
-        request,
-        chainId: body.chainId,
-        requestId: body.requestId,
-        quoteId: body.quoteId,
-        tokenIn: body.tokenIn,
-        tokenOut: body.tokenOut,
-        amountInStart: BigNumber.from(body.amountIn),
-        amountInEnd,
-        amountOutStart,
-        amountOutEnd,
-        swapper: body.swapper,
-        quoteType: QuoteType.RFQ,
-        filler: body.filler,
-        nonce,
-        portion
+      createdAtMs: currentTimestampInMs(),
+      request,
+      chainId: body.chainId,
+      requestId: body.requestId,
+      quoteId: body.quoteId,
+      tokenIn: body.tokenIn,
+      tokenOut: body.tokenOut,
+      amountInStart: BigNumber.from(body.amountIn),
+      amountInEnd,
+      amountOutStart,
+      amountOutEnd,
+      swapper: body.swapper,
+      quoteType: QuoteType.RFQ,
+      filler: body.filler,
+      nonce,
+      portion,
     };
     if (request instanceof DutchV1Request) {
-        return new DutchV1Quote(args);
+      return new DutchV1Quote(args);
     }
     if (request instanceof DutchV2Request) {
-        return new DutchV2Quote(args);
+      return new DutchV2Quote(args);
     }
-    throw new Error(`Unexpected request type ${typeof(request)}`);
+    throw new Error(`Unexpected request type ${typeof request}`);
   }
 
   // build a synthetic dutch quote from a classic quote
-  public static fromClassicQuote(
-    request: DutchQuoteRequest,
-    quote: ClassicQuote
-  ): DutchQuote<DutchQuoteRequest> {
+  public static fromClassicQuote(request: DutchQuoteRequest, quote: ClassicQuote): DutchQuote<DutchQuoteRequest> {
     const chainId = request.info.tokenInChainId;
     const quoteConfig = ChainConfigManager.getQuoteConfig(chainId, request.routingType);
     const priceImprovedStartAmounts = DutchQuote.applyPriceImprovement(
@@ -86,30 +81,30 @@ export class DutchQuoteFactory {
     });
 
     const args: DutchQuoteConstructorArgs = {
-        createdAtMs: quote.createdAtMs,
-        request,
-        chainId: request.info.tokenInChainId,
-        requestId: request.info.requestId,
-        quoteId: uuidv4(), // synthetic quote doesn't receive a quoteId from RFQ api, so generate one
-        tokenIn: request.info.tokenIn,
-        tokenOut: quote.request.info.tokenOut,
-        amountInStart: startAmounts.amountIn,
-        amountInEnd: endAmounts.amountIn,
-        amountOutStart: startAmounts.amountOut,
-        amountOutEnd: endAmounts.amountOut,
-        swapper: request.config.swapper,
-        quoteType: QuoteType.SYNTHETIC,
-        filler: NATIVE_ADDRESS, // synthetic quote has no filler
-        nonce: generateRandomNonce(), // synthetic quote has no nonce
-        portion: quote.portion
-    }
+      createdAtMs: quote.createdAtMs,
+      request,
+      chainId: request.info.tokenInChainId,
+      requestId: request.info.requestId,
+      quoteId: uuidv4(), // synthetic quote doesn't receive a quoteId from RFQ api, so generate one
+      tokenIn: request.info.tokenIn,
+      tokenOut: quote.request.info.tokenOut,
+      amountInStart: startAmounts.amountIn,
+      amountInEnd: endAmounts.amountIn,
+      amountOutStart: startAmounts.amountOut,
+      amountOutEnd: endAmounts.amountOut,
+      swapper: request.config.swapper,
+      quoteType: QuoteType.SYNTHETIC,
+      filler: NATIVE_ADDRESS, // synthetic quote has no filler
+      nonce: generateRandomNonce(), // synthetic quote has no nonce
+      portion: quote.portion,
+    };
     if (request instanceof DutchV1Request) {
-        return new DutchV1Quote(args);
+      return new DutchV1Quote(args);
     }
     if (request instanceof DutchV2Request) {
-        return new DutchV2Quote(args);
+      return new DutchV2Quote(args);
     }
-    throw new Error(`Unexpected request type ${typeof(request)}`);
+    throw new Error(`Unexpected request type ${typeof request}`);
   }
 
   // reparameterize an RFQ quote with awareness of classic
@@ -118,7 +113,6 @@ export class DutchQuoteFactory {
     classic?: ClassicQuote,
     options?: ParameterizationOptions
   ): DutchQuote<DutchQuoteRequest> {
-
     if (!classic) return quote;
 
     const { amountIn: amountInStart, amountOut: amountOutStart } = DutchQuote.applyPreSwapGasAdjustment(
@@ -141,25 +135,24 @@ export class DutchQuoteFactory {
       slippageAdjustedClassicAmountIn: amountInEnd.toString(),
       slippageAdjustedClassicAmountOut: amountOutEnd.toString(),
     });
-    
+
     const args: DutchQuoteConstructorArgs = {
-        ...quote,
-        amountInStart,
-        amountInEnd,
-        amountOutStart,
-        amountOutEnd,
-        portion: quote.portion ?? classic.portion,
-        derived: {
-          largeTrade: options?.largeTrade ?? false,
-       }
-    }
+      ...quote,
+      amountInStart,
+      amountInEnd,
+      amountOutStart,
+      amountOutEnd,
+      portion: quote.portion ?? classic.portion,
+      derived: {
+        largeTrade: options?.largeTrade ?? false,
+      },
+    };
     if (quote.request instanceof DutchV1Request) {
-        return new DutchV1Quote(args);
+      return new DutchV1Quote(args);
     }
     if (quote.request instanceof DutchV2Request) {
-        return new DutchV2Quote(args);
+      return new DutchV2Quote(args);
     }
-    throw new Error(`Unexpected request type ${typeof(quote.request)}`);
+    throw new Error(`Unexpected request type ${typeof quote.request}`);
   }
-  
 }

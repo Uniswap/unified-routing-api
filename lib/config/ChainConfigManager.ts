@@ -3,200 +3,193 @@ import { RoutingType } from '../constants';
 
 type ChainConfig = {
   routingTypes: (
-    |
-    {
-      routingType: RoutingType.CLASSIC | RoutingType.DUTCH_V2 | RoutingType.RELAY,
-      skipRFQ?: boolean,
-      priceImprovementBps?: number,
-      stdAuctionPeriodSecs?: number,
-      deadlineBufferSecs?: number
-    }
-    | 
-    {
-      routingType: RoutingType.DUTCH_LIMIT,
-      skipRFQ?: boolean,
-      priceImprovementBps?: number,
-      stdAuctionPeriodSecs?: number,
-      lrgAuctionPeriodSecs?: number,
-      deadlineBufferSecs?: number
-    }
-  )[],
-  alarmEnabled: boolean
-}
+    | {
+        routingType: RoutingType.CLASSIC | RoutingType.DUTCH_V2 | RoutingType.RELAY;
+        skipRFQ?: boolean;
+        priceImprovementBps?: number;
+        stdAuctionPeriodSecs?: number;
+        deadlineBufferSecs?: number;
+      }
+    | {
+        routingType: RoutingType.DUTCH_LIMIT;
+        skipRFQ?: boolean;
+        priceImprovementBps?: number;
+        stdAuctionPeriodSecs?: number;
+        lrgAuctionPeriodSecs?: number;
+        deadlineBufferSecs?: number;
+      }
+  )[];
+  alarmEnabled: boolean;
+};
 
 export abstract class ChainConfigManager {
-
   // Represents the other route dependencies for each route type
   // If a route is added in to the supported routingTypes for a chain,
   // all dependencies will also be supported
-  private static readonly _routeDependencies: { [routingType: string] : RoutingType[] } = {
-    [RoutingType.DUTCH_LIMIT]: [
-      RoutingType.CLASSIC
-    ],
-    [RoutingType.DUTCH_V2]: [
-      RoutingType.CLASSIC
-    ]
-  }
-  private static readonly _chainConfigs: { [chainId:number] : ChainConfig } = {
+  private static readonly _routeDependencies: { [routingType: string]: RoutingType[] } = {
+    [RoutingType.DUTCH_LIMIT]: [RoutingType.CLASSIC],
+    [RoutingType.DUTCH_V2]: [RoutingType.CLASSIC],
+  };
+  private static readonly _chainConfigs: { [chainId: number]: ChainConfig } = {
     [ChainId.MAINNET]: {
       routingTypes: [
         {
-          routingType: RoutingType.CLASSIC 
+          routingType: RoutingType.CLASSIC,
         },
         {
           routingType: RoutingType.DUTCH_LIMIT,
-          lrgAuctionPeriodSecs: 120
+          lrgAuctionPeriodSecs: 120,
         },
         {
-          routingType: RoutingType.RELAY 
+          routingType: RoutingType.RELAY,
         },
         {
           routingType: RoutingType.DUTCH_V2,
           // 25 blocks from now
           // to cover time to sign, run secondary auction, and some blocks for decay
-          deadlineBufferSecs: 300
-        }
+          deadlineBufferSecs: 300,
+        },
       ],
-      alarmEnabled: true
+      alarmEnabled: true,
     },
     [ChainId.OPTIMISM]: {
       routingTypes: [
-          {
-            routingType: RoutingType.CLASSIC 
-          },
+        {
+          routingType: RoutingType.CLASSIC,
+        },
       ],
-      alarmEnabled: true
+      alarmEnabled: true,
     },
     [ChainId.OPTIMISM_GOERLI]: {
       // TODO: add back optimism GOERLI once we are sure routing api supports it
       routingTypes: [],
-      alarmEnabled: false
+      alarmEnabled: false,
     },
     [ChainId.ARBITRUM_ONE]: {
       routingTypes: [
         {
-          routingType: RoutingType.CLASSIC 
+          routingType: RoutingType.CLASSIC,
         },
         {
           routingType: RoutingType.DUTCH_V2,
           skipRFQ: true,
-          priceImprovementBps: 2
+          priceImprovementBps: 2,
         },
       ],
-      alarmEnabled: true
+      alarmEnabled: true,
     },
     [ChainId.ARBITRUM_GOERLI]: {
       routingTypes: [
         {
-          routingType: RoutingType.CLASSIC 
+          routingType: RoutingType.CLASSIC,
         },
-    ],
-      alarmEnabled: false
+      ],
+      alarmEnabled: false,
     },
     [ChainId.POLYGON]: {
       routingTypes: [
         {
-          routingType: RoutingType.CLASSIC 
+          routingType: RoutingType.CLASSIC,
         },
         {
-          routingType: RoutingType.DUTCH_LIMIT
+          routingType: RoutingType.DUTCH_LIMIT,
         },
       ],
-      alarmEnabled: true
+      alarmEnabled: true,
     },
     [ChainId.POLYGON_MUMBAI]: {
       routingTypes: [
         {
-          routingType: RoutingType.CLASSIC 
+          routingType: RoutingType.CLASSIC,
         },
-    ],
-      alarmEnabled: false
+      ],
+      alarmEnabled: false,
     },
     [ChainId.GOERLI]: {
       routingTypes: [
         {
-          routingType: RoutingType.CLASSIC 
+          routingType: RoutingType.CLASSIC,
         },
         {
-          routingType: RoutingType.DUTCH_LIMIT
+          routingType: RoutingType.DUTCH_LIMIT,
         },
       ],
-      alarmEnabled: true
+      alarmEnabled: true,
     },
     [ChainId.SEPOLIA]: {
       routingTypes: [
         {
-          routingType: RoutingType.CLASSIC 
+          routingType: RoutingType.CLASSIC,
         },
-    ],
-      alarmEnabled: false
+      ],
+      alarmEnabled: false,
     },
     [ChainId.CELO]: {
       routingTypes: [
         {
-          routingType: RoutingType.CLASSIC 
+          routingType: RoutingType.CLASSIC,
         },
-    ],
-      alarmEnabled: true
+      ],
+      alarmEnabled: true,
     },
     [ChainId.CELO_ALFAJORES]: {
       routingTypes: [
         {
-          routingType: RoutingType.CLASSIC 
+          routingType: RoutingType.CLASSIC,
         },
-    ],
-      alarmEnabled: false
+      ],
+      alarmEnabled: false,
     },
     [ChainId.BNB]: {
       routingTypes: [
         {
-          routingType: RoutingType.CLASSIC 
+          routingType: RoutingType.CLASSIC,
         },
-    ],
-      alarmEnabled: true
+      ],
+      alarmEnabled: true,
     },
     [ChainId.AVALANCHE]: {
       routingTypes: [
         {
-          routingType: RoutingType.CLASSIC 
+          routingType: RoutingType.CLASSIC,
         },
-    ],
-      alarmEnabled: true
+      ],
+      alarmEnabled: true,
     },
     [ChainId.BASE_GOERLI]: {
       routingTypes: [
         {
-          routingType: RoutingType.CLASSIC 
+          routingType: RoutingType.CLASSIC,
         },
-    ],
-      alarmEnabled: false
+      ],
+      alarmEnabled: false,
     },
     [ChainId.BASE]: {
       routingTypes: [
         {
-          routingType: RoutingType.CLASSIC 
+          routingType: RoutingType.CLASSIC,
         },
-    ],
-      alarmEnabled: true
+      ],
+      alarmEnabled: true,
     },
     [ChainId.BLAST]: {
       routingTypes: [
         {
-          routingType: RoutingType.CLASSIC 
+          routingType: RoutingType.CLASSIC,
         },
-    ],
-      alarmEnabled: true
+      ],
+      alarmEnabled: true,
     },
   };
 
-  private static _chainConfigsWithDependencies: { [chainId:number] : ChainConfig };
-  private static _reverseConfigs: { [routeType:string] : number[] };
-  
+  private static _chainConfigsWithDependencies: { [chainId: number]: ChainConfig };
+  private static _reverseConfigs: { [routeType: string]: number[] };
+
   /**
    * Lazy load the full list
    * Adds dependencies if they don't already exist
    */
-  static get chainConfigsWithDependencies(): { [chainId:number] : ChainConfig } {
+  static get chainConfigsWithDependencies(): { [chainId: number]: ChainConfig } {
     if (ChainConfigManager._chainConfigsWithDependencies) {
       return ChainConfigManager._chainConfigsWithDependencies;
     }
@@ -213,7 +206,7 @@ export abstract class ChainConfigManager {
           // If we have the dependent but not the dependency, add it
           if (dependentPresent && !dependencyPresent) {
             ChainConfigManager._chainConfigsWithDependencies[chainId].routingTypes.push({
-              routingType: dependency as RoutingType
+              routingType: dependency as RoutingType,
             });
           }
         }
@@ -222,7 +215,7 @@ export abstract class ChainConfigManager {
     return ChainConfigManager._chainConfigsWithDependencies;
   }
 
-  static get reverseConfigs(): { [routeType:string] : number[] } {
+  static get reverseConfigs(): { [routeType: string]: number[] } {
     if (ChainConfigManager._reverseConfigs) {
       return ChainConfigManager._reverseConfigs;
     }
@@ -232,7 +225,7 @@ export abstract class ChainConfigManager {
         if (!ChainConfigManager._reverseConfigs[supportedRoutingType.routingType]) {
           ChainConfigManager._reverseConfigs[supportedRoutingType.routingType] = [];
         }
-        ChainConfigManager._reverseConfigs[supportedRoutingType.routingType].push(parseInt(chainId))
+        ChainConfigManager._reverseConfigs[supportedRoutingType.routingType].push(parseInt(chainId));
       }
     }
     return ChainConfigManager._reverseConfigs;
@@ -242,7 +235,7 @@ export abstract class ChainConfigManager {
    * @returns all ChainIds
    */
   public static getChainIds(): ChainId[] {
-    return Object.keys(ChainConfigManager.chainConfigsWithDependencies).map(c => Number.parseInt(c));
+    return Object.keys(ChainConfigManager.chainConfigsWithDependencies).map((c) => Number.parseInt(c));
   }
 
   /**
@@ -273,8 +266,10 @@ export abstract class ChainConfigManager {
    * @returns true when ChainId supports provided RoutingType
    */
   public static chainSupportsRoutingType(chainId: ChainId, routingType: RoutingType) {
-    return chainId in ChainConfigManager.chainConfigsWithDependencies && 
-      ChainConfigManager.chainConfigsWithDependencies[chainId].routingTypes.some(r => r.routingType == routingType);
+    return (
+      chainId in ChainConfigManager.chainConfigsWithDependencies &&
+      ChainConfigManager.chainConfigsWithDependencies[chainId].routingTypes.some((r) => r.routingType == routingType)
+    );
   }
 
   /**
@@ -287,7 +282,9 @@ export abstract class ChainConfigManager {
       throw new Error(`Unexpected chainId ${chainId}`);
     }
     // Should only return one element if exists
-    const quoteConfig = ChainConfigManager.chainConfigsWithDependencies[chainId].routingTypes.filter(r => r.routingType == routingType);
+    const quoteConfig = ChainConfigManager.chainConfigsWithDependencies[chainId].routingTypes.filter(
+      (r) => r.routingType == routingType
+    );
     if (quoteConfig.length == 0) {
       throw new Error(`Routing type ${routingType} not supported on chain ${chainId}`);
     }

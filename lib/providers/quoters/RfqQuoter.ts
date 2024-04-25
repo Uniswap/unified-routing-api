@@ -5,12 +5,12 @@ import axios from './helpers';
 
 import { BPS, frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { DutchQuoteRequest, Quote } from '../../entities';
+import { DutchQuoteFactory } from '../../entities/quote/DutchQuoteFactory';
 import { PostQuoteResponseJoi } from '../../handlers/quote';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import { generateRandomNonce } from '../../util/nonce';
 import { Quoter, QuoterType } from './index';
-import { DutchQuoteFactory } from '../../entities/quote/DutchQuoteFactory';
 
 export class RfqQuoter implements Quoter {
   static readonly type: QuoterType.UNISWAPX_RFQ;

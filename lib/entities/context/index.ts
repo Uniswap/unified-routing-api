@@ -1,14 +1,7 @@
 import { ethers } from 'ethers';
 
 import { RoutingType } from '../../constants';
-import {
-  ClassicConfig,
-  ClassicRequest,
-  DutchQuoteRequest,
-  Quote,
-  QuoteRequest,
-  RelayRequest,
-} from '../../entities';
+import { ClassicConfig, ClassicRequest, DutchQuoteRequest, Quote, QuoteRequest, RelayRequest } from '../../entities';
 
 import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
 import { SyntheticStatusProvider } from '../../providers';

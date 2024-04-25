@@ -1,8 +1,9 @@
 import { DutchOrder, DutchOrderBuilder } from '@uniswap/uniswapx-sdk';
 import { BigNumber, ethers } from 'ethers';
 
-import { DutchQuote, DutchQuoteDataJSON, IQuote, getPortionAdjustedOutputs } from '.';
+import { DutchQuote, DutchQuoteDataJSON, getPortionAdjustedOutputs, IQuote } from '.';
 import { DutchV1Request } from '..';
+import { ChainConfigManager } from '../../config/ChainConfigManager';
 import {
   DEFAULT_AUCTION_PERIOD_SECS,
   DEFAULT_DEADLINE_BUFFER_SECS,
@@ -12,7 +13,6 @@ import {
   RoutingType,
 } from '../../constants';
 import { generateRandomNonce } from '../../util/nonce';
-import { ChainConfigManager } from '../../config/ChainConfigManager';
 
 export class DutchV1Quote extends DutchQuote<DutchV1Request> implements IQuote {
   public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
@@ -99,9 +99,12 @@ export class DutchV1Quote extends DutchQuote<DutchV1Request> implements IQuote {
     }
 
     const quoteConfig = ChainConfigManager.getQuoteConfig(this.chainId, this.request.routingType);
-    if (quoteConfig.routingType == RoutingType.DUTCH_LIMIT &&
-        quoteConfig.lrgAuctionPeriodSecs && this.derived.largeTrade) {
-      return quoteConfig.lrgAuctionPeriodSecs
+    if (
+      quoteConfig.routingType == RoutingType.DUTCH_LIMIT &&
+      quoteConfig.lrgAuctionPeriodSecs &&
+      this.derived.largeTrade
+    ) {
+      return quoteConfig.lrgAuctionPeriodSecs;
     }
     return quoteConfig.stdAuctionPeriodSecs ?? DEFAULT_AUCTION_PERIOD_SECS;
   }

@@ -5,11 +5,12 @@ import { BigNumber } from 'ethers';
 import { PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { DutchV2QuoteDataJSON, IQuote, SharedOrderQuoteDataJSON } from '.';
 import { DutchQuoteRequest } from '..';
+import { ChainConfigManager } from '../../config/ChainConfigManager';
 import {
   BPS,
-  QuoteType,
   frontendAndUraEnablePortion,
   NATIVE_ADDRESS,
+  QuoteType,
   RoutingType,
   UNISWAPX_BASE_GAS,
   WETH_UNWRAP_GAS,
@@ -20,7 +21,6 @@ import { Portion } from '../../fetchers/PortionFetcher';
 import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
 import { ClassicQuote } from './ClassicQuote';
 import { LogJSON } from './index';
-import { ChainConfigManager } from '../../config/ChainConfigManager';
 
 export type DutchQuoteDerived = {
   largeTrade: boolean;
@@ -72,8 +72,8 @@ export type DutchQuoteConstructorArgs = {
   amountOutStart: BigNumber;
   amountOutEnd: BigNumber;
   swapper: string;
-  quoteType: QuoteType,
-  filler?: string,
+  quoteType: QuoteType;
+  filler?: string;
   nonce?: string;
   portion?: Portion;
   derived?: DutchQuoteDerived;
@@ -109,10 +109,10 @@ export abstract class DutchQuote<T extends DutchQuoteRequest> implements IQuote 
     Object.assign(this, args, {
       createdAtMs: args.createdAtMs || currentTimestampInMs(),
       createdAt: timestampInMstoSeconds(parseInt(args.createdAtMs || currentTimestampInMs())),
-      derived: args.derived || { largeTrade: false }
+      derived: args.derived || { largeTrade: false },
     });
   }
-  abstract toJSON(): DutchQuoteDataJSON | DutchV2QuoteDataJSON
+  abstract toJSON(): DutchQuoteDataJSON | DutchV2QuoteDataJSON;
 
   public toLog(): LogJSON {
     return {
@@ -146,8 +146,7 @@ export abstract class DutchQuote<T extends DutchQuoteRequest> implements IQuote 
     };
   }
 
-
-  public abstract toOrder(): DutchOrder | UnsignedV2DutchOrder
+  public abstract toOrder(): DutchOrder | UnsignedV2DutchOrder;
 
   getPermitData(): PermitTransferFromData {
     return this.toOrder().permitData();

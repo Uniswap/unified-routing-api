@@ -8,6 +8,7 @@ import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
 import NodeCache from 'node-cache';
 import { QuoteByKey, QuoteContext } from '.';
+import { ChainConfigManager } from '../../config/ChainConfigManager';
 import { DEFAULT_ROUTING_API_DEADLINE, LARGE_TRADE_USD_THRESHOLD, NATIVE_ADDRESS } from '../../constants';
 import {
   ClassicQuote,
@@ -22,7 +23,6 @@ import { SyntheticStatusProvider } from '../../providers';
 import { Erc20__factory } from '../../types/ext/factories/Erc20__factory';
 import { metrics } from '../../util/metrics';
 import { getQuoteSizeEstimateUSD } from '../../util/quoteMath';
-import { ChainConfigManager } from '../../config/ChainConfigManager';
 import { DutchQuoteFactory } from '../quote/DutchQuoteFactory';
 
 // if the gas is greater than this proportion of the whole trade size
@@ -106,9 +106,10 @@ export class DutchQuoteContext implements QuoteContext {
     return quote;
   }
 
-  async getRfqQuote(quote?: DutchQuote<DutchQuoteRequest>, classicQuote?: ClassicQuote): 
-    Promise<DutchQuote<DutchQuoteRequest> | null> 
-  {
+  async getRfqQuote(
+    quote?: DutchQuote<DutchQuoteRequest>,
+    classicQuote?: ClassicQuote
+  ): Promise<DutchQuote<DutchQuoteRequest> | null> {
     if (!quote) return null;
 
     // if quote tokens are not in tokenlist return null
@@ -174,7 +175,10 @@ export class DutchQuoteContext implements QuoteContext {
 
   // transform a classic quote into a synthetic dutch quote
   // if it makes sense to do so
-  async getSyntheticQuote(classicQuote?: Quote, routeBackToNative?: Quote): Promise<DutchQuote<DutchQuoteRequest> | null> {
+  async getSyntheticQuote(
+    classicQuote?: Quote,
+    routeBackToNative?: Quote
+  ): Promise<DutchQuote<DutchQuoteRequest> | null> {
     // no classic quote to build synthetic from
     if (!classicQuote) {
       this.log.info('No classic quote, skipping synthetic');
@@ -205,7 +209,6 @@ export class DutchQuoteContext implements QuoteContext {
 
     return DutchQuoteFactory.fromClassicQuote(this.request, classicQuote as ClassicQuote);
   }
-
 
   hasOrderSize(log: Logger, classicQuote: Quote): boolean {
     const classicQuoteData = classicQuote.toJSON() as ClassicQuoteDataJSON;

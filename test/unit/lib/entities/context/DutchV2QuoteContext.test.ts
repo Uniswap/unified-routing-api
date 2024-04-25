@@ -17,8 +17,8 @@ import {
 import {
   BASE_REQUEST_INFO_EXACT_IN,
   createClassicQuote,
-  createDutchV2QuoteWithRequestOverrides,
   createDutchV2Quote,
+  createDutchV2QuoteWithRequestOverrides,
   DL_QUOTE_EXACT_IN_BETTER,
   makeDutchV2Request,
   QUOTE_REQUEST_DUTCH_V2,
@@ -194,7 +194,10 @@ describe('DutchQuoteContext', () => {
       expect(quote?.routingType).toEqual(RoutingType.DUTCH_V2);
       // Synthetic starts at quoteGasAdjusted + 1bp
       expect(quote?.amountOut.toString()).toEqual(
-        BigNumber.from(9999000000).mul(BPS + DutchQuote.defaultPriceImprovementBps).div(BPS).toString()
+        BigNumber.from(9999000000)
+          .mul(BPS + DutchQuote.defaultPriceImprovementBps)
+          .div(BPS)
+          .toString()
       );
     });
 
@@ -218,7 +221,10 @@ describe('DutchQuoteContext', () => {
       expect(quote?.routingType).toEqual(RoutingType.DUTCH_V2);
       // Synthetic starts at quoteGasAdjusted + 1bp
       expect(quote?.amountOut.toString()).toEqual(
-        BigNumber.from(9999000000).mul(BPS + DutchQuote.defaultPriceImprovementBps).div(BPS).toString()
+        BigNumber.from(9999000000)
+          .mul(BPS + DutchQuote.defaultPriceImprovementBps)
+          .div(BPS)
+          .toString()
       );
     });
 
@@ -242,7 +248,10 @@ describe('DutchQuoteContext', () => {
       expect(quote?.routingType).toEqual(RoutingType.DUTCH_V2);
       // Synthetic starts at quoteGasAdjusted + 1bp
       expect(quote?.amountOut.toString()).toEqual(
-        BigNumber.from(9999000000).mul(BPS + DutchQuote.defaultPriceImprovementBps).div(BPS).toString()
+        BigNumber.from(9999000000)
+          .mul(BPS + DutchQuote.defaultPriceImprovementBps)
+          .div(BPS)
+          .toString()
       );
     });
 
@@ -282,7 +291,10 @@ describe('DutchQuoteContext', () => {
 
       expect(quote?.routingType).toEqual(RoutingType.DUTCH_V2);
       // Synthetic starts at quoteGasAdjusted + 1bp
-      const expected = BigNumber.from(90000000).mul(BPS + DutchQuote.defaultPriceImprovementBps).div(BPS).toString();
+      const expected = BigNumber.from(90000000)
+        .mul(BPS + DutchQuote.defaultPriceImprovementBps)
+        .div(BPS)
+        .toString();
       expect(quote?.amountOut.toString()).toEqual(expected);
     });
 
@@ -303,7 +315,10 @@ describe('DutchQuoteContext', () => {
 
       expect(quote?.routingType).toEqual(RoutingType.DUTCH_V2);
       // Synthetic starts at quoteGasAdjusted + 1bp
-      const expected = BigNumber.from(399000000).mul(BPS - DutchQuote.defaultPriceImprovementBps).div(BPS).toString();
+      const expected = BigNumber.from(399000000)
+        .mul(BPS - DutchQuote.defaultPriceImprovementBps)
+        .div(BPS)
+        .toString();
       expect(quote?.amountIn.toString()).toEqual(expected);
     });
 
@@ -361,7 +376,10 @@ describe('DutchQuoteContext', () => {
       expect(quote?.routingType).toEqual(RoutingType.DUTCH_V2);
       // Synthetic starts at quoteGasAdjusted + 1bp
       expect(quote?.amountOut.toString()).toEqual(
-        BigNumber.from(9999000000).mul(BPS + DutchQuote.defaultPriceImprovementBps).div(BPS).toString()
+        BigNumber.from(9999000000)
+          .mul(BPS + DutchQuote.defaultPriceImprovementBps)
+          .div(BPS)
+          .toString()
       );
     });
 
@@ -446,7 +464,10 @@ describe('DutchQuoteContext', () => {
       });
       expect(quote?.routingType).toEqual(RoutingType.DUTCH_V2);
       expect(quote?.amountOut.toString()).toEqual(
-        BigNumber.from(9999000000).mul(BPS + DutchQuote.defaultPriceImprovementBps).div(BPS).toString()
+        BigNumber.from(9999000000)
+          .mul(BPS + DutchQuote.defaultPriceImprovementBps)
+          .div(BPS)
+          .toString()
       );
     });
 
@@ -648,7 +669,10 @@ describe('DutchQuoteContext', () => {
       expect(quote?.routingType).toEqual(RoutingType.DUTCH_V2);
       // Synthetic starts at quoteGasAdjusted + 1bp
       expect(quote?.amountOut.toString()).toEqual(
-        BigNumber.from(9999000000).mul(BPS + DutchQuote.defaultPriceImprovementBps).div(BPS).toString()
+        BigNumber.from(9999000000)
+          .mul(BPS + DutchQuote.defaultPriceImprovementBps)
+          .div(BPS)
+          .toString()
       );
     });
 
@@ -678,7 +702,10 @@ describe('DutchQuoteContext', () => {
       expect(quote?.routingType).toEqual(RoutingType.DUTCH_V2);
       // Synthetic starts at quoteGasAdjusted + 1bp
       expect(quote?.amountOut.toString()).toEqual(
-        BigNumber.from(9999000000).mul(BPS + DutchQuote.defaultPriceImprovementBps).div(BPS).toString()
+        BigNumber.from(9999000000)
+          .mul(BPS + DutchQuote.defaultPriceImprovementBps)
+          .div(BPS)
+          .toString()
       );
     });
   });

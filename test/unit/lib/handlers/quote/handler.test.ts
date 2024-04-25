@@ -53,7 +53,14 @@ import { AxiosError } from 'axios';
 import { BigNumber, providers } from 'ethers';
 import NodeCache from 'node-cache';
 import { RoutingType } from '../../../../../lib/constants';
-import { ClassicQuote, ClassicQuoteDataJSON, DutchQuote, Quote, RelayQuote, RequestSource } from '../../../../../lib/entities';
+import {
+  ClassicQuote,
+  ClassicQuoteDataJSON,
+  DutchQuote,
+  Quote,
+  RelayQuote,
+  RequestSource,
+} from '../../../../../lib/entities';
 import { DutchConfigJSON, DutchQuoteRequest, QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index';
 import { Permit2Fetcher } from '../../../../../lib/fetchers/Permit2Fetcher';
 import {

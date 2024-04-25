@@ -3,6 +3,7 @@ import { BigNumber, ethers } from 'ethers';
 import NodeCache from 'node-cache';
 import { BPS } from '../../../../lib/constants';
 import { DutchQuote, DutchQuoteDataJSON, DutchQuoteJSON, DutchQuoteRequest } from '../../../../lib/entities';
+import { DutchV1Quote } from '../../../../lib/entities/quote/DutchV1Quote';
 import { GetPortionResponse, PortionFetcher, PortionType } from '../../../../lib/fetchers/PortionFetcher';
 import { RfqQuoter } from '../../../../lib/providers';
 import axios from '../../../../lib/providers/quoters/helpers';
@@ -21,7 +22,6 @@ import {
   QUOTE_REQUEST_DL_EXACT_OUT_WITH_PORTION,
   QUOTE_REQUEST_DL_FE_SEND_PORTION,
 } from '../../../utils/fixtures';
-import { DutchV1Quote } from '../../../../lib/entities/quote/DutchV1Quote';
 
 const UUID = 'c67c2882-24aa-4a68-a90b-53250ef81517';
 
@@ -136,7 +136,7 @@ describe('RfqQuoter test', () => {
 
     it('returns null if rfq POST times out', async () => {
       jest.spyOn(axios, 'post').mockRejectedValue(new Error('RfqQuoterErr'));
-      const quote = (await quoter.quote(QUOTE_REQUEST_DL));
+      const quote = await quoter.quote(QUOTE_REQUEST_DL);
       expect(quote).toBeNull();
     });
 

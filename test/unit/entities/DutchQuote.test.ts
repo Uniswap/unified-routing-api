@@ -12,6 +12,8 @@ import {
   OPEN_QUOTE_START_TIME_BUFFER_SECS,
 } from '../../../lib/constants';
 import { ClassicQuote, DutchQuote, DutchQuoteJSON } from '../../../lib/entities';
+import { DutchQuoteFactory } from '../../../lib/entities/quote/DutchQuoteFactory';
+import { DutchV1Quote } from '../../../lib/entities/quote/DutchV1Quote';
 import {
   AMOUNT,
   AMOUNT_LARGE,
@@ -39,8 +41,6 @@ import {
   DL_QUOTE_NATIVE_EXACT_IN_LARGE,
   DL_QUOTE_NATIVE_EXACT_IN_LARGE_WITH_PORTION,
 } from '../../utils/fixtures';
-import { DutchQuoteFactory } from '../../../lib/entities/quote/DutchQuoteFactory';
-import { DutchV1Quote } from '../../../lib/entities/quote/DutchV1Quote';
 
 describe('DutchQuote', () => {
   // silent logger in tests
@@ -148,7 +148,11 @@ describe('DutchQuote', () => {
 
     it('uses portion from original', async () => {
       const dutchQuotePortion = createDutchQuote({ amountOut: AMOUNT_LARGE }, 'EXACT_INPUT', '1', FLAT_PORTION, true);
-      const reparameterized = DutchQuoteFactory.reparameterize(dutchQuotePortion, CLASSIC_QUOTE_EXACT_IN_LARGE, undefined);
+      const reparameterized = DutchQuoteFactory.reparameterize(
+        dutchQuotePortion,
+        CLASSIC_QUOTE_EXACT_IN_LARGE,
+        undefined
+      );
       expect(reparameterized.portion?.bips).toEqual(PORTION_BIPS);
       expect(reparameterized.toOrder().toJSON().outputs.length).toEqual(2);
     });

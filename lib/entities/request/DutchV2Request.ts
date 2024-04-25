@@ -2,6 +2,7 @@ import { ethers } from 'ethers';
 import { defaultRequestKey, QuoteRequest, QuoteRequestHeaders, QuoteRequestInfo } from '.';
 import { DEFAULT_SLIPPAGE_TOLERANCE, RoutingType } from '../../constants';
 import { DutchQuoteRequestInfo } from './DutchV1Request';
+
 export interface DutchV2Config {
   swapper: string;
   deadlineBufferSecs?: number;

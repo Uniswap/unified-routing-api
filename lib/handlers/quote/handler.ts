@@ -5,7 +5,7 @@ import { Unit } from 'aws-embedded-metrics';
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { APIGatewayProxyEventHeaders } from 'aws-lambda/trigger/api-gateway-proxy';
 import { v4 as uuidv4 } from 'uuid';
-import { QuoteType, frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
+import { frontendAndUraEnablePortion, NATIVE_ADDRESS, QuoteType, RoutingType } from '../../constants';
 import {
   ClassicQuote,
   DutchQuote,
@@ -492,9 +492,7 @@ const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
   if (tradeType === TradeType.EXACT_INPUT) {
     if (quote.routingType === RoutingType.CLASSIC) {
       return (quote as ClassicQuote).amountOutGasAndPortionAdjusted;
-    } else if (
-      quote.routingType === RoutingType.DUTCH_LIMIT || 
-      quote.routingType === RoutingType.DUTCH_V2) {
+    } else if (quote.routingType === RoutingType.DUTCH_LIMIT || quote.routingType === RoutingType.DUTCH_V2) {
       return (quote as DutchQuote<DutchQuoteRequest>).amountOutGasAndPortionAdjusted;
     } else if (quote.routingType === RoutingType.RELAY) {
       return (quote as RelayQuote).classicQuote.amountOutGasAndPortionAdjusted;
@@ -503,9 +501,7 @@ const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
   } else {
     if (quote.routingType === RoutingType.CLASSIC) {
       return (quote as ClassicQuote).amountInGasAndPortionAdjusted;
-    } else if (
-      quote.routingType === RoutingType.DUTCH_LIMIT || 
-      quote.routingType === RoutingType.DUTCH_V2) {
+    } else if (quote.routingType === RoutingType.DUTCH_LIMIT || quote.routingType === RoutingType.DUTCH_V2) {
       return (quote as DutchQuote<DutchQuoteRequest>).amountInGasAndPortionAdjusted;
     } else if (quote.routingType === RoutingType.RELAY) {
       return (quote as RelayQuote).classicQuote.amountInGasAndPortionAdjusted;

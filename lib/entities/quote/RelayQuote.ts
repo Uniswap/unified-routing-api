@@ -5,6 +5,7 @@ import { BigNumber, ethers } from 'ethers';
 import { PermitBatchTransferFromData } from '@uniswap/permit2-sdk';
 import { Percent } from '@uniswap/sdk-core';
 import { IQuote, SharedOrderQuoteDataJSON } from '.';
+import { ChainConfigManager } from '../../config/ChainConfigManager';
 import {
   DEFAULT_AUCTION_PERIOD_SECS,
   DEFAULT_DEADLINE_BUFFER_SECS,
@@ -17,7 +18,6 @@ import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
 import { RelayRequest } from '../request/RelayRequest';
 import { ClassicQuote, ClassicQuoteDataJSON } from './ClassicQuote';
 import { LogJSON } from './index';
-import { ChainConfigManager } from '../../config/ChainConfigManager';
 
 // Data returned by the API
 export type RelayQuoteDataJSON = SharedOrderQuoteDataJSON & {

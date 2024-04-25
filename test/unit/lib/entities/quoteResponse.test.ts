@@ -9,6 +9,8 @@ import {
   RelayQuote,
   RelayQuoteJSON,
 } from '../../../../lib/entities';
+import { DutchQuoteFactory } from '../../../../lib/entities/quote/DutchQuoteFactory';
+import { DutchV1Quote } from '../../../../lib/entities/quote/DutchV1Quote';
 import { RelayRequest } from '../../../../lib/entities/request/RelayRequest';
 import {
   AMOUNT,
@@ -28,8 +30,6 @@ import {
   QUOTE_REQUEST_DL,
   QUOTE_REQUEST_RELAY,
 } from '../../../utils/fixtures';
-import { DutchQuoteFactory } from '../../../../lib/entities/quote/DutchQuoteFactory';
-import { DutchV1Quote } from '../../../../lib/entities/quote/DutchV1Quote';
 
 const DL_QUOTE_JSON: DutchQuoteJSON = {
   chainId: CHAIN_IN_ID,

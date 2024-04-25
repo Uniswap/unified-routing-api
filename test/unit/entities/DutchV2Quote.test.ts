@@ -12,11 +12,14 @@ describe('DutchV2Quote', () => {
 
   describe('toOrder', () => {
     it('should have proper json form', () => {
-      const v2Quote = createDutchV2QuoteWithRequestOverrides({}, {
-        tokenIn: ETH_IN,
-        tokenOut: TOKEN_IN,
-        type: 'EXACT_INPUT'
-      })
+      const v2Quote = createDutchV2QuoteWithRequestOverrides(
+        {},
+        {
+          tokenIn: ETH_IN,
+          tokenOut: TOKEN_IN,
+          type: 'EXACT_INPUT',
+        }
+      );
       const order = v2Quote.toOrder();
 
       const orderJson = order.toJSON();
@@ -27,11 +30,14 @@ describe('DutchV2Quote', () => {
     });
 
     it('should serialize', () => {
-      const v2Quote = createDutchV2QuoteWithRequestOverrides({}, {
-        tokenIn: ETH_IN,
-        tokenOut: TOKEN_IN,
-        type: 'EXACT_INPUT'
-      })
+      const v2Quote = createDutchV2QuoteWithRequestOverrides(
+        {},
+        {
+          tokenIn: ETH_IN,
+          tokenOut: TOKEN_IN,
+          type: 'EXACT_INPUT',
+        }
+      );
       const order = v2Quote.toOrder();
 
       const serialized = order.serialize();
@@ -39,11 +45,14 @@ describe('DutchV2Quote', () => {
     });
 
     it('should hash for signing', () => {
-      const v2Quote = createDutchV2QuoteWithRequestOverrides({}, {
-        tokenIn: ETH_IN,
-        tokenOut: TOKEN_IN,
-        type: 'EXACT_INPUT'
-      })
+      const v2Quote = createDutchV2QuoteWithRequestOverrides(
+        {},
+        {
+          tokenIn: ETH_IN,
+          tokenOut: TOKEN_IN,
+          type: 'EXACT_INPUT',
+        }
+      );
       const order = v2Quote.toOrder();
 
       const hash = order.hash();

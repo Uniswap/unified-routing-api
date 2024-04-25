@@ -19,6 +19,7 @@ import {
   RelayRequest,
 } from '../../lib/entities';
 import { ClassicQuote, Quote, RelayQuote, RelayQuoteJSON } from '../../lib/entities/quote';
+import { DutchV1Quote } from '../../lib/entities/quote/DutchV1Quote';
 import { Portion } from '../../lib/fetchers/PortionFetcher';
 import {
   AMOUNT,
@@ -38,7 +39,6 @@ import {
 } from '../constants';
 import { buildQuoteResponse } from './quoteResponse';
 import { BULLET_WHT_FOT_TAX } from './tokens';
-import { DutchV1Quote } from '../../lib/entities/quote/DutchV1Quote';
 
 export const BASE_REQUEST_INFO_EXACT_IN = {
   tokenInChainId: CHAIN_IN_ID,
@@ -584,10 +584,7 @@ export function createDutchQuote(
   ) as DutchV1Quote;
 }
 
-export function createDutchQuoteWithRequest(
-  overrides: Partial<DutchQuoteJSON>,
-  request: DutchV1Request
-): DutchV1Quote {
+export function createDutchQuoteWithRequest(overrides: Partial<DutchQuoteJSON>, request: DutchV1Request): DutchV1Quote {
   return buildQuoteResponse(
     Object.assign({}, DL_QUOTE_DATA, {
       quote: { ...DL_QUOTE_DATA.quote, type: RoutingType.DUTCH_LIMIT, ...overrides },
@@ -601,9 +598,7 @@ export function createDutchQuoteWithRequestOverrides(
   requestOverrides: Partial<QuoteRequestBodyJSON>,
   configOverrides?: Partial<DutchConfig>
 ): DutchV1Quote {
-  return createDutchQuoteWithRequest(overrides,
-    makeDutchRequest({ ...requestOverrides }, configOverrides)
-  );
+  return createDutchQuoteWithRequest(overrides, makeDutchRequest({ ...requestOverrides }, configOverrides));
 }
 
 export function createDutchV2Quote(
@@ -640,9 +635,7 @@ export function createDutchV2QuoteWithRequestOverrides(
   requestOverrides: Partial<QuoteRequestBodyJSON>,
   configOverrides?: Partial<DutchV2Config>
 ): DutchV2Quote {
-  return createDutchV2QuoteWithRequest(overrides,
-    makeDutchV2Request({ ...requestOverrides }, configOverrides)
-  );
+  return createDutchV2QuoteWithRequest(overrides, makeDutchV2Request({ ...requestOverrides }, configOverrides));
 }
 
 export function createClassicQuote(
@@ -917,10 +910,7 @@ export function createRelayQuote(overrides: Partial<RelayQuoteJSON>, type: strin
   ) as RelayQuote;
 }
 
-export function createRelayQuoteWithRequest(
-  overrides: Partial<RelayQuoteJSON>,
-  request: RelayRequest
-): RelayQuote {
+export function createRelayQuoteWithRequest(overrides: Partial<RelayQuoteJSON>, request: RelayRequest): RelayQuote {
   return buildQuoteResponse(
     Object.assign({}, RELAY_QUOTE_DATA, {
       quote: { ...RELAY_QUOTE_DATA.quote, type: RoutingType.RELAY, ...overrides },
@@ -934,9 +924,7 @@ export function createRelayQuoteWithRequestOverrides(
   requestOverrides: Partial<QuoteRequestBodyJSON>,
   configOverrides?: Partial<RelayConfigJSON>
 ): RelayQuote {
-  return createRelayQuoteWithRequest(overrides,
-    makeRelayRequest({ ...requestOverrides }, configOverrides)
-  );
+  return createRelayQuoteWithRequest(overrides, makeRelayRequest({ ...requestOverrides }, configOverrides));
 }
 
 export const RELAY_QUOTE_EXACT_IN_BETTER = createRelayQuote(
