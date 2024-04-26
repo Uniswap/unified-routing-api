@@ -21,6 +21,7 @@ Currently supported routing types:
    SERVICE_URL=<>
    UNISWAP_API='<YourUrl>'
    ARCHIVE_NODE_RPC=<>
+   ENABLE_PORTION="true"
    ```
 
 To deploy to your own AWS account,
