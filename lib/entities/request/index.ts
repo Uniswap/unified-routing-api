@@ -76,7 +76,7 @@ export interface QuoteRequest {
 }
 
 export interface DutchQuoteRequest {
-  routingType: RoutingType;
+  routingType: RoutingType.DUTCH_LIMIT | RoutingType.DUTCH_V2;
   info: DutchQuoteRequestInfo;
   config: DutchRoutingConfig;
   headers: QuoteRequestHeaders;

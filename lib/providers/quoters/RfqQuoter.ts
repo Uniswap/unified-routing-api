@@ -14,15 +14,11 @@ import { Quoter, QuoterType } from './index';
 
 export class RfqQuoter implements Quoter {
   static readonly type: QuoterType.UNISWAPX_RFQ;
+  static readonly supportedRoutingTypes = [RoutingType.DUTCH_LIMIT, RoutingType.DUTCH_V2];
 
   constructor(private rfqUrl: string, private serviceUrl: string, private paramApiKey: string) {}
 
   async quote(request: DutchQuoteRequest): Promise<Quote | null> {
-    if (request.routingType !== RoutingType.DUTCH_LIMIT) {
-      log.error(`Invalid routing config type: ${request.routingType}`);
-      return null;
-    }
-
     const swapper = request.config.swapper;
     const now = Date.now();
     const portionEnabled = frontendAndUraEnablePortion(request.info.sendPortionEnabled);

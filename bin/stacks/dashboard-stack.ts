@@ -5,6 +5,7 @@ import * as aws_cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import { Construct } from 'constructs';
 import _ from 'lodash';
 import { ChainConfigManager } from '../../lib/config/ChainConfigManager';
+import { RoutingType } from '../../lib/constants';
 
 export const METRIC_NAMESPACE = 'Uniswap';
 export const METRIC_SERVICE_NAME = 'UnifiedRoutingAPI';
@@ -538,9 +539,57 @@ export class DashboardStack extends cdk.NestedStack {
           },
           {
             type: 'metric',
-            height: 5,
+            height: 6,
             width: 24,
-            y: 61,
+            y: 50,
+            x: 0,
+            properties: {
+              metrics: _.flatMap(
+                ChainConfigManager.getChainIds(),
+                (chainId: ChainId) => [
+                  ['Uniswap', `Latency-GetQuotes-ChainId${chainId}`, 'Service', METRIC_SERVICE_NAME],
+                  ['Uniswap', `Latency-ResolveQuotes-ChainId${chainId}`, 'Service', METRIC_SERVICE_NAME],
+                  ['Uniswap', `Latency-QuoteFull-ChainId${chainId}`, 'Service', METRIC_SERVICE_NAME],
+                ]
+              ),
+              view: 'timeSeries',
+              stacked: false,
+              stat: 'Sum',
+              period: 300,
+              region,
+              title: 'Quote Latency by Chain',
+            },
+          },
+          {
+            type: 'metric',
+            height: 6,
+            width: 24,
+            y: 56,
+            x: 0,
+            properties: {
+              metrics: _.flatMap(
+                ChainConfigManager.getChainIds(),
+                (chainId: ChainId) => 
+                    _.flatMap(RoutingType,
+                      (routingType: RoutingType) =>
+                      [
+                        ['Uniswap', `Latency-Quote-${routingType}-ChainId${chainId}`, 'Service', METRIC_SERVICE_NAME],
+                      ]
+                  )
+              ),
+              view: 'timeSeries',
+              stacked: false,
+              stat: 'Sum',
+              period: 300,
+              region,
+              title: 'Quote Latency by Chain and RoutingType',
+            },
+          },
+          {
+            type: 'metric',
+            height: 6,
+            width: 24,
+            y: 68,
             x: 0,
             properties: {
               view: 'timeSeries',
@@ -559,19 +608,25 @@ export class DashboardStack extends cdk.NestedStack {
             type: 'metric',
             height: 6,
             width: 12,
-            y: 50,
+            y: 62,
             x: 0,
             properties: {
               metrics: [
                 [{ expression: '(m3/m1)*100', label: 'RoutingAPIRequest4xxErrorRate', id: 'e1' }],
                 [{ expression: '(m4/m5)*100', label: 'RFQAPIRequestErrorRate', id: 'e2' }],
                 [{ expression: '(m6/m1)*100', label: 'RoutingAPIRequest5xxErrorRate', id: 'e3' }],
+                [{ expression: '(m8/m7)*100', label: 'PortionFetcherErrorRate', id: 'e4' }],
+                [{ expression: '(m10/m9)*100', label: 'Permit2FetcherErrorRate', id: 'e4' }],
                 ['Uniswap', 'RoutingApiQuoterRequest', 'Service', METRIC_SERVICE_NAME, { id: 'm1', visible: false }],
                 ['.', 'RoutingApiQuoterSuccess', '.', '.', { id: 'm2', visible: false }],
                 ['.', 'RoutingApiQuote4xxErr', '.', '.', { id: 'm3', visible: false }],
                 ['.', 'RfqQuoterRfqErr', '.', '.', { id: 'm4', visible: false }],
                 ['.', 'RfqQuoterRequest', '.', '.', { id: 'm5', visible: false }],
                 ['.', 'RoutingApiQuote5xxErr', '.', '.', { id: 'm6', visible: false }],
+                ['.', 'PortionFetcherRequest', '.', '.', { id: 'm7', visible: false }],
+                ['.', 'PortionFetcherErr', '.', '.', { id: 'm8', visible: false }],
+                ['.', 'Permit2FetcherRequest', '.', '.', { id: 'm9', visible: false }],
+                ['.', 'Permit2FetcherErr', '.', '.', { id: 'm10', visible: false }],
               ],
               view: 'timeSeries',
               stacked: false,
@@ -585,7 +640,7 @@ export class DashboardStack extends cdk.NestedStack {
             type: 'metric',
             height: 6,
             width: 12,
-            y: 50,
+            y: 56,
             x: 12,
             properties: {
               metrics: [
@@ -594,6 +649,12 @@ export class DashboardStack extends cdk.NestedStack {
                 ['.', 'RoutingApiQuoterErr', '.', '.', { id: 'm3' }],
                 ['.', 'RfqQuoterRfqErr', '.', '.', { id: 'm4' }],
                 ['.', 'RfqQuoterRequest', '.', '.', { id: 'm5' }],
+                ['.', 'PortionFetcherRequest', '.', '.', { id: 'm6' }],
+                ['.', 'PortionFetcherSuccess', '.', '.', { id: 'm7' }],
+                ['.', 'PortionFetcherErr', '.', '.', { id: 'm8' }],
+                ['.', 'Permit2FetcherRequest', '.', '.', { id: 'm9' }],
+                ['.', 'Permit2FetcherSuccess', '.', '.', { id: 'm10' }],
+                ['.', 'Permit2FetcherErr', '.', '.', { id: 'm10' }],
               ],
               view: 'timeSeries',
               stacked: false,
@@ -613,6 +674,8 @@ export class DashboardStack extends cdk.NestedStack {
               metrics: [
                 ['Uniswap', 'RfqQuoterLatency', 'Service', METRIC_SERVICE_NAME],
                 ['.', 'RoutingApiQuoterLatency', '.', '.'],
+                ['.', 'Latency-GetPortion', '.', '.'],
+                ['.', 'Latency-Permit2Fetcher', '.', '.'],
               ],
               view: 'timeSeries',
               stacked: false,
