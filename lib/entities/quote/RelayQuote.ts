@@ -284,11 +284,20 @@ export class RelayQuote implements IQuote {
   static getGasAdjustedAmounts(
     gasEstimateInFeeToken: BigNumber,
     gasAdjustment: BigNumber,
-    _classicQuote: ClassicQuote
+    classicQuote: ClassicQuote
   ): FeeStartEndAmounts {
-    // TODO: add parameterization for feeAmountStart
-    const feeAmountStart = gasEstimateInFeeToken;
-    const feeAmountEnd = feeAmountStart.add(gasAdjustment.mul(125).div(100));
+    const gasUseEstimate = BigNumber.from(classicQuote.toJSON().gasUseEstimate);
+    const gasPriceWei = BigNumber.from(classicQuote.toJSON().gasPriceWei);
+    
+    // get the classic estimated gas cost in native token
+    const classicGasNative = gasUseEstimate.mul(gasPriceWei);
+    // apply the gas adjustment, and get the cost in native token
+    const adjustedGasNative = gasUseEstimate.add(gasAdjustment).mul(gasPriceWei);
+    // multiply the gas estimate in fee token by the ratio of the adjusted gas to the classic gas
+    const feeAmountStart = gasEstimateInFeeToken.mul(adjustedGasNative).div(classicGasNative);
+    // add a 25% buffer to the fee start amount to account for potential gas price increases
+    const feeAmountEnd = feeAmountStart.mul(125).div(100);
+
     return {
       feeAmountStart,
       feeAmountEnd,
