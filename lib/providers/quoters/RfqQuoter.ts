@@ -13,11 +13,12 @@ import { Quoter, QuoterType } from './index';
 
 export class RfqQuoter implements Quoter {
   static readonly type: QuoterType.UNISWAPX_RFQ;
+  static readonly supportedRoutingTypes = [RoutingType.DUTCH_LIMIT, RoutingType.DUTCH_V2];
 
   constructor(private rfqUrl: string, private serviceUrl: string, private paramApiKey: string) {}
 
   async quote(request: DutchRequest): Promise<Quote | null> {
-    if (request.routingType !== RoutingType.DUTCH_LIMIT) {
+    if (!RfqQuoter.supportedRoutingTypes.includes(request.routingType)) {
       log.error(`Invalid routing config type: ${request.routingType}`);
       return null;
     }
@@ -47,6 +48,7 @@ export class RfqQuoter implements Quoter {
           requestId: request.info.requestId,
           type: TradeType[request.info.type],
           numOutputs: portionEnabled ? 2 : 1,
+          protocol: routingTypeToProtocolVersion(request.routingType),
         },
         { headers: { 'x-api-key': this.paramApiKey } }
       ),
@@ -97,4 +99,15 @@ function mapNative(token: string, chainId: number): string {
     return wrapped;
   }
   return token;
+}
+
+function routingTypeToProtocolVersion(routingType: RoutingType): string {
+  switch (routingType) {
+    case RoutingType.DUTCH_LIMIT:
+      return 'v1';
+    case RoutingType.DUTCH_V2:
+      return 'v2';
+    default:
+      throw new Error(`Invalid routing type: ${routingType}`);
+  }
 }
