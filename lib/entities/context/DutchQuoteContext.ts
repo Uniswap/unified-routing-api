@@ -63,7 +63,7 @@ export class DutchQuoteContext implements QuoteContext {
       simulateFromAddress: this.request.config.swapper,
       deadline: DEFAULT_ROUTING_API_DEADLINE,
       recipient: this.request.config.swapper,
-      enableUniversalRouter: true
+      enableUniversalRouter: true,
     });
     this.classicKey = classicRequest.key();
     this.log.info({ classicRequest: classicRequest.info }, 'Adding synthetic classic request');
@@ -76,8 +76,8 @@ export class DutchQuoteContext implements QuoteContext {
     const rfqQuote = dependencies[this.requestKey] as DutchQuote;
 
     const [quote, syntheticQuote] = await Promise.all([
-      this.getRfqQuote(rfqQuote, classicQuote),
-      this.getSyntheticQuote(classicQuote),
+      this.validateRfqQuote(rfqQuote, classicQuote),
+      this.validateSyntheticQuote(classicQuote),
     ]);
 
     // handle cases where we only either have RFQ or synthetic
@@ -105,7 +105,7 @@ export class DutchQuoteContext implements QuoteContext {
     return quote;
   }
 
-  async getRfqQuote(quote?: DutchQuote, classicQuote?: ClassicQuote): Promise<DutchQuote | null> {
+  async validateRfqQuote(quote?: DutchQuote, classicQuote?: ClassicQuote): Promise<DutchQuote | null> {
     if (!quote) return null;
 
     // if quote tokens are not in tokenlist return null
@@ -165,7 +165,7 @@ export class DutchQuoteContext implements QuoteContext {
 
   // transform a classic quote into a synthetic dutch quote
   // if it makes sense to do so
-  async getSyntheticQuote(classicQuote?: Quote, routeBackToNative?: Quote): Promise<DutchQuote | null> {
+  async validateSyntheticQuote(classicQuote?: Quote, routeBackToNative?: Quote): Promise<DutchQuote | null> {
     // no classic quote to build synthetic from
     if (!classicQuote) {
       this.log.info('No classic quote, skipping synthetic');
