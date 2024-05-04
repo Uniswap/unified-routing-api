@@ -207,7 +207,7 @@ describe('ChainConfigManager', () => {
         [ChainId.MAINNET]: {
           routingTypes: [
             {
-              routingType: RoutingType.CLASSIC,
+              routingType: RoutingType.DUTCH_V2,
               stdAuctionPeriodSecs: 99,
             },
             {
@@ -221,7 +221,7 @@ describe('ChainConfigManager', () => {
           alarmEnabled: false,
         },
       });
-      let quoteConfig = ChainConfigManager.getQuoteConfig(ChainId.MAINNET, RoutingType.CLASSIC);
+      let quoteConfig = ChainConfigManager.getQuoteConfig(ChainId.MAINNET, RoutingType.DUTCH_V2);
       expect(quoteConfig.stdAuctionPeriodSecs).toEqual(99);
       quoteConfig = ChainConfigManager.getQuoteConfig(ChainId.MAINNET, RoutingType.DUTCH_LIMIT);
       expect(quoteConfig.stdAuctionPeriodSecs).toEqual(undefined);
