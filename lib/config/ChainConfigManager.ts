@@ -13,7 +13,7 @@ export type DutchOverrides = IntentOverrides & {
   priceImprovementBps?: number;
 }
 
-type RoutingTypeConfig = Partial<{
+type RoutingTypeOverrides = Partial<{
   [RoutingType.DUTCH_LIMIT]: DutchOverrides & {
     largeAuctionPeriodSecs?: number;
   },
@@ -23,7 +23,7 @@ type RoutingTypeConfig = Partial<{
 }>;
 
 type ChainConfigType = {  
-  routingTypes: RoutingTypeConfig,
+  routingTypes: RoutingTypeOverrides,
   alarmEnabled: boolean;
 }
 
@@ -197,7 +197,7 @@ export abstract class ChainConfigManager {
               dependentPresent = dependentPresent || supportedRoutingType == dependencyMapping;
               dependencyPresent = dependencyPresent || supportedRoutingType == dependency;
             }
-            // If we have the dependent but not the dependency, add it
+            // If we have the dependent but not the dependency, fail fast
             if (dependentPresent && !dependencyPresent) {
               throw new Error(`ChainId ${chainId} has routingType ${dependencyMapping} but missing dependency ${dependency}`);
             }
@@ -271,7 +271,7 @@ export abstract class ChainConfigManager {
    * @param routingType the RoutingType to check
    * @returns the QuoteConfig for the provided ChainId and RoutingType
    */
-  public static getQuoteConfig<T extends RoutingType>(chainId: ChainId, routingType: T): Exclude<RoutingTypeConfig[T], undefined> {
+  public static getQuoteConfig<T extends RoutingType>(chainId: ChainId, routingType: T): Exclude<RoutingTypeOverrides[T], undefined> {
     if (!(chainId in ChainConfigManager.chainConfigsWithDependencies)) {
       throw new Error(`Unexpected chainId ${chainId}`);
     }
@@ -280,6 +280,6 @@ export abstract class ChainConfigManager {
     if (!quoteConfig) {
       throw new Error(`Routing type ${routingType} not supported on chain ${chainId}`);
     }
-    return quoteConfig as Exclude<RoutingTypeConfig[T], undefined>;
+    return quoteConfig as Exclude<RoutingTypeOverrides[T], undefined>;
   }
 }
