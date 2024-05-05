@@ -1,31 +1,31 @@
 import { ChainId } from '@uniswap/sdk-core';
 import { RoutingType } from '../constants';
 
-type CommonOverrides = {}
+type CommonOverrides = {};
 
 type IntentOverrides = {
   stdAuctionPeriodSecs?: number;
   deadlineBufferSecs?: number;
-}
+};
 
 export type DutchOverrides = IntentOverrides & {
   skipRFQ?: boolean;
   priceImprovementBps?: number;
-}
+};
 
 type RoutingTypeOverrides = Partial<{
   [RoutingType.DUTCH_LIMIT]: DutchOverrides & {
     largeAuctionPeriodSecs?: number;
-  },
-  [RoutingType.DUTCH_V2]: DutchOverrides,
-  [RoutingType.RELAY]: CommonOverrides & IntentOverrides,
-  [RoutingType.CLASSIC]: CommonOverrides,
+  };
+  [RoutingType.DUTCH_V2]: DutchOverrides;
+  [RoutingType.RELAY]: CommonOverrides & IntentOverrides;
+  [RoutingType.CLASSIC]: CommonOverrides;
 }>;
 
-type ChainConfigType = {  
-  routingTypes: RoutingTypeOverrides,
+type ChainConfigType = {
+  routingTypes: RoutingTypeOverrides;
   alarmEnabled: boolean;
-}
+};
 
 export type ChainConfigMap = { [chainId: number]: ChainConfigType };
 export type DependencyMap = { [routingType: string]: RoutingType[] };
@@ -45,19 +45,19 @@ export abstract class ChainConfigManager {
         [RoutingType.CLASSIC]: {},
         [RoutingType.RELAY]: {},
         [RoutingType.DUTCH_LIMIT]: {
-          largeAuctionPeriodSecs: 120
+          largeAuctionPeriodSecs: 120,
         },
         [RoutingType.DUTCH_V2]: {
           // 25 blocks from now
           // to cover time to sign, run secondary auction, and some blocks for decay
-          deadlineBufferSecs: 300
-        }
+          deadlineBufferSecs: 300,
+        },
       },
       alarmEnabled: true,
     },
     [ChainId.OPTIMISM]: {
       routingTypes: {
-        [RoutingType.CLASSIC]: {}
+        [RoutingType.CLASSIC]: {},
       },
       alarmEnabled: true,
     },
@@ -74,15 +74,15 @@ export abstract class ChainConfigManager {
       routingTypes: {
         [RoutingType.CLASSIC]: {},
         [RoutingType.DUTCH_V2]: {
-                  skipRFQ: true,
-                  priceImprovementBps: 2
-        }
+          skipRFQ: true,
+          priceImprovementBps: 2,
+        },
       },
       alarmEnabled: true,
     },
     [ChainId.ARBITRUM_GOERLI]: {
       routingTypes: {
-        [RoutingType.CLASSIC]: {}
+        [RoutingType.CLASSIC]: {},
       },
       alarmEnabled: false,
     },
@@ -93,20 +93,20 @@ export abstract class ChainConfigManager {
     [ChainId.POLYGON]: {
       routingTypes: {
         [RoutingType.CLASSIC]: {},
-        [RoutingType.DUTCH_LIMIT]: {}
+        [RoutingType.DUTCH_LIMIT]: {},
       },
       alarmEnabled: true,
     },
     [ChainId.POLYGON_MUMBAI]: {
       routingTypes: {
-        [RoutingType.CLASSIC]: {}
+        [RoutingType.CLASSIC]: {},
       },
       alarmEnabled: false,
     },
     [ChainId.GOERLI]: {
       routingTypes: {
         [RoutingType.CLASSIC]: {},
-        [RoutingType.DUTCH_LIMIT]: {}
+        [RoutingType.DUTCH_LIMIT]: {},
       },
       alarmEnabled: false,
     },
@@ -116,49 +116,49 @@ export abstract class ChainConfigManager {
     },
     [ChainId.SEPOLIA]: {
       routingTypes: {
-        [RoutingType.CLASSIC]: {}
+        [RoutingType.CLASSIC]: {},
       },
       alarmEnabled: false,
     },
     [ChainId.CELO]: {
       routingTypes: {
-        [RoutingType.CLASSIC]: {}
+        [RoutingType.CLASSIC]: {},
       },
       alarmEnabled: true,
     },
     [ChainId.CELO_ALFAJORES]: {
       routingTypes: {
-        [RoutingType.CLASSIC]: {}
+        [RoutingType.CLASSIC]: {},
       },
       alarmEnabled: false,
     },
     [ChainId.BNB]: {
       routingTypes: {
-        [RoutingType.CLASSIC]: {}
+        [RoutingType.CLASSIC]: {},
       },
       alarmEnabled: true,
     },
     [ChainId.AVALANCHE]: {
       routingTypes: {
-        [RoutingType.CLASSIC]: {}
+        [RoutingType.CLASSIC]: {},
       },
       alarmEnabled: true,
     },
     [ChainId.BASE_GOERLI]: {
       routingTypes: {
-        [RoutingType.CLASSIC]: {}
+        [RoutingType.CLASSIC]: {},
       },
       alarmEnabled: false,
     },
     [ChainId.BASE]: {
       routingTypes: {
-        [RoutingType.CLASSIC]: {}
+        [RoutingType.CLASSIC]: {},
       },
       alarmEnabled: true,
     },
     [ChainId.BLAST]: {
       routingTypes: {
-        [RoutingType.CLASSIC]: {}
+        [RoutingType.CLASSIC]: {},
       },
       alarmEnabled: true,
     },
@@ -177,10 +177,10 @@ export abstract class ChainConfigManager {
     [ChainId.ROOTSTOCK]: {
       routingTypes: {},
       alarmEnabled: false,
-    }
-  }
+    },
+  };
 
-  private static _performedDependencyCheck: boolean = false;
+  private static _performedDependencyCheck = false;
   private static _chainsByRoutingType: RouteChainMap;
 
   /**
@@ -199,7 +199,9 @@ export abstract class ChainConfigManager {
             }
             // If we have the dependent but not the dependency, fail fast
             if (dependentPresent && !dependencyPresent) {
-              throw new Error(`ChainId ${chainId} has routingType ${dependencyMapping} but missing dependency ${dependency}`);
+              throw new Error(
+                `ChainId ${chainId} has routingType ${dependencyMapping} but missing dependency ${dependency}`
+              );
             }
           }
         }
@@ -271,7 +273,10 @@ export abstract class ChainConfigManager {
    * @param routingType the RoutingType to check
    * @returns the QuoteConfig for the provided ChainId and RoutingType
    */
-  public static getQuoteConfig<T extends RoutingType>(chainId: ChainId, routingType: T): Exclude<RoutingTypeOverrides[T], undefined> {
+  public static getQuoteConfig<T extends RoutingType>(
+    chainId: ChainId,
+    routingType: T
+  ): Exclude<RoutingTypeOverrides[T], undefined> {
     if (!(chainId in ChainConfigManager.chainConfigsWithDependencies)) {
       throw new Error(`Unexpected chainId ${chainId}`);
     }

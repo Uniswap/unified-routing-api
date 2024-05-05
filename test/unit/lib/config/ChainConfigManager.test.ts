@@ -96,7 +96,7 @@ describe('ChainConfigManager', () => {
               [RoutingType.DUTCH_V2]: {},
             },
             alarmEnabled: false,
-          }
+          },
         },
         {
           [RoutingType.DUTCH_V2]: [RoutingType.CLASSIC],
@@ -104,8 +104,10 @@ describe('ChainConfigManager', () => {
       );
       // chainConfigs doesn't contain Classic but its listed as a dependency
       expect(() => {
-        ChainConfigManager.getChainIdsByRoutingType(RoutingType.CLASSIC);        
-      }).toThrow(`ChainId ${ChainId.MAINNET} has routingType ${RoutingType.DUTCH_V2} but missing dependency ${RoutingType.CLASSIC}`)
+        ChainConfigManager.getChainIdsByRoutingType(RoutingType.CLASSIC);
+      }).toThrow(
+        `ChainId ${ChainId.MAINNET} has routingType ${RoutingType.DUTCH_V2} but missing dependency ${RoutingType.CLASSIC}`
+      );
     });
 
     it('getChainIdsByRoutingType returns all chains by routing type', () => {
@@ -153,7 +155,7 @@ describe('ChainConfigManager', () => {
           alarmEnabled: false,
         },
       });
-      let chainIds = ChainConfigManager.getAlarmedChainIds();
+      const chainIds = ChainConfigManager.getAlarmedChainIds();
       expect(chainIds.length == 1).toBeTruthy();
       expect(chainIds.includes(ChainId.MAINNET)).toBeTruthy();
     });
@@ -184,8 +186,7 @@ describe('ChainConfigManager', () => {
         [ChainId.MAINNET]: {
           routingTypes: {
             [RoutingType.CLASSIC]: {},
-            [RoutingType.DUTCH_V2]:
-            {
+            [RoutingType.DUTCH_V2]: {
               stdAuctionPeriodSecs: 99,
             },
             [RoutingType.DUTCH_LIMIT]: {},
@@ -322,7 +323,7 @@ describe('ChainConfigManager', () => {
             [ChainId.MAINNET]: {
               routingTypes: {
                 [RoutingType.CLASSIC]: {},
-                [routingType]: {}
+                [routingType]: {},
               },
               alarmEnabled: false,
             },
@@ -383,8 +384,8 @@ describe('ChainConfigManager', () => {
               routingTypes: {
                 [RoutingType.CLASSIC]: {},
                 [routingType]: {
-                  skipRFQ: true
-                }
+                  skipRFQ: true,
+                },
               },
               alarmEnabled: false,
             },
@@ -414,7 +415,7 @@ describe('ChainConfigManager', () => {
               routingTypes: {
                 [RoutingType.CLASSIC]: {},
                 [routingType]: {
-                  skipRFQ: true
+                  skipRFQ: true,
                 },
               },
               alarmEnabled: false,
@@ -479,11 +480,10 @@ describe('ChainConfigManager', () => {
             [ChainId.MAINNET]: {
               routingTypes: {
                 [RoutingType.CLASSIC]: {},
-                [routingType]:
-                  {
-                    priceImprovementBps: 1,
-                    skipRFQ: true,
-                  },
+                [routingType]: {
+                  priceImprovementBps: 1,
+                  skipRFQ: true,
+                },
               },
               alarmEnabled: false,
             },
@@ -544,11 +544,10 @@ describe('ChainConfigManager', () => {
             [ChainId.MAINNET]: {
               routingTypes: {
                 [RoutingType.CLASSIC]: {},
-                [routingType]:
-                  {
-                    priceImprovementBps: 10,
-                    skipRFQ: true,
-                  },
+                [routingType]: {
+                  priceImprovementBps: 10,
+                  skipRFQ: true,
+                },
               },
               alarmEnabled: false,
             },
@@ -577,10 +576,9 @@ describe('ChainConfigManager', () => {
           [ChainId.MAINNET]: {
             routingTypes: {
               [RoutingType.CLASSIC]: {},
-              [RoutingType.DUTCH_LIMIT]:
-                {
-                  skipRFQ: true,
-                },
+              [RoutingType.DUTCH_LIMIT]: {
+                skipRFQ: true,
+              },
             },
             alarmEnabled: false,
           },
@@ -624,10 +622,9 @@ describe('ChainConfigManager', () => {
           [ChainId.MAINNET]: {
             routingTypes: {
               [RoutingType.CLASSIC]: {},
-              [RoutingType.DUTCH_LIMIT]:
-                {
-                  stdAuctionPeriodSecs: 9999,
-                },
+              [RoutingType.DUTCH_LIMIT]: {
+                stdAuctionPeriodSecs: 9999,
+              },
             },
             alarmEnabled: false,
           },
@@ -668,8 +665,7 @@ describe('ChainConfigManager', () => {
           [ChainId.MAINNET]: {
             routingTypes: {
               [RoutingType.CLASSIC]: {},
-              [RoutingType.DUTCH_LIMIT]:
-              {
+              [RoutingType.DUTCH_LIMIT]: {
                 stdAuctionPeriodSecs: 1,
                 largeAuctionPeriodSecs: 9999,
               },
@@ -737,11 +733,10 @@ describe('ChainConfigManager', () => {
             [ChainId.MAINNET]: {
               routingTypes: {
                 [RoutingType.CLASSIC]: {},
-                [routingType]:
-                  {
-                    deadlineBufferSecs: 9999,
-                    skipRFQ: true,
-                  },
+                [routingType]: {
+                  deadlineBufferSecs: 9999,
+                  skipRFQ: true,
+                },
               },
               alarmEnabled: false,
             },
