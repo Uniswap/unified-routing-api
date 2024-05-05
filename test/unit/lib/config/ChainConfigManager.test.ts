@@ -1,7 +1,7 @@
 import { ChainId } from '@uniswap/sdk-core';
 import Logger from 'bunyan';
 import { BigNumber } from 'ethers';
-import { ChainConfigManager } from '../../../../lib/config/ChainConfigManager';
+import { ChainConfigManager, ChainConfigMap, DependencyMap } from '../../../../lib/config/ChainConfigManager';
 import { BPS, NATIVE_ADDRESS, QuoteType, RoutingType } from '../../../../lib/constants';
 import { DutchQuote, DutchQuoteContext, RelayQuoteContext } from '../../../../lib/entities';
 import { DutchV1Quote } from '../../../../lib/entities/quote/DutchV1Quote';
@@ -52,9 +52,9 @@ describe('ChainConfigManager', () => {
 
   // Reset ChainConfigManager lazy loading to test changes for each test case
   // Necessary whenever we're changing _chainConfigs or _routeDependencies
-  function setChainConfigManager(chainConfigs?: any, routeDependencies?: any) {
-    Object.defineProperty(ChainConfigManager, '_reverseConfigs', { value: undefined });
-    Object.defineProperty(ChainConfigManager, '_chainConfigsWithDependencies', { value: undefined });
+  function setChainConfigManager(chainConfigs?: ChainConfigMap, routeDependencies?: DependencyMap) {
+    Object.defineProperty(ChainConfigManager, '_chainsByRoutingType', { value: undefined });
+    Object.defineProperty(ChainConfigManager, '_performedDependencyCheck', { value: false });
     if (chainConfigs) {
       Object.defineProperty(ChainConfigManager, '_chainConfigs', { value: chainConfigs });
     }
@@ -74,11 +74,11 @@ describe('ChainConfigManager', () => {
     it('getChainIds returns all chains', () => {
       setChainConfigManager({
         [ChainId.MAINNET]: {
-          routingTypes: [],
+          routingTypes: {},
           alarmEnabled: false,
         },
         [ChainId.OPTIMISM_GOERLI]: {
-          routingTypes: [],
+          routingTypes: {},
           alarmEnabled: false,
         },
       });
@@ -88,59 +88,40 @@ describe('ChainConfigManager', () => {
       expect(chainIds.includes(ChainId.OPTIMISM_GOERLI)).toBeTruthy();
     });
 
-    it('getChainIds includes routeDependencies', () => {
+    it('getChainIds throws an error if routeDependencies are not present', () => {
       setChainConfigManager(
         {
           [ChainId.MAINNET]: {
-            routingTypes: [
-              {
-                routingType: RoutingType.DUTCH_V2,
-              },
-            ],
+            routingTypes: {
+              [RoutingType.DUTCH_V2]: {},
+            },
             alarmEnabled: false,
-          },
-          [ChainId.OPTIMISM_GOERLI]: {
-            routingTypes: [
-              {
-                routingType: RoutingType.DUTCH_LIMIT,
-              },
-            ],
-            alarmEnabled: false,
-          },
+          }
         },
         {
-          [RoutingType.DUTCH_LIMIT]: [RoutingType.CLASSIC],
           [RoutingType.DUTCH_V2]: [RoutingType.CLASSIC],
         }
       );
-      // chainConfigs doesn't contain Mainnet but it should still
-      // show in getChainIdsByRoutingType since it's listed as a dependency
-      const chainIds = ChainConfigManager.getChainIdsByRoutingType(RoutingType.CLASSIC);
-      expect(chainIds.length == 2).toBeTruthy();
-      expect(chainIds.includes(ChainId.MAINNET)).toBeTruthy();
-      expect(chainIds.includes(ChainId.OPTIMISM_GOERLI)).toBeTruthy();
+      // chainConfigs doesn't contain Classic but its listed as a dependency
+      expect(() => {
+        ChainConfigManager.getChainIdsByRoutingType(RoutingType.CLASSIC);        
+      }).toThrow(`ChainId ${ChainId.MAINNET} has routingType ${RoutingType.DUTCH_V2} but missing dependency ${RoutingType.CLASSIC}`)
     });
 
     it('getChainIdsByRoutingType returns all chains by routing type', () => {
       setChainConfigManager(
         {
           [ChainId.MAINNET]: {
-            routingTypes: [
-              {
-                routingType: RoutingType.CLASSIC,
-              },
-              {
-                routingType: RoutingType.DUTCH_LIMIT,
-              },
-            ],
+            routingTypes: {
+              [RoutingType.CLASSIC]: {},
+              [RoutingType.DUTCH_LIMIT]: {},
+            },
             alarmEnabled: false,
           },
           [ChainId.OPTIMISM_GOERLI]: {
-            routingTypes: [
-              {
-                routingType: RoutingType.DUTCH_LIMIT,
-              },
-            ],
+            routingTypes: {
+              [RoutingType.DUTCH_LIMIT]: {},
+            },
             alarmEnabled: false,
           },
         },
@@ -164,11 +145,11 @@ describe('ChainConfigManager', () => {
     it('getAlarmedChainIds returns all chains by alarm setting', () => {
       setChainConfigManager({
         [ChainId.MAINNET]: {
-          routingTypes: [],
+          routingTypes: {},
           alarmEnabled: true,
         },
         [ChainId.OPTIMISM_GOERLI]: {
-          routingTypes: [],
+          routingTypes: {},
           alarmEnabled: false,
         },
       });
@@ -180,18 +161,14 @@ describe('ChainConfigManager', () => {
     it('chainSupportsRoutingType returns true when chainId support routingType', () => {
       setChainConfigManager({
         [ChainId.MAINNET]: {
-          routingTypes: [
-            {
-              routingType: RoutingType.CLASSIC,
-            },
-            {
-              routingType: RoutingType.DUTCH_LIMIT,
-            },
-          ],
+          routingTypes: {
+            [RoutingType.CLASSIC]: {},
+            [RoutingType.DUTCH_LIMIT]: {},
+          },
           alarmEnabled: false,
         },
         [ChainId.OPTIMISM_GOERLI]: {
-          routingTypes: [],
+          routingTypes: {},
           alarmEnabled: false,
         },
       });
@@ -205,19 +182,18 @@ describe('ChainConfigManager', () => {
     it('getQuoteConfig returns the QuoteConfig for the provided chainId and routingType', () => {
       setChainConfigManager({
         [ChainId.MAINNET]: {
-          routingTypes: [
+          routingTypes: {
+            [RoutingType.CLASSIC]: {},
+            [RoutingType.DUTCH_V2]:
             {
-              routingType: RoutingType.DUTCH_V2,
               stdAuctionPeriodSecs: 99,
             },
-            {
-              routingType: RoutingType.DUTCH_LIMIT,
-            },
-          ],
+            [RoutingType.DUTCH_LIMIT]: {},
+          },
           alarmEnabled: false,
         },
         [ChainId.OPTIMISM_GOERLI]: {
-          routingTypes: [],
+          routingTypes: {},
           alarmEnabled: false,
         },
       });
@@ -238,11 +214,9 @@ describe('ChainConfigManager', () => {
     it('Missing chainId cannot be used with Classic', () => {
       setChainConfigManager({
         [ChainId.MAINNET]: {
-          routingTypes: [
-            {
-              routingType: RoutingType.CLASSIC,
-            },
-          ],
+          routingTypes: {
+            [RoutingType.CLASSIC]: {},
+          },
           alarmEnabled: false,
         },
       });
@@ -255,11 +229,10 @@ describe('ChainConfigManager', () => {
     it('Missing chainId cannot be used with Dutch', () => {
       setChainConfigManager({
         [ChainId.MAINNET]: {
-          routingTypes: [
-            {
-              routingType: RoutingType.DUTCH_LIMIT,
-            },
-          ],
+          routingTypes: {
+            [RoutingType.CLASSIC]: {},
+            [RoutingType.DUTCH_LIMIT]: {},
+          },
           alarmEnabled: false,
         },
       });
@@ -278,11 +251,10 @@ describe('ChainConfigManager', () => {
     it('Missing chainId cannot be used with Dutchv2', () => {
       setChainConfigManager({
         [ChainId.MAINNET]: {
-          routingTypes: [
-            {
-              routingType: RoutingType.DUTCH_V2,
-            },
-          ],
+          routingTypes: {
+            [RoutingType.CLASSIC]: {},
+            [RoutingType.DUTCH_V2]: {},
+          },
           alarmEnabled: false,
         },
       });
@@ -301,11 +273,9 @@ describe('ChainConfigManager', () => {
     it('Missing chainId cannot be used with Relay', () => {
       setChainConfigManager({
         [ChainId.MAINNET]: {
-          routingTypes: [
-            {
-              routingType: RoutingType.RELAY,
-            },
-          ],
+          routingTypes: {
+            [RoutingType.RELAY]: {},
+          },
           alarmEnabled: false,
         },
       });
@@ -318,7 +288,7 @@ describe('ChainConfigManager', () => {
     it('Missing routingType cannot be used with chain', () => {
       setChainConfigManager({
         [ChainId.MAINNET]: {
-          routingTypes: [],
+          routingTypes: {},
           alarmEnabled: false,
         },
       });
@@ -330,11 +300,9 @@ describe('ChainConfigManager', () => {
 
       setChainConfigManager({
         [ChainId.MAINNET]: {
-          routingTypes: [
-            {
-              routingType: RoutingType.DUTCH_LIMIT,
-            },
-          ],
+          routingTypes: {
+            [RoutingType.DUTCH_LIMIT]: {},
+          },
           alarmEnabled: false,
         },
       });
@@ -352,11 +320,10 @@ describe('ChainConfigManager', () => {
         setChainConfigManager(
           {
             [ChainId.MAINNET]: {
-              routingTypes: [
-                {
-                  routingType: routingType,
-                },
-              ],
+              routingTypes: {
+                [RoutingType.CLASSIC]: {},
+                [routingType]: {}
+              },
               alarmEnabled: false,
             },
           },
@@ -413,12 +380,12 @@ describe('ChainConfigManager', () => {
         setChainConfigManager(
           {
             [ChainId.MAINNET]: {
-              routingTypes: [
-                {
-                  routingType: routingType,
-                  skipRFQ: true,
-                },
-              ],
+              routingTypes: {
+                [RoutingType.CLASSIC]: {},
+                [routingType]: {
+                  skipRFQ: true
+                }
+              },
               alarmEnabled: false,
             },
           },
@@ -444,12 +411,12 @@ describe('ChainConfigManager', () => {
         setChainConfigManager(
           {
             [ChainId.MAINNET]: {
-              routingTypes: [
-                {
-                  routingType: routingType,
-                  skipRFQ: true,
+              routingTypes: {
+                [RoutingType.CLASSIC]: {},
+                [routingType]: {
+                  skipRFQ: true
                 },
-              ],
+              },
               alarmEnabled: false,
             },
           },
@@ -510,13 +477,14 @@ describe('ChainConfigManager', () => {
         setChainConfigManager(
           {
             [ChainId.MAINNET]: {
-              routingTypes: [
-                {
-                  routingType: routingType,
-                  priceImprovementBps: 1,
-                  skipRFQ: true,
-                },
-              ],
+              routingTypes: {
+                [RoutingType.CLASSIC]: {},
+                [routingType]:
+                  {
+                    priceImprovementBps: 1,
+                    skipRFQ: true,
+                  },
+              },
               alarmEnabled: false,
             },
           },
@@ -574,13 +542,14 @@ describe('ChainConfigManager', () => {
         setChainConfigManager(
           {
             [ChainId.MAINNET]: {
-              routingTypes: [
-                {
-                  routingType: routingType,
-                  priceImprovementBps: 10,
-                  skipRFQ: true,
-                },
-              ],
+              routingTypes: {
+                [RoutingType.CLASSIC]: {},
+                [routingType]:
+                  {
+                    priceImprovementBps: 10,
+                    skipRFQ: true,
+                  },
+              },
               alarmEnabled: false,
             },
           },
@@ -606,12 +575,13 @@ describe('ChainConfigManager', () => {
       setChainConfigManager(
         {
           [ChainId.MAINNET]: {
-            routingTypes: [
-              {
-                routingType: RoutingType.DUTCH_LIMIT,
-                skipRFQ: true,
-              },
-            ],
+            routingTypes: {
+              [RoutingType.CLASSIC]: {},
+              [RoutingType.DUTCH_LIMIT]:
+                {
+                  skipRFQ: true,
+                },
+            },
             alarmEnabled: false,
           },
         },
@@ -652,12 +622,13 @@ describe('ChainConfigManager', () => {
       setChainConfigManager(
         {
           [ChainId.MAINNET]: {
-            routingTypes: [
-              {
-                routingType: RoutingType.DUTCH_LIMIT,
-                stdAuctionPeriodSecs: 9999,
-              },
-            ],
+            routingTypes: {
+              [RoutingType.CLASSIC]: {},
+              [RoutingType.DUTCH_LIMIT]:
+                {
+                  stdAuctionPeriodSecs: 9999,
+                },
+            },
             alarmEnabled: false,
           },
         },
@@ -695,13 +666,14 @@ describe('ChainConfigManager', () => {
       setChainConfigManager(
         {
           [ChainId.MAINNET]: {
-            routingTypes: [
+            routingTypes: {
+              [RoutingType.CLASSIC]: {},
+              [RoutingType.DUTCH_LIMIT]:
               {
-                routingType: RoutingType.DUTCH_LIMIT,
                 stdAuctionPeriodSecs: 1,
                 largeAuctionPeriodSecs: 9999,
               },
-            ],
+            },
             alarmEnabled: false,
           },
         },
@@ -763,13 +735,14 @@ describe('ChainConfigManager', () => {
         setChainConfigManager(
           {
             [ChainId.MAINNET]: {
-              routingTypes: [
-                {
-                  routingType: routingType,
-                  deadlineBufferSecs: 9999,
-                  skipRFQ: true,
-                },
-              ],
+              routingTypes: {
+                [RoutingType.CLASSIC]: {},
+                [routingType]:
+                  {
+                    deadlineBufferSecs: 9999,
+                    skipRFQ: true,
+                  },
+              },
               alarmEnabled: false,
             },
           },

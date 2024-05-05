@@ -8,7 +8,7 @@ import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
 import NodeCache from 'node-cache';
 import { QuoteByKey, QuoteContext } from '.';
-import { ChainConfigManager, DutchConfig } from '../../config/ChainConfigManager';
+import { ChainConfigManager } from '../../config/ChainConfigManager';
 import { DEFAULT_ROUTING_API_DEADLINE, LARGE_TRADE_USD_THRESHOLD, NATIVE_ADDRESS } from '../../constants';
 import {
   ClassicQuote,
@@ -136,7 +136,7 @@ export class DutchQuoteContext implements QuoteContext {
       return null;
     }
 
-    const quoteConfig = ChainConfigManager.getQuoteConfig(quote.chainId, this.request.routingType) as DutchConfig;
+    const quoteConfig = ChainConfigManager.getQuoteConfig(quote.chainId, this.request.routingType);
     if (quoteConfig.skipRFQ) {
       this.log.info('RFQ Orders are disabled in config');
       return null;
@@ -200,7 +200,7 @@ export class DutchQuoteContext implements QuoteContext {
 
     const syntheticStatus = await this.syntheticStatusProvider.getStatus(this.request.info);
     const chainId = classicQuote.request.info.tokenInChainId;
-    const quoteConfig = ChainConfigManager.getQuoteConfig(chainId, this.request.routingType) as DutchConfig;
+    const quoteConfig = ChainConfigManager.getQuoteConfig(chainId, this.request.routingType);
     // if the useSyntheticQuotes override is not set by client or server and we're not skipping RFQ, return null
     // if we are skipping RFQ, we need a synthetic quote
     if (!this.request.config.useSyntheticQuotes && !syntheticStatus.syntheticEnabled && !quoteConfig.skipRFQ) {

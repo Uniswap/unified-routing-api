@@ -1,36 +1,40 @@
 import { ChainId } from '@uniswap/sdk-core';
 import { RoutingType } from '../constants';
 
-type CommonConfig = {}
+type CommonOverrides = {}
 
-export type DutchConfig = {
-  skipRFQ?: boolean;
-  priceImprovementBps?: number;
+type IntentOverrides = {
   stdAuctionPeriodSecs?: number;
   deadlineBufferSecs?: number;
 }
 
+export type DutchOverrides = IntentOverrides & {
+  skipRFQ?: boolean;
+  priceImprovementBps?: number;
+}
+
 type RoutingTypeConfig = Partial<{
-  [RoutingType.DUTCH_LIMIT]: DutchConfig & {
+  [RoutingType.DUTCH_LIMIT]: DutchOverrides & {
     largeAuctionPeriodSecs?: number;
   },
-  [RoutingType.DUTCH_V2]: DutchConfig,
-  [RoutingType.RELAY]: CommonConfig,
-  [RoutingType.CLASSIC]: CommonConfig,
+  [RoutingType.DUTCH_V2]: DutchOverrides,
+  [RoutingType.RELAY]: CommonOverrides & IntentOverrides,
+  [RoutingType.CLASSIC]: CommonOverrides,
 }>;
 
-type ChainConfigType = {
+type ChainConfigType = {  
   routingTypes: RoutingTypeConfig,
   alarmEnabled: boolean;
 }
 
-type ChainConfigMap = { [chainId: number]: ChainConfigType };
-type RouteChainMap = { [routeType: string]: number[] };
+export type ChainConfigMap = { [chainId: number]: ChainConfigType };
+export type DependencyMap = { [routingType: string]: RoutingType[] };
+type RouteChainMap = { [routingType: string]: number[] };
 
 export abstract class ChainConfigManager {
   // Represents the other route dependencies for each route type
   // If a route is added in to the supported routingTypes for a chain,
-  // all dependencies will also be supported
+  // this class will ensure all dependencies are present
   private static readonly _routeDependencies: { [routingType: string]: RoutingType[] } = {
     [RoutingType.DUTCH_LIMIT]: [RoutingType.CLASSIC],
     [RoutingType.DUTCH_V2]: [RoutingType.CLASSIC],
@@ -177,7 +181,7 @@ export abstract class ChainConfigManager {
   }
 
   private static _performedDependencyCheck: boolean = false;
-  private static _reverseConfigs: RouteChainMap;
+  private static _chainsByRoutingType: RouteChainMap;
 
   /**
    * Checks for dependencies and throws an error if any are missing
@@ -205,20 +209,20 @@ export abstract class ChainConfigManager {
     return ChainConfigManager._chainConfigs;
   }
 
-  static get reverseConfigs(): { [routeType: string]: number[] } {
-    if (ChainConfigManager._reverseConfigs) {
-      return ChainConfigManager._reverseConfigs;
+  static get chainsByRoutingType(): { [routingType: string]: number[] } {
+    if (ChainConfigManager._chainsByRoutingType) {
+      return ChainConfigManager._chainsByRoutingType;
     }
-    ChainConfigManager._reverseConfigs = {};
+    ChainConfigManager._chainsByRoutingType = {};
     for (const chainId in ChainConfigManager.chainConfigsWithDependencies) {
       for (const supportedRoutingType in ChainConfigManager.chainConfigsWithDependencies[chainId].routingTypes) {
-        if (!ChainConfigManager._reverseConfigs[supportedRoutingType]) {
-          ChainConfigManager._reverseConfigs[supportedRoutingType] = [];
+        if (!ChainConfigManager._chainsByRoutingType[supportedRoutingType]) {
+          ChainConfigManager._chainsByRoutingType[supportedRoutingType] = [];
         }
-        ChainConfigManager._reverseConfigs[supportedRoutingType].push(parseInt(chainId));
+        ChainConfigManager._chainsByRoutingType[supportedRoutingType].push(parseInt(chainId));
       }
     }
-    return ChainConfigManager._reverseConfigs;
+    return ChainConfigManager._chainsByRoutingType;
   }
 
   /**
@@ -233,7 +237,7 @@ export abstract class ChainConfigManager {
    * @returns all chains that support given RoutingType
    */
   public static getChainIdsByRoutingType(routingType: RoutingType): ChainId[] {
-    return ChainConfigManager.reverseConfigs[routingType] || [];
+    return ChainConfigManager.chainsByRoutingType[routingType] || [];
   }
 
   /**
@@ -267,7 +271,7 @@ export abstract class ChainConfigManager {
    * @param routingType the RoutingType to check
    * @returns the QuoteConfig for the provided ChainId and RoutingType
    */
-  public static getQuoteConfig<T extends RoutingType>(chainId: ChainId, routingType: T): RoutingTypeConfig[T] {
+  public static getQuoteConfig<T extends RoutingType>(chainId: ChainId, routingType: T): Exclude<RoutingTypeConfig[T], undefined> {
     if (!(chainId in ChainConfigManager.chainConfigsWithDependencies)) {
       throw new Error(`Unexpected chainId ${chainId}`);
     }
@@ -276,6 +280,6 @@ export abstract class ChainConfigManager {
     if (!quoteConfig) {
       throw new Error(`Routing type ${routingType} not supported on chain ${chainId}`);
     }
-    return quoteConfig as RoutingTypeConfig[T];
+    return quoteConfig as Exclude<RoutingTypeConfig[T], undefined>;
   }
 }
