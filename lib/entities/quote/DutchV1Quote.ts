@@ -99,11 +99,7 @@ export class DutchV1Quote extends DutchQuote<DutchV1Request> implements IQuote {
     }
 
     const quoteConfig = ChainConfigManager.getQuoteConfig(this.chainId, this.request.routingType);
-    if (
-      quoteConfig.routingType == RoutingType.DUTCH_LIMIT &&
-      quoteConfig.largeAuctionPeriodSecs &&
-      this.derived.largeTrade
-    ) {
+    if (quoteConfig.largeAuctionPeriodSecs && this.derived.largeTrade) {
       return quoteConfig.largeAuctionPeriodSecs;
     }
     return quoteConfig.stdAuctionPeriodSecs ?? DEFAULT_AUCTION_PERIOD_SECS;

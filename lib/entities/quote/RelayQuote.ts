@@ -244,7 +244,7 @@ export class RelayQuote implements IQuote {
       return this.request.config.auctionPeriodSecs;
     }
 
-    const quoteConfig = ChainConfigManager.getQuoteConfig(this.chainId, this.request.routingType);
+    const quoteConfig = ChainConfigManager.getQuoteConfig(this.chainId, RoutingType.RELAY);
     return quoteConfig.stdAuctionPeriodSecs ?? DEFAULT_AUCTION_PERIOD_SECS;
   }
 
