@@ -1,6 +1,12 @@
 import { PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { TradeType } from '@uniswap/sdk-core';
-import { UnsignedV2DutchOrder, UnsignedV2DutchOrderInfoJSON, V2DutchOrderBuilder } from '@uniswap/uniswapx-sdk';
+import {
+  DutchInput,
+  DutchOutput,
+  UnsignedV2DutchOrder,
+  UnsignedV2DutchOrderInfoJSON,
+  V2DutchOrderBuilder,
+} from '@uniswap/uniswapx-sdk';
 import { BigNumber, ethers } from 'ethers';
 
 import { IQuote, LogJSON, SharedOrderQuoteDataJSON } from '.';
@@ -12,6 +18,7 @@ import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
 import { DutchQuote as DutchV1Quote, getPortionAdjustedOutputs } from './DutchQuote';
 
 export const DEFAULT_LABS_COSIGNER = ethers.constants.AddressZero;
+export const V2_OUTPUT_AMOUNT_BUFFER_BPS = 10;
 
 // JSON format of a DutchV2Quote, to be returned by the API
 export type DutchV2QuoteDataJSON = SharedOrderQuoteDataJSON & {
@@ -111,13 +118,33 @@ export class DutchV2Quote implements IQuote {
         endAmount: this.amountInEnd,
       });
 
+    const input = {
+      token: this.tokenIn,
+      startAmount: this.amountInStart,
+      endAmount: this.amountInEnd,
+      recipient: this.request.config.swapper,
+    };
+
+    const output = {
+      token: this.tokenOut,
+      startAmount: this.amountOutStart,
+      endAmount: this.amountOutEnd,
+      recipient: this.request.config.swapper,
+    };
+
+    // Apply negative buffer to allow for improvement during hard quote process
+    // - the buffer is applied to the output for EXACT_INPUT and to the input for EXACT_OUTPUT
+    // - any portion is taken out of the the transformed output
+    const { input: V2Input, output: V2Output } = addBufferToV2InputOutput(
+      input,
+      output,
+      this.request.info.type,
+      V2_OUTPUT_AMOUNT_BUFFER_BPS
+    );
+    builder.input(V2Input);
+
     const outputs = getPortionAdjustedOutputs(
-      {
-        token: this.tokenOut,
-        startAmount: this.amountOutStart,
-        endAmount: this.amountOutEnd,
-        recipient: this.request.config.swapper,
-      },
+      V2Output,
       this.request.info.type,
       this.request.info.sendPortionEnabled,
       this.portion
@@ -215,5 +242,37 @@ export class DutchV2Quote implements IQuote {
 
   static getLabsCosigner(): string {
     return process.env.RFQ_LABS_COSIGNER_ADDRESS || DEFAULT_LABS_COSIGNER;
+  }
+}
+
+export function addBufferToV2InputOutput(
+  input: DutchInput,
+  output: DutchOutput,
+  type: TradeType,
+  bps: number
+): {
+  input: DutchInput;
+  output: DutchOutput;
+} {
+  if (type === TradeType.EXACT_INPUT) {
+    return {
+      input,
+      output: {
+        ...output,
+        // subtract buffer from output
+        startAmount: output.startAmount.mul(BPS - bps).div(BPS),
+        endAmount: output.endAmount.mul(BPS - bps).div(BPS),
+      },
+    };
+  } else {
+    return {
+      input: {
+        ...input,
+        // add buffer to input
+        startAmount: input.startAmount.mul(BPS + bps).div(BPS),
+        endAmount: input.endAmount.mul(BPS + bps).div(BPS),
+      },
+      output,
+    };
   }
 }
