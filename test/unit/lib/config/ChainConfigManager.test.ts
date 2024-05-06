@@ -71,13 +71,21 @@ describe('ChainConfigManager', () => {
   }
 
   describe('ChainConfigManager interface', () => {
-    it('getChainIds returns all chains', () => {
+    it('getChainIds returns all chains that have some routingTypes', () => {
       setChainConfigManager({
         [ChainId.MAINNET]: {
-          routingTypes: {},
+          routingTypes: {
+            [RoutingType.CLASSIC]: {},
+          },
           alarmEnabled: false,
         },
         [ChainId.OPTIMISM_GOERLI]: {
+          routingTypes: {
+            [RoutingType.CLASSIC]: {},
+          },
+          alarmEnabled: false,
+        },
+        [ChainId.ROOTSTOCK]: {
           routingTypes: {},
           alarmEnabled: false,
         },
@@ -88,7 +96,7 @@ describe('ChainConfigManager', () => {
       expect(chainIds.includes(ChainId.OPTIMISM_GOERLI)).toBeTruthy();
     });
 
-    it('getChainIds throws an error if routeDependencies are not present', () => {
+    it('getChainIdsByRoutingType throws an error if routeDependencies are not present', () => {
       setChainConfigManager(
         {
           [ChainId.MAINNET]: {
