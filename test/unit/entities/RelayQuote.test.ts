@@ -100,8 +100,9 @@ describe('RelayQuote', () => {
       const relayRequest = makeRelayRequest({ type: 'EXACT_INPUT' });
       const quote = RelayQuote.fromClassicQuote(relayRequest, classicQuote);
       expect(quote).toBeDefined();
-      expect(quote.feeAmountStart.eq(AMOUNT)).toBeTruthy();
-      // Expect escalation to be applied to gas token amount
+      // Expect adjustment to be applied to fee token stat amount
+      expect(quote.feeAmountStart.gt(AMOUNT)).toBeTruthy();
+      // Expect some escalation to be applied to fee token end amount
       expect(quote.feeAmountEnd.gt(quote.feeAmountStart)).toBeTruthy();
     });
   });
