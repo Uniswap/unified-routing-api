@@ -43,6 +43,7 @@ type DutchV2QuoteConstructorArgs = {
   amountOutStart: BigNumber;
   amountOutEnd: BigNumber;
   swapper: string;
+  filler?: string;
   nonce?: string;
   portion?: Portion;
 };
@@ -62,6 +63,7 @@ export class DutchV2Quote implements IQuote {
   public readonly amountOutStart: BigNumber;
   public readonly amountOutEnd: BigNumber;
   public readonly swapper: string;
+  public readonly filler?: string;
   public readonly nonce?: string;
   public readonly portion?: Portion;
 
@@ -167,6 +169,7 @@ export class DutchV2Quote implements IQuote {
       endAmountIn: this.amountInEnd.toString(),
       endAmountOut: this.amountOutEnd.toString(),
       amountInGasAdjusted: this.amountInStart.toString(),
+      filler: this.filler,
       amountInGasAndPortionAdjusted:
         this.request.info.type === TradeType.EXACT_OUTPUT ? this.amountInGasAndPortionAdjusted.toString() : undefined,
       amountOutGasAdjusted: this.amountOutStart.toString(),
