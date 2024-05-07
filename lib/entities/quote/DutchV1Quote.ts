@@ -52,36 +52,20 @@ export class DutchV1Quote extends DutchQuote<DutchV1Request> implements IQuote {
       .decayEndTime(decayStartTime + this.auctionPeriodSecs)
       .deadline(decayStartTime + this.auctionPeriodSecs + this.deadlineBufferSecs)
       .swapper(ethers.utils.getAddress(this.request.config.swapper))
-      .nonce(BigNumber.from(nonce));
-
-    const input = {
-      token: this.tokenIn,
-      startAmount: this.amountInStart,
-      endAmount: this.amountInEnd,
-      recipient: this.request.config.swapper,
-    };
-
-    const output = {
-      token: this.tokenOut,
-      startAmount: this.amountOutStart,
-      endAmount: this.amountOutEnd,
-      recipient: this.request.config.swapper,
-    };
-
-    // Apply negative buffer to allow for improvement during hard quote process
-    // - the buffer is applied to the output for EXACT_INPUT and to the input for EXACT_OUTPUT
-    // - any portion is taken out of the the transformed output
-    const quoteConfig = ChainConfigManager.getQuoteConfig(this.chainId, this.request.routingType);
-    const { input: bufferedInput, output: bufferedOutput } = DutchV1Quote.applyBufferToInputOutput(
-      input,
-      output,
-      this.request.info.type,
-      quoteConfig.priceBufferBps
-    );
-    builder.input(bufferedInput);
+      .nonce(BigNumber.from(nonce))
+      .input({
+        token: this.tokenIn,
+        startAmount: this.amountInStart,
+        endAmount: this.amountInEnd,
+      });
 
     const outputs = getPortionAdjustedOutputs(
-      bufferedOutput,
+      {
+        token: this.tokenOut,
+        startAmount: this.amountOutStart,
+        endAmount: this.amountOutEnd,
+        recipient: this.request.config.swapper,
+      },
       this.request.info.type,
       this.request.info.sendPortionEnabled,
       this.portion

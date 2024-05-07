@@ -11,14 +11,15 @@ type IntentOverrides = {
 export type DutchOverrides = IntentOverrides & {
   skipRFQ?: boolean;
   priceImprovementBps?: number;
-  priceBufferBps?: number; // used to shift the start and end price lower
 };
 
 type RoutingTypeOverrides = Partial<{
   [RoutingType.DUTCH_LIMIT]: DutchOverrides & {
     largeAuctionPeriodSecs?: number;
   };
-  [RoutingType.DUTCH_V2]: DutchOverrides;
+  [RoutingType.DUTCH_V2]: DutchOverrides & {
+    priceBufferBps?: number; // used to shift the start and end price lower
+  };
   [RoutingType.RELAY]: CommonOverrides & IntentOverrides;
   [RoutingType.CLASSIC]: CommonOverrides;
 }>;
