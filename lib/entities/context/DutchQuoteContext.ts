@@ -78,8 +78,8 @@ export class DutchQuoteContext implements QuoteContext {
     const rfqQuote = dependencies[this.requestKey] as DutchQuote<DutchQuoteRequest>;
 
     const [quote, syntheticQuote] = await Promise.all([
-      this.getRfqQuote(rfqQuote, classicQuote),
-      this.getSyntheticQuote(classicQuote),
+      this.validateRfqQuote(rfqQuote, classicQuote),
+      this.validateSyntheticQuote(classicQuote),
     ]);
 
     // handle cases where we only either have RFQ or synthetic
@@ -107,7 +107,7 @@ export class DutchQuoteContext implements QuoteContext {
     return quote;
   }
 
-  async getRfqQuote(
+  async validateRfqQuote(
     quote?: DutchQuote<DutchQuoteRequest>,
     classicQuote?: ClassicQuote
   ): Promise<DutchQuote<DutchQuoteRequest> | null> {
@@ -176,7 +176,7 @@ export class DutchQuoteContext implements QuoteContext {
 
   // transform a classic quote into a synthetic dutch quote
   // if it makes sense to do so
-  async getSyntheticQuote(
+  async validateSyntheticQuote(
     classicQuote?: Quote,
     routeBackToNative?: Quote
   ): Promise<DutchQuote<DutchQuoteRequest> | null> {

@@ -11,6 +11,7 @@ type IntentOverrides = {
 export type DutchOverrides = IntentOverrides & {
   skipRFQ?: boolean;
   priceImprovementBps?: number;
+  priceBufferBps?: number; // set negative if you want to lower PI
 };
 
 type RoutingTypeOverrides = Partial<{
@@ -51,6 +52,7 @@ export abstract class ChainConfigManager {
           // 25 blocks from now
           // to cover time to sign, run secondary auction, and some blocks for decay
           deadlineBufferSecs: 300,
+          priceBufferBps: -10,
         },
       },
       alarmEnabled: true,

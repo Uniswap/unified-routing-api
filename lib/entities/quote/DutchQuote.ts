@@ -275,6 +275,45 @@ export abstract class DutchQuote<T extends DutchQuoteRequest> implements IQuote 
     );
   }
 
+  /**
+   * Shift the start and end price up by the provided BPs
+   * Use a negative value to shift down
+   */
+  static applyBufferToInputOutput(
+    startAmounts: Amounts,
+    endAmounts: Amounts,
+    type: TradeType,
+    bps = 0
+  ): {
+    bufferedStartAmounts: Amounts;
+    bufferedEndAmounts: Amounts;
+  } {
+    if (type === TradeType.EXACT_INPUT) {
+      return {
+        bufferedStartAmounts: {
+          amountIn: startAmounts.amountIn,
+          amountOut: startAmounts.amountOut.mul(BPS + bps).div(BPS),
+        },
+        bufferedEndAmounts: {
+          amountIn: endAmounts.amountIn,
+          amountOut: endAmounts.amountOut.mul(BPS + bps).div(BPS),
+        },
+      };
+    } else {
+      return {
+        // subtract buffer from input
+        bufferedStartAmounts: {
+          amountIn: startAmounts.amountIn.mul(BPS - bps).div(BPS),
+          amountOut: startAmounts.amountOut,
+        },
+        bufferedEndAmounts: {
+          amountIn: endAmounts.amountIn.mul(BPS - bps).div(BPS),
+          amountOut: endAmounts.amountOut,
+        },
+      };
+    }
+  }
+
   // return the amounts, with the gasAdjustment value taken out
   // classicQuote used to get the gas price values in quote token
   static getGasAdjustedAmounts(amounts: Amounts, gasAdjustment: BigNumber, classicQuote: ClassicQuote): Amounts {

@@ -93,6 +93,7 @@ export class DutchV2Quote extends DutchQuote<DutchV2Request> implements IQuote {
       endAmountIn: this.amountInEnd.toString(),
       endAmountOut: this.amountOutEnd.toString(),
       amountInGasAdjusted: this.amountInStart.toString(),
+      filler: this.filler,
       amountInGasAndPortionAdjusted:
         this.request.info.type === TradeType.EXACT_OUTPUT ? this.amountInGasAndPortionAdjusted.toString() : undefined,
       amountOutGasAdjusted: this.amountOutStart.toString(),

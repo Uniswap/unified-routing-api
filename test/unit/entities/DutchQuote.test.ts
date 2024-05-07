@@ -116,6 +116,62 @@ describe('DutchQuote', () => {
       expect(amountOutSlippageAdjusted.eq(amountOutGasAdjusted)).toBeTruthy();
     });
 
+    it('buffer is added to the output amounts for EXACT_INPUT', async () => {
+      const amountIn = BigNumber.from('1000000000');
+      const { bufferedStartAmounts, bufferedEndAmounts } = DutchQuote.applyBufferToInputOutput(
+        { amountIn, amountOut: amountIn },
+        { amountIn, amountOut: amountIn },
+        TradeType.EXACT_INPUT,
+        10
+      );
+      expect(bufferedStartAmounts.amountIn).toEqual(amountIn);
+      expect(bufferedStartAmounts.amountOut).toEqual(amountIn.mul(BPS+10).div(BPS));
+      expect(bufferedEndAmounts.amountIn).toEqual(amountIn);
+      expect(bufferedEndAmounts.amountOut).toEqual(amountIn.mul(BPS+10).div(BPS));
+    });
+
+    it('buffer is subtracted from the output amounts for EXACT_INPUT when buffer is negative', async () => {
+      const amountIn = BigNumber.from('1000000000');
+      const { bufferedStartAmounts, bufferedEndAmounts } = DutchQuote.applyBufferToInputOutput(
+        { amountIn, amountOut: amountIn },
+        { amountIn, amountOut: amountIn },
+        TradeType.EXACT_INPUT,
+        -10
+      );
+      expect(bufferedStartAmounts.amountIn).toEqual(amountIn);
+      expect(bufferedStartAmounts.amountOut).toEqual(amountIn.mul(BPS-10).div(BPS));
+      expect(bufferedEndAmounts.amountIn).toEqual(amountIn);
+      expect(bufferedEndAmounts.amountOut).toEqual(amountIn.mul(BPS-10).div(BPS));
+    });
+
+    it('buffer is subtracted from the input amounts for EXACT_OUTPUT', async () => {
+      const amountIn = BigNumber.from('1000000000');
+      const { bufferedStartAmounts, bufferedEndAmounts } = DutchQuote.applyBufferToInputOutput(
+        { amountIn, amountOut: amountIn },
+        { amountIn, amountOut: amountIn },
+        TradeType.EXACT_OUTPUT,
+        10
+      );
+      expect(bufferedStartAmounts.amountOut).toEqual(amountIn);
+      expect(bufferedStartAmounts.amountIn).toEqual(amountIn.mul(BPS-10).div(BPS));
+      expect(bufferedEndAmounts.amountOut).toEqual(amountIn);
+      expect(bufferedEndAmounts.amountIn).toEqual(amountIn.mul(BPS-10).div(BPS));
+    });
+
+    it('buffer is added to the input amounts for EXACT_OUTPUT when buffer is negative', async () => {
+      const amountIn = BigNumber.from('1000000000');
+      const { bufferedStartAmounts, bufferedEndAmounts } = DutchQuote.applyBufferToInputOutput(
+        { amountIn, amountOut: amountIn },
+        { amountIn, amountOut: amountIn },
+        TradeType.EXACT_OUTPUT,
+        -10
+      );
+      expect(bufferedStartAmounts.amountOut).toEqual(amountIn);
+      expect(bufferedStartAmounts.amountIn).toEqual(amountIn.mul(BPS+10).div(BPS));
+      expect(bufferedEndAmounts.amountOut).toEqual(amountIn);
+      expect(bufferedEndAmounts.amountIn).toEqual(amountIn.mul(BPS+10).div(BPS));
+    });
+
     it.each([
       { title: 'overrides', largeTrade: true },
       { title: 'does not override', largeTrade: false },
