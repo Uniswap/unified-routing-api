@@ -125,9 +125,9 @@ describe('DutchQuote', () => {
         10
       );
       expect(bufferedStartAmounts.amountIn).toEqual(amountIn);
-      expect(bufferedStartAmounts.amountOut).toEqual(amountIn.mul(BPS+10).div(BPS));
+      expect(bufferedStartAmounts.amountOut).toEqual(amountIn.mul(BPS + 10).div(BPS));
       expect(bufferedEndAmounts.amountIn).toEqual(amountIn);
-      expect(bufferedEndAmounts.amountOut).toEqual(amountIn.mul(BPS+10).div(BPS));
+      expect(bufferedEndAmounts.amountOut).toEqual(amountIn.mul(BPS + 10).div(BPS));
     });
 
     it('buffer is subtracted from the output amounts for EXACT_INPUT when buffer is negative', async () => {
@@ -139,9 +139,9 @@ describe('DutchQuote', () => {
         -10
       );
       expect(bufferedStartAmounts.amountIn).toEqual(amountIn);
-      expect(bufferedStartAmounts.amountOut).toEqual(amountIn.mul(BPS-10).div(BPS));
+      expect(bufferedStartAmounts.amountOut).toEqual(amountIn.mul(BPS - 10).div(BPS));
       expect(bufferedEndAmounts.amountIn).toEqual(amountIn);
-      expect(bufferedEndAmounts.amountOut).toEqual(amountIn.mul(BPS-10).div(BPS));
+      expect(bufferedEndAmounts.amountOut).toEqual(amountIn.mul(BPS - 10).div(BPS));
     });
 
     it('buffer is subtracted from the input amounts for EXACT_OUTPUT', async () => {
@@ -153,9 +153,9 @@ describe('DutchQuote', () => {
         10
       );
       expect(bufferedStartAmounts.amountOut).toEqual(amountIn);
-      expect(bufferedStartAmounts.amountIn).toEqual(amountIn.mul(BPS-10).div(BPS));
+      expect(bufferedStartAmounts.amountIn).toEqual(amountIn.mul(BPS - 10).div(BPS));
       expect(bufferedEndAmounts.amountOut).toEqual(amountIn);
-      expect(bufferedEndAmounts.amountIn).toEqual(amountIn.mul(BPS-10).div(BPS));
+      expect(bufferedEndAmounts.amountIn).toEqual(amountIn.mul(BPS - 10).div(BPS));
     });
 
     it('buffer is added to the input amounts for EXACT_OUTPUT when buffer is negative', async () => {
@@ -167,9 +167,9 @@ describe('DutchQuote', () => {
         -10
       );
       expect(bufferedStartAmounts.amountOut).toEqual(amountIn);
-      expect(bufferedStartAmounts.amountIn).toEqual(amountIn.mul(BPS+10).div(BPS));
+      expect(bufferedStartAmounts.amountIn).toEqual(amountIn.mul(BPS + 10).div(BPS));
       expect(bufferedEndAmounts.amountOut).toEqual(amountIn);
-      expect(bufferedEndAmounts.amountIn).toEqual(amountIn.mul(BPS+10).div(BPS));
+      expect(bufferedEndAmounts.amountIn).toEqual(amountIn.mul(BPS + 10).div(BPS));
     });
 
     it.each([

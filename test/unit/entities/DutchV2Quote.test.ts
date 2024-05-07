@@ -1,12 +1,14 @@
 import Logger from 'bunyan';
 
 import { it } from '@jest/globals';
+import { BigNumber } from 'ethers';
 import { BPS } from '../../../lib/constants';
 import { DEFAULT_LABS_COSIGNER } from '../../../lib/entities';
-import { ETH_IN, TOKEN_IN } from '../../constants';
+import { AMOUNT, ETH_IN, TOKEN_IN } from '../../constants';
 import { createDutchV2QuoteWithRequestOverrides } from '../../utils/fixtures';
 
 describe('DutchV2Quote', () => {
+  //setChainConfigManager();
   // silent logger in tests
   const logger = Logger.createLogger({ name: 'test' });
   logger.level(Logger.FATAL);
@@ -27,7 +29,7 @@ describe('DutchV2Quote', () => {
       expect(orderJson.input.startAmount).toEqual(v2Quote.amountIn.toString());
       expect(orderJson.outputs.length).toEqual(1);
       expect(orderJson.outputs[0].startAmount).toEqual(
-        v2Quote.amountOut
+        BigNumber.from(AMOUNT) // Default starting amount out in createDutchV2QuoteWithRequestOverrides
           .mul(BPS - 10)
           .div(BPS)
           .toString()

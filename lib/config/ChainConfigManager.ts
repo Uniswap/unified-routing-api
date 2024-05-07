@@ -11,7 +11,7 @@ type IntentOverrides = {
 export type DutchOverrides = IntentOverrides & {
   skipRFQ?: boolean;
   priceImprovementBps?: number;
-  priceBufferBps?: number; // set negative if you want to lower PI
+  priceBufferBps?: number; // set negative if you want to lower start and end
 };
 
 type RoutingTypeOverrides = Partial<{
