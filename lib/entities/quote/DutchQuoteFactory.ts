@@ -24,18 +24,9 @@ export class DutchQuoteFactory {
     // if it's exact out, we will explicitly define the amount out start to be the swapper's requested amount
     const amountOutStart =
       request.info.type === TradeType.EXACT_OUTPUT ? request.info.amount : BigNumber.from(body.amountOut);
-    const chainId = request.info.tokenInChainId;
     const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchQuote.applySlippage(
       { amountIn: BigNumber.from(body.amountIn), amountOut: amountOutStart },
       request
-    );
-
-    const quoteConfig = ChainConfigManager.getQuoteConfig(chainId, request.routingType);
-    const { bufferedStartAmounts, bufferedEndAmounts } = DutchQuote.applyBufferToInputOutput(
-      { amountIn: BigNumber.from(body.amountIn), amountOut: amountOutStart },
-      { amountIn: amountInEnd, amountOut: amountOutEnd },
-      request.info.type,
-      quoteConfig.priceBufferBps
     );
     const args: DutchQuoteConstructorArgs = {
       createdAtMs: currentTimestampInMs(),
@@ -46,10 +37,10 @@ export class DutchQuoteFactory {
       quoteId: body.quoteId,
       tokenIn: body.tokenIn,
       tokenOut: body.tokenOut,
-      amountInStart: bufferedStartAmounts.amountIn,
-      amountInEnd: bufferedEndAmounts.amountIn,
-      amountOutStart: bufferedStartAmounts.amountOut,
-      amountOutEnd: bufferedEndAmounts.amountOut,
+      amountInStart: BigNumber.from(body.amountIn),
+      amountInEnd,
+      amountOutStart,
+      amountOutEnd,
       swapper: body.swapper,
       quoteType: QuoteType.RFQ,
       filler: body.filler,
@@ -79,13 +70,6 @@ export class DutchQuoteFactory {
     const gasAdjustedAmounts = DutchQuote.applyGasAdjustment(startAmounts, quote);
     const endAmounts = DutchQuote.applySlippage(gasAdjustedAmounts, request);
 
-    const { bufferedStartAmounts, bufferedEndAmounts } = DutchQuote.applyBufferToInputOutput(
-      startAmounts,
-      endAmounts,
-      request.info.type,
-      quoteConfig.priceBufferBps
-    );
-
     log.info('Synthetic quote parameterization', {
       priceImprovedAmountIn: priceImprovedStartAmounts.amountIn.toString(),
       priceImprovedAmountOut: priceImprovedStartAmounts.amountOut.toString(),
@@ -95,10 +79,6 @@ export class DutchQuoteFactory {
       gasAdjustedAmountOut: gasAdjustedAmounts.amountOut.toString(),
       slippageAdjustedAmountIn: endAmounts.amountIn.toString(),
       slippageAdjustedAmountOut: endAmounts.amountOut.toString(),
-      bufferAdjustedStartAmountIn: bufferedStartAmounts.amountIn.toString(),
-      bufferAdjustedEndAmountIn: bufferedEndAmounts.amountIn.toString(),
-      bufferAdjustedStartAmountOut: bufferedStartAmounts.amountOut.toString(),
-      bufferAdjustedEndAmountOut: bufferedEndAmounts.amountIn.toString(),
     });
 
     const args: DutchQuoteConstructorArgs = {
@@ -110,10 +90,10 @@ export class DutchQuoteFactory {
       quoteId: uuidv4(), // synthetic quote doesn't receive a quoteId from RFQ api, so generate one
       tokenIn: request.info.tokenIn,
       tokenOut: quote.request.info.tokenOut,
-      amountInStart: bufferedStartAmounts.amountIn,
-      amountInEnd: bufferedEndAmounts.amountIn,
-      amountOutStart: bufferedStartAmounts.amountOut,
-      amountOutEnd: bufferedEndAmounts.amountOut,
+      amountInStart: startAmounts.amountIn,
+      amountInEnd: endAmounts.amountIn,
+      amountOutStart: startAmounts.amountOut,
+      amountOutEnd: endAmounts.amountOut,
       swapper: request.config.swapper,
       quoteType: QuoteType.SYNTHETIC,
       filler: NATIVE_ADDRESS, // synthetic quote has no filler
@@ -147,16 +127,8 @@ export class DutchQuoteFactory {
       { amountIn: classic.amountInGasAdjusted, amountOut: classic.amountOutGasAdjusted },
       classic
     );
-    const chainId = quote.chainId;
-    const quoteConfig = ChainConfigManager.getQuoteConfig(chainId, quote.routingType);
     const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchQuote.applySlippage(classicAmounts, quote.request);
 
-    const { bufferedStartAmounts, bufferedEndAmounts } = DutchQuote.applyBufferToInputOutput(
-      { amountIn: amountInStart, amountOut: amountOutStart },
-      { amountIn: amountInEnd, amountOut: amountOutEnd },
-      classic.request.info.type,
-      quoteConfig.priceBufferBps
-    );
     log.info('RFQ quote parameterization', {
       startAmountIn: amountInStart.toString(),
       startAmountOut: amountOutStart.toString(),
@@ -164,20 +136,16 @@ export class DutchQuoteFactory {
       gasAdjustedClassicAmountOut: classicAmounts.amountOut.toString(),
       slippageAdjustedClassicAmountIn: amountInEnd.toString(),
       slippageAdjustedClassicAmountOut: amountOutEnd.toString(),
-      bufferAdjustedStartAmountIn: bufferedStartAmounts.amountIn.toString(),
-      bufferAdjustedEndAmountIn: bufferedEndAmounts.amountIn.toString(),
-      bufferAdjustedStartAmountOut: bufferedStartAmounts.amountOut.toString(),
-      bufferAdjustedEndAmountOut: bufferedEndAmounts.amountIn.toString(),
     });
 
     const args: DutchQuoteConstructorArgs = {
       ...quote,
       tokenInChainId: quote.chainId,
       tokenOutChainId: quote.chainId,
-      amountInStart: bufferedStartAmounts.amountIn,
-      amountInEnd: bufferedEndAmounts.amountIn,
-      amountOutStart: bufferedStartAmounts.amountOut,
-      amountOutEnd: bufferedEndAmounts.amountOut,
+      amountInStart,
+      amountInEnd,
+      amountOutStart,
+      amountOutEnd,
       portion: quote.portion ?? classic.portion,
       derived: {
         largeTrade: options?.largeTrade ?? false,

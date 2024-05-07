@@ -2,8 +2,6 @@ import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-ro
 import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
 
-import { ChainId } from '@uniswap/sdk-core';
-import { ChainConfigManager } from '../../../../../lib/config/ChainConfigManager';
 import { BPS, NATIVE_ADDRESS, RoutingType } from '../../../../../lib/constants';
 import { DutchQuote, DutchQuoteContext } from '../../../../../lib/entities';
 import { SyntheticStatusProvider } from '../../../../../lib/providers';
@@ -55,17 +53,7 @@ describe('DutchQuoteContext', () => {
       };
     });
     provider = jest.fn();
-    setChainConfigManager();
   });
-
-  // Set the DutchV2 priceBufferBps to be 0 on mainnet
-  function setChainConfigManager() {
-    const chainConfigs = ChainConfigManager.chainConfigs;
-    chainConfigs[ChainId.MAINNET].routingTypes[RoutingType.DUTCH_V2]!.priceBufferBps = 0;
-    Object.defineProperty(ChainConfigManager, '_chainsByRoutingType', { value: undefined });
-    Object.defineProperty(ChainConfigManager, '_performedDependencyCheck', { value: false });
-    Object.defineProperty(ChainConfigManager, '_chainConfigs', { value: chainConfigs });
-  }
 
   afterAll(() => {
     process.env = OLD_ENV; // Restore old environment

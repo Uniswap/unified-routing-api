@@ -5,6 +5,7 @@ import { BigNumber, ethers } from 'ethers';
 
 import { IQuote, LogJSON, SharedOrderQuoteDataJSON } from '.';
 import { DutchV2Request } from '..';
+import { ChainConfigManager } from '../../config/ChainConfigManager';
 import { DEFAULT_V2_DEADLINE_BUFFER_SECS, frontendAndUraEnablePortion, RoutingType } from '../../constants';
 import { generateRandomNonce } from '../../util/nonce';
 import { timestampInMstoSeconds } from '../../util/time';
@@ -64,13 +65,34 @@ export class DutchV2Quote extends DutchQuote<DutchV2Request> implements IQuote {
         endAmount: this.amountInEnd,
       });
 
+    const input = {
+      token: this.tokenIn,
+      startAmount: this.amountInStart,
+      endAmount: this.amountInEnd,
+      recipient: this.request.config.swapper,
+    };
+
+    const output = {
+      token: this.tokenOut,
+      startAmount: this.amountOutStart,
+      endAmount: this.amountOutEnd,
+      recipient: this.request.config.swapper,
+    };
+
+    // Apply negative buffer to allow for improvement during hard quote process
+    // - the buffer is applied to the output for EXACT_INPUT and to the input for EXACT_OUTPUT
+    // - any portion is taken out of the the transformed output
+    const quoteConfig = ChainConfigManager.getQuoteConfig(this.chainId, this.request.routingType);
+    const { input: bufferedInput, output: bufferedOutput } = DutchV2Quote.applyBufferToInputOutput(
+      input,
+      output,
+      this.request.info.type,
+      quoteConfig.priceBufferBps
+    );
+    builder.input(bufferedInput);
+
     const outputs = getPortionAdjustedOutputs(
-      {
-        token: this.tokenOut,
-        startAmount: this.amountOutStart,
-        endAmount: this.amountOutEnd,
-        recipient: this.request.config.swapper,
-      },
+      bufferedOutput,
       this.request.info.type,
       this.request.info.sendPortionEnabled,
       this.portion

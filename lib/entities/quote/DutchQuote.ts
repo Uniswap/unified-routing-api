@@ -1,5 +1,5 @@
 import { TradeType } from '@uniswap/sdk-core';
-import { DutchOrder, DutchOrderInfoJSON, DutchOutput, UnsignedV2DutchOrder } from '@uniswap/uniswapx-sdk';
+import { DutchInput, DutchOrder, DutchOrderInfoJSON, DutchOutput, UnsignedV2DutchOrder } from '@uniswap/uniswapx-sdk';
 import { BigNumber } from 'ethers';
 
 import { PermitTransferFromData } from '@uniswap/permit2-sdk';
@@ -276,40 +276,36 @@ export abstract class DutchQuote<T extends DutchQuoteRequest> implements IQuote 
   }
 
   /**
-   * Shift the start and end price up by the provided BPs
-   * Use a negative value to shift down
+   * Shift the start and end price down by the provided BPs
    */
   static applyBufferToInputOutput(
-    startAmounts: Amounts,
-    endAmounts: Amounts,
+    input: DutchInput,
+    output: DutchOutput,
     type: TradeType,
     bps = 0
   ): {
-    bufferedStartAmounts: Amounts;
-    bufferedEndAmounts: Amounts;
+    input: DutchInput;
+    output: DutchOutput;
   } {
     if (type === TradeType.EXACT_INPUT) {
       return {
-        bufferedStartAmounts: {
-          amountIn: startAmounts.amountIn,
-          amountOut: startAmounts.amountOut.mul(BPS + bps).div(BPS),
-        },
-        bufferedEndAmounts: {
-          amountIn: endAmounts.amountIn,
-          amountOut: endAmounts.amountOut.mul(BPS + bps).div(BPS),
+        input,
+        output: {
+          ...output,
+          // add buffer to output
+          startAmount: output.startAmount.mul(BPS - bps).div(BPS),
+          endAmount: output.endAmount.mul(BPS - bps).div(BPS),
         },
       };
     } else {
       return {
-        // subtract buffer from input
-        bufferedStartAmounts: {
-          amountIn: startAmounts.amountIn.mul(BPS - bps).div(BPS),
-          amountOut: startAmounts.amountOut,
+        input: {
+          ...input,
+          // add buffer to input
+          startAmount: input.startAmount.mul(BPS + bps).div(BPS),
+          endAmount: input.endAmount.mul(BPS + bps).div(BPS),
         },
-        bufferedEndAmounts: {
-          amountIn: endAmounts.amountIn.mul(BPS - bps).div(BPS),
-          amountOut: endAmounts.amountOut,
-        },
+        output,
       };
     }
   }
