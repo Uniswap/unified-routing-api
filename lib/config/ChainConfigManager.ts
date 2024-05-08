@@ -76,10 +76,6 @@ export abstract class ChainConfigManager {
     [ChainId.ARBITRUM_ONE]: {
       routingTypes: {
         [RoutingType.CLASSIC]: {},
-        [RoutingType.DUTCH_V2]: {
-          skipRFQ: true,
-          priceImprovementBps: 2,
-        },
       },
       alarmEnabled: true,
     },
