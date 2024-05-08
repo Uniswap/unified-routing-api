@@ -1,6 +1,10 @@
 import { PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { TradeType } from '@uniswap/sdk-core';
-import { UnsignedV2DutchOrder, UnsignedV2DutchOrderInfoJSON, V2DutchOrderBuilder } from '@uniswap/uniswapx-sdk';
+import {
+  UnsignedV2DutchOrder,
+  UnsignedV2DutchOrderInfoJSON,
+  V2DutchOrderBuilder,
+} from '@uniswap/uniswapx-sdk';
 import { BigNumber, ethers } from 'ethers';
 
 import { IQuote, LogJSON, SharedOrderQuoteDataJSON } from '.';
@@ -12,6 +16,7 @@ import { timestampInMstoSeconds } from '../../util/time';
 import { DutchQuote, getPortionAdjustedOutputs } from './DutchQuote';
 
 export const DEFAULT_LABS_COSIGNER = ethers.constants.AddressZero;
+export const V2_OUTPUT_AMOUNT_BUFFER_BPS = 10;
 
 // JSON format of a DutchV2Quote, to be returned by the API
 export type DutchV2QuoteDataJSON = SharedOrderQuoteDataJSON & {
