@@ -14,6 +14,7 @@ import {
   AMOUNT_UNDER_GAS_THRESHOLD,
   CHAIN_OUT_ID,
   ETH_IN,
+  FILLER,
   TOKEN_IN,
 } from '../../../../constants';
 import {
@@ -168,9 +169,7 @@ describe('DutchQuoteContext', () => {
         [QUOTE_REQUEST_DL.key()]: rfqQuote,
       });
       expect(quote?.routingType).toEqual(RoutingType.DUTCH_LIMIT);
-      expect((quote?.toJSON() as DutchQuoteDataJSON).orderInfo.exclusiveFiller).toEqual(
-        '0x0000000000000000000000000000000000000000'
-      );
+      expect((quote?.toJSON() as DutchQuoteDataJSON).orderInfo.exclusiveFiller).toEqual(FILLER);
       expect(quote?.amountOut.toString()).toEqual('2');
     });
 
@@ -181,9 +180,7 @@ describe('DutchQuoteContext', () => {
         [QUOTE_REQUEST_DL.key()]: rfqQuote,
       });
       expect(quote?.routingType).toEqual(RoutingType.DUTCH_LIMIT);
-      expect((quote?.toJSON() as DutchQuoteDataJSON).orderInfo.exclusiveFiller).toEqual(
-        '0x0000000000000000000000000000000000000000'
-      );
+      expect((quote?.toJSON() as DutchQuoteDataJSON).orderInfo.exclusiveFiller).toEqual(FILLER);
       expect(quote?.amountOut.toString()).toEqual('2');
     });
 

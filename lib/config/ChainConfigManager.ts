@@ -17,7 +17,9 @@ type RoutingTypeOverrides = Partial<{
   [RoutingType.DUTCH_LIMIT]: DutchOverrides & {
     largeAuctionPeriodSecs?: number;
   };
-  [RoutingType.DUTCH_V2]: DutchOverrides;
+  [RoutingType.DUTCH_V2]: DutchOverrides & {
+    priceBufferBps?: number; // used to shift the start and end price lower
+  };
   [RoutingType.RELAY]: CommonOverrides & IntentOverrides;
   [RoutingType.CLASSIC]: CommonOverrides;
 }>;
@@ -51,6 +53,7 @@ export abstract class ChainConfigManager {
           // 25 blocks from now
           // to cover time to sign, run secondary auction, and some blocks for decay
           deadlineBufferSecs: 300,
+          priceBufferBps: 10,
         },
       },
       alarmEnabled: true,

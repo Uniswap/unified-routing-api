@@ -1,5 +1,5 @@
 import { TradeType } from '@uniswap/sdk-core';
-import { DutchOrder, DutchOrderInfoJSON, DutchOutput, UnsignedV2DutchOrder } from '@uniswap/uniswapx-sdk';
+import { DutchInput, DutchOrder, DutchOrderInfoJSON, DutchOutput, UnsignedV2DutchOrder } from '@uniswap/uniswapx-sdk';
 import { BigNumber } from 'ethers';
 
 import { PermitTransferFromData } from '@uniswap/permit2-sdk';
@@ -273,6 +273,41 @@ export abstract class DutchQuote<T extends DutchQuoteRequest> implements IQuote 
       gasAdjustment,
       classicQuote
     );
+  }
+
+  /**
+   * Shift the start and end price down by the provided BPs
+   */
+  static applyBufferToInputOutput(
+    input: DutchInput,
+    output: DutchOutput,
+    type: TradeType,
+    bps = 0
+  ): {
+    input: DutchInput;
+    output: DutchOutput;
+  } {
+    if (type === TradeType.EXACT_INPUT) {
+      return {
+        input,
+        output: {
+          ...output,
+          // add buffer to output
+          startAmount: output.startAmount.mul(BPS - bps).div(BPS),
+          endAmount: output.endAmount.mul(BPS - bps).div(BPS),
+        },
+      };
+    } else {
+      return {
+        input: {
+          ...input,
+          // add buffer to input
+          startAmount: input.startAmount.mul(BPS + bps).div(BPS),
+          endAmount: input.endAmount.mul(BPS + bps).div(BPS),
+        },
+        output,
+      };
+    }
   }
 
   // return the amounts, with the gasAdjustment value taken out
