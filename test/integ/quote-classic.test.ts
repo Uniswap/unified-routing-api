@@ -15,7 +15,7 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import chaiSubset from 'chai-subset';
 import _ from 'lodash';
-import { SUPPORTED_CHAINS } from '../../lib/config/chains';
+import { ChainConfigManager } from '../../lib/config/ChainConfigManager';
 import { RoutingType } from '../../lib/constants';
 import { ClassicQuoteDataJSON } from '../../lib/entities/quote';
 import { QuoteRequestBodyJSON } from '../../lib/entities/request';
@@ -416,7 +416,7 @@ describe('quote', function () {
             ],
           };
 
-          const chains = SUPPORTED_CHAINS[RoutingType.CLASSIC].values();
+          const chains = ChainConfigManager.getChainIdsByRoutingType(RoutingType.CLASSIC);
           const chainStr = [...chains].toString().split(',').join(', ');
 
           await callAndExpectFail(quoteReq, {
@@ -485,7 +485,7 @@ describe('quote', function () {
 
   // TODO: Find valid pools/tokens on optimistic kovan and polygon mumbai. We skip those tests for now.
   for (const chain of _.filter(
-    SUPPORTED_CHAINS[RoutingType.CLASSIC],
+    ChainConfigManager.getChainIdsByRoutingType(RoutingType.CLASSIC),
     (c) =>
       c !== ChainId.POLYGON_MUMBAI &&
       c !== ChainId.ARBITRUM_GOERLI &&

@@ -2,7 +2,7 @@ import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-ro
 import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
 
-import { NATIVE_ADDRESS, RoutingType } from '../../../../../lib/constants';
+import { BPS, NATIVE_ADDRESS, RoutingType } from '../../../../../lib/constants';
 import { ClassicConfig, DutchQuote, DutchQuoteContext, DutchQuoteDataJSON } from '../../../../../lib/entities';
 import { SyntheticStatusProvider } from '../../../../../lib/providers';
 import { Erc20__factory } from '../../../../../lib/types/ext/factories/Erc20__factory';
@@ -21,7 +21,7 @@ import {
   BASE_REQUEST_INFO_EXACT_IN,
   createClassicQuote,
   createDutchQuote,
-  createDutchQuoteWithRequest,
+  createDutchQuoteWithRequestOverrides,
   DL_QUOTE_EXACT_IN_BETTER,
   makeDutchRequest,
   QUOTE_REQUEST_CLASSIC,
@@ -247,7 +247,10 @@ describe('DutchQuoteContext', () => {
       );
       // Synthetic starts at quoteGasAdjusted + 1bp
       expect(quote?.amountOut.toString()).toEqual(
-        BigNumber.from(9999000000).mul(DutchQuote.amountOutImprovementExactIn).div(10000).toString()
+        BigNumber.from(9999000000)
+          .mul(BPS + DutchQuote.defaultPriceImprovementBps)
+          .div(BPS)
+          .toString()
       );
     });
 
@@ -274,7 +277,10 @@ describe('DutchQuoteContext', () => {
       );
       // Synthetic starts at quoteGasAdjusted + 1bp
       expect(quote?.amountOut.toString()).toEqual(
-        BigNumber.from(9999000000).mul(DutchQuote.amountOutImprovementExactIn).div(10000).toString()
+        BigNumber.from(9999000000)
+          .mul(BPS + DutchQuote.defaultPriceImprovementBps)
+          .div(BPS)
+          .toString()
       );
     });
 
@@ -301,7 +307,10 @@ describe('DutchQuoteContext', () => {
       );
       // Synthetic starts at quoteGasAdjusted + 1bp
       expect(quote?.amountOut.toString()).toEqual(
-        BigNumber.from(9999000000).mul(DutchQuote.amountOutImprovementExactIn).div(10000).toString()
+        BigNumber.from(9999000000)
+          .mul(BPS + DutchQuote.defaultPriceImprovementBps)
+          .div(BPS)
+          .toString()
       );
     });
 
@@ -326,7 +335,7 @@ describe('DutchQuoteContext', () => {
       expect((quote?.toJSON() as DutchQuoteDataJSON).orderInfo.exclusiveFiller).toEqual(filler);
     });
 
-    it('uses synthetic if rfq quote is at least 300% better than clasic; EXACT_IN', async () => {
+    it('uses synthetic if rfq quote is at least 300% better than classic; EXACT_IN', async () => {
       const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
       const rfqQuote = createDutchQuote({ amountOut: '400000000', filler }, 'EXACT_INPUT');
@@ -342,12 +351,14 @@ describe('DutchQuoteContext', () => {
 
       expect(quote?.routingType).toEqual(RoutingType.DUTCH_LIMIT);
       // Synthetic starts at quoteGasAdjusted + 1bp
-      expect(quote?.amountOut.toString()).toEqual(
-        BigNumber.from(90000000).mul(DutchQuote.amountOutImprovementExactIn).div(10000).toString()
-      );
+      const expected = BigNumber.from(90000000)
+        .mul(BPS + DutchQuote.defaultPriceImprovementBps)
+        .div(BPS)
+        .toString();
+      expect(quote?.amountOut.toString()).toEqual(expected);
     });
 
-    it('uses synthetic if rfq quote is at least 300% better than clasic; EXACT_OUT', async () => {
+    it('uses synthetic if rfq quote is at least 300% better than classic; EXACT_OUT', async () => {
       const request = makeDutchRequest({ type: 'EXACT_OUTPUT' }, { useSyntheticQuotes: true });
       const context = new DutchQuoteContext(logger, request, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
@@ -364,9 +375,11 @@ describe('DutchQuoteContext', () => {
 
       expect(quote?.routingType).toEqual(RoutingType.DUTCH_LIMIT);
       // Synthetic starts at quoteGasAdjusted + 1bp
-      expect(quote?.amountIn.toString()).toEqual(
-        BigNumber.from(399000000).mul(DutchQuote.amountInImprovementExactOut).div(10000).toString()
-      );
+      const expected = BigNumber.from(399000000)
+        .mul(BPS - DutchQuote.defaultPriceImprovementBps)
+        .div(BPS)
+        .toString();
+      expect(quote?.amountIn.toString()).toEqual(expected);
     });
 
     it('skips UniswapX if rfq quote is at least 300% better than clasic; EXACT_IN, skipSynthetic', async () => {
@@ -426,7 +439,10 @@ describe('DutchQuoteContext', () => {
       );
       // Synthetic starts at quoteGasAdjusted + 1bp
       expect(quote?.amountOut.toString()).toEqual(
-        BigNumber.from(9999000000).mul(DutchQuote.amountOutImprovementExactIn).div(10000).toString()
+        BigNumber.from(9999000000)
+          .mul(BPS + DutchQuote.defaultPriceImprovementBps)
+          .div(BPS)
+          .toString()
       );
     });
 
@@ -517,7 +533,10 @@ describe('DutchQuoteContext', () => {
         '0x0000000000000000000000000000000000000000'
       );
       expect(quote?.amountOut.toString()).toEqual(
-        BigNumber.from(9999000000).mul(DutchQuote.amountOutImprovementExactIn).div(10000).toString()
+        BigNumber.from(9999000000)
+          .mul(BPS + DutchQuote.defaultPriceImprovementBps)
+          .div(BPS)
+          .toString()
       );
     });
 
@@ -565,7 +584,7 @@ describe('DutchQuoteContext', () => {
       });
 
       const filler = '0x1111111111111111111111111111111111111111';
-      const rfqQuote = createDutchQuoteWithRequest(
+      const rfqQuote = createDutchQuoteWithRequestOverrides(
         { tokenIn: ETH_IN, tokenOut: TOKEN_IN, amountOut: AMOUNT, filler },
         {
           tokenIn: ETH_IN,
@@ -737,7 +756,7 @@ describe('DutchQuoteContext', () => {
       );
       const context = new DutchQuoteContext(logger, request, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
-      const rfqQuote = createDutchQuoteWithRequest(
+      const rfqQuote = createDutchQuoteWithRequestOverrides(
         { amountOut: '1', filler, tokenOut: NATIVE_ADDRESS },
         { type: 'EXACT_INPUT' }
       );
@@ -758,7 +777,10 @@ describe('DutchQuoteContext', () => {
       );
       // Synthetic starts at quoteGasAdjusted + 1bp
       expect(quote?.amountOut.toString()).toEqual(
-        BigNumber.from(9999000000).mul(DutchQuote.amountOutImprovementExactIn).div(10000).toString()
+        BigNumber.from(9999000000)
+          .mul(BPS + DutchQuote.defaultPriceImprovementBps)
+          .div(BPS)
+          .toString()
       );
     });
 
@@ -770,7 +792,7 @@ describe('DutchQuoteContext', () => {
       );
       const context = new DutchQuoteContext(logger, request, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
-      const rfqQuote = createDutchQuoteWithRequest(
+      const rfqQuote = createDutchQuoteWithRequestOverrides(
         { amountOut: '1', filler, tokenOut: WRAPPED_NATIVE_CURRENCY[ID_TO_CHAIN_ID(CHAIN_OUT_ID)].address },
         { type: 'EXACT_INPUT' }
       );
@@ -791,7 +813,10 @@ describe('DutchQuoteContext', () => {
       );
       // Synthetic starts at quoteGasAdjusted + 1bp
       expect(quote?.amountOut.toString()).toEqual(
-        BigNumber.from(9999000000).mul(DutchQuote.amountOutImprovementExactIn).div(10000).toString()
+        BigNumber.from(9999000000)
+          .mul(BPS + DutchQuote.defaultPriceImprovementBps)
+          .div(BPS)
+          .toString()
       );
     });
   });

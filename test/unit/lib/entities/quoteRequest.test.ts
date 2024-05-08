@@ -3,7 +3,7 @@ import {
   ClassicConfigJSON,
   ClassicRequest,
   DutchConfigJSON,
-  DutchRequest,
+  DutchV1Request,
   DutchV2ConfigJSON,
   DutchV2Request,
   parseQuoteRequests,
@@ -109,7 +109,7 @@ describe('QuoteRequest', () => {
         const { quoteRequests: requests } = parseQuoteRequests(request);
         const info = requests[0].info;
 
-        const config = DutchRequest.fromRequestBody(info, MOCK_DL_CONFIG_JSON);
+        const config = DutchV1Request.fromRequestBody(info, MOCK_DL_CONFIG_JSON);
         expect(config.toJSON()).toEqual(MOCK_DL_CONFIG_JSON);
       });
 
@@ -117,7 +117,7 @@ describe('QuoteRequest', () => {
         const { quoteRequests: requests } = parseQuoteRequests(request);
         const info = requests[0].info;
 
-        const config = DutchRequest.fromRequestBody(info, MOCK_DL_CONFIG_JSON);
+        const config = DutchV1Request.fromRequestBody(info, MOCK_DL_CONFIG_JSON);
         expect(config.toJSON()).toEqual(MOCK_DL_CONFIG_JSON);
       });
 
@@ -162,7 +162,7 @@ describe('QuoteRequest', () => {
       it('includes swapper in info for dutch limit', () => {
         const { quoteRequests: requests } = parseQuoteRequests(request);
         const info = requests[0].info;
-        const config = DutchRequest.fromRequestBody(info, MOCK_DL_CONFIG_JSON);
+        const config = DutchV1Request.fromRequestBody(info, MOCK_DL_CONFIG_JSON);
 
         expect(config.info.swapper).toEqual(SWAPPER);
       });
@@ -202,21 +202,6 @@ describe('QuoteRequest', () => {
           const classicRequest = requests[1] as ClassicRequest;
 
           expect(classicRequest.toJSON()).toEqual(CLASSIC_CONFIG_JSON);
-        });
-
-        it('converts to dutch v1 request', () => {
-          const { quoteRequests: requests } = parseQuoteRequests(request);
-          const dutchRequest = requests[0] as DutchV2Request;
-          const converted = dutchRequest.toDutchRequest();
-
-          expect(converted.routingType === RoutingType.DUTCH_LIMIT);
-          expect(converted.toJSON()).toEqual({
-            routingType: RoutingType.DUTCH_V2,
-            exclusivityOverrideBps: 0,
-            swapper: SWAPPER,
-            deadlineBufferSecs: 12,
-            useSyntheticQuotes: false,
-          });
         });
       });
     }

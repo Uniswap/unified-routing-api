@@ -2,17 +2,17 @@ import { Protocol } from '@uniswap/router-sdk';
 import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber } from 'ethers';
 
-import { SUPPORTED_CHAINS } from '../../config/chains';
+import { ChainConfigManager } from '../../config/ChainConfigManager';
 import { DEFAULT_SLIPPAGE_TOLERANCE, RoutingType } from '../../constants';
 import { Portion } from '../../fetchers/PortionFetcher';
 import { ValidationError } from '../../util/errors';
 import { ClassicConfig, ClassicConfigJSON, ClassicRequest } from './ClassicRequest';
-import { DutchConfig, DutchConfigJSON, DutchRequest } from './DutchRequest';
+import { DutchConfig, DutchConfigJSON, DutchV1Request } from './DutchV1Request';
 import { DutchV2Config, DutchV2ConfigJSON, DutchV2Request } from './DutchV2Request';
 import { RelayConfig, RelayConfigJSON, RelayRequest } from './RelayRequest';
 
 export * from './ClassicRequest';
-export * from './DutchRequest';
+export * from './DutchV1Request';
 export * from './DutchV2Request';
 export * from './RelayRequest';
 
@@ -20,6 +20,7 @@ export type RequestByRoutingType = { [routingType in RoutingType]?: QuoteRequest
 
 // config specific to the given routing type
 export type RoutingConfig = DutchConfig | DutchV2Config | RelayConfig | ClassicConfig;
+export type DutchRoutingConfig = DutchConfig | DutchV2Config;
 export type RoutingConfigJSON = DutchConfigJSON | DutchV2ConfigJSON | RelayConfigJSON | ClassicConfigJSON;
 
 export interface QuoteRequestHeaders {
@@ -42,6 +43,10 @@ export interface QuoteRequestInfo {
   portion?: Portion;
   intent?: string;
   source?: RequestSource;
+}
+
+export interface DutchQuoteRequestInfo extends QuoteRequestInfo {
+  slippageTolerance: string;
 }
 
 export interface QuoteRequestBodyJSON extends Omit<QuoteRequestInfo, 'type' | 'amount'> {
@@ -70,6 +75,17 @@ export interface QuoteRequest {
   key(): string;
 }
 
+export interface DutchQuoteRequest {
+  routingType: RoutingType.DUTCH_LIMIT | RoutingType.DUTCH_V2;
+  info: DutchQuoteRequestInfo;
+  config: DutchRoutingConfig;
+  headers: QuoteRequestHeaders;
+
+  toJSON(): RoutingConfigJSON;
+  // return a key that uniquely identifies this request
+  key(): string;
+}
+
 export function parseQuoteRequests(body: QuoteRequestBodyJSON): {
   quoteRequests: QuoteRequest[];
   quoteInfo: QuoteRequestInfo;
@@ -90,23 +106,26 @@ export function parseQuoteRequests(body: QuoteRequestBodyJSON): {
   };
 
   const requests = body.configs.flatMap((config) => {
-    if (config.routingType == RoutingType.CLASSIC) {
+    if (
+      config.routingType == RoutingType.CLASSIC &&
+      ChainConfigManager.chainSupportsRoutingType(info.tokenInChainId, RoutingType.CLASSIC)
+    ) {
       return ClassicRequest.fromRequestBody(info, config as ClassicConfigJSON);
     } else if (
       config.routingType == RoutingType.DUTCH_LIMIT &&
-      SUPPORTED_CHAINS[RoutingType.DUTCH_LIMIT].includes(info.tokenInChainId) &&
+      ChainConfigManager.chainSupportsRoutingType(info.tokenInChainId, RoutingType.DUTCH_LIMIT) &&
       info.tokenInChainId === info.tokenOutChainId
     ) {
-      return DutchRequest.fromRequestBody(info, config as DutchConfigJSON);
+      return DutchV1Request.fromRequestBody(info, config as DutchConfigJSON);
     } else if (
       config.routingType == RoutingType.RELAY &&
-      SUPPORTED_CHAINS[RoutingType.RELAY].includes(info.tokenInChainId) &&
+      ChainConfigManager.chainSupportsRoutingType(info.tokenInChainId, RoutingType.RELAY) &&
       info.tokenInChainId === info.tokenOutChainId
     ) {
       return RelayRequest.fromRequestBody(info, config as RelayConfigJSON);
     } else if (
       config.routingType == RoutingType.DUTCH_V2 &&
-      SUPPORTED_CHAINS[RoutingType.DUTCH_V2].includes(info.tokenInChainId) &&
+      ChainConfigManager.chainSupportsRoutingType(info.tokenInChainId, RoutingType.DUTCH_V2) &&
       info.tokenInChainId === info.tokenOutChainId
     ) {
       return DutchV2Request.fromRequestBody(info, config as DutchV2ConfigJSON);

@@ -1,7 +1,8 @@
 import { BigNumber, ethers } from 'ethers';
 import Joi, { CustomHelpers } from 'joi';
 
-import { SUPPORTED_CHAINS } from '../config/chains';
+import { ChainConfigManager } from '../config/ChainConfigManager';
+import { RoutingType } from '../constants';
 
 export class FieldValidator {
   public static readonly address = Joi.string().custom((value: string, helpers: CustomHelpers<string>) => {
@@ -30,11 +31,11 @@ export class FieldValidator {
 
   public static readonly classicChainId = Joi.number()
     .integer()
-    .valid(...SUPPORTED_CHAINS.CLASSIC);
+    .valid(...ChainConfigManager.getChainIdsByRoutingType(RoutingType.CLASSIC));
 
   public static readonly dutchChainId = Joi.number()
     .integer()
-    .valid(...SUPPORTED_CHAINS.DUTCH_LIMIT);
+    .valid(...ChainConfigManager.getChainIdsByRoutingType(RoutingType.DUTCH_LIMIT));
 
   public static readonly tradeType = Joi.string().valid('EXACT_INPUT', 'EXACT_OUTPUT');
 

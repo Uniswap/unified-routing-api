@@ -20,6 +20,8 @@ Currently supported routing types:
    ROUTING_API_URL=<>
    SERVICE_URL=<>
    UNISWAP_API='<YourUrl>'
+   ARCHIVE_NODE_RPC=<>
+   ENABLE_PORTION="true"
    ```
 
 To deploy to your own AWS account,
@@ -57,13 +59,14 @@ The project currently has a `GET hello-world` Api Gateway<>Lambda integration se
 
 1. Deploy your API using the intructions above.
 
-1. Add your deployed API url to your `.env` file as `UNISWAP_API`
+2. Add your deployed API url as `UNISWAP_API` and the `ARCHIVE_NODE_RPC` pulled from team secrets to your `.env` file.
 
    ```
    UNISWAP_API='<YourUrl>'
+   ARCHIVE_NODE_RPC=''
    ```
 
-1. Run the tests with:
+3. Run the tests with:
    ```
    yarn test:integ
    ```

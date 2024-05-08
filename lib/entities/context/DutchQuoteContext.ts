@@ -8,13 +8,14 @@ import Logger from 'bunyan';
 import { BigNumber, ethers } from 'ethers';
 import NodeCache from 'node-cache';
 import { QuoteByKey, QuoteContext } from '.';
-import { DEFAULT_ROUTING_API_DEADLINE, LARGE_TRADE_USD_THRESHOLD, NATIVE_ADDRESS, RoutingType } from '../../constants';
+import { ChainConfigManager } from '../../config/ChainConfigManager';
+import { DEFAULT_ROUTING_API_DEADLINE, LARGE_TRADE_USD_THRESHOLD, NATIVE_ADDRESS } from '../../constants';
 import {
   ClassicQuote,
   ClassicQuoteDataJSON,
   ClassicRequest,
   DutchQuote,
-  DutchRequest,
+  DutchQuoteRequest,
   Quote,
   QuoteRequest,
 } from '../../entities';
@@ -22,6 +23,7 @@ import { SyntheticStatusProvider } from '../../providers';
 import { Erc20__factory } from '../../types/ext/factories/Erc20__factory';
 import { metrics } from '../../util/metrics';
 import { getQuoteSizeEstimateUSD } from '../../util/quoteMath';
+import { DutchQuoteFactory } from '../quote/DutchQuoteFactory';
 
 // if the gas is greater than this proportion of the whole trade size
 // then we will not route the order
@@ -34,9 +36,9 @@ export type DutchQuoteContextProviders = {
   syntheticStatusProvider: SyntheticStatusProvider;
 };
 
-// manages context around a single top level classic quote request
+// manages context around a single top level dutch quote request
+// can be used for DutchV1 or DutchV2 quotes
 export class DutchQuoteContext implements QuoteContext {
-  public routingType = RoutingType.DUTCH_LIMIT;
   private log: Logger;
   private rpcProvider: ethers.providers.StaticJsonRpcProvider;
   private syntheticStatusProvider: SyntheticStatusProvider;
@@ -46,7 +48,7 @@ export class DutchQuoteContext implements QuoteContext {
   public routeToNativeKey: string;
   public needsRouteToNative: boolean;
 
-  constructor(_log: Logger, public request: DutchRequest, providers: DutchQuoteContextProviders) {
+  constructor(_log: Logger, public request: DutchQuoteRequest, providers: DutchQuoteContextProviders) {
     this.log = _log.child({ context: 'DutchQuoteContext' });
     this.rpcProvider = providers.rpcProvider;
     this.syntheticStatusProvider = providers.syntheticStatusProvider;
@@ -71,9 +73,9 @@ export class DutchQuoteContext implements QuoteContext {
     return [this.request, classicRequest];
   }
 
-  async resolveHandler(dependencies: QuoteByKey): Promise<Quote | null> {
+  async resolveHandler(dependencies: QuoteByKey): Promise<DutchQuote<DutchQuoteRequest> | null> {
     const classicQuote = dependencies[this.classicKey] as ClassicQuote;
-    const rfqQuote = dependencies[this.requestKey] as DutchQuote;
+    const rfqQuote = dependencies[this.requestKey] as DutchQuote<DutchQuoteRequest>;
 
     const [quote, syntheticQuote] = await Promise.all([
       this.validateRfqQuote(rfqQuote, classicQuote),
@@ -99,13 +101,16 @@ export class DutchQuoteContext implements QuoteContext {
   }
 
   // return either the rfq quote or a synthetic quote from the classic dependency
-  async resolve(dependencies: QuoteByKey): Promise<Quote | null> {
+  async resolve(dependencies: QuoteByKey): Promise<DutchQuote<DutchQuoteRequest> | null> {
     const quote = await this.resolveHandler(dependencies);
-    if (!quote || (quote as DutchQuote).amountOutEnd.eq(0)) return null;
+    if (!quote || (quote as DutchQuote<DutchQuoteRequest>).amountOutEnd.eq(0)) return null;
     return quote;
   }
 
-  async validateRfqQuote(quote?: DutchQuote, classicQuote?: ClassicQuote): Promise<DutchQuote | null> {
+  async validateRfqQuote(
+    quote?: DutchQuote<DutchQuoteRequest>,
+    classicQuote?: ClassicQuote
+  ): Promise<DutchQuote<DutchQuoteRequest> | null> {
     if (!quote) return null;
 
     // if quote tokens are not in tokenlist return null
@@ -128,6 +133,12 @@ export class DutchQuoteContext implements QuoteContext {
     // order too small; rfq quote not usable
     if (classicQuote && !this.hasOrderSize(this.log, classicQuote)) {
       this.log.info('Order size too small, skipping rfq');
+      return null;
+    }
+
+    const quoteConfig = ChainConfigManager.getQuoteConfig(quote.chainId, this.request.routingType);
+    if (quoteConfig.skipRFQ) {
+      this.log.info('RFQ Orders are disabled in config');
       return null;
     }
 
@@ -154,7 +165,7 @@ export class DutchQuoteContext implements QuoteContext {
       }
     }
 
-    const reparameterized = DutchQuote.reparameterize(quote, classicQuote as ClassicQuote, {
+    const reparameterized = DutchQuoteFactory.reparameterize(quote, classicQuote as ClassicQuote, {
       hasApprovedPermit2: await this.hasApprovedPermit2(quote.request),
       largeTrade: isLargeTrade,
     });
@@ -165,7 +176,10 @@ export class DutchQuoteContext implements QuoteContext {
 
   // transform a classic quote into a synthetic dutch quote
   // if it makes sense to do so
-  async validateSyntheticQuote(classicQuote?: Quote, routeBackToNative?: Quote): Promise<DutchQuote | null> {
+  async validateSyntheticQuote(
+    classicQuote?: Quote,
+    routeBackToNative?: Quote
+  ): Promise<DutchQuote<DutchQuoteRequest> | null> {
     // no classic quote to build synthetic from
     if (!classicQuote) {
       this.log.info('No classic quote, skipping synthetic');
@@ -185,13 +199,16 @@ export class DutchQuoteContext implements QuoteContext {
     }
 
     const syntheticStatus = await this.syntheticStatusProvider.getStatus(this.request.info);
-    // if the useSyntheticQuotes override is not set, and the request is not eligible for synthetic, return null
-    if (!this.request.config.useSyntheticQuotes && !syntheticStatus.syntheticEnabled) {
+    const chainId = classicQuote.request.info.tokenInChainId;
+    const quoteConfig = ChainConfigManager.getQuoteConfig(chainId, this.request.routingType);
+    // if the useSyntheticQuotes override is not set by client or server and we're not skipping RFQ, return null
+    // if we are skipping RFQ, we need a synthetic quote
+    if (!this.request.config.useSyntheticQuotes && !syntheticStatus.syntheticEnabled && !quoteConfig.skipRFQ) {
       this.log.info('Synthetic not enabled, skipping synthetic');
       return null;
     }
 
-    return DutchQuote.fromClassicQuote(this.request, classicQuote as ClassicQuote);
+    return DutchQuoteFactory.fromClassicQuote(this.request, classicQuote as ClassicQuote);
   }
 
   hasOrderSize(log: Logger, classicQuote: Quote): boolean {
@@ -237,7 +254,7 @@ export class DutchQuoteContext implements QuoteContext {
     return quoteSizeEstimateUSD.gte(LARGE_TRADE_USD_THRESHOLD);
   }
 
-  rfqQuoteTooGood(quote: DutchQuote, classicQuote: ClassicQuote): boolean {
+  rfqQuoteTooGood(quote: DutchQuote<DutchQuoteRequest>, classicQuote: ClassicQuote): boolean {
     if (quote.request.info.type === TradeType.EXACT_INPUT) {
       return quote.amountOut.gt(classicQuote.amountOutGasAdjusted.mul(RFQ_QUOTE_UPPER_BOUND_MULTIPLIER));
     } else {
@@ -245,7 +262,7 @@ export class DutchQuoteContext implements QuoteContext {
     }
   }
 
-  async hasApprovedPermit2(request: DutchRequest): Promise<boolean> {
+  async hasApprovedPermit2(request: DutchQuoteRequest): Promise<boolean> {
     // either swapper was not set or is zero address
     if (!request.info.swapper || request.info.swapper == NATIVE_ADDRESS) return false;
 
