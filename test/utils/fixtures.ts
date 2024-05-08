@@ -9,7 +9,7 @@ import {
   ClassicRequest,
   DutchConfig,
   DutchQuoteJSON,
-  DutchRequest,
+  DutchV1Request,
   DutchV2Config,
   DutchV2Quote,
   DutchV2Request,
@@ -18,7 +18,8 @@ import {
   RelayConfigJSON,
   RelayRequest,
 } from '../../lib/entities';
-import { ClassicQuote, DutchQuote, Quote, RelayQuote, RelayQuoteJSON } from '../../lib/entities/quote';
+import { ClassicQuote, Quote, RelayQuote, RelayQuoteJSON } from '../../lib/entities/quote';
+import { DutchV1Quote } from '../../lib/entities/quote/DutchV1Quote';
 import { Portion } from '../../lib/fetchers/PortionFetcher';
 import {
   AMOUNT,
@@ -213,7 +214,7 @@ export function makeDutchRequest(
   overrides: Partial<QuoteRequestBodyJSON>,
   configOverrides?: Partial<DutchConfig>,
   baseRequestInfo = BASE_REQUEST_INFO_EXACT_IN
-): DutchRequest {
+): DutchV1Request {
   const requestInfo = Object.assign({}, baseRequestInfo, overrides);
   return parseQuoteRequests({
     ...requestInfo,
@@ -226,7 +227,7 @@ export function makeDutchRequest(
         ...configOverrides,
       },
     ],
-  }).quoteRequests[0] as DutchRequest;
+  }).quoteRequests[0] as DutchV1Request;
 }
 
 export function makeDutchV2Request(
@@ -584,7 +585,7 @@ export function createDutchQuote(
   nonce?: string,
   portion?: Portion,
   sendPortionEnabled?: boolean
-): DutchQuote {
+): DutchV1Quote {
   return buildQuoteResponse(
     Object.assign({}, DL_QUOTE_DATA, {
       quote: { ...DL_QUOTE_DATA.quote, type: RoutingType.DUTCH_LIMIT, ...overrides },
@@ -592,20 +593,24 @@ export function createDutchQuote(
     makeDutchRequest({ type, sendPortionEnabled }),
     nonce,
     portion
-  ) as DutchQuote;
+  ) as DutchV1Quote;
 }
 
-export function createDutchQuoteWithRequest(
-  overrides: Partial<DutchQuoteJSON>,
-  requestOverrides: Partial<QuoteRequestBodyJSON>,
-  configOverrides?: Partial<DutchConfig>
-): DutchQuote {
+export function createDutchQuoteWithRequest(overrides: Partial<DutchQuoteJSON>, request: DutchV1Request): DutchV1Quote {
   return buildQuoteResponse(
     Object.assign({}, DL_QUOTE_DATA, {
       quote: { ...DL_QUOTE_DATA.quote, type: RoutingType.DUTCH_LIMIT, ...overrides },
     }),
-    makeDutchRequest({ ...requestOverrides }, configOverrides)
-  ) as DutchQuote;
+    request
+  ) as DutchV1Quote;
+}
+
+export function createDutchQuoteWithRequestOverrides(
+  overrides: Partial<DutchQuoteJSON>,
+  requestOverrides: Partial<QuoteRequestBodyJSON>,
+  configOverrides?: Partial<DutchConfig>
+): DutchV1Quote {
+  return createDutchQuoteWithRequest(overrides, makeDutchRequest({ ...requestOverrides }, configOverrides));
 }
 
 export function createDutchV2Quote(
@@ -627,15 +632,22 @@ export function createDutchV2Quote(
 
 export function createDutchV2QuoteWithRequest(
   overrides: Partial<DutchQuoteJSON>,
-  requestOverrides: Partial<QuoteRequestBodyJSON>,
-  configOverrides?: Partial<DutchV2Config>
+  request: DutchV2Request
 ): DutchV2Quote {
   return buildQuoteResponse(
     Object.assign({}, DUTCH_V2_QUOTE_DATA, {
       quote: { ...DUTCH_V2_QUOTE_DATA.quote, type: RoutingType.DUTCH_V2, ...overrides },
     }),
-    makeDutchV2Request({ ...requestOverrides }, configOverrides)
+    request
   ) as DutchV2Quote;
+}
+
+export function createDutchV2QuoteWithRequestOverrides(
+  overrides: Partial<DutchQuoteJSON>,
+  requestOverrides: Partial<QuoteRequestBodyJSON>,
+  configOverrides?: Partial<DutchV2Config>
+): DutchV2Quote {
+  return createDutchV2QuoteWithRequest(overrides, makeDutchV2Request({ ...requestOverrides }, configOverrides));
 }
 
 export function createClassicQuote(
@@ -910,17 +922,21 @@ export function createRelayQuote(overrides: Partial<RelayQuoteJSON>, type: strin
   ) as RelayQuote;
 }
 
-export function createRelayQuoteWithRequest(
-  overrides: Partial<RelayQuoteJSON>,
-  requestOverrides: Partial<QuoteRequestBodyJSON>,
-  configOverrides?: Partial<RelayConfigJSON>
-): RelayQuote {
+export function createRelayQuoteWithRequest(overrides: Partial<RelayQuoteJSON>, request: RelayRequest): RelayQuote {
   return buildQuoteResponse(
     Object.assign({}, RELAY_QUOTE_DATA, {
       quote: { ...RELAY_QUOTE_DATA.quote, type: RoutingType.RELAY, ...overrides },
     }),
-    makeRelayRequest({ ...requestOverrides }, configOverrides)
+    request
   ) as RelayQuote;
+}
+
+export function createRelayQuoteWithRequestOverrides(
+  overrides: Partial<RelayQuoteJSON>,
+  requestOverrides: Partial<QuoteRequestBodyJSON>,
+  configOverrides?: Partial<RelayConfigJSON>
+): RelayQuote {
+  return createRelayQuoteWithRequest(overrides, makeRelayRequest({ ...requestOverrides }, configOverrides));
 }
 
 export const RELAY_QUOTE_EXACT_IN_BETTER = createRelayQuote(
@@ -936,7 +952,7 @@ export const RELAY_QUOTE_EXACT_IN_BETTER = createRelayQuote(
   },
   'EXACT_INPUT'
 );
-export const RELAY_QUOTE_NATIVE_EXACT_IN_BETTER = createRelayQuoteWithRequest(
+export const RELAY_QUOTE_NATIVE_EXACT_IN_BETTER = createRelayQuoteWithRequestOverrides(
   {
     amountIn: AMOUNT_BETTER,
     feeAmountStart: AMOUNT_BETTER,

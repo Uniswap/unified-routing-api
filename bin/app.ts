@@ -9,7 +9,7 @@ import dotenv from 'dotenv';
 
 import { ChainId } from '@uniswap/sdk-core';
 import { PipelineNotificationEvents } from 'aws-cdk-lib/aws-codepipeline';
-import { SUPPORTED_CHAINS } from '../lib/config/chains';
+import { ChainConfigManager } from '../lib/config/ChainConfigManager';
 import { RoutingType } from '../lib/constants';
 import { STAGE } from '../lib/util/stage';
 import { SERVICE_NAME } from './constants';
@@ -111,7 +111,7 @@ export class APIPipeline extends Stack {
     });
 
     const jsonRpcProviders = {} as { [chainKey: string]: string };
-    SUPPORTED_CHAINS[RoutingType.CLASSIC].forEach((chainId: ChainId) => {
+    ChainConfigManager.getChainIdsByRoutingType(RoutingType.CLASSIC).forEach((chainId: ChainId) => {
       const mapKey = `RPC_${chainId}`;
       jsonRpcProviders[mapKey] = jsonRpcProvidersSecret.secretValueFromJson(mapKey).toString();
     });
@@ -302,7 +302,7 @@ envVars['PARAMETERIZATION_API_KEY'] = process.env['PARAMETERIZATION_API_KEY'] ||
 envVars['FORCE_PORTION_SECRET'] = process.env['FORCE_PORTION_SECRET'] || '';
 
 const jsonRpcProviders = {} as { [chainKey: string]: string };
-SUPPORTED_CHAINS[RoutingType.CLASSIC].forEach((chainId: ChainId) => {
+ChainConfigManager.getChainIdsByRoutingType(RoutingType.CLASSIC).forEach((chainId: ChainId) => {
   const mapKey = `RPC_${chainId}`;
   jsonRpcProviders[mapKey] = process.env[mapKey] || '';
 });

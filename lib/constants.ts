@@ -22,12 +22,19 @@ export const DEFAULT_START_TIME_BUFFER_SECS = 45;
 export const OPEN_QUOTE_START_TIME_BUFFER_SECS = 60;
 export const DEFAULT_AUCTION_PERIOD_SECS = 60;
 export const DEFAULT_DEADLINE_BUFFER_SECS = 12;
+export const DEFAULT_V2_DEADLINE_BUFFER_SECS = 30;
 
 export enum RoutingType {
   CLASSIC = 'CLASSIC',
   DUTCH_LIMIT = 'DUTCH_LIMIT',
   RELAY = 'RELAY',
   DUTCH_V2 = 'DUTCH_V2',
+}
+
+export enum QuoteType {
+  CLASSIC,
+  RFQ,
+  SYNTHETIC,
 }
 
 export const DEFAULT_POSITIVE_CACHE_ENTRY_TTL = 300; // 5 minutes

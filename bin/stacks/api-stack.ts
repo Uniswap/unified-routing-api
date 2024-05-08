@@ -12,28 +12,15 @@ import * as aws_waf from 'aws-cdk-lib/aws-wafv2';
 import { Construct } from 'constructs';
 import * as path from 'path';
 
-import { ChainId } from '@uniswap/sdk-core';
 import _ from 'lodash';
-import { SUPPORTED_CHAINS } from '../../lib/config/chains';
+import { ChainConfigManager } from '../../lib/config/ChainConfigManager';
 import { STAGE } from '../../lib/util/stage';
 import { SERVICE_NAME } from '../constants';
 import { AnalyticsStack } from './analytics-stack';
 import { DashboardStack } from './dashboard-stack';
 import { XPairDashboardStack } from './pair-dashboard-stack';
 
-const ALL_SUPPORTED_CHAINS = _.uniq([...SUPPORTED_CHAINS.CLASSIC, ...SUPPORTED_CHAINS.DUTCH_LIMIT]);
-
-export const CHAINS_NOT_ALARMED = new Set<ChainId>([
-  ChainId.ARBITRUM_GOERLI,
-  ChainId.CELO_ALFAJORES,
-  ChainId.OPTIMISM_GOERLI,
-  ChainId.GOERLI,
-  ChainId.POLYGON_MUMBAI,
-  ChainId.SEPOLIA,
-  ChainId.BASE_GOERLI,
-]);
-
-const ALL_ALARMED_CHAINS = _.filter(ALL_SUPPORTED_CHAINS, (c) => !CHAINS_NOT_ALARMED.has(c));
+const ALL_ALARMED_CHAINS = ChainConfigManager.getAlarmedChainIds();
 
 export class APIStack extends cdk.Stack {
   public readonly url: CfnOutput;

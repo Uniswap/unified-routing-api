@@ -4,7 +4,8 @@ import { BigNumber } from 'ethers';
 import axios from './helpers';
 
 import { BPS, frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
-import { DutchQuote, DutchRequest, Quote } from '../../entities';
+import { DutchQuoteRequest, Quote } from '../../entities';
+import { DutchQuoteFactory } from '../../entities/quote/DutchQuoteFactory';
 import { PostQuoteResponseJoi } from '../../handlers/quote';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
@@ -17,12 +18,7 @@ export class RfqQuoter implements Quoter {
 
   constructor(private rfqUrl: string, private serviceUrl: string, private paramApiKey: string) {}
 
-  async quote(request: DutchRequest): Promise<Quote | null> {
-    if (!RfqQuoter.supportedRoutingTypes.includes(request.routingType)) {
-      log.error(`Invalid routing config type: ${request.routingType}`);
-      return null;
-    }
-
+  async quote(request: DutchQuoteRequest): Promise<Quote | null> {
     const swapper = request.config.swapper;
     const now = Date.now();
     const portionEnabled = frontendAndUraEnablePortion(request.info.sendPortionEnabled);
@@ -73,12 +69,12 @@ export class RfqQuoter implements Quoter {
             log.debug(results[1].reason, 'RfqQuoterErr: GET nonce failed');
             metrics.putMetric(`RfqQuoterLatency`, Date.now() - now);
             metrics.putMetric(`RfqQuoterNonceErr`, 1);
-            quote = DutchQuote.fromResponseBody(request, response, generateRandomNonce(), request.info.portion);
+            quote = DutchQuoteFactory.fromResponseBody(request, response, generateRandomNonce(), request.info.portion);
           } else {
             log.info(results[1].value.data, 'RfqQuoter: GET nonce success');
             metrics.putMetric(`RfqQuoterLatency`, Date.now() - now);
             metrics.putMetric(`RfqQuoterSuccess`, 1);
-            quote = DutchQuote.fromResponseBody(
+            quote = DutchQuoteFactory.fromResponseBody(
               request,
               response,
               BigNumber.from(results[1].value.data.nonce).add(1).toString(),

@@ -5,7 +5,7 @@ import { ChainId } from '@uniswap/sdk-core';
 import { MetricsLogger } from 'aws-embedded-metrics';
 import { providers } from 'ethers';
 import NodeCache from 'node-cache';
-import { SUPPORTED_CHAINS } from '../../config/chains';
+import { ChainConfigManager } from '../../config/ChainConfigManager';
 import { RoutingType } from '../../constants';
 import { QuoteRequestBodyJSON } from '../../entities';
 import { Permit2Fetcher } from '../../fetchers/Permit2Fetcher';
@@ -54,7 +54,7 @@ export class QuoteInjector extends ApiInjector<ContainerInjected, ApiRInj, Quote
     const portionApiUrl = checkDefined(process.env.PORTION_API_URL, 'PORTION_API_URL is not defined');
 
     const chainIdRpcMap = new Map<ChainId, providers.StaticJsonRpcProvider>();
-    SUPPORTED_CHAINS[RoutingType.CLASSIC].forEach((chainId) => {
+    ChainConfigManager.getChainIdsByRoutingType(RoutingType.CLASSIC).forEach((chainId) => {
       const rpcUrl = checkDefined(process.env[`RPC_${chainId}`], `RPC_${chainId} is not defined`);
       const provider = new providers.StaticJsonRpcProvider(rpcUrl, chainId); // specify chainId to avoid detecctNetwork() call on initialization
       chainIdRpcMap.set(chainId, provider);
