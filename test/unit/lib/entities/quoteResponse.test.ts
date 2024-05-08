@@ -4,12 +4,13 @@ import { BigNumber } from 'ethers';
 import {
   ClassicQuote,
   ClassicQuoteDataJSON,
-  DutchQuote,
   DutchQuoteJSON,
-  DutchRequest,
+  DutchV1Request,
   RelayQuote,
   RelayQuoteJSON,
 } from '../../../../lib/entities';
+import { DutchQuoteFactory } from '../../../../lib/entities/quote/DutchQuoteFactory';
+import { DutchV1Quote } from '../../../../lib/entities/quote/DutchV1Quote';
 import { RelayRequest } from '../../../../lib/entities/request/RelayRequest';
 import {
   AMOUNT,
@@ -96,11 +97,11 @@ const CLASSIC_QUOTE_JSON: ClassicQuoteDataJSON = {
 const UNIVERSAL_ROUTER_ADDRESS = '0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD';
 
 describe('QuoteResponse', () => {
-  const config: DutchRequest = QUOTE_REQUEST_DL;
+  const config: DutchV1Request = QUOTE_REQUEST_DL;
   const relayConfig: RelayRequest = QUOTE_REQUEST_RELAY;
 
   it('parses dutch limit quote from param-api properly', () => {
-    expect(() => DutchQuote.fromResponseBody(config, DL_QUOTE_JSON)).not.toThrow();
+    expect(() => DutchQuoteFactory.fromResponseBody(config, DL_QUOTE_JSON)).not.toThrow();
   });
 
   it('parses relay quote properly', () => {
@@ -108,7 +109,7 @@ describe('QuoteResponse', () => {
   });
 
   it('produces dutch limit order info from param-api response and config', () => {
-    const quote = DutchQuote.fromResponseBody(config, DL_QUOTE_JSON_RFQ);
+    const quote = DutchQuoteFactory.fromResponseBody(config, DL_QUOTE_JSON_RFQ);
     expect(quote.toOrder().toJSON()).toMatchObject({
       swapper: SWAPPER,
       input: {
@@ -125,7 +126,7 @@ describe('QuoteResponse', () => {
         },
       ],
     });
-    const order = DutchOrder.fromJSON(quote.toOrder().toJSON(), quote.chainId);
+    const order = DutchOrder.fromJSON((quote as DutchV1Quote).toOrder().toJSON(), quote.chainId);
     expect(order.info.exclusiveFiller).toEqual('0x1111111111111111111111111111111111111111');
     expect(order.info.exclusivityOverrideBps.toString()).toEqual('12');
 

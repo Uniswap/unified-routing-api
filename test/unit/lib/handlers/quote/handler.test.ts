@@ -58,13 +58,12 @@ import {
   ClassicQuote,
   ClassicQuoteDataJSON,
   DutchQuote,
-  DutchV2Quote,
   DutchV2QuoteDataJSON,
   Quote,
   RelayQuote,
   RequestSource,
 } from '../../../../../lib/entities';
-import { DutchConfigJSON, QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index';
+import { DutchConfigJSON, DutchQuoteRequest, QuoteRequestBodyJSON } from '../../../../../lib/entities/request/index';
 import { Permit2Fetcher } from '../../../../../lib/fetchers/Permit2Fetcher';
 import {
   GetPortionResponse,
@@ -150,7 +149,7 @@ const getQuoteHandler = (
   );
 
 const quoteMock = jest.fn();
-const RfqQuoterMock = (dlQuote: DutchQuote | DutchV2Quote): Quoter => {
+const RfqQuoterMock = (dlQuote: DutchQuote<DutchQuoteRequest>): Quoter => {
   return {
     quote: quoteMock.mockResolvedValueOnce(dlQuote),
   };

@@ -5,6 +5,7 @@ import { BigNumber, ethers } from 'ethers';
 import { PermitBatchTransferFromData } from '@uniswap/permit2-sdk';
 import { Percent } from '@uniswap/sdk-core';
 import { IQuote, SharedOrderQuoteDataJSON } from '.';
+import { ChainConfigManager } from '../../config/ChainConfigManager';
 import {
   DEFAULT_AUCTION_PERIOD_SECS,
   DEFAULT_DEADLINE_BUFFER_SECS,
@@ -243,12 +244,8 @@ export class RelayQuote implements IQuote {
       return this.request.config.auctionPeriodSecs;
     }
 
-    switch (this.chainId) {
-      case 1:
-        return DEFAULT_AUCTION_PERIOD_SECS;
-      default:
-        return DEFAULT_AUCTION_PERIOD_SECS;
-    }
+    const quoteConfig = ChainConfigManager.getQuoteConfig(this.chainId, RoutingType.RELAY);
+    return quoteConfig.stdAuctionPeriodSecs ?? DEFAULT_AUCTION_PERIOD_SECS;
   }
 
   // The number of seconds from endTime that the order should expire
@@ -257,12 +254,8 @@ export class RelayQuote implements IQuote {
       return this.request.config.deadlineBufferSecs;
     }
 
-    switch (this.chainId) {
-      case 1:
-        return DEFAULT_DEADLINE_BUFFER_SECS;
-      default:
-        return DEFAULT_DEADLINE_BUFFER_SECS;
-    }
+    const quoteConfig = ChainConfigManager.getQuoteConfig(this.chainId, this.request.routingType);
+    return quoteConfig.deadlineBufferSecs ?? DEFAULT_DEADLINE_BUFFER_SECS;
   }
 
   validate(): boolean {

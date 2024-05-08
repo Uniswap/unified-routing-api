@@ -1,6 +1,6 @@
 import { BigNumber } from 'ethers';
 
-import { DutchQuote, DutchQuoteDataJSON, DutchV2Quote, DutchV2QuoteDataJSON, QuoteRequest } from '..';
+import { DutchQuote, DutchQuoteDataJSON, DutchQuoteRequest, DutchV2QuoteDataJSON, QuoteRequest } from '..';
 import { RoutingType } from '../../constants';
 import { ClassicQuote, ClassicQuoteDataJSON } from './ClassicQuote';
 import { RelayQuote, RelayQuoteDataJSON } from './RelayQuote';
@@ -66,4 +66,4 @@ export interface IQuote {
   toLog(): LogJSON;
 }
 
-export type Quote = DutchQuote | DutchV2Quote | RelayQuote | ClassicQuote;
+export type Quote = DutchQuote<DutchQuoteRequest> | RelayQuote | ClassicQuote;

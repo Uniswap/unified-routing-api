@@ -5,12 +5,11 @@ import { Unit } from 'aws-embedded-metrics';
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { APIGatewayProxyEventHeaders } from 'aws-lambda/trigger/api-gateway-proxy';
 import { v4 as uuidv4 } from 'uuid';
-import { frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
+import { frontendAndUraEnablePortion, NATIVE_ADDRESS, QuoteType, RoutingType } from '../../constants';
 import {
   ClassicQuote,
   DutchQuote,
-  DutchQuoteType,
-  DutchV2Quote,
+  DutchQuoteRequest,
   parseQuoteContexts,
   parseQuoteRequests,
   Quote,
@@ -26,7 +25,7 @@ import { TokenFetcher } from '../../fetchers/TokenFetcher';
 import { ErrorCode, NoQuotesAvailable, QuoteFetchError, ValidationError } from '../../util/errors';
 import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
-import { emitUniswapXPairMetricIfTracking, QuoteType } from '../../util/metrics-pair';
+import { emitUniswapXPairMetricIfTracking } from '../../util/metrics-pair';
 import { timestampInMstoSeconds } from '../../util/time';
 import { APIGLambdaHandler } from '../base';
 import { APIHandleRequestParams, ApiRInj, ErrorResponse, Response } from '../base/api-handler';
@@ -290,7 +289,7 @@ export class QuoteHandler extends APIGLambdaHandler<
 
     let bestQuoteType: QuoteType;
     if (bestQuote.routingType == RoutingType.DUTCH_LIMIT) {
-      if (bestQuote.quoteType == DutchQuoteType.RFQ) {
+      if (bestQuote.quoteType == QuoteType.RFQ) {
         bestQuoteType = QuoteType.RFQ;
       } else {
         bestQuoteType = QuoteType.SYNTHETIC;
@@ -493,10 +492,8 @@ const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
   if (tradeType === TradeType.EXACT_INPUT) {
     if (quote.routingType === RoutingType.CLASSIC) {
       return (quote as ClassicQuote).amountOutGasAndPortionAdjusted;
-    } else if (quote.routingType === RoutingType.DUTCH_LIMIT) {
-      return (quote as DutchQuote).amountOutGasAndPortionAdjusted;
-    } else if (quote.routingType === RoutingType.DUTCH_V2) {
-      return (quote as DutchV2Quote).amountOutGasAndPortionAdjusted;
+    } else if (quote.routingType === RoutingType.DUTCH_LIMIT || quote.routingType === RoutingType.DUTCH_V2) {
+      return (quote as DutchQuote<DutchQuoteRequest>).amountOutGasAndPortionAdjusted;
     } else if (quote.routingType === RoutingType.RELAY) {
       return (quote as RelayQuote).classicQuote.amountOutGasAndPortionAdjusted;
     }
@@ -504,10 +501,8 @@ const getQuotedAmount = (quote: Quote, tradeType: TradeType) => {
   } else {
     if (quote.routingType === RoutingType.CLASSIC) {
       return (quote as ClassicQuote).amountInGasAndPortionAdjusted;
-    } else if (quote.routingType === RoutingType.DUTCH_LIMIT) {
-      return (quote as DutchQuote).amountInGasAndPortionAdjusted;
-    } else if (quote.routingType === RoutingType.DUTCH_V2) {
-      return (quote as DutchV2Quote).amountInGasAndPortionAdjusted;
+    } else if (quote.routingType === RoutingType.DUTCH_LIMIT || quote.routingType === RoutingType.DUTCH_V2) {
+      return (quote as DutchQuote<DutchQuoteRequest>).amountInGasAndPortionAdjusted;
     } else if (quote.routingType === RoutingType.RELAY) {
       return (quote as RelayQuote).classicQuote.amountInGasAndPortionAdjusted;
     }

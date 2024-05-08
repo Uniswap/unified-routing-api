@@ -1,19 +1,16 @@
 import { TradeType } from '@uniswap/sdk-core';
-import { DutchOrder, DutchOrderBuilder, DutchOrderInfoJSON, DutchOutput } from '@uniswap/uniswapx-sdk';
-import { BigNumber, ethers } from 'ethers';
+import { DutchInput, DutchOrder, DutchOrderInfoJSON, DutchOutput, UnsignedV2DutchOrder } from '@uniswap/uniswapx-sdk';
+import { BigNumber } from 'ethers';
 
 import { PermitTransferFromData } from '@uniswap/permit2-sdk';
-import { v4 as uuidv4 } from 'uuid';
-import { IQuote, SharedOrderQuoteDataJSON } from '.';
-import { DutchRequest } from '..';
+import { DutchV2QuoteDataJSON, IQuote, SharedOrderQuoteDataJSON } from '.';
+import { DutchQuoteRequest } from '..';
+import { ChainConfigManager } from '../../config/ChainConfigManager';
 import {
   BPS,
-  DEFAULT_AUCTION_PERIOD_SECS,
-  DEFAULT_DEADLINE_BUFFER_SECS,
-  DEFAULT_START_TIME_BUFFER_SECS,
   frontendAndUraEnablePortion,
   NATIVE_ADDRESS,
-  OPEN_QUOTE_START_TIME_BUFFER_SECS,
+  QuoteType,
   RoutingType,
   UNISWAPX_BASE_GAS,
   WETH_UNWRAP_GAS,
@@ -21,8 +18,6 @@ import {
   WETH_WRAP_GAS_ALREADY_APPROVED,
 } from '../../constants';
 import { Portion } from '../../fetchers/PortionFetcher';
-import { log } from '../../util/log';
-import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInMs, timestampInMstoSeconds } from '../../util/time';
 import { ClassicQuote } from './ClassicQuote';
 import { LogJSON } from './index';
@@ -64,231 +59,62 @@ export type Amounts = {
   amountOut: BigNumber;
 };
 
-export enum DutchQuoteType {
-  RFQ,
-  SYNTHETIC,
-}
+export type DutchQuoteConstructorArgs = {
+  createdAtMs?: string;
+  request: DutchQuoteRequest;
+  tokenInChainId: number;
+  tokenOutChainId: number;
+  requestId: string;
+  quoteId: string;
+  tokenIn: string;
+  tokenOut: string;
+  amountInStart: BigNumber;
+  amountInEnd: BigNumber;
+  amountOutStart: BigNumber;
+  amountOutEnd: BigNumber;
+  swapper: string;
+  quoteType: QuoteType;
+  filler?: string;
+  nonce?: string;
+  portion?: Portion;
+  derived?: DutchQuoteDerived;
+};
 
-export class DutchQuote implements IQuote {
+// A common class for both DutchV1 and DutchV2 quotes
+export abstract class DutchQuote<T extends DutchQuoteRequest> implements IQuote {
   public readonly createdAt: string;
   public derived: DutchQuoteDerived;
-  public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
+  public routingType: RoutingType.DUTCH_LIMIT | RoutingType.DUTCH_V2;
+  public abstract readonly defaultDeadlienBufferInSecs: number;
   // Add 1bps price improvmement to favor Dutch
-  public static amountOutImprovementExactIn = BigNumber.from(10001);
-  public static amountInImprovementExactOut = BigNumber.from(9999);
+  public static defaultPriceImprovementBps = 1;
 
-  // build a dutch quote from an RFQ response
-  public static fromResponseBody(
-    request: DutchRequest,
-    body: DutchQuoteJSON,
-    nonce?: string,
-    portion?: Portion
-  ): DutchQuote {
-    // if it's exact out, we will explicitly define the amount out start to be the swapper's requested amount
-    const amountOutStart =
-      request.info.type === TradeType.EXACT_OUTPUT ? request.info.amount : BigNumber.from(body.amountOut);
-    const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchQuote.applySlippage(
-      { amountIn: BigNumber.from(body.amountIn), amountOut: amountOutStart },
-      request
-    );
-    return new DutchQuote(
-      currentTimestampInMs(),
-      request,
-      body.chainId,
-      body.requestId,
-      body.quoteId,
-      body.tokenIn,
-      body.tokenOut,
-      BigNumber.from(body.amountIn),
-      amountInEnd,
-      amountOutStart,
-      amountOutEnd,
-      body.swapper,
-      DutchQuoteType.RFQ,
-      body.filler,
-      nonce,
-      portion
-    );
-  }
+  public readonly request: T;
+  public readonly createdAtMs: string;
+  public readonly chainId: number;
+  public readonly requestId: string;
+  public readonly quoteId: string;
+  public readonly tokenIn: string;
+  public readonly tokenOut: string;
+  public readonly amountInStart: BigNumber;
+  public readonly amountInEnd: BigNumber;
+  public readonly amountOutStart: BigNumber;
+  public readonly amountOutEnd: BigNumber;
+  public readonly swapper: string;
+  public readonly quoteType: QuoteType;
+  public readonly filler?: string;
+  public readonly nonce?: string;
+  public readonly portion?: Portion;
 
-  // build a synthetic dutch quote from a classic quote
-  public static fromClassicQuote(request: DutchRequest, quote: ClassicQuote): DutchQuote {
-    const priceImprovedStartAmounts = this.applyPriceImprovement(
-      { amountIn: quote.amountInGasAdjusted, amountOut: quote.amountOutGasAdjusted },
-      request.info.type
-    );
-    const startAmounts = this.applyPreSwapGasAdjustment(priceImprovedStartAmounts, quote);
-
-    const gasAdjustedAmounts = this.applyGasAdjustment(startAmounts, quote);
-    const endAmounts = this.applySlippage(gasAdjustedAmounts, request);
-
-    log.info('Synthetic quote parameterization', {
-      priceImprovedAmountIn: priceImprovedStartAmounts.amountIn.toString(),
-      priceImprovedAmountOut: priceImprovedStartAmounts.amountOut.toString(),
-      startAmountIn: startAmounts.amountIn.toString(),
-      startAmountOut: startAmounts.amountOut.toString(),
-      gasAdjustedAmountIn: gasAdjustedAmounts.amountIn.toString(),
-      gasAdjustedAmountOut: gasAdjustedAmounts.amountOut.toString(),
-      slippageAdjustedAmountIn: endAmounts.amountIn.toString(),
-      slippageAdjustedAmountOut: endAmounts.amountOut.toString(),
+  public constructor(args: DutchQuoteConstructorArgs) {
+    Object.assign(this, args, {
+      chainId: args.tokenInChainId,
+      createdAtMs: args.createdAtMs || currentTimestampInMs(),
+      createdAt: timestampInMstoSeconds(parseInt(args.createdAtMs || currentTimestampInMs())),
+      derived: args.derived || { largeTrade: false },
     });
-
-    return new DutchQuote(
-      quote.createdAtMs,
-      request,
-      request.info.tokenInChainId,
-      request.info.requestId,
-      uuidv4(), // synthetic quote doesn't receive a quoteId from RFQ api, so generate one
-      request.info.tokenIn,
-      quote.request.info.tokenOut,
-      startAmounts.amountIn,
-      endAmounts.amountIn,
-      startAmounts.amountOut,
-      endAmounts.amountOut,
-      request.config.swapper,
-      DutchQuoteType.SYNTHETIC,
-      NATIVE_ADDRESS, // synthetic quote has no filler
-      generateRandomNonce(), // synthetic quote has no nonce
-      quote.portion
-    );
   }
-
-  // reparameterize an RFQ quote with awareness of classic
-  public static reparameterize(
-    quote: DutchQuote,
-    classic?: ClassicQuote,
-    options?: ParameterizationOptions
-  ): DutchQuote {
-    if (!classic) return quote;
-
-    const { amountIn: amountInStart, amountOut: amountOutStart } = this.applyPreSwapGasAdjustment(
-      { amountIn: quote.amountInStart, amountOut: quote.amountOutStart },
-      classic,
-      options
-    );
-
-    const classicAmounts = this.applyGasAdjustment(
-      { amountIn: classic.amountInGasAdjusted, amountOut: classic.amountOutGasAdjusted },
-      classic
-    );
-    const { amountIn: amountInEnd, amountOut: amountOutEnd } = this.applySlippage(classicAmounts, quote.request);
-
-    log.info('RFQ quote parameterization', {
-      startAmountIn: amountInStart.toString(),
-      startAmountOut: amountOutStart.toString(),
-      gasAdjustedClassicAmountIn: classicAmounts.amountIn.toString(),
-      gasAdjustedClassicAmountOut: classicAmounts.amountOut.toString(),
-      slippageAdjustedClassicAmountIn: amountInEnd.toString(),
-      slippageAdjustedClassicAmountOut: amountOutEnd.toString(),
-    });
-
-    return new DutchQuote(
-      quote.createdAtMs,
-      quote.request,
-      quote.chainId,
-      quote.requestId,
-      quote.quoteId,
-      quote.tokenIn,
-      quote.tokenOut,
-      amountInStart,
-      amountInEnd,
-      amountOutStart,
-      amountOutEnd,
-      quote.swapper,
-      quote.quoteType,
-      quote.filler,
-      quote.nonce,
-      quote.portion === undefined ? classic.portion : quote.portion,
-      {
-        largeTrade: options?.largeTrade ?? false,
-      }
-    );
-  }
-
-  private constructor(
-    public readonly createdAtMs: string,
-    public readonly request: DutchRequest,
-    public readonly chainId: number,
-    public readonly requestId: string,
-    public readonly quoteId: string,
-    public readonly tokenIn: string,
-    public readonly tokenOut: string,
-    public readonly amountInStart: BigNumber,
-    public readonly amountInEnd: BigNumber,
-    public readonly amountOutStart: BigNumber,
-    public readonly amountOutEnd: BigNumber,
-    public readonly swapper: string,
-    public readonly quoteType: DutchQuoteType,
-    public readonly filler?: string,
-    public readonly nonce?: string,
-    public portion?: Portion,
-    derived?: DutchQuoteDerived
-  ) {
-    this.createdAtMs = createdAtMs || currentTimestampInMs();
-    this.createdAt = timestampInMstoSeconds(parseInt(this.createdAtMs));
-    this.derived = derived || { largeTrade: false };
-  }
-
-  public toJSON(): DutchQuoteDataJSON {
-    return {
-      orderInfo: this.toOrder().toJSON(),
-      encodedOrder: this.toOrder().serialize(),
-      quoteId: this.quoteId,
-      requestId: this.requestId,
-      orderHash: this.toOrder().hash(),
-      startTimeBufferSecs: this.startTimeBufferSecs,
-      auctionPeriodSecs: this.auctionPeriodSecs,
-      deadlineBufferSecs: this.deadlineBufferSecs,
-      slippageTolerance: this.request.info.slippageTolerance,
-      permitData: this.getPermitData(),
-      // NOTE: important for URA to return 0 bps and amount, in case of no portion.
-      // this is FE requirement
-      portionBips: frontendAndUraEnablePortion(this.request.info.sendPortionEnabled)
-        ? this.portion?.bips ?? 0
-        : undefined,
-      portionAmount: frontendAndUraEnablePortion(this.request.info.sendPortionEnabled)
-        ? this.portionAmountOutStart.toString() ?? '0'
-        : undefined,
-      portionRecipient: this.portion?.recipient,
-    };
-  }
-
-  public toOrder(): DutchOrder {
-    const orderBuilder = new DutchOrderBuilder(this.chainId);
-    const decayStartTime = Math.floor(Date.now() / 1000);
-    const nonce = this.nonce ?? generateRandomNonce();
-
-    const builder = orderBuilder
-      .decayStartTime(decayStartTime)
-      .decayEndTime(decayStartTime + this.auctionPeriodSecs)
-      .deadline(decayStartTime + this.auctionPeriodSecs + this.deadlineBufferSecs)
-      .swapper(ethers.utils.getAddress(this.request.config.swapper))
-      .nonce(BigNumber.from(nonce))
-      .input({
-        token: this.tokenIn,
-        startAmount: this.amountInStart,
-        endAmount: this.amountInEnd,
-      });
-
-    const outputs = getPortionAdjustedOutputs(
-      {
-        token: this.tokenOut,
-        startAmount: this.amountOutStart,
-        endAmount: this.amountOutEnd,
-        recipient: this.request.config.swapper,
-      },
-      this.request.info.type,
-      this.request.info.sendPortionEnabled,
-      this.portion
-    );
-    outputs.forEach((output) => builder.output(output));
-
-    if (this.isExclusiveQuote() && this.filler) {
-      builder.exclusiveFiller(this.filler, BigNumber.from(this.request.config.exclusivityOverrideBps));
-    }
-
-    return builder.build();
-  }
+  abstract toJSON(): DutchQuoteDataJSON | DutchV2QuoteDataJSON;
 
   public toLog(): LogJSON {
     return {
@@ -322,6 +148,8 @@ export class DutchQuote implements IQuote {
     };
   }
 
+  public abstract toOrder(): DutchOrder | UnsignedV2DutchOrder;
+
   getPermitData(): PermitTransferFromData {
     return this.toOrder().permitData();
   }
@@ -336,47 +164,13 @@ export class DutchQuote implements IQuote {
     return this.amountInStart;
   }
 
-  // The number of seconds from now that order decay should begin
-  public get startTimeBufferSecs(): number {
-    if (this.request.config.startTimeBufferSecs !== undefined) {
-      return this.request.config.startTimeBufferSecs;
-    }
-
-    if (this.isOpenQuote()) {
-      return OPEN_QUOTE_START_TIME_BUFFER_SECS;
-    }
-
-    return DEFAULT_START_TIME_BUFFER_SECS;
-  }
-
-  // The number of seconds from startTime that decay should end
-  public get auctionPeriodSecs(): number {
-    if (this.request.config.auctionPeriodSecs !== undefined) {
-      return this.request.config.auctionPeriodSecs;
-    }
-
-    switch (this.chainId) {
-      case 1:
-        return this.derived.largeTrade ? 120 : 60;
-      case 137:
-        return DEFAULT_AUCTION_PERIOD_SECS;
-      default:
-        return DEFAULT_AUCTION_PERIOD_SECS;
-    }
-  }
-
   // The number of seconds from endTime that the order should expire
   public get deadlineBufferSecs(): number {
     if (this.request.config.deadlineBufferSecs !== undefined) {
       return this.request.config.deadlineBufferSecs;
     }
-
-    switch (this.chainId) {
-      case 1:
-        return DEFAULT_DEADLINE_BUFFER_SECS;
-      default:
-        return DEFAULT_DEADLINE_BUFFER_SECS;
-    }
+    const quoteConfig = ChainConfigManager.getQuoteConfig(this.chainId, this.request.routingType);
+    return quoteConfig.deadlineBufferSecs ?? this.defaultDeadlienBufferInSecs;
   }
 
   public get portionAmountOutStart(): BigNumber {
@@ -421,7 +215,7 @@ export class DutchQuote implements IQuote {
 
   // static helpers
 
-  static applySlippage(amounts: Amounts, request: DutchRequest): Amounts {
+  static applySlippage(amounts: Amounts, request: DutchQuoteRequest): Amounts {
     const { amountIn: amountInStart, amountOut: amountOutStart } = amounts;
     const isExactIn = request.info.type === TradeType.EXACT_INPUT;
     if (isExactIn) {
@@ -437,12 +231,18 @@ export class DutchQuote implements IQuote {
     }
   }
 
-  static applyPriceImprovement(amounts: Amounts, type: TradeType): Amounts {
+  static applyPriceImprovement(
+    amounts: Amounts,
+    type: TradeType,
+    priceImprovementBps: number = DutchQuote.defaultPriceImprovementBps
+  ): Amounts {
     const { amountIn, amountOut } = amounts;
     if (type === TradeType.EXACT_INPUT) {
-      return { amountIn, amountOut: amountOut.mul(DutchQuote.amountOutImprovementExactIn).div(BPS) };
+      const amountOutImprovementExactIn = BigNumber.from(BPS).add(priceImprovementBps);
+      return { amountIn, amountOut: amountOut.mul(amountOutImprovementExactIn).div(BPS) };
     } else {
-      return { amountIn: amountIn.mul(DutchQuote.amountInImprovementExactOut).div(BPS), amountOut };
+      const amountInImprovementExactOut = BigNumber.from(BPS).sub(priceImprovementBps);
+      return { amountIn: amountIn.mul(amountInImprovementExactOut).div(BPS), amountOut };
     }
   }
 
@@ -473,6 +273,41 @@ export class DutchQuote implements IQuote {
       gasAdjustment,
       classicQuote
     );
+  }
+
+  /**
+   * Shift the start and end price down by the provided BPs
+   */
+  static applyBufferToInputOutput(
+    input: DutchInput,
+    output: DutchOutput,
+    type: TradeType,
+    bps = 0
+  ): {
+    input: DutchInput;
+    output: DutchOutput;
+  } {
+    if (type === TradeType.EXACT_INPUT) {
+      return {
+        input,
+        output: {
+          ...output,
+          // add buffer to output
+          startAmount: output.startAmount.mul(BPS - bps).div(BPS),
+          endAmount: output.endAmount.mul(BPS - bps).div(BPS),
+        },
+      };
+    } else {
+      return {
+        input: {
+          ...input,
+          // add buffer to input
+          startAmount: input.startAmount.mul(BPS + bps).div(BPS),
+          endAmount: input.endAmount.mul(BPS + bps).div(BPS),
+        },
+        output,
+      };
+    }
   }
 
   // return the amounts, with the gasAdjustment value taken out
