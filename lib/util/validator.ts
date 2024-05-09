@@ -109,7 +109,7 @@ export class FieldValidator {
     startTimeBufferSecs: FieldValidator.positiveNumber.optional(),
     auctionPeriodSecs: FieldValidator.positiveNumber.optional(),
     deadlineBufferSecs: FieldValidator.positiveNumber.optional(),
-    useSyntheticQuotes: Joi.boolean().optional(), 
+    useSyntheticQuotes: Joi.boolean().optional(),
     gasAdjustmentBps: FieldValidator.bps.optional(),
   });
 
