@@ -263,8 +263,8 @@ export abstract class DutchQuote<T extends DutchQuoteRequest> implements IQuote 
   // Calculates the gas adjustment for the given quote if processed through UniswapX
   // Swap gas adjustments are paid by the filler in the process of filling a trade
   // and should be applied to endAmounts
-  static applyGasAdjustment(amounts: Amounts, classicQuote: ClassicQuote): Amounts {
-    const gasAdjustment = DutchQuote.getGasAdjustment(classicQuote);
+  static applyGasAdjustment(amounts: Amounts, classicQuote: ClassicQuote, adjustmentBps?: number): Amounts {
+    const gasAdjustment = DutchQuote.getGasAdjustment(classicQuote, adjustmentBps);
     if (gasAdjustment.eq(0)) return amounts;
     return DutchQuote.getGasAdjustedAmounts(
       amounts,
@@ -358,7 +358,7 @@ export abstract class DutchQuote<T extends DutchQuoteRequest> implements IQuote 
   }
 
   // Returns the number of gas units extra required to execute this quote through UniswapX
-  static getGasAdjustment(classicQuote: ClassicQuote): BigNumber {
+  static getGasAdjustment(classicQuote: ClassicQuote, adjustmentBps?: number): BigNumber {
     let result = BigNumber.from(0);
 
     // fill contract must unwrap WETH output tokens
@@ -366,7 +366,11 @@ export abstract class DutchQuote<T extends DutchQuoteRequest> implements IQuote 
       result = result.add(WETH_UNWRAP_GAS);
     }
 
-    return result.add(UNISWAPX_BASE_GAS);
+    result.add(UNISWAPX_BASE_GAS);
+    if(adjustmentBps) {
+      result = result.mul(BPS + adjustmentBps).div(BPS);
+    }
+    return result;
   }
 }
 

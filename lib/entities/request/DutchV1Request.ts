@@ -16,6 +16,7 @@ export interface DutchConfig {
   auctionPeriodSecs?: number;
   deadlineBufferSecs?: number;
   useSyntheticQuotes: boolean;
+  gasAdjustmentBps?: number;
 }
 
 export interface DutchQuoteRequestInfo extends QuoteRequestInfo {
@@ -30,6 +31,7 @@ export interface DutchConfigJSON {
   auctionPeriodSecs?: number;
   deadlineBufferSecs?: number;
   useSyntheticQuotes?: boolean;
+  gasAdjustmentBps?: number;
 }
 
 export class DutchV1Request implements QuoteRequest {
