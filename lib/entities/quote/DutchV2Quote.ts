@@ -96,7 +96,7 @@ export class DutchV2Quote implements IQuote {
       // this is FE requirement
       ...(frontendAndUraEnablePortion(this.request.info.sendPortionEnabled) && {
         portionBips: this.portion?.bips ?? 0,
-        portionAmount: applyBufferToPortion(this.portionAmountOutStart, V2_OUTPUT_AMOUNT_BUFFER_BPS).toString() ?? '0',
+        portionAmount: applyBufferToPortion(this.portionAmountOutStart, this.request.info.type).toString() ?? '0',
         portionRecipient: this.portion?.recipient,
       }),
     };
@@ -182,8 +182,8 @@ export class DutchV2Quote implements IQuote {
       createdAtMs: this.createdAtMs,
       portionBips: this.portion?.bips,
       portionRecipient: this.portion?.recipient,
-      portionAmountOutStart: applyBufferToPortion(this.portionAmountOutStart, V2_OUTPUT_AMOUNT_BUFFER_BPS).toString(),
-      portionAmountOutEnd: applyBufferToPortion(this.portionAmountOutEnd, V2_OUTPUT_AMOUNT_BUFFER_BPS).toString(),
+      portionAmountOutStart: applyBufferToPortion(this.portionAmountOutStart, this.request.info.type).toString(),
+      portionAmountOutEnd: applyBufferToPortion(this.portionAmountOutEnd, this.request.info.type).toString(),
     };
   }
 
@@ -280,6 +280,14 @@ export function addBufferToV2InputOutput(
   }
 }
 
-export function applyBufferToPortion(portionAmount: BigNumber, bps: number): BigNumber {
-  return portionAmount.mul(BPS - bps).div(BPS);
+/*
+ * if exact_input, apply buffer to both user and portion outputs
+ *  if exact_output, do nothing since the buffer is applied to user input
+ */
+export function applyBufferToPortion(portionAmount: BigNumber, type: TradeType): BigNumber {
+  if (type === TradeType.EXACT_INPUT) {
+    return portionAmount.mul(BPS - V2_OUTPUT_AMOUNT_BUFFER_BPS).div(BPS);
+  } else {
+    return portionAmount;
+  }
 }
