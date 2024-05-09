@@ -7,6 +7,7 @@ export interface DutchV2Config {
   swapper: string;
   deadlineBufferSecs?: number;
   useSyntheticQuotes: boolean;
+  gasAdjustmentBps?: number;
 }
 
 export interface DutchV2ConfigJSON extends Omit<DutchV2Config, 'useSyntheticQuotes'> {
