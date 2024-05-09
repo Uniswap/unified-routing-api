@@ -335,7 +335,7 @@ export class BaseIntegrationTestSuite {
 
   before = async () => {
     let alice: SignerWithAddress;
-    const filler: SignerWithAddress;
+    let filler: SignerWithAddress;
     [alice, filler] = await ethers.getSigners();
 
     // Make a dummy call to the API to get a block number to fork from.
