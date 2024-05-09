@@ -5,10 +5,10 @@ import { TradeType } from '@uniswap/sdk-core';
 import dotenv from 'dotenv';
 import { BigNumber } from 'ethers';
 import { BPS } from '../../../lib/constants';
-import { DEFAULT_LABS_COSIGNER, DutchQuote, DutchV2Quote, V2_OUTPUT_AMOUNT_BUFFER_BPS } from '../../../lib/entities';
+import { DEFAULT_LABS_COSIGNER, DutchQuote, V2_OUTPUT_AMOUNT_BUFFER_BPS } from '../../../lib/entities';
 import { PortionType } from '../../../lib/fetchers/PortionFetcher';
 import { AMOUNT, ETH_IN, SWAPPER, TOKEN_IN } from '../../constants';
-import { createDutchQuote, createDutchV2QuoteWithRequestOverrides, makeDutchV2Request } from '../../utils/fixtures';
+import { createDutchV2QuoteWithRequestOverrides } from '../../utils/fixtures';
 
 // ENABLE_PORTION flag
 dotenv.config();
