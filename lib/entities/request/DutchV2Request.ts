@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import { defaultRequestKey, QuoteRequest, QuoteRequestHeaders, QuoteRequestInfo } from '.';
 import { DEFAULT_SLIPPAGE_TOLERANCE, RoutingType } from '../../constants';
-import { DutchQuoteRequestInfo, DutchRequest } from './DutchRequest';
+import { DutchQuoteRequestInfo } from './DutchV1Request';
 
 export interface DutchV2Config {
   swapper: string;
@@ -37,17 +37,6 @@ export class DutchV2Request implements QuoteRequest {
     public readonly config: DutchV2Config,
     public headers: QuoteRequestHeaders = {}
   ) {}
-
-  public toDutchRequest(): DutchRequest {
-    return new DutchRequest(
-      this.info,
-      {
-        ...this.config,
-        exclusivityOverrideBps: 0,
-      },
-      RoutingType.DUTCH_V2
-    );
-  }
 
   public toJSON(): DutchV2ConfigJSON {
     return Object.assign({}, this.config, {

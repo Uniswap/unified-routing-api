@@ -7,7 +7,7 @@ import {
 } from '../../constants';
 
 export * from './ClassicRequest';
-export * from './DutchRequest';
+export * from './DutchV1Request';
 
 export interface DutchConfig {
   swapper: string;
@@ -32,10 +32,12 @@ export interface DutchConfigJSON {
   useSyntheticQuotes?: boolean;
 }
 
-export class DutchRequest implements QuoteRequest {
-  public static fromRequestBody(info: QuoteRequestInfo, body: DutchConfigJSON): DutchRequest {
+export class DutchV1Request implements QuoteRequest {
+  public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
+
+  public static fromRequestBody(info: QuoteRequestInfo, body: DutchConfigJSON): DutchV1Request {
     const convertedSlippage = info.slippageTolerance ?? DEFAULT_SLIPPAGE_TOLERANCE;
-    return new DutchRequest(
+    return new DutchV1Request(
       {
         ...info,
         slippageTolerance: convertedSlippage,
@@ -54,7 +56,6 @@ export class DutchRequest implements QuoteRequest {
   constructor(
     public readonly info: DutchQuoteRequestInfo,
     public readonly config: DutchConfig,
-    public readonly routingType: RoutingType.DUTCH_LIMIT | RoutingType.DUTCH_V2 = RoutingType.DUTCH_LIMIT,
     public headers: QuoteRequestHeaders = {}
   ) {}
 
