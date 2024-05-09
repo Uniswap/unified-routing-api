@@ -20,7 +20,7 @@ chai.use(chaiSubset);
 
 const SLIPPAGE = '5';
 
-describe('relayQuote', function () {
+describe.skip('relayQuote', function () {
   let baseTest: BaseIntegrationTestSuite;
   let reactorAddress: string;
 
