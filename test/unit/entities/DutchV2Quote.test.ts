@@ -4,9 +4,12 @@ import { it } from '@jest/globals';
 import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber } from 'ethers';
 import { BPS } from '../../../lib/constants';
-import { DEFAULT_LABS_COSIGNER, DutchQuote } from '../../../lib/entities';
+import { DEFAULT_LABS_COSIGNER, DutchQuote, V2_OUTPUT_AMOUNT_BUFFER_BPS } from '../../../lib/entities';
+import { PortionType } from '../../../lib/fetchers/PortionFetcher';
 import { AMOUNT, ETH_IN, SWAPPER, TOKEN_IN } from '../../constants';
 import { createDutchV2QuoteWithRequestOverrides } from '../../utils/fixtures';
+
+process.env.ENABLE_PORTION = 'true';
 
 describe('DutchV2Quote', () => {
   //setChainConfigManager();
@@ -36,6 +39,64 @@ describe('DutchV2Quote', () => {
           .toString()
       );
       expect(orderJson.cosigner).toEqual(DEFAULT_LABS_COSIGNER);
+    });
+
+    it('apply negative buffer to outputs for EXACT_INPUT trades', () => {
+      const v2Quote = createDutchV2QuoteWithRequestOverrides(
+        {},
+        {
+          tokenIn: ETH_IN,
+          tokenOut: TOKEN_IN,
+          type: 'EXACT_INPUT',
+          portion: { bips: 25, recipient: TOKEN_IN, type: PortionType.Flat },
+          sendPortionEnabled: true,
+        },
+        {}
+      );
+      const order = v2Quote.toOrder();
+      const orderJson = order.toJSON();
+
+      console.log(orderJson.outputs);
+      console.log(v2Quote.amountOutGasAndPortionAdjusted.toString());
+
+      expect(orderJson.outputs[0].startAmount).toEqual(
+        v2Quote.amountOutGasAndPortionAdjusted
+          .mul(BPS - V2_OUTPUT_AMOUNT_BUFFER_BPS)
+          .div(BPS)
+          .toString()
+      );
+      expect(orderJson.outputs[1].startAmount).toEqual(
+        v2Quote.portionAmountOutStart
+          .mul(BPS - V2_OUTPUT_AMOUNT_BUFFER_BPS)
+          .div(BPS)
+          .toString()
+      );
+    });
+
+    it('does not apply neg buffer to outputs, but to user input for EXACT_OUTPUT trades', () => {
+      const v2Quote = createDutchV2QuoteWithRequestOverrides(
+        {},
+        {
+          tokenIn: ETH_IN,
+          tokenOut: TOKEN_IN,
+          type: 'EXACT_OUTPUT',
+          portion: { bips: 25, recipient: TOKEN_IN, type: PortionType.Flat },
+          sendPortionEnabled: true,
+        },
+        {}
+      );
+      const order = v2Quote.toOrder();
+      const orderJson = order.toJSON();
+
+      expect(orderJson.outputs[0].startAmount).toEqual(v2Quote.amountOutStart.toString());
+      expect(orderJson.outputs[1].startAmount).toEqual(v2Quote.portionAmountOutStart.toString());
+
+      expect(orderJson.input.startAmount).toEqual(
+        v2Quote.amountInGasAndPortionAdjusted
+          .mul(BPS + V2_OUTPUT_AMOUNT_BUFFER_BPS)
+          .div(BPS)
+          .toString()
+      );
     });
 
     it('should serialize', () => {

@@ -1,6 +1,8 @@
 import { PermitTransferFromData } from '@uniswap/permit2-sdk';
 import { TradeType } from '@uniswap/sdk-core';
 import {
+  DutchInput,
+  DutchOutput,
   UnsignedV2DutchOrder,
   UnsignedV2DutchOrderInfoJSON,
   V2DutchOrderBuilder,
@@ -10,7 +12,7 @@ import { BigNumber, ethers } from 'ethers';
 import { IQuote, LogJSON, SharedOrderQuoteDataJSON } from '.';
 import { DutchV2Request } from '..';
 import { ChainConfigManager } from '../../config/ChainConfigManager';
-import { DEFAULT_V2_DEADLINE_BUFFER_SECS, frontendAndUraEnablePortion, RoutingType } from '../../constants';
+import { BPS, DEFAULT_V2_DEADLINE_BUFFER_SECS, frontendAndUraEnablePortion, RoutingType } from '../../constants';
 import { generateRandomNonce } from '../../util/nonce';
 import { timestampInMstoSeconds } from '../../util/time';
 import { DutchQuote, getPortionAdjustedOutputs } from './DutchQuote';
@@ -46,7 +48,7 @@ export class DutchV2Quote extends DutchQuote<DutchV2Request> implements IQuote {
       // this is FE requirement
       ...(frontendAndUraEnablePortion(this.request.info.sendPortionEnabled) && {
         portionBips: this.portion?.bips ?? 0,
-        portionAmount: this.portionAmountOutStart.toString() ?? '0',
+        portionAmount: applyBufferToPortion(this.portionAmountOutStart, this.request.info.type).toString() ?? '0',
         portionRecipient: this.portion?.recipient,
       }),
     };
@@ -133,12 +135,56 @@ export class DutchV2Quote extends DutchQuote<DutchV2Request> implements IQuote {
       createdAtMs: this.createdAtMs,
       portionBips: this.portion?.bips,
       portionRecipient: this.portion?.recipient,
-      portionAmountOutStart: this.portionAmountOutStart.toString(),
-      portionAmountOutEnd: this.portionAmountOutEnd.toString(),
+      portionAmountOutStart: applyBufferToPortion(this.portionAmountOutStart, this.request.info.type).toString(),
+      portionAmountOutEnd: applyBufferToPortion(this.portionAmountOutEnd, this.request.info.type).toString(),
     };
   }
 
   static getLabsCosigner(): string {
     return process.env.RFQ_LABS_COSIGNER_ADDRESS || DEFAULT_LABS_COSIGNER;
+  }
+}
+
+export function addBufferToV2InputOutput(
+  input: DutchInput,
+  output: DutchOutput,
+  type: TradeType,
+  bps: number
+): {
+  input: DutchInput;
+  output: DutchOutput;
+} {
+  if (type === TradeType.EXACT_INPUT) {
+    return {
+      input,
+      output: {
+        ...output,
+        // subtract buffer from output
+        startAmount: output.startAmount.mul(BPS - bps).div(BPS),
+        endAmount: output.endAmount.mul(BPS - bps).div(BPS),
+      },
+    };
+  } else {
+    return {
+      input: {
+        ...input,
+        // add buffer to input
+        startAmount: input.startAmount.mul(BPS + bps).div(BPS),
+        endAmount: input.endAmount.mul(BPS + bps).div(BPS),
+      },
+      output,
+    };
+  }
+}
+
+/*
+ * if exact_input, apply buffer to both user and portion outputs
+ *  if exact_output, do nothing since the buffer is applied to user input
+ */
+export function applyBufferToPortion(portionAmount: BigNumber, type: TradeType): BigNumber {
+  if (type === TradeType.EXACT_INPUT) {
+    return portionAmount.mul(BPS - V2_OUTPUT_AMOUNT_BUFFER_BPS).div(BPS);
+  } else {
+    return portionAmount;
   }
 }
