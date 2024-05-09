@@ -366,9 +366,9 @@ export abstract class DutchQuote<T extends DutchQuoteRequest> implements IQuote 
       result = result.add(WETH_UNWRAP_GAS);
     }
 
-    result.add(UNISWAPX_BASE_GAS);
-    if(adjustmentBps) {
-      result = result.mul(BPS + adjustmentBps).div(BPS);
+    result = result.add(UNISWAPX_BASE_GAS);
+    if (adjustmentBps) {
+      result = result.mul(BPS - adjustmentBps).div(BPS);
     }
     return result;
   }

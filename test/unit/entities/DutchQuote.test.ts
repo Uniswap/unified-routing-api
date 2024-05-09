@@ -9,7 +9,10 @@ import {
   DEFAULT_AUCTION_PERIOD_SECS,
   DEFAULT_DEADLINE_BUFFER_SECS,
   DEFAULT_START_TIME_BUFFER_SECS,
+  NATIVE_ADDRESS,
   OPEN_QUOTE_START_TIME_BUFFER_SECS,
+  UNISWAPX_BASE_GAS,
+  WETH_UNWRAP_GAS,
 } from '../../../lib/constants';
 import { ClassicQuote, DutchQuote, DutchQuoteJSON } from '../../../lib/entities';
 import { DutchQuoteFactory } from '../../../lib/entities/quote/DutchQuoteFactory';
@@ -23,6 +26,9 @@ import {
   FLAT_PORTION,
   PORTION_BIPS,
   PORTION_RECIPIENT,
+  TEST_GAS_ADJUSTMENT_BPS,
+  TEST_GAS_ADJUSTMENT_X_AMOUNT,
+  TEST_GAS_ADJUSTMENT_X_AMOUNT_WITH_UNWRAP,
 } from '../../constants';
 import {
   CLASSIC_QUOTE_EXACT_IN_LARGE,
@@ -53,6 +59,46 @@ describe('DutchQuote', () => {
 
   afterEach(() => {
     process.env.ENABLE_PORTION = 'false';
+  });
+
+  describe('getGasAdjustment', () => {
+    it('gets gas adjustment without unwrap, no adjustment', () => {
+      const classicQuote = createClassicQuote({}, {});
+      const result = DutchQuote.getGasAdjustment(
+        classicQuote
+      );
+      expect(result.eq(BigNumber.from(UNISWAPX_BASE_GAS))).toBeTruthy()
+    });
+
+    it('gets gas adjustment with unwrap, no adjustment', () => {
+      const classicQuote = createClassicQuote({}, {
+        tokenOut: NATIVE_ADDRESS
+      });
+      const result = DutchQuote.getGasAdjustment(
+        classicQuote
+      );
+      expect(result.eq(BigNumber.from(UNISWAPX_BASE_GAS).add(BigNumber.from(WETH_UNWRAP_GAS)))).toBeTruthy()
+    });
+
+    it('gets gas adjustment without unwrap, with adjustment', () => {
+      const classicQuote = createClassicQuote({}, {});
+      const result = DutchQuote.getGasAdjustment(
+        classicQuote,
+        TEST_GAS_ADJUSTMENT_BPS
+      );
+      expect(result.eq(TEST_GAS_ADJUSTMENT_X_AMOUNT)).toBeTruthy()
+    });
+
+    it('gets gas adjustment with unwrap, with adjustment', () => {
+      const classicQuote = createClassicQuote({}, {
+        tokenOut: NATIVE_ADDRESS
+      });
+      const result = DutchQuote.getGasAdjustment(
+        classicQuote,
+        TEST_GAS_ADJUSTMENT_BPS
+      );
+      expect(result.eq(TEST_GAS_ADJUSTMENT_X_AMOUNT_WITH_UNWRAP)).toBeTruthy()
+    });
   });
 
   describe('Reparameterize', () => {
