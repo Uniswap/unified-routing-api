@@ -96,7 +96,7 @@ export class DutchV2Quote implements IQuote {
       // this is FE requirement
       ...(frontendAndUraEnablePortion(this.request.info.sendPortionEnabled) && {
         portionBips: this.portion?.bips ?? 0,
-        portionAmount: this.portionAmountOutStart.toString() ?? '0',
+        portionAmount: applyBufferToPortion(this.portionAmountOutStart, V2_OUTPUT_AMOUNT_BUFFER_BPS).toString() ?? '0',
         portionRecipient: this.portion?.recipient,
       }),
     };
@@ -182,8 +182,8 @@ export class DutchV2Quote implements IQuote {
       createdAtMs: this.createdAtMs,
       portionBips: this.portion?.bips,
       portionRecipient: this.portion?.recipient,
-      portionAmountOutStart: this.portionAmountOutStart.toString(),
-      portionAmountOutEnd: this.portionAmountOutEnd.toString(),
+      portionAmountOutStart: applyBufferToPortion(this.portionAmountOutStart, V2_OUTPUT_AMOUNT_BUFFER_BPS).toString(),
+      portionAmountOutEnd: applyBufferToPortion(this.portionAmountOutEnd, V2_OUTPUT_AMOUNT_BUFFER_BPS).toString(),
     };
   }
 
@@ -278,4 +278,8 @@ export function addBufferToV2InputOutput(
       output,
     };
   }
+}
+
+export function applyBufferToPortion(portionAmount: BigNumber, bps: number): BigNumber {
+  return portionAmount.mul(BPS - bps).div(BPS);
 }
