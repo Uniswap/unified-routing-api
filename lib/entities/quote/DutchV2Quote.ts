@@ -12,7 +12,7 @@ import { BigNumber, ethers } from 'ethers';
 import { IQuote, LogJSON, SharedOrderQuoteDataJSON } from '.';
 import { DutchV2Request } from '..';
 import { ChainConfigManager } from '../../config/ChainConfigManager';
-import { DEFAULT_V2_DEADLINE_BUFFER_SECS, frontendAndUraEnablePortion, RoutingType } from '../../constants';
+import { BPS, DEFAULT_V2_DEADLINE_BUFFER_SECS, frontendAndUraEnablePortion, RoutingType } from '../../constants';
 import { generateRandomNonce } from '../../util/nonce';
 import { timestampInMstoSeconds } from '../../util/time';
 import { DutchQuote, getPortionAdjustedOutputs } from './DutchQuote';
