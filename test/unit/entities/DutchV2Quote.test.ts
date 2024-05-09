@@ -2,7 +2,6 @@ import Logger from 'bunyan';
 
 import { it } from '@jest/globals';
 import { TradeType } from '@uniswap/sdk-core';
-import dotenv from 'dotenv';
 import { BigNumber } from 'ethers';
 import { BPS } from '../../../lib/constants';
 import { DEFAULT_LABS_COSIGNER, DutchQuote, V2_OUTPUT_AMOUNT_BUFFER_BPS } from '../../../lib/entities';
@@ -10,8 +9,7 @@ import { PortionType } from '../../../lib/fetchers/PortionFetcher';
 import { AMOUNT, ETH_IN, SWAPPER, TOKEN_IN } from '../../constants';
 import { createDutchV2QuoteWithRequestOverrides } from '../../utils/fixtures';
 
-// ENABLE_PORTION flag
-dotenv.config();
+process.env.ENABLE_PORTION = 'true';
 
 describe('DutchV2Quote', () => {
   //setChainConfigManager();
@@ -57,6 +55,9 @@ describe('DutchV2Quote', () => {
       );
       const order = v2Quote.toOrder();
       const orderJson = order.toJSON();
+
+      console.log(orderJson.outputs);
+      console.log(v2Quote.amountOutGasAndPortionAdjusted.toString());
 
       expect(orderJson.outputs[0].startAmount).toEqual(
         v2Quote.amountOutGasAndPortionAdjusted
