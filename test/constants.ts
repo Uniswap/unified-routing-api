@@ -49,12 +49,14 @@ export const DL_CONFIG = {
   swapper: SWAPPER,
   exclusivityOverrideBps: 24,
   auctionPeriodSecs: 60,
+  gasAdjustmentBps: TEST_GAS_ADJUSTMENT_BPS,
 };
 
 export const DUTCH_V2_CONFIG = {
   routingType: RoutingType.DUTCH_V2,
   swapper: SWAPPER,
   deadlineBufferSecs: 24,
+  gasAdjustmentBps: TEST_GAS_ADJUSTMENT_BPS,
 };
 
 export const CLASSIC_CONFIG = {

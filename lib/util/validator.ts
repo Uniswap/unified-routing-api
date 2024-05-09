@@ -3,6 +3,7 @@ import Joi, { CustomHelpers } from 'joi';
 
 import { ChainConfigManager } from '../config/ChainConfigManager';
 import { RoutingType } from '../constants';
+import { DutchConfigJSON, DutchV2ConfigJSON } from '../entities';
 
 export class FieldValidator {
   public static readonly address = Joi.string().custom((value: string, helpers: CustomHelpers<string>) => {
@@ -77,6 +78,8 @@ export class FieldValidator {
 
   public static readonly quoteSpeed = Joi.string().valid('fast', 'standard');
 
+  public static readonly bps = Joi.number().greater(0).max(10000); // 0 to 100%
+
   public static readonly classicConfig = Joi.object({
     routingType: Joi.string().valid('CLASSIC'),
     protocols: FieldValidator.protocols.required(),
@@ -94,21 +97,20 @@ export class FieldValidator {
     maxSplits: FieldValidator.maxSplits.optional(),
     forceCrossProtocol: FieldValidator.forceCrossProtocol.optional(),
     forceMixedRoutes: FieldValidator.forceMixedRoutes.optional(),
-    slippageTolerance: FieldValidator.slippageTolerance.optional(),
     algorithm: FieldValidator.algorithm.optional(),
     quoteSpeed: FieldValidator.quoteSpeed.optional(),
     enableFeeOnTransferFeeFetching: Joi.boolean().optional(),
   });
 
-  public static readonly dutchLimitConfig = Joi.object({
+  public static readonly dutchLimitConfig = Joi.object<DutchConfigJSON>({
     routingType: Joi.string().valid('DUTCH_LIMIT'),
     swapper: FieldValidator.address.optional(),
     exclusivityOverrideBps: FieldValidator.positiveNumber.optional(),
     startTimeBufferSecs: FieldValidator.positiveNumber.optional(),
     auctionPeriodSecs: FieldValidator.positiveNumber.optional(),
     deadlineBufferSecs: FieldValidator.positiveNumber.optional(),
-    slippageTolerance: FieldValidator.slippageTolerance.optional(),
-    useSyntheticQuotes: Joi.boolean().optional(),
+    useSyntheticQuotes: Joi.boolean().optional(), 
+    gasAdjustmentBps: FieldValidator.bps.optional(),
   });
 
   // extends a classic request config, but requires a gasToken and has optional parameters for the fee auction
@@ -123,10 +125,11 @@ export class FieldValidator {
     amountInGasTokenStartOverride: FieldValidator.amount.optional(),
   });
 
-  public static readonly dutchV2Config = Joi.object({
+  public static readonly dutchV2Config = Joi.object<DutchV2ConfigJSON>({
     routingType: Joi.string().valid('DUTCH_V2'),
     swapper: FieldValidator.address.optional(),
     deadlineBufferSecs: FieldValidator.positiveNumber.optional(),
     useSyntheticQuotes: Joi.boolean().optional(),
+    gasAdjustmentBps: FieldValidator.bps.optional(),
   });
 }

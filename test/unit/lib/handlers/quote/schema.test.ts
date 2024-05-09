@@ -68,6 +68,24 @@ describe('Post quote request validation', () => {
       expect(error).toBeDefined();
       expect(error?.message).toEqual('"routingType" must be [DUTCH_LIMIT]');
     });
+    
+    it('should reject invalid gasAdjustmentBps', () => {
+      const { error } = FieldValidator.dutchLimitConfig.validate({
+        ...DL_CONFIG_JSON,
+        gasAdjustmentBps: -1,
+      });
+      expect(error).toBeDefined();
+      expect(error?.message).toEqual("\"gasAdjustmentBps\" must be greater than 0");
+    });
+
+    it('should reject invalid gasAdjustmentBps for v2', () => {
+      const { error } = FieldValidator.dutchV2Config.validate({
+        ...DUTCH_V2_CONFIG_JSON,
+        gasAdjustmentBps: -1,
+      });
+      expect(error).toBeDefined();
+      expect(error?.message).toEqual("\"gasAdjustmentBps\" must be greater than 0");
+    });
 
     it('should reject invalid slippage', () => {
       const { error } = FieldValidator.dutchLimitConfig.validate({
