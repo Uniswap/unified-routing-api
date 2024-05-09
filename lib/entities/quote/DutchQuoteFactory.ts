@@ -125,8 +125,7 @@ export class DutchQuoteFactory {
 
     const classicAmounts = DutchQuote.applyGasAdjustment(
       { amountIn: classic.amountInGasAdjusted, amountOut: classic.amountOutGasAdjusted },
-      classic,
-      quote.request.config.gasAdjustmentBps
+      classic
     );
     const { amountIn: amountInEnd, amountOut: amountOutEnd } = DutchQuote.applySlippage(classicAmounts, quote.request);
 
