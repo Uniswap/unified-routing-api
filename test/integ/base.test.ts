@@ -1,42 +1,31 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { ZERO } from '@uniswap/router-sdk';
-import { ChainId, Currency, CurrencyAmount, Fraction, Percent } from '@uniswap/sdk-core';
+import { Currency, CurrencyAmount, Fraction, Percent } from '@uniswap/sdk-core';
 import {
   DAI_MAINNET,
-  MethodParameters,
   parseAmount,
-  SWAP_ROUTER_02_ADDRESSES,
   USDC_MAINNET,
   USDT_MAINNET,
   WBTC_MAINNET,
   WETH9,
 } from '@uniswap/smart-order-router';
-import { DutchOrder, RelayOrder } from '@uniswap/uniswapx-sdk';
-import {
-  PERMIT2_ADDRESS,
-  UNIVERSAL_ROUTER_ADDRESS as UNIVERSAL_ROUTER_ADDRESS_BY_CHAIN,
-} from '@uniswap/universal-router-sdk';
 import { fail } from 'assert';
 import axiosStatic, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import axiosRetry from 'axios-retry';
 import { expect } from 'chai';
-import { BigNumber, Contract, ContractFactory, providers } from 'ethers';
+import { Contract, ContractFactory } from 'ethers';
 import hre from 'hardhat';
 import _ from 'lodash';
 import NodeCache from 'node-cache';
 import { RoutingType } from '../../lib/constants';
 import { ClassicQuoteDataJSON } from '../../lib/entities/quote';
 import { QuoteRequestBodyJSON } from '../../lib/entities/request';
-import { Portion, PortionFetcher } from '../../lib/fetchers/PortionFetcher';
+import { PortionFetcher } from '../../lib/fetchers/PortionFetcher';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
-import { ExclusiveDutchOrderReactor__factory, Permit2__factory, RelayOrderReactor__factory } from '../../lib/types/ext';
 import { resetAndFundAtBlock } from '../utils/forkAndFund';
-import { getBalance, getBalanceAndApprove } from '../utils/getBalanceAndApprove';
 import { agEUR_MAINNET, BULLET, getAmount, UNI_MAINNET, XSGD_MAINNET } from '../utils/tokens';
 
 const { ethers } = hre;
-
-const UNIVERSAL_ROUTER_ADDRESS = UNIVERSAL_ROUTER_ADDRESS_BY_CHAIN(1);
 
 if (!process.env.UNISWAP_API || !process.env.ARCHIVE_NODE_RPC) {
   throw new Error('Must set UNISWAP_API and ARCHIVE_NODE_RPC env variables for integ tests. See README');
@@ -155,8 +144,6 @@ export const isTesterPKEnvironmentSet = (): boolean => {
   return isSet;
 };
 
-const MAX_UINT160 = '0xffffffffffffffffffffffffffffffffffffffff';
-
 export class BaseIntegrationTestSuite {
   block: number;
   curNonce = 0;
@@ -166,171 +153,6 @@ export class BaseIntegrationTestSuite {
     const nonce = this.curNonce.toString();
     this.curNonce = this.curNonce + 1;
     return nonce;
-  };
-
-  executeSwap = async (
-    swapper: SignerWithAddress,
-    methodParameters: MethodParameters,
-    currencyIn: Currency,
-    currencyOut: Currency,
-    permit?: boolean,
-    chainId = ChainId.MAINNET,
-    portion?: Portion
-  ): Promise<{
-    tokenInAfter: CurrencyAmount<Currency>;
-    tokenInBefore: CurrencyAmount<Currency>;
-    tokenOutAfter: CurrencyAmount<Currency>;
-    tokenOutBefore: CurrencyAmount<Currency>;
-    tokenOutPortionRecipientBefore?: CurrencyAmount<Currency>;
-    tokenOutPortionRecipientAfter?: CurrencyAmount<Currency>;
-  }> => {
-    const permit2 = Permit2__factory.connect(PERMIT2_ADDRESS, swapper);
-    const portionRecipientSigner = portion?.recipient ? await ethers.getSigner(portion?.recipient) : undefined;
-
-    // Approve Permit2
-    const tokenInBefore = await getBalanceAndApprove(swapper, PERMIT2_ADDRESS, currencyIn);
-    const tokenOutBefore = await getBalance(swapper, currencyOut);
-    const tokenOutPortionRecipientBefore = portionRecipientSigner
-      ? await getBalance(portionRecipientSigner, currencyOut)
-      : undefined;
-
-    // Approve SwapRouter02 in case we request calldata for it instead of Universal Router
-    await getBalanceAndApprove(swapper, SWAP_ROUTER_02_ADDRESSES(chainId), currencyIn);
-
-    // If not using permit do a regular approval allowing narwhal max balance.
-    if (!permit) {
-      const approveNarwhal = await permit2.approve(
-        currencyIn.wrapped.address,
-        UNIVERSAL_ROUTER_ADDRESS,
-        MAX_UINT160,
-        100000000000000
-      );
-      await approveNarwhal.wait();
-    }
-
-    const transaction = {
-      data: methodParameters.calldata,
-      to: methodParameters.to,
-      value: BigNumber.from(methodParameters.value),
-      from: swapper.address,
-      gasPrice: BigNumber.from(2000000000000),
-      type: 1,
-    };
-
-    const transactionResponse: providers.TransactionResponse = await swapper.sendTransaction(transaction);
-    await transactionResponse.wait();
-
-    const tokenInAfter = await getBalance(swapper, currencyIn);
-    const tokenOutAfter = await getBalance(swapper, currencyOut);
-    const tokenOutPortionRecipientAfter = portionRecipientSigner
-      ? await getBalance(portionRecipientSigner, currencyOut)
-      : undefined;
-
-    return {
-      tokenInAfter,
-      tokenInBefore,
-      tokenOutAfter,
-      tokenOutBefore,
-      tokenOutPortionRecipientBefore,
-      tokenOutPortionRecipientAfter,
-    };
-  };
-
-  executeDutchSwap = async (
-    swapper: SignerWithAddress,
-    filler: SignerWithAddress,
-    order: DutchOrder,
-    currencyIn: Currency,
-    currencyOut: Currency,
-    portion?: Portion
-  ): Promise<{
-    tokenInAfter: CurrencyAmount<Currency>;
-    tokenInBefore: CurrencyAmount<Currency>;
-    tokenOutAfter: CurrencyAmount<Currency>;
-    tokenOutBefore: CurrencyAmount<Currency>;
-    tokenOutPortionRecipientAfter: CurrencyAmount<Currency>;
-    tokenOutPortionRecipientBefore: CurrencyAmount<Currency>;
-  }> => {
-    const reactor = ExclusiveDutchOrderReactor__factory.connect(order.info.reactor, filler);
-    const portionRecipientSigner = portion?.recipient ? await ethers.getSigner(portion?.recipient) : undefined;
-
-    // Approve Permit2 for swapper
-    // Note we pass in currency.wrapped, since Gouda does not support native ETH in
-    const tokenInBefore = await getBalanceAndApprove(swapper, PERMIT2_ADDRESS, currencyIn.wrapped);
-    const tokenOutBefore = await getBalance(swapper, currencyOut);
-    const tokenOutPortionRecipientBefore = portionRecipientSigner
-      ? await getBalance(portionRecipientSigner, currencyOut)
-      : CurrencyAmount.fromRawAmount(currencyOut, '0');
-
-    // Directly approve reactor for filler funds
-    await getBalanceAndApprove(filler, order.info.reactor, currencyOut);
-
-    const { domain, types, values } = order.permitData();
-    const signature = await swapper._signTypedData(domain, types, values);
-
-    const transactionResponse = await reactor.execute({ order: order.serialize(), sig: signature });
-    await transactionResponse.wait();
-
-    const tokenInAfter = await getBalance(swapper, currencyIn.wrapped);
-    const tokenOutAfter = await getBalance(swapper, currencyOut);
-    const tokenOutPortionRecipientAfter = portionRecipientSigner
-      ? await getBalance(portionRecipientSigner, currencyOut)
-      : CurrencyAmount.fromRawAmount(currencyOut, '0');
-
-    return {
-      tokenInAfter,
-      tokenInBefore,
-      tokenOutAfter,
-      tokenOutBefore,
-      tokenOutPortionRecipientAfter,
-      tokenOutPortionRecipientBefore,
-    };
-  };
-
-  executeRelaySwap = async (
-    swapper: SignerWithAddress,
-    filler: SignerWithAddress,
-    order: RelayOrder,
-    currencyIn: Currency,
-    currencyGasToken: Currency,
-    currencyOut: Currency
-  ): Promise<{
-    tokenInAfter: CurrencyAmount<Currency>;
-    tokenInBefore: CurrencyAmount<Currency>;
-    gasTokenAfter: CurrencyAmount<Currency>;
-    gasTokenBefore: CurrencyAmount<Currency>;
-    tokenOutAfter: CurrencyAmount<Currency>;
-    tokenOutBefore: CurrencyAmount<Currency>;
-  }> => {
-    const reactor = RelayOrderReactor__factory.connect(order.info.reactor, filler);
-
-    // Approve Permit2 for Alice
-    // Note we pass in currency.wrapped, since reactor does not support native ETH in
-    const tokenInBefore = await getBalanceAndApprove(swapper, PERMIT2_ADDRESS, currencyIn.wrapped);
-    const tokenOutBefore = await getBalance(swapper, currencyOut);
-    const gasTokenBefore = await getBalanceAndApprove(swapper, PERMIT2_ADDRESS, currencyGasToken.wrapped);
-
-    const { domain, types, values } = order.permitData();
-    const signature = await swapper._signTypedData(domain, types, values);
-
-    const transactionResponse = await reactor['execute((bytes,bytes),address)'](
-      { order: order.serialize(), sig: signature },
-      filler.address
-    );
-    await transactionResponse.wait();
-
-    const tokenInAfter = await getBalance(swapper, currencyIn.wrapped);
-    const tokenOutAfter = await getBalance(swapper, currencyOut);
-    const gasTokenAfter = await getBalance(swapper, currencyGasToken.wrapped);
-
-    return {
-      tokenInAfter,
-      tokenInBefore,
-      tokenOutAfter,
-      tokenOutBefore,
-      gasTokenAfter,
-      gasTokenBefore,
-    };
   };
 
   before = async () => {
