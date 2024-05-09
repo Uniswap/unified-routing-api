@@ -56,6 +56,9 @@ describe('DutchV2Quote', () => {
       const order = v2Quote.toOrder();
       const orderJson = order.toJSON();
 
+      console.log(orderJson.outputs);
+      console.log(v2Quote.amountOutGasAndPortionAdjusted.toString());
+
       expect(orderJson.outputs[0].startAmount).toEqual(
         v2Quote.amountOutGasAndPortionAdjusted
           .mul(BPS - V2_OUTPUT_AMOUNT_BUFFER_BPS)
