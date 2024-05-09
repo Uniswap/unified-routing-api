@@ -44,30 +44,28 @@ describe('DutchV2Quote', () => {
     });
 
     it('apply negative buffer to outputs for EXACT_INPUT trades', () => {
-      const request = makeDutchV2Request({
-        tokenIn: ETH_IN,
-        tokenOut: TOKEN_IN,
-        sendPortionEnabled: true,
-      });
-      const v1Quote = createDutchQuote(
+      const v2Quote = createDutchV2QuoteWithRequestOverrides(
         {},
-        'EXACT_INPUT',
-        '1',
-        { bips: 25, recipient: TOKEN_IN, type: PortionType.Flat },
-        true
+        {
+          tokenIn: ETH_IN,
+          tokenOut: TOKEN_IN,
+          type: 'EXACT_INPUT',
+          portion: { bips: 25, recipient: TOKEN_IN, type: PortionType.Flat },
+          sendPortionEnabled: true,
+        },
+        {}
       );
-      const v2Quote = DutchV2Quote.fromV1Quote(request, v1Quote);
       const order = v2Quote.toOrder();
       const orderJson = order.toJSON();
 
       expect(orderJson.outputs[0].startAmount).toEqual(
-        v1Quote.amountOutGasAndPortionAdjusted
+        v2Quote.amountOutGasAndPortionAdjusted
           .mul(BPS - V2_OUTPUT_AMOUNT_BUFFER_BPS)
           .div(BPS)
           .toString()
       );
       expect(orderJson.outputs[1].startAmount).toEqual(
-        v1Quote.portionAmountOutStart
+        v2Quote.portionAmountOutStart
           .mul(BPS - V2_OUTPUT_AMOUNT_BUFFER_BPS)
           .div(BPS)
           .toString()
@@ -75,28 +73,25 @@ describe('DutchV2Quote', () => {
     });
 
     it('does not apply neg buffer to outputs, but to user input for EXACT_OUTPUT trades', () => {
-      const request = makeDutchV2Request({
-        tokenIn: ETH_IN,
-        tokenOut: TOKEN_IN,
-        sendPortionEnabled: true,
-        type: 'EXACT_OUTPUT',
-      });
-      const v1Quote = createDutchQuote(
+      const v2Quote = createDutchV2QuoteWithRequestOverrides(
         {},
-        'EXACT_OUTPUT',
-        '1',
-        { bips: 25, recipient: TOKEN_IN, type: PortionType.Flat },
-        true
+        {
+          tokenIn: ETH_IN,
+          tokenOut: TOKEN_IN,
+          type: 'EXACT_OUTPUT',
+          portion: { bips: 25, recipient: TOKEN_IN, type: PortionType.Flat },
+          sendPortionEnabled: true,
+        },
+        {}
       );
-      const v2Quote = DutchV2Quote.fromV1Quote(request, v1Quote);
       const order = v2Quote.toOrder();
       const orderJson = order.toJSON();
 
-      expect(orderJson.outputs[0].startAmount).toEqual(v1Quote.amountOutStart.toString());
-      expect(orderJson.outputs[1].startAmount).toEqual(v1Quote.portionAmountOutStart.toString());
+      expect(orderJson.outputs[0].startAmount).toEqual(v2Quote.amountOutStart.toString());
+      expect(orderJson.outputs[1].startAmount).toEqual(v2Quote.portionAmountOutStart.toString());
 
       expect(orderJson.input.startAmount).toEqual(
-        v1Quote.amountInGasAndPortionAdjusted
+        v2Quote.amountInGasAndPortionAdjusted
           .mul(BPS + V2_OUTPUT_AMOUNT_BUFFER_BPS)
           .div(BPS)
           .toString()

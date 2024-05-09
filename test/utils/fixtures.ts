@@ -638,7 +638,9 @@ export function createDutchV2QuoteWithRequest(
     Object.assign({}, DUTCH_V2_QUOTE_DATA, {
       quote: { ...DUTCH_V2_QUOTE_DATA.quote, type: RoutingType.DUTCH_V2, ...overrides },
     }),
-    request
+    request,
+    undefined,
+    request.info.portion
   ) as DutchV2Quote;
 }
 
