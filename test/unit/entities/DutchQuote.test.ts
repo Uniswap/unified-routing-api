@@ -30,6 +30,7 @@ import {
   TEST_GAS_ADJUSTED_AMOUNT_WITH_ADJUSTMENT,
   TEST_GAS_ADJUSTED_AMOUNT_WITH_UNWRAP,
   TEST_GAS_ADJUSTED_AMOUNT_WITH_UNWRAP_WITH_ADJUSTMENT,
+  TEST_GAS_ADJUSTED_END_AMOUNT,
   TEST_GAS_ADJUSTMENT_BPS,
   TEST_X_GAS_ADJUSTMENT_AMOUNT,
   TEST_X_GAS_ADJUSTMENT_AMOUNT_WITH_UNWRAP,
@@ -270,6 +271,18 @@ describe('DutchQuote', () => {
       );
       expect(reparameterized.portion?.bips).toEqual(PORTION_BIPS);
       expect(reparameterized.toOrder().toJSON().outputs.length).toEqual(2);
+    });
+
+    it('reparametrizes correctly with gas adjustment bps', async () => {
+      const dutchQuotePortion = createDutchQuote({ amountOut: AMOUNT_LARGE }, 'EXACT_INPUT', '1');
+      dutchQuotePortion.request.config.gasAdjustmentBps = TEST_GAS_ADJUSTMENT_BPS;
+      const reparameterized = DutchQuoteFactory.reparameterize(
+        dutchQuotePortion,
+        CLASSIC_QUOTE_EXACT_IN_LARGE,
+        undefined
+      );
+
+      expect(reparameterized.toOrder().toJSON().outputs[0].endAmount).toEqual(TEST_GAS_ADJUSTED_END_AMOUNT);
     });
 
     it('only override auctionPeriodSec on mainnet', async () => {
