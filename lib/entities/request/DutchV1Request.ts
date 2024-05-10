@@ -51,6 +51,7 @@ export class DutchV1Request implements QuoteRequest {
         auctionPeriodSecs: body.auctionPeriodSecs,
         deadlineBufferSecs: body.deadlineBufferSecs,
         useSyntheticQuotes: body.useSyntheticQuotes ?? false,
+        gasAdjustmentBps: body.gasAdjustmentBps,
       }
     );
   }

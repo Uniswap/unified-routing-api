@@ -29,6 +29,7 @@ export class DutchV2Request implements QuoteRequest {
         swapper: body.swapper ?? ethers.constants.AddressZero,
         deadlineBufferSecs: body.deadlineBufferSecs,
         useSyntheticQuotes: body.useSyntheticQuotes ?? false,
+        gasAdjustmentBps: body.gasAdjustmentBps,
       }
     );
   }

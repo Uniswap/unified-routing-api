@@ -66,8 +66,6 @@ export class QuoteHandler extends APIGLambdaHandler<
       },
     } = params;
 
-    log.info({ requestBody: JSON.stringify(requestBody) }, 'quote request');
-
     const startTime = Date.now();
     if (requestBody.tokenInChainId != requestBody.tokenOutChainId) {
       throw new ValidationError(`Cannot request quotes for tokens on different chains`);

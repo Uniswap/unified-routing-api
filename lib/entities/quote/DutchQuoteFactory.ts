@@ -123,10 +123,6 @@ export class DutchQuoteFactory {
       options
     );
 
-    log.info('RFQ quote pre-swap gas adjustment', {
-      bps: quote.request.config,
-    });
-
     const classicAmounts = DutchQuote.applyGasAdjustment(
       { amountIn: classic.amountInGasAdjusted, amountOut: classic.amountOutGasAdjusted },
       classic,
