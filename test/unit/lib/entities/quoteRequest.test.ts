@@ -11,7 +11,7 @@ import {
 } from '../../../../lib/entities';
 import { RelayConfigJSON, RelayRequest } from '../../../../lib/entities/request/RelayRequest';
 import { ValidationError } from '../../../../lib/util/errors';
-import { AMOUNT, CHAIN_IN_ID, CHAIN_OUT_ID, SWAPPER, TOKEN_IN, TOKEN_OUT } from '../../../constants';
+import { AMOUNT, CHAIN_IN_ID, CHAIN_OUT_ID, SWAPPER, TEST_GAS_ADJUSTMENT_BPS, TOKEN_IN, TOKEN_OUT } from '../../../constants';
 
 const MOCK_DL_CONFIG_JSON: DutchConfigJSON = {
   routingType: RoutingType.DUTCH_LIMIT,
@@ -20,6 +20,7 @@ const MOCK_DL_CONFIG_JSON: DutchConfigJSON = {
   auctionPeriodSecs: 60,
   deadlineBufferSecs: 12,
   useSyntheticQuotes: true,
+  gasAdjustmentBps: TEST_GAS_ADJUSTMENT_BPS,
 };
 
 const MOCK_RELAY_CONFIG_JSON: RelayConfigJSON = {
@@ -34,6 +35,7 @@ const MOCK_DUTCH_V2_CONFIG_JSON: DutchV2ConfigJSON = {
   routingType: RoutingType.DUTCH_V2,
   swapper: SWAPPER,
   deadlineBufferSecs: 12,
+  gasAdjustmentBps: TEST_GAS_ADJUSTMENT_BPS,
 };
 
 const CLASSIC_CONFIG_JSON: ClassicConfigJSON = {
