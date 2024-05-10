@@ -11,7 +11,15 @@ import {
 } from '../../../../lib/entities';
 import { RelayConfigJSON, RelayRequest } from '../../../../lib/entities/request/RelayRequest';
 import { ValidationError } from '../../../../lib/util/errors';
-import { AMOUNT, CHAIN_IN_ID, CHAIN_OUT_ID, SWAPPER, TEST_GAS_ADJUSTMENT_BPS, TOKEN_IN, TOKEN_OUT } from '../../../constants';
+import {
+  AMOUNT,
+  CHAIN_IN_ID,
+  CHAIN_OUT_ID,
+  SWAPPER,
+  TEST_GAS_ADJUSTMENT_BPS,
+  TOKEN_IN,
+  TOKEN_OUT,
+} from '../../../constants';
 
 const MOCK_DL_CONFIG_JSON: DutchConfigJSON = {
   routingType: RoutingType.DUTCH_LIMIT,

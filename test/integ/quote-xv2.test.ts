@@ -8,9 +8,9 @@ import chaiSubset from 'chai-subset';
 import { RoutingType } from '../../lib/constants';
 import { QuoteRequestBodyJSON, RoutingConfigJSON } from '../../lib/entities';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
+import { TEST_GAS_ADJUSTMENT_BPS } from '../constants';
 import { getAmount } from '../utils/tokens';
 import { BaseIntegrationTestSuite, callIndicative } from './base.test';
-import { TEST_GAS_ADJUSTMENT_BPS } from '../constants';
 
 chai.use(chaiAsPromised);
 chai.use(chaiSubset);
@@ -49,7 +49,7 @@ describe('quoteUniswapX-v2', function () {
               routingType: RoutingType.DUTCH_V2,
               swapper: alice.address,
               useSyntheticQuotes: true,
-              gasAdjustmentBps: TEST_GAS_ADJUSTMENT_BPS
+              gasAdjustmentBps: TEST_GAS_ADJUSTMENT_BPS,
             },
           ] as RoutingConfigJSON[],
         };

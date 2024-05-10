@@ -118,7 +118,7 @@ describe('quoteUniswapX', function () {
               routingType: RoutingType.DUTCH_LIMIT,
               swapper: alice.address,
               useSyntheticQuotes: true,
-              gasAdjustmentBps: TEST_GAS_ADJUSTMENT_BPS
+              gasAdjustmentBps: TEST_GAS_ADJUSTMENT_BPS,
             },
           ] as RoutingConfigJSON[],
         };
