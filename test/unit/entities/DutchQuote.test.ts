@@ -106,6 +106,18 @@ describe('DutchQuote', () => {
       const result = DutchQuote.getGasAdjustment(classicQuote, TEST_GAS_ADJUSTMENT_BPS);
       expect(result.eq(TEST_X_GAS_ADJUSTMENT_AMOUNT_WITH_UNWRAP)).toBeTruthy();
     });
+
+    it('gets gas adjustment without unwrap, with lowest limit adjustment', () => {
+      const classicQuote = createClassicQuote({}, {});
+      const result = DutchQuote.getGasAdjustment(classicQuote, 0);
+      expect(result.eq(BigNumber.from(UNISWAPX_BASE_GAS))).toBeTruthy();
+    });
+
+    it('gets gas adjustment without unwrap, with highest limit adjustment', () => {
+      const classicQuote = createClassicQuote({}, {});
+      const result = DutchQuote.getGasAdjustment(classicQuote, 10000);
+      expect(result.eq(0)).toBeTruthy();
+    });
   });
 
   describe('applyGasAdjustment', () => {
