@@ -10,7 +10,7 @@ import qs from 'qs';
 import { BPS, NATIVE_ADDRESS, RoutingType } from '../../lib/constants';
 import { DutchQuoteDataJSON, QuoteRequestBodyJSON, RequestSource, RoutingConfigJSON } from '../../lib/entities';
 import { QuoteResponseJSON } from '../../lib/handlers/quote/handler';
-import { GREENLIST_STABLE_TO_STABLE_PAIRS, GREENLIST_TOKEN_PAIRS } from '../constants';
+import { GREENLIST_STABLE_TO_STABLE_PAIRS, GREENLIST_TOKEN_PAIRS, TEST_GAS_ADJUSTMENT_BPS } from '../constants';
 import { RoutingApiQuoteResponse } from '../utils/quoteResponse';
 import { getAmount, getAmountFromToken } from '../utils/tokens';
 import { axiosHelper, BaseIntegrationTestSuite, call, callAndExpectFail } from './base.test';
@@ -118,6 +118,7 @@ describe('quoteUniswapX', function () {
               routingType: RoutingType.DUTCH_LIMIT,
               swapper: alice.address,
               useSyntheticQuotes: true,
+              gasAdjustmentBps: TEST_GAS_ADJUSTMENT_BPS
             },
           ] as RoutingConfigJSON[],
         };
