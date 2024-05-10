@@ -34,7 +34,8 @@ import {
   TEST_GAS_ADJUSTED_AMOUNT_WITH_UNWRAP_OUTPUT,
   TEST_GAS_ADJUSTED_AMOUNT_WITH_UNWRAP_WITH_ADJUSTMENT_INPUT,
   TEST_GAS_ADJUSTED_AMOUNT_WITH_UNWRAP_WITH_ADJUSTMENT_OUTPUT,
-  TEST_GAS_ADJUSTED_END_AMOUNT,
+  TEST_GAS_ADJUSTED_END_AMOUNT_INPUT,
+  TEST_GAS_ADJUSTED_END_AMOUNT_OUTPUT,
   TEST_GAS_ADJUSTMENT_BPS,
   TEST_X_GAS_ADJUSTMENT_AMOUNT,
   TEST_X_GAS_ADJUSTMENT_AMOUNT_WITH_UNWRAP,
@@ -47,6 +48,7 @@ import {
   CLASSIC_QUOTE_EXACT_IN_NATIVE_WITH_PORTION,
   CLASSIC_QUOTE_EXACT_IN_SMALL,
   CLASSIC_QUOTE_EXACT_OUT_LARGE,
+  CLASSIC_QUOTE_EXACT_OUT_WORSE,
   createClassicQuote,
   createDutchQuote,
   createDutchQuoteWithRequestOverrides,
@@ -344,7 +346,7 @@ describe('DutchQuote', () => {
       expect(reparameterized.toOrder().toJSON().outputs.length).toEqual(2);
     });
 
-    it('reparametrizes correctly with gas adjustment bps', async () => {
+    it('reparameterizes correctly with gas adjustment bps', async () => {
       const dutchQuotePortion = createDutchQuote({ amountOut: AMOUNT_LARGE }, 'EXACT_INPUT', '1');
       dutchQuotePortion.request.config.gasAdjustmentBps = TEST_GAS_ADJUSTMENT_BPS;
       const reparameterized = DutchQuoteFactory.reparameterize(
@@ -353,7 +355,19 @@ describe('DutchQuote', () => {
         undefined
       );
 
-      expect(reparameterized.toOrder().toJSON().outputs[0].endAmount).toEqual(TEST_GAS_ADJUSTED_END_AMOUNT);
+      expect(reparameterized.toOrder().toJSON().outputs[0].endAmount).toEqual(TEST_GAS_ADJUSTED_END_AMOUNT_OUTPUT);
+    });
+
+    it('reparameterizes correctly with gas adjustment bps, exact out', async () => {
+      const dutchQuotePortion = createDutchQuote({ amountIn: AMOUNT_LARGE }, 'EXACT_OUTPUT', '1');
+      // dutchQuotePortion.request.config.gasAdjustmentBps = TEST_GAS_ADJUSTMENT_BPS;
+      const reparameterized = DutchQuoteFactory.reparameterize(
+        dutchQuotePortion,
+        CLASSIC_QUOTE_EXACT_OUT_WORSE,
+        undefined
+      );
+
+      expect(reparameterized.toOrder().toJSON().input.endAmount).toEqual(TEST_GAS_ADJUSTED_END_AMOUNT_INPUT);
     });
 
     it('only override auctionPeriodSec on mainnet', async () => {
