@@ -322,7 +322,7 @@ export class APIStack extends cdk.Stack {
     const apiAlarmLatencySev2 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV2-Latency', {
       alarmName: 'UnifiedRoutingAPI-SEV2-Latency',
       metric: api.metricLatency({
-        period: Duration.minutes(30),
+        period: Duration.minutes(20),
         statistic: 'p90',
       }),
       threshold: 8500,
@@ -332,7 +332,7 @@ export class APIStack extends cdk.Stack {
     const apiAlarmLatencySev3 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV3-Latency', {
       alarmName: 'UnifiedRoutingAPI-SEV3-Latency',
       metric: api.metricLatency({
-        period: Duration.minutes(30),
+        period: Duration.minutes(20),
         statistic: 'p90',
       }),
       threshold: 5500,
@@ -342,7 +342,7 @@ export class APIStack extends cdk.Stack {
     const apiAlarmLatencyP99Sev2 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV2-LatencyP99', {
       alarmName: 'UnifiedRoutingAPI-SEV2-LatencyP99',
       metric: api.metricLatency({
-        period: Duration.minutes(30),
+        period: Duration.minutes(20),
         statistic: 'p99',
       }),
       threshold: 10000,
@@ -398,7 +398,7 @@ export class APIStack extends cdk.Stack {
     const apiAlarmLatencyP99Sev3 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV3-LatencyP99', {
       alarmName: 'UnifiedRoutingAPI-SEV3-LatencyP99',
       metric: api.metricLatency({
-        period: Duration.minutes(30),
+        period: Duration.minutes(20),
         statistic: 'p99',
       }),
       threshold: 7000,
