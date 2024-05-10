@@ -1,10 +1,10 @@
 import { TradeType } from '@uniswap/sdk-core';
-import { log } from '@uniswap/smart-order-router';
 import { BigNumber } from 'ethers';
 import { v4 as uuidv4 } from 'uuid';
 import { ChainConfigManager } from '../../config/ChainConfigManager';
 import { NATIVE_ADDRESS, QuoteType, RoutingType } from '../../constants';
 import { Portion } from '../../fetchers/PortionFetcher';
+import { log } from '../../util/log';
 import { generateRandomNonce } from '../../util/nonce';
 import { currentTimestampInMs } from '../../util/time';
 import { DutchQuoteRequest, DutchV1Request, DutchV2Request } from '../request';
@@ -122,6 +122,10 @@ export class DutchQuoteFactory {
       classic,
       options
     );
+
+    log.info('RFQ quote pre-swap gas adjustment', {
+      bps: quote.request.config,
+    });
 
     const classicAmounts = DutchQuote.applyGasAdjustment(
       { amountIn: classic.amountInGasAdjusted, amountOut: classic.amountOutGasAdjusted },

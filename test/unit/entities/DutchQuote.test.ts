@@ -372,7 +372,7 @@ describe('DutchQuote', () => {
 
     it('reparameterizes correctly with gas adjustment bps, exact out', async () => {
       const dutchQuotePortion = createDutchQuote({ amountIn: AMOUNT_LARGE }, 'EXACT_OUTPUT', '1');
-      // dutchQuotePortion.request.config.gasAdjustmentBps = TEST_GAS_ADJUSTMENT_BPS;
+      dutchQuotePortion.request.config.gasAdjustmentBps = TEST_GAS_ADJUSTMENT_BPS;
       const reparameterized = DutchQuoteFactory.reparameterize(
         dutchQuotePortion,
         CLASSIC_QUOTE_EXACT_OUT_WORSE,

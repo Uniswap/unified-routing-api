@@ -2,7 +2,7 @@ import { BigNumber, ethers } from 'ethers';
 import Joi, { CustomHelpers } from 'joi';
 
 import { ChainConfigManager } from '../config/ChainConfigManager';
-import { RoutingType } from '../constants';
+import { BPS, RoutingType } from '../constants';
 import { DutchConfigJSON, DutchV2ConfigJSON } from '../entities';
 
 export class FieldValidator {
@@ -78,7 +78,7 @@ export class FieldValidator {
 
   public static readonly quoteSpeed = Joi.string().valid('fast', 'standard');
 
-  public static readonly bps = Joi.number().greater(0).max(10000); // 0 to 100%
+  public static readonly bps = Joi.number().greater(0).max(BPS);
 
   public static readonly classicConfig = Joi.object({
     routingType: Joi.string().valid('CLASSIC'),

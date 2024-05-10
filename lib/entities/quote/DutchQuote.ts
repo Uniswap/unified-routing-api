@@ -358,7 +358,8 @@ export abstract class DutchQuote<T extends DutchQuoteRequest> implements IQuote 
   }
 
   // Returns the number of gas units extra required to execute this quote through UniswapX
-  static getGasAdjustment(classicQuote: ClassicQuote, adjustmentBps?: number): BigNumber {
+  // if adjustmentBps is provided, it reduce the gas adjustment by that factor
+  static getGasAdjustment(classicQuote: ClassicQuote, adjustmentBps = 0): BigNumber {
     let result = BigNumber.from(0);
 
     // fill contract must unwrap WETH output tokens
@@ -367,10 +368,7 @@ export abstract class DutchQuote<T extends DutchQuoteRequest> implements IQuote 
     }
 
     result = result.add(UNISWAPX_BASE_GAS);
-    if (adjustmentBps) {
-      result = result.mul(BPS - adjustmentBps).div(BPS);
-    }
-    return result;
+    return result.mul(BPS - adjustmentBps).div(BPS);
   }
 }
 
