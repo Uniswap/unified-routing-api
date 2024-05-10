@@ -26,10 +26,14 @@ import {
   FLAT_PORTION,
   PORTION_BIPS,
   PORTION_RECIPIENT,
-  TEST_GAS_ADJUSTED_AMOUNT,
-  TEST_GAS_ADJUSTED_AMOUNT_WITH_ADJUSTMENT,
-  TEST_GAS_ADJUSTED_AMOUNT_WITH_UNWRAP,
-  TEST_GAS_ADJUSTED_AMOUNT_WITH_UNWRAP_WITH_ADJUSTMENT,
+  TEST_GAS_ADJUSTED_AMOUNT_INPUT,
+  TEST_GAS_ADJUSTED_AMOUNT_OUTPUT,
+  TEST_GAS_ADJUSTED_AMOUNT_WITH_ADJUSTMENT_INPUT,
+  TEST_GAS_ADJUSTED_AMOUNT_WITH_ADJUSTMENT_OUTPUT,
+  TEST_GAS_ADJUSTED_AMOUNT_WITH_UNWRAP_INPUT,
+  TEST_GAS_ADJUSTED_AMOUNT_WITH_UNWRAP_OUTPUT,
+  TEST_GAS_ADJUSTED_AMOUNT_WITH_UNWRAP_WITH_ADJUSTMENT_INPUT,
+  TEST_GAS_ADJUSTED_AMOUNT_WITH_UNWRAP_WITH_ADJUSTMENT_OUTPUT,
   TEST_GAS_ADJUSTED_END_AMOUNT,
   TEST_GAS_ADJUSTMENT_BPS,
   TEST_X_GAS_ADJUSTMENT_AMOUNT,
@@ -116,7 +120,7 @@ describe('DutchQuote', () => {
       );
 
       expect(amountInGasAdjusted.eq(amountIn)).toBeTruthy();
-      expect(amountOutGasAdjusted.eq(TEST_GAS_ADJUSTED_AMOUNT)).toBeTruthy();
+      expect(amountOutGasAdjusted.eq(TEST_GAS_ADJUSTED_AMOUNT_OUTPUT)).toBeTruthy();
     });
 
     it('applyGasAdjustment, no unwrap, with adjustment bps', () => {
@@ -132,7 +136,7 @@ describe('DutchQuote', () => {
         TEST_GAS_ADJUSTMENT_BPS
       );
       expect(amountInGasAdjusted.eq(amountIn)).toBeTruthy();
-      expect(amountOutGasAdjusted.eq(TEST_GAS_ADJUSTED_AMOUNT_WITH_ADJUSTMENT)).toBeTruthy();
+      expect(amountOutGasAdjusted.eq(TEST_GAS_ADJUSTED_AMOUNT_WITH_ADJUSTMENT_OUTPUT)).toBeTruthy();
     });
 
     it('applyGasAdjustment, with unwrap, no adjustment bps', () => {
@@ -149,7 +153,7 @@ describe('DutchQuote', () => {
       );
 
       expect(amountInGasAdjusted.eq(amountIn)).toBeTruthy();
-      expect(amountOutGasAdjusted.eq(TEST_GAS_ADJUSTED_AMOUNT_WITH_UNWRAP)).toBeTruthy();
+      expect(amountOutGasAdjusted.eq(TEST_GAS_ADJUSTED_AMOUNT_WITH_UNWRAP_OUTPUT)).toBeTruthy();
     });
 
     it('applyGasAdjustment, with unwrap, with adjustment bps', () => {
@@ -167,7 +171,74 @@ describe('DutchQuote', () => {
       );
 
       expect(amountInGasAdjusted.eq(amountIn)).toBeTruthy();
-      expect(amountOutGasAdjusted.eq(TEST_GAS_ADJUSTED_AMOUNT_WITH_UNWRAP_WITH_ADJUSTMENT)).toBeTruthy();
+      expect(amountOutGasAdjusted.eq(TEST_GAS_ADJUSTED_AMOUNT_WITH_UNWRAP_WITH_ADJUSTMENT_OUTPUT)).toBeTruthy();
+    });
+
+    it('applyGasAdjustment, exact output, no unwrap, no adjustment bps', () => {
+      const quote = CLASSIC_QUOTE_EXACT_OUT_LARGE;
+      const amountIn = quote.amountInGasAdjusted;
+      const amountOut = quote.amountOutGasAdjusted;
+      const { amountIn: amountInGasAdjusted, amountOut: amountOutGasAdjusted } = DutchQuote.applyGasAdjustment(
+        {
+          amountIn: amountIn,
+          amountOut: amountOut,
+        },
+        quote
+      );
+
+      expect(amountOutGasAdjusted.eq(amountOut)).toBeTruthy();
+      expect(amountInGasAdjusted.eq(TEST_GAS_ADJUSTED_AMOUNT_INPUT)).toBeTruthy();
+    });
+
+    it('applyGasAdjustment, exact output, no unwrap, with adjustment bps', () => {
+      const quote = CLASSIC_QUOTE_EXACT_OUT_LARGE;
+      const amountIn = quote.amountInGasAdjusted;
+      const amountOut = quote.amountOutGasAdjusted;
+      const { amountIn: amountInGasAdjusted, amountOut: amountOutGasAdjusted } = DutchQuote.applyGasAdjustment(
+        {
+          amountIn: amountIn,
+          amountOut: amountOut,
+        },
+        quote,
+        TEST_GAS_ADJUSTMENT_BPS
+      );
+      expect(amountOutGasAdjusted.eq(amountOut)).toBeTruthy();
+      expect(amountInGasAdjusted.eq(TEST_GAS_ADJUSTED_AMOUNT_WITH_ADJUSTMENT_INPUT)).toBeTruthy();
+    });
+
+    it('applyGasAdjustment, exact output, with unwrap, no adjustment bps', () => {
+      const quote = CLASSIC_QUOTE_EXACT_OUT_LARGE;
+      quote.request.info.tokenOut = NATIVE_ADDRESS;
+      const amountIn = quote.amountInGasAdjusted;
+      const amountOut = quote.amountOutGasAdjusted;
+      const { amountIn: amountInGasAdjusted, amountOut: amountOutGasAdjusted } = DutchQuote.applyGasAdjustment(
+        {
+          amountIn: amountIn,
+          amountOut: amountOut,
+        },
+        quote
+      );
+
+      expect(amountOutGasAdjusted.eq(amountOut)).toBeTruthy();
+      expect(amountInGasAdjusted.eq(TEST_GAS_ADJUSTED_AMOUNT_WITH_UNWRAP_INPUT)).toBeTruthy();
+    });
+
+    it('applyGasAdjustment, exact output, with unwrap, with adjustment bps', () => {
+      const quote = CLASSIC_QUOTE_EXACT_OUT_LARGE;
+      quote.request.info.tokenOut = NATIVE_ADDRESS;
+      const amountIn = quote.amountInGasAdjusted;
+      const amountOut = quote.amountOutGasAdjusted;
+      const { amountIn: amountInGasAdjusted, amountOut: amountOutGasAdjusted } = DutchQuote.applyGasAdjustment(
+        {
+          amountIn: amountIn,
+          amountOut: amountOut,
+        },
+        quote,
+        TEST_GAS_ADJUSTMENT_BPS
+      );
+
+      expect(amountOutGasAdjusted.eq(amountOut)).toBeTruthy();
+      expect(amountInGasAdjusted.eq(TEST_GAS_ADJUSTED_AMOUNT_WITH_UNWRAP_WITH_ADJUSTMENT_INPUT)).toBeTruthy();
     });
   });
 
