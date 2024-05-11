@@ -15,7 +15,7 @@ import * as path from 'path';
 import _ from 'lodash';
 import { ChainConfigManager } from '../../lib/config/ChainConfigManager';
 import { STAGE } from '../../lib/util/stage';
-import { SERVICE_NAME } from '../constants';
+import { ROUTING_API_MAX_LATENCY_MS, SERVICE_NAME, SEV2_P99LATENCY_MS, SEV2_P90LATENCY_MS, SEV3_P99LATENCY_MS, SEV3_P90LATENCY_MS, LATENCY_ALARM_DEFAULT_PERIOD_MIN } from '../constants';
 import { AnalyticsStack } from './analytics-stack';
 import { DashboardStack } from './dashboard-stack';
 import { XPairDashboardStack } from './pair-dashboard-stack';
@@ -322,34 +322,34 @@ export class APIStack extends cdk.Stack {
     const apiAlarmLatencySev2 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV2-Latency', {
       alarmName: 'UnifiedRoutingAPI-SEV2-Latency',
       metric: api.metricLatency({
-        period: Duration.minutes(20),
+        period: Duration.minutes(LATENCY_ALARM_DEFAULT_PERIOD_MIN),
         statistic: 'p90',
       }),
-      threshold: 8500,
+      threshold: SEV2_P90LATENCY_MS,
       evaluationPeriods: 3,
     });
 
     const apiAlarmLatencySev3 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV3-Latency', {
       alarmName: 'UnifiedRoutingAPI-SEV3-Latency',
       metric: api.metricLatency({
-        period: Duration.minutes(20),
+        period: Duration.minutes(LATENCY_ALARM_DEFAULT_PERIOD_MIN),
         statistic: 'p90',
       }),
-      threshold: 5500,
+      threshold: SEV3_P90LATENCY_MS,
       evaluationPeriods: 3,
     });
 
     const apiAlarmLatencyP99Sev2 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV2-LatencyP99', {
       alarmName: 'UnifiedRoutingAPI-SEV2-LatencyP99',
       metric: api.metricLatency({
-        period: Duration.minutes(20),
+        period: Duration.minutes(LATENCY_ALARM_DEFAULT_PERIOD_MIN),
         statistic: 'p99',
       }),
-      threshold: 10000,
+      threshold: SEV2_P99LATENCY_MS,
       evaluationPeriods: 3,
     });
 
-    // Alarm if URA latency is high (> 10s) and Routing API is not (< 4s)
+    // Alarm if URA latency is high (> SEV2_P99LATENCY_MS) and Routing API is not (< ROUTING_API_MAX_LATENCY_MS)
     // Usually there's nothing to be done in URA when RoutingAPI latency is high
     const apiAlarmLatencyP99WithDepsSev2 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV2-LatencyP99WithDeps', {
       alarmName: 'UnifiedRoutingAPI-SEV2-LatencyP99WithDeps',
@@ -364,7 +364,7 @@ export class APIStack extends cdk.Stack {
           label: 'Latency Alarm',
           usingMetrics: {
             ura_high_latency: new aws_cloudwatch.MathExpression({
-              expression: "IF(overall_latency > 10000, 1, 0)",
+              expression: `IF(overall_latency > ${SEV2_P99LATENCY_MS}, 1, 0)`,
               label: 'Overall Latency',
               usingMetrics: {
                 overall_latency: new aws_cloudwatch.Metric({
@@ -378,7 +378,7 @@ export class APIStack extends cdk.Stack {
               },
             }),
             low_routing_api_latency: new aws_cloudwatch.MathExpression({
-              expression: "IF(routing_api_latency < 4000, 1, 0)",
+              expression: `IF(routing_api_latency < ${ROUTING_API_MAX_LATENCY_MS}, 1, 0)`,
               label: 'Routing API Quoter Latency',
               usingMetrics: {
                 routing_api_latency: new aws_cloudwatch.Metric({
@@ -398,14 +398,14 @@ export class APIStack extends cdk.Stack {
     const apiAlarmLatencyP99Sev3 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV3-LatencyP99', {
       alarmName: 'UnifiedRoutingAPI-SEV3-LatencyP99',
       metric: api.metricLatency({
-        period: Duration.minutes(20),
+        period: Duration.minutes(LATENCY_ALARM_DEFAULT_PERIOD_MIN),
         statistic: 'p99',
       }),
-      threshold: 7000,
+      threshold: SEV3_P99LATENCY_MS,
       evaluationPeriods: 3,
     });
 
-    // Alarm if URA latency is high (> 7s) and Routing API is not (< 4s)
+    // Alarm if URA latency is high (> SEV3_P99LATENCY_MS) and Routing API is not (< ROUTING_API_MAX_LATENCY_MS)
     // Usually there's nothing to be done in URA when RoutingAPI latency is high
     const apiAlarmLatencyP99WithDepsSev3 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV3-LatencyP99WithDeps', {
       alarmName: 'UnifiedRoutingAPI-SEV3-LatencyP99WithDeps',
@@ -420,7 +420,7 @@ export class APIStack extends cdk.Stack {
           label: 'Latency Alarm',
           usingMetrics: {
             ura_high_latency: new aws_cloudwatch.MathExpression({
-              expression: "IF(overall_latency > 7000, 1, 0)",
+              expression: `IF(overall_latency > ${SEV3_P99LATENCY_MS}, 1, 0)`,
               label: 'Overall Latency',
               usingMetrics: {
                 overall_latency: new aws_cloudwatch.Metric({
@@ -434,7 +434,7 @@ export class APIStack extends cdk.Stack {
               },
             }),
             low_routing_api_latency: new aws_cloudwatch.MathExpression({
-              expression: "IF(routing_api_latency < 4000, 1, 0)",
+              expression: `IF(routing_api_latency < ${ROUTING_API_MAX_LATENCY_MS}, 1, 0)`,
               label: 'Routing API Quoter Latency',
               usingMetrics: {
                 routing_api_latency: new aws_cloudwatch.Metric({
