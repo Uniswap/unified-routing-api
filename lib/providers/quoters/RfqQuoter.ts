@@ -28,7 +28,7 @@ export class RfqQuoter implements Quoter {
         ? request.info.amount.mul(request.info.portion.bips).div(BPS)
         : undefined;
 
-    // we will only add portion to the exact out swap amount if the URA ENABLE_PORTION is true
+    // we will only add portion to the exact out swap amount if the portionEnabled is true
     // as well as the frontend sendPortionEnabled is true
     const amount = portionAmount && portionEnabled ? request.info.amount.add(portionAmount) : request.info.amount;
     const requests = [

@@ -58,11 +58,9 @@ describe('RfqQuoter test', () => {
         swapper: SWAPPER,
         filler: SWAPPER,
       });
-      process.env.ENABLE_PORTION = undefined;
     });
 
     it('sets numOutputs to 2 if portionEnabled', async () => {
-      process.env.ENABLE_PORTION = 'true';
       await quoter.quote(QUOTE_REQUEST_DL_FE_SEND_PORTION);
       expect(axios.post).toBeCalledWith(
         'https://api.uniswap.org/quote',
@@ -73,18 +71,7 @@ describe('RfqQuoter test', () => {
       );
     });
 
-    it('sets numOutputs to 1 if either FE or BE portion flag is set to false', async () => {
-      process.env.ENABLE_PORTION = 'false';
-      await quoter.quote(QUOTE_REQUEST_DL_FE_SEND_PORTION);
-      expect(axios.post).toBeCalledWith(
-        'https://api.uniswap.org/quote',
-        expect.objectContaining({
-          numOutputs: 1,
-        }),
-        expect.anything()
-      );
-
-      process.env.ENABLE_PORTION = 'true';
+    it('sets numOutputs to 1 if either FE portion flag is set to false', async () => {
       await quoter.quote(QUOTE_REQUEST_DL);
       expect(axios.post).toBeCalledWith(
         'https://api.uniswap.org/quote',
@@ -178,8 +165,6 @@ describe('RfqQuoter test', () => {
     });
 
     it('returns EXACT_INPUT quote with portion', async () => {
-      process.env.ENABLE_PORTION = 'true';
-
       const quote = await quoter.quote(QUOTE_REQUEST_DL_FE_SEND_PORTION);
       expect(quote).toMatchObject({
         chainId: 1,
@@ -223,8 +208,6 @@ describe('RfqQuoter test', () => {
     });
 
     it('returns EXACT_OUTPUT quote with portion', async () => {
-      process.env.ENABLE_PORTION = 'true';
-
       const quote = await quoter.quote(QUOTE_REQUEST_DL_EXACT_OUT_WITH_PORTION);
       expect(quote).toMatchObject({
         chainId: 1,

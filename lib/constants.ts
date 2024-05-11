@@ -1,5 +1,4 @@
 import { BigNumber } from 'ethers';
-import { forcePortion } from './util/portion';
 
 export const DEFAULT_SLIPPAGE_TOLERANCE = '0.5'; // 0.5%
 export const DEFAULT_ROUTING_API_DEADLINE = 600; // 10 minutes
@@ -40,23 +39,10 @@ export enum QuoteType {
 export const DEFAULT_POSITIVE_CACHE_ENTRY_TTL = 300; // 5 minutes
 export const DEFAULT_NEGATIVE_CACHE_ENTRY_TTL = 300; // 5 minutes
 
-// we need this functional style of always enquirying the env var,
-// otherwise when assigning process.env.ENABLE_PORTION to const variables,
-// an update in process.env.ENABLE_PORTION will not be reflected in the lambda invocations until lambda recycles.
-export const getEnablePortionEnvVar = () => process.env.ENABLE_PORTION;
-
-export const uraEnablePortion = () => {
-  if (forcePortion) {
-    return true;
-  } else {
-    return getEnablePortionEnvVar() === 'true';
-  }
-};
-
 export const frontendEnablePortion = (sendPortionFlag?: boolean) => {
   return sendPortionFlag;
 };
 
 export const frontendAndUraEnablePortion = (sendPortionFlag?: boolean) => {
-  return frontendEnablePortion(sendPortionFlag) && uraEnablePortion();
+  return frontendEnablePortion(sendPortionFlag);
 };

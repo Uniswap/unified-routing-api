@@ -74,7 +74,6 @@ export const axiosHelper = axiosStatic.create({
 const axiosConfig: AxiosRequestConfig<any> = {
   headers: {
     ...(process.env.URA_INTERNAL_API_KEY && { 'x-api-key': process.env.URA_INTERNAL_API_KEY }),
-    ...(process.env.FORCE_PORTION_SECRET && { 'X-UNISWAP-FORCE-PORTION-SECRET': process.env.FORCE_PORTION_SECRET }),
   },
 };
 
@@ -374,7 +373,6 @@ export class BaseIntegrationTestSuite {
       parseAmount('700000', BULLET),
     ]);
 
-    process.env.ENABLE_PORTION = 'true';
     if (process.env.PORTION_API_URL) {
       this.portionFetcher = new PortionFetcher(process.env.PORTION_API_URL, new NodeCache());
     }

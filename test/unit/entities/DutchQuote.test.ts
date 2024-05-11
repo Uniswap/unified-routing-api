@@ -47,14 +47,6 @@ describe('DutchQuote', () => {
   const logger = Logger.createLogger({ name: 'test' });
   logger.level(Logger.FATAL);
 
-  beforeEach(() => {
-    process.env.ENABLE_PORTION = 'true';
-  });
-
-  afterEach(() => {
-    process.env.ENABLE_PORTION = 'false';
-  });
-
   describe('Reparameterize', () => {
     it('slippage is in percent terms', async () => {
       const amountIn = BigNumber.from('1000000000');
