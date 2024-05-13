@@ -78,7 +78,7 @@ export class FieldValidator {
 
   public static readonly quoteSpeed = Joi.string().valid('fast', 'standard');
 
-  public static readonly bps = Joi.number().greater(0).max(BPS);
+  public static readonly bps = Joi.number().min(0).max(BPS);
 
   public static readonly classicConfig = Joi.object({
     routingType: Joi.string().valid('CLASSIC'),

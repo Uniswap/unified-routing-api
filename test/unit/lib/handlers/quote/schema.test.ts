@@ -54,6 +54,22 @@ describe('Post quote request validation', () => {
       expect(error).toBeUndefined();
     });
 
+    it('should validate dutch limit config with gasAdjustmentBps as 0', () => {
+      const { error } = FieldValidator.dutchLimitConfig.validate({
+        ...DL_CONFIG_JSON,
+        gasAdjustmentBps: 0,
+      });
+      expect(error).toBeUndefined();
+    });
+
+    it('should validate dutch v2 config with gasAdjustmentBps as 0', () => {
+      const { error } = FieldValidator.dutchV2Config.validate({
+        ...DUTCH_V2_CONFIG_JSON,
+        gasAdjustmentBps: 0,
+      });
+      expect(error).toBeUndefined();
+    });
+
     it('should reject dutch v2 config as dutch v1', () => {
       const { error } = FieldValidator.dutchLimitConfig.validate(DUTCH_V2_CONFIG_JSON);
       expect(error).toBeDefined();
@@ -75,7 +91,7 @@ describe('Post quote request validation', () => {
         gasAdjustmentBps: -1,
       });
       expect(error).toBeDefined();
-      expect(error?.message).toEqual('"gasAdjustmentBps" must be greater than 0');
+      expect(error?.message).toEqual('"gasAdjustmentBps" must be greater than or equal to 0');
     });
 
     it('should reject invalid gasAdjustmentBps for v2', () => {
@@ -84,7 +100,7 @@ describe('Post quote request validation', () => {
         gasAdjustmentBps: -1,
       });
       expect(error).toBeDefined();
-      expect(error?.message).toEqual('"gasAdjustmentBps" must be greater than 0');
+      expect(error?.message).toEqual('"gasAdjustmentBps" must be greater than or equal to 0');
     });
 
     it('should reject invalid slippage', () => {
