@@ -23,6 +23,7 @@ describe('DutchV2Quote', () => {
       expect(v2Quote.routingType).toEqual(RoutingType.DUTCH_V2);
       expect(v2Quote.amountOut).toEqual(v1Quote.amountOut);
       expect(v2Quote.amountIn).toEqual(v1Quote.amountIn);
+      expect(v2Quote.filler).toEqual(v1Quote.filler);
     });
   });
 

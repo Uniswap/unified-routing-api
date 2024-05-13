@@ -61,6 +61,7 @@ export class DutchV2Quote implements IQuote {
   public readonly amountOutStart: BigNumber;
   public readonly amountOutEnd: BigNumber;
   public readonly swapper: string;
+  public readonly filler: string;
   public readonly nonce?: string;
   public readonly portion?: Portion;
 
@@ -152,6 +153,7 @@ export class DutchV2Quote implements IQuote {
       amountOutGasAndPortionAdjusted:
         this.request.info.type === TradeType.EXACT_INPUT ? this.amountOutGasAndPortionAdjusted.toString() : undefined,
       swapper: this.swapper,
+      filler: this.filler,
       routing: RoutingType[this.routingType],
       slippage: parseFloat(this.request.info.slippageTolerance),
       createdAt: timestampInMstoSeconds(parseInt(this.createdAtMs)),
