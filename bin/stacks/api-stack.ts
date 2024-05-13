@@ -15,7 +15,7 @@ import * as path from 'path';
 import _ from 'lodash';
 import { ChainConfigManager } from '../../lib/config/ChainConfigManager';
 import { STAGE } from '../../lib/util/stage';
-import { SERVICE_NAME } from '../constants';
+import { ROUTING_API_MAX_LATENCY_MS, SERVICE_NAME, SEV2_P99LATENCY_MS, SEV2_P90LATENCY_MS, SEV3_P99LATENCY_MS, SEV3_P90LATENCY_MS, LATENCY_ALARM_DEFAULT_PERIOD_MIN } from '../constants';
 import { AnalyticsStack } from './analytics-stack';
 import { DashboardStack } from './dashboard-stack';
 import { XPairDashboardStack } from './pair-dashboard-stack';
@@ -322,41 +322,133 @@ export class APIStack extends cdk.Stack {
     const apiAlarmLatencySev2 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV2-Latency', {
       alarmName: 'UnifiedRoutingAPI-SEV2-Latency',
       metric: api.metricLatency({
-        period: Duration.minutes(5),
+        period: Duration.minutes(LATENCY_ALARM_DEFAULT_PERIOD_MIN),
         statistic: 'p90',
       }),
-      threshold: 8500,
+      threshold: SEV2_P90LATENCY_MS,
       evaluationPeriods: 3,
     });
 
     const apiAlarmLatencySev3 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV3-Latency', {
       alarmName: 'UnifiedRoutingAPI-SEV3-Latency',
       metric: api.metricLatency({
-        period: Duration.minutes(5),
+        period: Duration.minutes(LATENCY_ALARM_DEFAULT_PERIOD_MIN),
         statistic: 'p90',
       }),
-      threshold: 5500,
+      threshold: SEV3_P90LATENCY_MS,
       evaluationPeriods: 3,
     });
 
     const apiAlarmLatencyP99Sev2 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV2-LatencyP99', {
       alarmName: 'UnifiedRoutingAPI-SEV2-LatencyP99',
       metric: api.metricLatency({
-        period: Duration.minutes(5),
+        period: Duration.minutes(LATENCY_ALARM_DEFAULT_PERIOD_MIN),
         statistic: 'p99',
       }),
-      threshold: 10000,
+      threshold: SEV2_P99LATENCY_MS,
       evaluationPeriods: 3,
+    });
+
+    // Alarm if URA latency is high (> SEV2_P99LATENCY_MS) and Routing API is not (< ROUTING_API_MAX_LATENCY_MS)
+    // Usually there's nothing to be done in URA when RoutingAPI latency is high
+    const apiAlarmLatencyP99WithDepsSev2 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV2-LatencyP99WithDeps', {
+      alarmName: 'UnifiedRoutingAPI-SEV2-LatencyP99WithDeps',
+      actionsEnabled: true,
+      evaluationPeriods: 3,
+      datapointsToAlarm: 3,
+      threshold: 1,
+      comparisonOperator: aws_cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      metric:
+        new aws_cloudwatch.MathExpression({
+          expression: "IF(ura_high_latency AND low_routing_api_latency, 1, 0)",
+          label: 'Latency Alarm',
+          usingMetrics: {
+            ura_high_latency: new aws_cloudwatch.MathExpression({
+              expression: `IF(overall_latency > ${SEV2_P99LATENCY_MS}, 1, 0)`,
+              label: 'Overall Latency',
+              usingMetrics: {
+                overall_latency: new aws_cloudwatch.Metric({
+                  namespace: 'AWS/ApiGateway',
+                  metricName: 'Latency',
+                  dimensionsMap: {
+                    ApiName: 'UnifiedRouting'
+                  },
+                  statistic: 'p99',
+                }),
+              },
+            }),
+            low_routing_api_latency: new aws_cloudwatch.MathExpression({
+              expression: `IF(routing_api_latency < ${ROUTING_API_MAX_LATENCY_MS}, 1, 0)`,
+              label: 'Routing API Quoter Latency',
+              usingMetrics: {
+                routing_api_latency: new aws_cloudwatch.Metric({
+                  namespace: 'Uniswap',
+                  metricName: 'RoutingApiQuoterLatency',
+                  dimensionsMap: {
+                    Service: 'UnifiedRoutingAPI'
+                  },
+                  statistic: 'p99',
+                }),
+              },
+            }),
+          },
+        }),
     });
 
     const apiAlarmLatencyP99Sev3 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV3-LatencyP99', {
       alarmName: 'UnifiedRoutingAPI-SEV3-LatencyP99',
       metric: api.metricLatency({
-        period: Duration.minutes(5),
+        period: Duration.minutes(LATENCY_ALARM_DEFAULT_PERIOD_MIN),
         statistic: 'p99',
       }),
-      threshold: 7000,
+      threshold: SEV3_P99LATENCY_MS,
       evaluationPeriods: 3,
+    });
+
+    // Alarm if URA latency is high (> SEV3_P99LATENCY_MS) and Routing API is not (< ROUTING_API_MAX_LATENCY_MS)
+    // Usually there's nothing to be done in URA when RoutingAPI latency is high
+    const apiAlarmLatencyP99WithDepsSev3 = new aws_cloudwatch.Alarm(this, 'UnifiedRoutingAPI-SEV3-LatencyP99WithDeps', {
+      alarmName: 'UnifiedRoutingAPI-SEV3-LatencyP99WithDeps',
+      actionsEnabled: true,
+      evaluationPeriods: 3,
+      datapointsToAlarm: 3,
+      threshold: 1,
+      comparisonOperator: aws_cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      metric:
+        new aws_cloudwatch.MathExpression({
+          expression: "IF(ura_high_latency AND low_routing_api_latency, 1, 0)",
+          label: 'Latency Alarm',
+          usingMetrics: {
+            ura_high_latency: new aws_cloudwatch.MathExpression({
+              expression: `IF(overall_latency > ${SEV3_P99LATENCY_MS}, 1, 0)`,
+              label: 'Overall Latency',
+              usingMetrics: {
+                overall_latency: new aws_cloudwatch.Metric({
+                  namespace: 'AWS/ApiGateway',
+                  metricName: 'Latency',
+                  dimensionsMap: {
+                    ApiName: 'UnifiedRouting'
+                  },
+                  statistic: 'p99',
+                }),
+              },
+            }),
+            low_routing_api_latency: new aws_cloudwatch.MathExpression({
+              expression: `IF(routing_api_latency < ${ROUTING_API_MAX_LATENCY_MS}, 1, 0)`,
+              label: 'Routing API Quoter Latency',
+              usingMetrics: {
+                routing_api_latency: new aws_cloudwatch.Metric({
+                  namespace: 'Uniswap',
+                  metricName: 'RoutingApiQuoterLatency',
+                  dimensionsMap: {
+                    Service: 'UnifiedRoutingAPI'
+                  },
+                  statistic: 'p99',
+                }),
+              },
+            }),
+          },
+        }),
     });
 
     // Alarms for 200 rate being too low for each chain
@@ -594,9 +686,11 @@ export class APIStack extends cdk.Stack {
       apiAlarm5xxSev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       apiAlarm4xxSev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       apiAlarmLatencySev2.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
+      apiAlarmLatencyP99WithDepsSev2.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       apiAlarmLatencySev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       apiAlarmLatencyP99Sev2.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
       apiAlarmLatencyP99Sev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
+      apiAlarmLatencyP99WithDepsSev3.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
 
       percent5XXByChainAlarm.forEach((alarm) => {
         alarm.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(chatBotTopic));
