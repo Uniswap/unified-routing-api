@@ -9,7 +9,10 @@ import {
   DEFAULT_AUCTION_PERIOD_SECS,
   DEFAULT_DEADLINE_BUFFER_SECS,
   DEFAULT_START_TIME_BUFFER_SECS,
+  NATIVE_ADDRESS,
   OPEN_QUOTE_START_TIME_BUFFER_SECS,
+  UNISWAPX_BASE_GAS,
+  WETH_UNWRAP_GAS,
 } from '../../../lib/constants';
 import { ClassicQuote, DutchQuote, DutchQuoteJSON } from '../../../lib/entities';
 import { DutchQuoteFactory } from '../../../lib/entities/quote/DutchQuoteFactory';
@@ -23,6 +26,19 @@ import {
   FLAT_PORTION,
   PORTION_BIPS,
   PORTION_RECIPIENT,
+  TEST_GAS_ADJUSTED_AMOUNT_INPUT,
+  TEST_GAS_ADJUSTED_AMOUNT_OUTPUT,
+  TEST_GAS_ADJUSTED_AMOUNT_WITH_ADJUSTMENT_INPUT,
+  TEST_GAS_ADJUSTED_AMOUNT_WITH_ADJUSTMENT_OUTPUT,
+  TEST_GAS_ADJUSTED_AMOUNT_WITH_UNWRAP_INPUT,
+  TEST_GAS_ADJUSTED_AMOUNT_WITH_UNWRAP_OUTPUT,
+  TEST_GAS_ADJUSTED_AMOUNT_WITH_UNWRAP_WITH_ADJUSTMENT_INPUT,
+  TEST_GAS_ADJUSTED_AMOUNT_WITH_UNWRAP_WITH_ADJUSTMENT_OUTPUT,
+  TEST_GAS_ADJUSTED_END_AMOUNT_INPUT,
+  TEST_GAS_ADJUSTED_END_AMOUNT_OUTPUT,
+  TEST_GAS_ADJUSTMENT_BPS,
+  TEST_X_GAS_ADJUSTMENT_AMOUNT,
+  TEST_X_GAS_ADJUSTMENT_AMOUNT_WITH_UNWRAP,
 } from '../../constants';
 import {
   CLASSIC_QUOTE_EXACT_IN_LARGE,
@@ -32,6 +48,7 @@ import {
   CLASSIC_QUOTE_EXACT_IN_NATIVE_WITH_PORTION,
   CLASSIC_QUOTE_EXACT_IN_SMALL,
   CLASSIC_QUOTE_EXACT_OUT_LARGE,
+  CLASSIC_QUOTE_EXACT_OUT_WORSE,
   createClassicQuote,
   createDutchQuote,
   createDutchQuoteWithRequestOverrides,
@@ -53,6 +70,190 @@ describe('DutchQuote', () => {
 
   afterEach(() => {
     process.env.ENABLE_PORTION = 'false';
+  });
+
+  describe('getGasAdjustment', () => {
+    it('gets gas adjustment without unwrap, no adjustment', () => {
+      const classicQuote = createClassicQuote({}, {});
+      const result = DutchQuote.getGasAdjustment(classicQuote);
+      expect(result.eq(BigNumber.from(UNISWAPX_BASE_GAS))).toBeTruthy();
+    });
+
+    it('gets gas adjustment with unwrap, no adjustment', () => {
+      const classicQuote = createClassicQuote(
+        {},
+        {
+          tokenOut: NATIVE_ADDRESS,
+        }
+      );
+      const result = DutchQuote.getGasAdjustment(classicQuote);
+      expect(result.eq(BigNumber.from(UNISWAPX_BASE_GAS).add(BigNumber.from(WETH_UNWRAP_GAS)))).toBeTruthy();
+    });
+
+    it('gets gas adjustment without unwrap, with adjustment', () => {
+      const classicQuote = createClassicQuote({}, {});
+      const result = DutchQuote.getGasAdjustment(classicQuote, TEST_GAS_ADJUSTMENT_BPS);
+      expect(result.eq(TEST_X_GAS_ADJUSTMENT_AMOUNT)).toBeTruthy();
+    });
+
+    it('gets gas adjustment with unwrap, with adjustment', () => {
+      const classicQuote = createClassicQuote(
+        {},
+        {
+          tokenOut: NATIVE_ADDRESS,
+        }
+      );
+      const result = DutchQuote.getGasAdjustment(classicQuote, TEST_GAS_ADJUSTMENT_BPS);
+      expect(result.eq(TEST_X_GAS_ADJUSTMENT_AMOUNT_WITH_UNWRAP)).toBeTruthy();
+    });
+
+    it('gets gas adjustment without unwrap, with lowest limit adjustment', () => {
+      const classicQuote = createClassicQuote({}, {});
+      const result = DutchQuote.getGasAdjustment(classicQuote, 0);
+      expect(result.eq(BigNumber.from(UNISWAPX_BASE_GAS))).toBeTruthy();
+    });
+
+    it('gets gas adjustment without unwrap, with highest limit adjustment', () => {
+      const classicQuote = createClassicQuote({}, {});
+      const result = DutchQuote.getGasAdjustment(classicQuote, 10000);
+      expect(result.eq(0)).toBeTruthy();
+    });
+  });
+
+  describe('applyGasAdjustment', () => {
+    it('applyGasAdjustment, no unwrap, no adjustment bps', () => {
+      const quote = CLASSIC_QUOTE_EXACT_IN_LARGE_GAS;
+      const amountIn = quote.amountInGasAdjusted;
+      const amountOut = quote.amountOutGasAdjusted;
+      const { amountIn: amountInGasAdjusted, amountOut: amountOutGasAdjusted } = DutchQuote.applyGasAdjustment(
+        {
+          amountIn: amountIn,
+          amountOut: amountOut,
+        },
+        quote
+      );
+
+      expect(amountInGasAdjusted.eq(amountIn)).toBeTruthy();
+      expect(amountOutGasAdjusted.eq(TEST_GAS_ADJUSTED_AMOUNT_OUTPUT)).toBeTruthy();
+    });
+
+    it('applyGasAdjustment, no unwrap, with adjustment bps', () => {
+      const quote = CLASSIC_QUOTE_EXACT_IN_LARGE_GAS;
+      const amountIn = quote.amountInGasAdjusted;
+      const amountOut = quote.amountOutGasAdjusted;
+      const { amountIn: amountInGasAdjusted, amountOut: amountOutGasAdjusted } = DutchQuote.applyGasAdjustment(
+        {
+          amountIn: amountIn,
+          amountOut: amountOut,
+        },
+        quote,
+        TEST_GAS_ADJUSTMENT_BPS
+      );
+      expect(amountInGasAdjusted.eq(amountIn)).toBeTruthy();
+      expect(amountOutGasAdjusted.eq(TEST_GAS_ADJUSTED_AMOUNT_WITH_ADJUSTMENT_OUTPUT)).toBeTruthy();
+    });
+
+    it('applyGasAdjustment, with unwrap, no adjustment bps', () => {
+      const quote = CLASSIC_QUOTE_EXACT_IN_LARGE_GAS;
+      quote.request.info.tokenOut = NATIVE_ADDRESS;
+      const amountIn = quote.amountInGasAdjusted;
+      const amountOut = quote.amountOutGasAdjusted;
+      const { amountIn: amountInGasAdjusted, amountOut: amountOutGasAdjusted } = DutchQuote.applyGasAdjustment(
+        {
+          amountIn: amountIn,
+          amountOut: amountOut,
+        },
+        quote
+      );
+
+      expect(amountInGasAdjusted.eq(amountIn)).toBeTruthy();
+      expect(amountOutGasAdjusted.eq(TEST_GAS_ADJUSTED_AMOUNT_WITH_UNWRAP_OUTPUT)).toBeTruthy();
+    });
+
+    it('applyGasAdjustment, with unwrap, with adjustment bps', () => {
+      const quote = CLASSIC_QUOTE_EXACT_IN_LARGE_GAS;
+      quote.request.info.tokenOut = NATIVE_ADDRESS;
+      const amountIn = quote.amountInGasAdjusted;
+      const amountOut = quote.amountOutGasAdjusted;
+      const { amountIn: amountInGasAdjusted, amountOut: amountOutGasAdjusted } = DutchQuote.applyGasAdjustment(
+        {
+          amountIn: amountIn,
+          amountOut: amountOut,
+        },
+        quote,
+        TEST_GAS_ADJUSTMENT_BPS
+      );
+
+      expect(amountInGasAdjusted.eq(amountIn)).toBeTruthy();
+      expect(amountOutGasAdjusted.eq(TEST_GAS_ADJUSTED_AMOUNT_WITH_UNWRAP_WITH_ADJUSTMENT_OUTPUT)).toBeTruthy();
+    });
+
+    it('applyGasAdjustment, exact output, no unwrap, no adjustment bps', () => {
+      const quote = CLASSIC_QUOTE_EXACT_OUT_LARGE;
+      const amountIn = quote.amountInGasAdjusted;
+      const amountOut = quote.amountOutGasAdjusted;
+      const { amountIn: amountInGasAdjusted, amountOut: amountOutGasAdjusted } = DutchQuote.applyGasAdjustment(
+        {
+          amountIn: amountIn,
+          amountOut: amountOut,
+        },
+        quote
+      );
+
+      expect(amountOutGasAdjusted.eq(amountOut)).toBeTruthy();
+      expect(amountInGasAdjusted.eq(TEST_GAS_ADJUSTED_AMOUNT_INPUT)).toBeTruthy();
+    });
+
+    it('applyGasAdjustment, exact output, no unwrap, with adjustment bps', () => {
+      const quote = CLASSIC_QUOTE_EXACT_OUT_LARGE;
+      const amountIn = quote.amountInGasAdjusted;
+      const amountOut = quote.amountOutGasAdjusted;
+      const { amountIn: amountInGasAdjusted, amountOut: amountOutGasAdjusted } = DutchQuote.applyGasAdjustment(
+        {
+          amountIn: amountIn,
+          amountOut: amountOut,
+        },
+        quote,
+        TEST_GAS_ADJUSTMENT_BPS
+      );
+      expect(amountOutGasAdjusted.eq(amountOut)).toBeTruthy();
+      expect(amountInGasAdjusted.eq(TEST_GAS_ADJUSTED_AMOUNT_WITH_ADJUSTMENT_INPUT)).toBeTruthy();
+    });
+
+    it('applyGasAdjustment, exact output, with unwrap, no adjustment bps', () => {
+      const quote = CLASSIC_QUOTE_EXACT_OUT_LARGE;
+      quote.request.info.tokenOut = NATIVE_ADDRESS;
+      const amountIn = quote.amountInGasAdjusted;
+      const amountOut = quote.amountOutGasAdjusted;
+      const { amountIn: amountInGasAdjusted, amountOut: amountOutGasAdjusted } = DutchQuote.applyGasAdjustment(
+        {
+          amountIn: amountIn,
+          amountOut: amountOut,
+        },
+        quote
+      );
+
+      expect(amountOutGasAdjusted.eq(amountOut)).toBeTruthy();
+      expect(amountInGasAdjusted.eq(TEST_GAS_ADJUSTED_AMOUNT_WITH_UNWRAP_INPUT)).toBeTruthy();
+    });
+
+    it('applyGasAdjustment, exact output, with unwrap, with adjustment bps', () => {
+      const quote = CLASSIC_QUOTE_EXACT_OUT_LARGE;
+      quote.request.info.tokenOut = NATIVE_ADDRESS;
+      const amountIn = quote.amountInGasAdjusted;
+      const amountOut = quote.amountOutGasAdjusted;
+      const { amountIn: amountInGasAdjusted, amountOut: amountOutGasAdjusted } = DutchQuote.applyGasAdjustment(
+        {
+          amountIn: amountIn,
+          amountOut: amountOut,
+        },
+        quote,
+        TEST_GAS_ADJUSTMENT_BPS
+      );
+
+      expect(amountOutGasAdjusted.eq(amountOut)).toBeTruthy();
+      expect(amountInGasAdjusted.eq(TEST_GAS_ADJUSTED_AMOUNT_WITH_UNWRAP_WITH_ADJUSTMENT_INPUT)).toBeTruthy();
+    });
   });
 
   describe('Reparameterize', () => {
@@ -155,6 +356,30 @@ describe('DutchQuote', () => {
       );
       expect(reparameterized.portion?.bips).toEqual(PORTION_BIPS);
       expect(reparameterized.toOrder().toJSON().outputs.length).toEqual(2);
+    });
+
+    it('reparameterizes correctly with gas adjustment bps', async () => {
+      const dutchQuotePortion = createDutchQuote({ amountOut: AMOUNT_LARGE }, 'EXACT_INPUT', '1');
+      dutchQuotePortion.request.config.gasAdjustmentBps = TEST_GAS_ADJUSTMENT_BPS;
+      const reparameterized = DutchQuoteFactory.reparameterize(
+        dutchQuotePortion,
+        CLASSIC_QUOTE_EXACT_IN_LARGE,
+        undefined
+      );
+
+      expect(reparameterized.toOrder().toJSON().outputs[0].endAmount).toEqual(TEST_GAS_ADJUSTED_END_AMOUNT_OUTPUT);
+    });
+
+    it('reparameterizes correctly with gas adjustment bps, exact out', async () => {
+      const dutchQuotePortion = createDutchQuote({ amountIn: AMOUNT_LARGE }, 'EXACT_OUTPUT', '1');
+      dutchQuotePortion.request.config.gasAdjustmentBps = TEST_GAS_ADJUSTMENT_BPS;
+      const reparameterized = DutchQuoteFactory.reparameterize(
+        dutchQuotePortion,
+        CLASSIC_QUOTE_EXACT_OUT_WORSE,
+        undefined
+      );
+
+      expect(reparameterized.toOrder().toJSON().input.endAmount).toEqual(TEST_GAS_ADJUSTED_END_AMOUNT_INPUT);
     });
 
     it('only override auctionPeriodSec on mainnet', async () => {
