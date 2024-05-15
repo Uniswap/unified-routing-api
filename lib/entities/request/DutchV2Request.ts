@@ -8,6 +8,8 @@ export interface DutchV2Config {
   deadlineBufferSecs?: number;
   useSyntheticQuotes: boolean;
   gasAdjustmentBps?: number;
+  forceSyntheticQuotes?: boolean;
+  priceImprovementBps?: number;
 }
 
 export interface DutchV2ConfigJSON extends Omit<DutchV2Config, 'useSyntheticQuotes'> {
@@ -30,6 +32,8 @@ export class DutchV2Request implements QuoteRequest {
         deadlineBufferSecs: body.deadlineBufferSecs,
         useSyntheticQuotes: body.useSyntheticQuotes ?? false,
         gasAdjustmentBps: body.gasAdjustmentBps,
+        forceSyntheticQuotes: body.forceSyntheticQuotes,
+        priceImprovementBps: body.priceImprovementBps,
       }
     );
   }

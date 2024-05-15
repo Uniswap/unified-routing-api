@@ -85,7 +85,7 @@ export abstract class DutchQuote<T extends DutchQuoteRequest> implements IQuote 
   public readonly createdAt: string;
   public derived: DutchQuoteDerived;
   public routingType: RoutingType.DUTCH_LIMIT | RoutingType.DUTCH_V2;
-  public abstract readonly defaultDeadlienBufferInSecs: number;
+  public abstract readonly defaultDeadlineBufferInSecs: number;
   // Add 1bps price improvmement to favor Dutch
   public static defaultPriceImprovementBps = 1;
 
@@ -170,7 +170,7 @@ export abstract class DutchQuote<T extends DutchQuoteRequest> implements IQuote 
       return this.request.config.deadlineBufferSecs;
     }
     const quoteConfig = ChainConfigManager.getQuoteConfig(this.chainId, this.request.routingType);
-    return quoteConfig.deadlineBufferSecs ?? this.defaultDeadlienBufferInSecs;
+    return this.request.config.deadlineBufferSecs ?? quoteConfig.deadlineBufferSecs ?? this.defaultDeadlineBufferInSecs;
   }
 
   public get portionAmountOutStart(): BigNumber {

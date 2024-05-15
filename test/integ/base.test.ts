@@ -1,14 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { ZERO } from '@uniswap/router-sdk';
 import { Currency, CurrencyAmount, Fraction, Percent } from '@uniswap/sdk-core';
-import {
-  DAI_MAINNET,
-  parseAmount,
-  USDC_MAINNET,
-  USDT_MAINNET,
-  WBTC_MAINNET,
-  WETH9,
-} from '@uniswap/smart-order-router';
+import { DAI_MAINNET, parseAmount, USDC_MAINNET, USDT_MAINNET, WBTC_MAINNET, WETH9 } from '@uniswap/smart-order-router';
 import { fail } from 'assert';
 import axiosStatic, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import axiosRetry from 'axios-retry';

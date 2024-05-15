@@ -32,7 +32,7 @@ export type DutchV2QuoteDataJSON = SharedOrderQuoteDataJSON & {
 
 export class DutchV2Quote extends DutchQuote<DutchV2Request> implements IQuote {
   public readonly routingType: RoutingType.DUTCH_V2 = RoutingType.DUTCH_V2;
-  public readonly defaultDeadlienBufferInSecs: number = DEFAULT_V2_DEADLINE_BUFFER_SECS;
+  public readonly defaultDeadlineBufferInSecs: number = DEFAULT_V2_DEADLINE_BUFFER_SECS;
 
   public toJSON(): DutchV2QuoteDataJSON {
     return {

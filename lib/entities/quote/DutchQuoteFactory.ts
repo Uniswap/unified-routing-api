@@ -63,7 +63,7 @@ export class DutchQuoteFactory {
     const priceImprovedStartAmounts = DutchQuote.applyPriceImprovement(
       { amountIn: quote.amountInGasAdjusted, amountOut: quote.amountOutGasAdjusted },
       request.info.type,
-      quoteConfig.priceImprovementBps
+      request.config.priceImprovementBps ?? quoteConfig.priceImprovementBps
     );
     const startAmounts = DutchQuote.applyPreSwapGasAdjustment(priceImprovedStartAmounts, quote);
 

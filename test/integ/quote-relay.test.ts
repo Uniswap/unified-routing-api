@@ -114,7 +114,7 @@ describe.skip('relayQuote', function () {
           expect(order.info.universalRouterCalldata).to.not.be.undefined;
         });
 
-        it('missing gasToken in request config' , async () => {
+        it('missing gasToken in request config', async () => {
           const quoteReq: QuoteRequestBodyJSON = {
             requestId: 'id',
             tokenIn: USDC_MAINNET.address,
@@ -140,7 +140,7 @@ describe.skip('relayQuote', function () {
               errorCode: 'VALIDATION_ERROR',
             },
           });
-        })
+        });
       });
     });
   }
