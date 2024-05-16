@@ -11,6 +11,7 @@ import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import { generateRandomNonce } from '../../util/nonce';
 import { Quoter, QuoterType } from './index';
+import { ChainConfigManager } from '../../config/ChainConfigManager';
 
 export class RfqQuoter implements Quoter {
   static readonly type: QuoterType.UNISWAPX_RFQ;
@@ -19,6 +20,11 @@ export class RfqQuoter implements Quoter {
   constructor(private rfqUrl: string, private serviceUrl: string, private paramApiKey: string) {}
 
   async quote(request: DutchQuoteRequest): Promise<Quote | null> {
+    // Skip RFQ for forced Open Orders
+    const quoteConfig = ChainConfigManager.getQuoteConfig(request.info.tokenInChainId, request.routingType);
+    if (quoteConfig.forceOpenOrders || request.config.forceOpenOrders) {
+      return null;
+    }
     const swapper = request.config.swapper;
     const now = Date.now();
     const portionEnabled = frontendAndUraEnablePortion(request.info.sendPortionEnabled);
