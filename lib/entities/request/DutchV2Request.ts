@@ -8,7 +8,7 @@ export interface DutchV2Config {
   deadlineBufferSecs?: number;
   useSyntheticQuotes: boolean;
   gasAdjustmentBps?: number;
-  forceSyntheticQuotes?: boolean;
+  forceOpenOrders?: boolean;
   priceImprovementBps?: number;
 }
 
@@ -32,7 +32,7 @@ export class DutchV2Request implements QuoteRequest {
         deadlineBufferSecs: body.deadlineBufferSecs,
         useSyntheticQuotes: body.useSyntheticQuotes ?? false,
         gasAdjustmentBps: body.gasAdjustmentBps,
-        forceSyntheticQuotes: body.forceSyntheticQuotes,
+        forceOpenOrders: body.forceOpenOrders,
         priceImprovementBps: body.priceImprovementBps,
       }
     );

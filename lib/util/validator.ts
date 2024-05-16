@@ -111,7 +111,7 @@ export class FieldValidator {
     deadlineBufferSecs: FieldValidator.positiveNumber.optional(),
     useSyntheticQuotes: Joi.boolean().optional(),
     gasAdjustmentBps: FieldValidator.bps.optional(),
-    forceSyntheticQuotes: Joi.boolean().optional(),
+    forceOpenOrders: Joi.boolean().optional(),
     priceImprovementBps: FieldValidator.bps.optional(),
   });
 
@@ -133,7 +133,7 @@ export class FieldValidator {
     deadlineBufferSecs: FieldValidator.positiveNumber.optional(),
     useSyntheticQuotes: Joi.boolean().optional(),
     gasAdjustmentBps: FieldValidator.bps.optional(),
-    forceSyntheticQuotes: Joi.boolean().optional(),
+    forceOpenOrders: Joi.boolean().optional(),
     priceImprovementBps: FieldValidator.bps.optional(),
   });
 }

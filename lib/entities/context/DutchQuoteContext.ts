@@ -137,7 +137,7 @@ export class DutchQuoteContext implements QuoteContext {
     }
 
     const quoteConfig = ChainConfigManager.getQuoteConfig(quote.chainId, this.request.routingType);
-    if (quoteConfig.skipRFQ || this.request.config.forceSyntheticQuotes) {
+    if (quoteConfig.forceOpenOrders || this.request.config.forceOpenOrders) {
       this.log.info('RFQ Orders are disabled in config');
       return null;
     }
@@ -205,9 +205,9 @@ export class DutchQuoteContext implements QuoteContext {
     // if we are skipping RFQ, we need a synthetic quote
     if (
       !this.request.config.useSyntheticQuotes &&
-      !this.request.config.forceSyntheticQuotes &&
+      !this.request.config.forceOpenOrders &&
       !syntheticStatus.syntheticEnabled &&
-      !quoteConfig.skipRFQ
+      !quoteConfig.forceOpenOrders
     ) {
       this.log.info('Synthetic not enabled, skipping synthetic');
       return null;

@@ -9,7 +9,7 @@ type IntentOverrides = {
 };
 
 export type DutchOverrides = IntentOverrides & {
-  skipRFQ?: boolean;
+  forceOpenOrders?: boolean;
   priceImprovementBps?: number;
 };
 
@@ -77,7 +77,7 @@ export abstract class ChainConfigManager {
       routingTypes: {
         [RoutingType.CLASSIC]: {},
         [RoutingType.DUTCH_V2]: {
-          skipRFQ: true,
+          forceOpenOrders: true,
           priceImprovementBps: 5,
           deadlineBufferSecs: 20,
         },

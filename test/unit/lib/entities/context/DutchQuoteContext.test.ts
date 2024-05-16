@@ -335,6 +335,82 @@ describe('DutchQuoteContext', () => {
       expect((quote?.toJSON() as DutchQuoteDataJSON).orderInfo.exclusiveFiller).toEqual(filler);
     });
 
+    it('uses synthetic if worse with forceOpenOrders=true and switch=false', async () => {
+      // Show that the test first will prefer RFQ
+      let request = makeDutchRequest({}, { forceOpenOrders: false });
+      let context = new DutchQuoteContext(logger, request, makeProviders(false));
+      const filler = '0x1111111111111111111111111111111111111111';
+      const rfqQuote = createDutchQuote({ amountOut: '10000000000', filler }, 'EXACT_INPUT');
+      expect(rfqQuote.filler).toEqual(filler);
+      const classicQuote = createClassicQuote(
+        { quote: '5000000000', quoteGasAdjusted: '4999500000' },
+        { type: 'EXACT_INPUT' }
+      );
+      context.dependencies();
+
+      let quote = await context.resolve({
+        [context.requestKey]: rfqQuote,
+        [context.classicKey]: classicQuote,
+        [context.routeToNativeKey]: classicQuote,
+      });
+      expect(quote?.routingType).toEqual(RoutingType.DUTCH_LIMIT);
+      expect((quote?.toJSON() as DutchQuoteDataJSON).orderInfo.exclusiveFiller).toEqual(filler);
+      expect(quote?.amountOut.toString()).toEqual('10000000000');
+
+      // Setting forceOpenOrders will skip the RFQ
+      request = makeDutchRequest({}, { forceOpenOrders: true });
+      context = new DutchQuoteContext(logger, request, makeProviders(false));
+      context.dependencies();
+
+      quote = await context.resolve({
+        [context.requestKey]: rfqQuote,
+        [context.classicKey]: classicQuote,
+        [context.routeToNativeKey]: classicQuote,
+      });
+      expect(quote?.routingType).toEqual(RoutingType.DUTCH_LIMIT);
+      expect((quote?.toJSON() as DutchQuoteDataJSON).orderInfo.exclusiveFiller).toEqual(
+        '0x0000000000000000000000000000000000000000'
+      );
+      // Synthetic starts at quoteGasAdjusted + 1bp
+      expect(quote?.amountOut.toString()).toEqual(
+        BigNumber.from(4999500000)
+          .mul(BPS + DutchQuote.defaultPriceImprovementBps)
+          .div(BPS)
+          .toString()
+      );
+    });
+
+    it('uses priceImprovementBps when present in request', async () => {
+      const bpsImprovement = 10;
+      const request = makeDutchRequest({}, { forceOpenOrders: true, priceImprovementBps: bpsImprovement });
+      const context = new DutchQuoteContext(logger, request, makeProviders(false));
+      const filler = '0x1111111111111111111111111111111111111111';
+      const rfqQuote = createDutchQuote({ amountOut: '10000000000', filler }, 'EXACT_INPUT');
+      expect(rfqQuote.filler).toEqual(filler);
+      const classicQuote = createClassicQuote(
+        { quote: '5000000000', quoteGasAdjusted: '4999500000' },
+        { type: 'EXACT_INPUT' }
+      );
+      context.dependencies();
+
+      const quote = await context.resolve({
+        [context.requestKey]: rfqQuote,
+        [context.classicKey]: classicQuote,
+        [context.routeToNativeKey]: classicQuote,
+      });
+
+      expect(quote?.routingType).toEqual(RoutingType.DUTCH_LIMIT);
+      expect((quote?.toJSON() as DutchQuoteDataJSON).orderInfo.exclusiveFiller).toEqual(
+        '0x0000000000000000000000000000000000000000'
+      );
+      expect(quote?.amountOut.toString()).toEqual(
+        BigNumber.from(4999500000)
+          .mul(BPS + bpsImprovement)
+          .div(BPS)
+          .toString()
+      );
+    });
+
     it('uses synthetic if rfq quote is at least 300% better than classic; EXACT_IN', async () => {
       const context = new DutchQuoteContext(logger, QUOTE_REQUEST_DL, makeProviders(false));
       const filler = '0x1111111111111111111111111111111111111111';
