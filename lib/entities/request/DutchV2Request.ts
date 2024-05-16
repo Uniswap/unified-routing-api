@@ -6,8 +6,10 @@ import { DutchQuoteRequestInfo } from './DutchV1Request';
 export interface DutchV2Config {
   swapper: string;
   deadlineBufferSecs?: number;
+  // Setting true will include an Open Order in the quote comparison
   useSyntheticQuotes: boolean;
   gasAdjustmentBps?: number;
+  // Setting true will force an Open Order and skip RFQ
   forceOpenOrders?: boolean;
   priceImprovementBps?: number;
 }

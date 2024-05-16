@@ -75,12 +75,7 @@ export abstract class ChainConfigManager {
     },
     [ChainId.ARBITRUM_ONE]: {
       routingTypes: {
-        [RoutingType.CLASSIC]: {},
-        [RoutingType.DUTCH_V2]: {
-          forceOpenOrders: true,
-          priceImprovementBps: 5,
-          deadlineBufferSecs: 20,
-        },
+        [RoutingType.CLASSIC]: {}
       },
       alarmEnabled: true,
     },
