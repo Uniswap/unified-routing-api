@@ -2072,7 +2072,7 @@
 
 "@uniswap/permit2-sdk@^1.2.1":
   version "1.2.1"
-  resolved "https://registry.yarnpkg.com/@uniswap/permit2-sdk/-/permit2-sdk-1.2.1.tgz#7f562d96a26de0538508ba9ea2b2f02150572bf2"
+  resolved "https://registry.npmjs.org/@uniswap/permit2-sdk/-/permit2-sdk-1.2.1.tgz#7f562d96a26de0538508ba9ea2b2f02150572bf2"
   integrity sha512-3eEVW6d1tepF9L4XLGhrGoVPKFBe/kQYRCvkzMmYu32amEeV2L8sg5TBJhrVZu+cu0srX7rh3nhOucNdMVOGzg==
   dependencies:
     ethers "^5.7.0"
@@ -2103,7 +2103,7 @@
 
 "@uniswap/sdk-core@^5.0.0":
   version "5.0.0"
-  resolved "https://registry.yarnpkg.com/@uniswap/sdk-core/-/sdk-core-5.0.0.tgz#7accd8c7372b14811777cbd1d92133d4de57c683"
+  resolved "https://registry.npmjs.org/@uniswap/sdk-core/-/sdk-core-5.0.0.tgz#7accd8c7372b14811777cbd1d92133d4de57c683"
   integrity sha512-m5KmkqvvEz5rurRHdG3zGJappi1Crxet3B2dpgDFgq5MKoKd6qCbeChRkoQjTTJpY1MLGCsXj8ZtZ0/arisvLQ==
   dependencies:
     "@ethersproject/address" "^5.0.2"
@@ -2173,9 +2173,9 @@
   resolved "https://registry.npmjs.org/@uniswap/token-lists/-/token-lists-1.0.0-beta.33.tgz"
   integrity sha512-JQkXcpRI3jFG8y3/CGC4TS8NkDgcxXaOQuYW8Qdvd6DcDiIyg2vVYCG9igFEzF0G6UvxgHkBKC7cWCgzZNYvQg==
 
-"@uniswap/uniswapx-sdk@^2.1.0-beta.4":
+"@uniswap/uniswapx-sdk@2.1.0-beta.4":
   version "2.1.0-beta.4"
-  resolved "https://registry.yarnpkg.com/@uniswap/uniswapx-sdk/-/uniswapx-sdk-2.1.0-beta.4.tgz#052bd0d3601e4e14eb76e744f4ab164b952756c9"
+  resolved "https://registry.npmjs.org/@uniswap/uniswapx-sdk/-/uniswapx-sdk-2.1.0-beta.4.tgz#052bd0d3601e4e14eb76e744f4ab164b952756c9"
   integrity sha512-kIbWoGiMrrpq265/99+zOBOlHP/t22lLYKW5C7yKT0HiSM+t671Nl6hvUftRkdf2J7CribOBH1koJyWjkMikOA==
   dependencies:
     "@ethersproject/bytes" "^5.7.0"
