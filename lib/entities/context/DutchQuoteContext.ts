@@ -202,7 +202,7 @@ export class DutchQuoteContext implements QuoteContext {
     const chainId = classicQuote.request.info.tokenInChainId;
     const quoteConfig = ChainConfigManager.getQuoteConfig(chainId, this.request.routingType);
     // if the useSyntheticQuotes override is not set by client or server and we're not skipping RFQ, return null
-    // if we are skipping RFQ, we need a synthetic quote
+    // if we are forcing Open Orders, we need a synthetic quote
     if (
       !this.request.config.useSyntheticQuotes &&
       !this.request.config.forceOpenOrders &&
