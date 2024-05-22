@@ -2089,6 +2089,17 @@
     "@uniswap/v2-sdk" "^4.3.0"
     "@uniswap/v3-sdk" "^3.11.0"
 
+"@uniswap/router-sdk@^1.9.2":
+  version "1.9.2"
+  resolved "https://registry.yarnpkg.com/@uniswap/router-sdk/-/router-sdk-1.9.2.tgz#cc2411f0849467c2bd71ce34cdca9db2a584367d"
+  integrity sha512-J63Of3HRpV0s3ZtEnhGlyvbBuZFfjK7NtnMwflzFMKzfdm+75APHYqnvHAnVARKuL/hMYHF4hni0o84bHem2Ng==
+  dependencies:
+    "@ethersproject/abi" "^5.5.0"
+    "@uniswap/sdk-core" "^5.0.0"
+    "@uniswap/swap-router-contracts" "^1.3.0"
+    "@uniswap/v2-sdk" "^4.3.2"
+    "@uniswap/v3-sdk" "^3.11.2"
+
 "@uniswap/sdk-core@^4.2.0":
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/@uniswap/sdk-core/-/sdk-core-4.2.0.tgz#9930f133baec9c1118d891ebf8fcba7f7efc153d"
@@ -2113,10 +2124,10 @@
     tiny-invariant "^1.1.0"
     toformat "^2.0.0"
 
-"@uniswap/smart-order-router@^3.26.0":
-  version "3.26.0"
-  resolved "https://registry.yarnpkg.com/@uniswap/smart-order-router/-/smart-order-router-3.26.0.tgz#b3b172adb6b6f5f2865f6dd8ec7dddebf7a701a5"
-  integrity sha512-0xoMyirXAjCwIYDA423O8HwahwxLX+0v2OaayDuRWeYKX+rFsKKGXRTykG9CJx0vHSpuI2fqBIQQ38r/+Ww3cA==
+"@uniswap/smart-order-router@^3.32.0":
+  version "3.32.0"
+  resolved "https://registry.yarnpkg.com/@uniswap/smart-order-router/-/smart-order-router-3.32.0.tgz#83d70b10d68744680d570458209f14397b2585c8"
+  integrity sha512-M6JK/D5zj67LwPHXoREDirL0wcIIvAB6tVa/UvNbKBqyO+Mc/0wFo1APzSE3Z+WYvA0TMZypGFhV9KGYN/ukVg==
   dependencies:
     "@eth-optimism/sdk" "^3.2.2"
     "@types/brotli" "^1.3.4"
@@ -2127,7 +2138,7 @@
     "@uniswap/swap-router-contracts" "^1.3.1"
     "@uniswap/token-lists" "^1.0.0-beta.31"
     "@uniswap/universal-router" "^1.6.0"
-    "@uniswap/universal-router-sdk" "^1.8.1"
+    "@uniswap/universal-router-sdk" "^2.1.0"
     "@uniswap/v2-sdk" "^4.3.0"
     "@uniswap/v3-sdk" "^3.11.0"
     async-retry "^1.3.1"
@@ -2144,7 +2155,7 @@
     node-cache "^5.1.2"
     stats-lite "^2.2.0"
 
-"@uniswap/swap-router-contracts@^1.1.0", "@uniswap/swap-router-contracts@^1.3.1":
+"@uniswap/swap-router-contracts@^1.1.0", "@uniswap/swap-router-contracts@^1.3.0", "@uniswap/swap-router-contracts@^1.3.1":
   version "1.3.1"
   resolved "https://registry.yarnpkg.com/@uniswap/swap-router-contracts/-/swap-router-contracts-1.3.1.tgz#0ebbb93eb578625618ed9489872de381f9c66fb4"
   integrity sha512-mh/YNbwKb7Mut96VuEtL+Z5bRe0xVIbjjiryn+iMMrK2sFKhR4duk/86mEz0UO5gSx4pQIw9G5276P5heY/7Rg==
@@ -2184,33 +2195,19 @@
     "@uniswap/sdk-core" "^5.0.0"
     ethers "^5.7.0"
 
-"@uniswap/universal-router-sdk@^1.8.1":
-  version "1.8.1"
-  resolved "https://registry.yarnpkg.com/@uniswap/universal-router-sdk/-/universal-router-sdk-1.8.1.tgz#1d94c3142aed697d3a06c0542ae8cc9404640296"
-  integrity sha512-oA4JFLD1JmfJn5AnPcvgOmLIqZnsUpDYSShYCt8CaA3AzBzKmPTz9xpGdQwVHIH8rJnYu6mPTqRg5GwLobeMGA==
+"@uniswap/universal-router-sdk@^2.1.0":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@uniswap/universal-router-sdk/-/universal-router-sdk-2.1.0.tgz#7b4e48af92a6162973d3503bcd6ccf4b52dcba4a"
+  integrity sha512-nLIIr0bZ6AfvwuYC97rM10tyEfqDIdujtG+Ahwqhv1EMWayh6abbqPUwvUQvk6Px4LOyuKtlciryW/MJMusn4w==
   dependencies:
-    "@uniswap/permit2-sdk" "^1.2.0"
-    "@uniswap/router-sdk" "^1.9.0"
-    "@uniswap/sdk-core" "^4.2.0"
+    "@uniswap/permit2-sdk" "^1.2.1"
+    "@uniswap/router-sdk" "^1.9.2"
+    "@uniswap/sdk-core" "^5.0.0"
     "@uniswap/universal-router" "1.6.0"
-    "@uniswap/v2-sdk" "^4.2.0"
-    "@uniswap/v3-sdk" "^3.11.0"
+    "@uniswap/v2-sdk" "^4.3.2"
+    "@uniswap/v3-sdk" "^3.11.2"
     bignumber.js "^9.0.2"
-    ethers "^5.3.1"
-
-"@uniswap/universal-router-sdk@^1.9.0":
-  version "1.9.0"
-  resolved "https://registry.yarnpkg.com/@uniswap/universal-router-sdk/-/universal-router-sdk-1.9.0.tgz#7e0c38dc6dc015bcb3b74f34df820af0aef90f41"
-  integrity sha512-B6iEczP2WdMsq/aVIdQfvHWWLJyhaUD7enfxO6koxaH3huYOqUWRAzmZLl026fRK7R7P+tVFcA6AqImWLG6tYQ==
-  dependencies:
-    "@uniswap/permit2-sdk" "^1.2.0"
-    "@uniswap/router-sdk" "^1.9.0"
-    "@uniswap/sdk-core" "^4.2.0"
-    "@uniswap/universal-router" "1.6.0"
-    "@uniswap/v2-sdk" "^4.3.0"
-    "@uniswap/v3-sdk" "^3.11.0"
-    bignumber.js "^9.0.2"
-    ethers "^5.3.1"
+    ethers "^5.7.0"
 
 "@uniswap/universal-router@1.6.0", "@uniswap/universal-router@^1.6.0":
   version "1.6.0"
@@ -2226,7 +2223,7 @@
   resolved "https://registry.npmjs.org/@uniswap/v2-core/-/v2-core-1.0.1.tgz"
   integrity sha512-MtybtkUPSyysqLY2U210NBDeCHX+ltHt3oADGdjqoThZaFRDKwM6k1Nb3F0A3hk5hwuQvytFWhrWHOEq6nVJ8Q==
 
-"@uniswap/v2-sdk@^4.2.0", "@uniswap/v2-sdk@^4.3.0":
+"@uniswap/v2-sdk@^4.3.0":
   version "4.3.0"
   resolved "https://registry.yarnpkg.com/@uniswap/v2-sdk/-/v2-sdk-4.3.0.tgz#621dcf4ea236448a0a49cd901932b3a466c8ae02"
   integrity sha512-FUKkgo/1TQc/HuWWgsoy1FIcsLkKwm3Nnor88yfn2NH8ER5RK/wDF9UzDDilYh3yyf2mAnaY89CKFhcIl+lbBQ==
@@ -2234,6 +2231,17 @@
     "@ethersproject/address" "^5.0.0"
     "@ethersproject/solidity" "^5.0.0"
     "@uniswap/sdk-core" "^4.2.0"
+    tiny-invariant "^1.1.0"
+    tiny-warning "^1.0.3"
+
+"@uniswap/v2-sdk@^4.3.2":
+  version "4.3.2"
+  resolved "https://registry.yarnpkg.com/@uniswap/v2-sdk/-/v2-sdk-4.3.2.tgz#d8eacdb2ddfeca849ee1cb05377521c4ba0d1542"
+  integrity sha512-yNxfQZuzmQ2xqiKutzyzzoXuiuwFrHWba6GG9gT8JeJ4NT5sTJOeLY1FEdEMVsJQwXfMc+goG/srNBRZXVRtSA==
+  dependencies:
+    "@ethersproject/address" "^5.0.2"
+    "@ethersproject/solidity" "^5.0.9"
+    "@uniswap/sdk-core" "^5.0.0"
     tiny-invariant "^1.1.0"
     tiny-warning "^1.0.3"
 
@@ -2290,6 +2298,20 @@
     "@ethersproject/solidity" "^5.0.9"
     "@uniswap/sdk-core" "^4.2.0"
     "@uniswap/swap-router-contracts" "^1.2.1"
+    "@uniswap/v3-periphery" "^1.1.1"
+    "@uniswap/v3-staker" "1.0.0"
+    tiny-invariant "^1.1.0"
+    tiny-warning "^1.0.3"
+
+"@uniswap/v3-sdk@^3.11.2":
+  version "3.11.2"
+  resolved "https://registry.yarnpkg.com/@uniswap/v3-sdk/-/v3-sdk-3.11.2.tgz#cda523307549548b6b53a1d5d1badeff1627a88b"
+  integrity sha512-TktyuMHVqlhtUxXK3cUaijlvlqiyWfpEYgzd2JD1EcvsVB55zLmtRKb/1fbtLbjRqOapcFsVihD5pVW9nyFlTg==
+  dependencies:
+    "@ethersproject/abi" "^5.5.0"
+    "@ethersproject/solidity" "^5.0.9"
+    "@uniswap/sdk-core" "^5.0.0"
+    "@uniswap/swap-router-contracts" "^1.3.0"
     "@uniswap/v3-periphery" "^1.1.1"
     "@uniswap/v3-staker" "1.0.0"
     tiny-invariant "^1.1.0"

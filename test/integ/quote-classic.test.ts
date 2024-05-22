@@ -8,6 +8,7 @@ import {
   ID_TO_NETWORK_NAME,
   NATIVE_CURRENCY,
   USDB_BLAST,
+  USDC_ZORA,
 } from '@uniswap/smart-order-router';
 import { fail } from 'assert';
 import { AxiosResponse } from 'axios';
@@ -451,7 +452,7 @@ describe('quote', function () {
     [ChainId.ARBITRUM_SEPOLIA]: null,
     [ChainId.BASE_GOERLI]: USDC_ON(ChainId.BASE_GOERLI),
     [ChainId.BASE]: USDC_ON(ChainId.BASE),
-    [ChainId.ZORA]: null,
+    [ChainId.ZORA]: USDC_ZORA,
     [ChainId.ZORA_SEPOLIA]: null,
     [ChainId.ROOTSTOCK]: null,
     [ChainId.BLAST]: USDB_BLAST,
@@ -477,7 +478,7 @@ describe('quote', function () {
     [ChainId.ARBITRUM_SEPOLIA]: null,
     [ChainId.BASE_GOERLI]: WNATIVE_ON(ChainId.BASE_GOERLI),
     [ChainId.BASE]: WNATIVE_ON(ChainId.BASE),
-    [ChainId.ZORA]: null,
+    [ChainId.ZORA]: WNATIVE_ON(ChainId.ZORA),
     [ChainId.ZORA_SEPOLIA]: null,
     [ChainId.ROOTSTOCK]: null,
     [ChainId.BLAST]: WNATIVE_ON(ChainId.BLAST),
@@ -497,8 +498,7 @@ describe('quote', function () {
       c != ChainId.OPTIMISM_SEPOLIA &&
       c !== ChainId.BASE &&
       c !== ChainId.BASE_GOERLI &&
-      // We will follow up supporting ZORA and ROOTSTOCK
-      c !== ChainId.ZORA &&
+      // We will follow up supporting ROOTSTOCK
       c !== ChainId.ZORA_SEPOLIA &&
       c !== ChainId.ROOTSTOCK
   )) {
@@ -584,8 +584,9 @@ describe('quote', function () {
         });
         const native = NATIVE_CURRENCY[chain];
         it(`${native} -> erc20`, async () => {
-          if (chain === ChainId.BLAST) {
+          if (chain === ChainId.BLAST || chain === ChainId.ZORA) {
             // Blast doesn't have DAI or USDC yet
+            // Zora doesn't have DAI
             return;
           }
 

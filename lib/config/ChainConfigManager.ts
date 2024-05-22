@@ -169,7 +169,9 @@ export abstract class ChainConfigManager {
       alarmEnabled: false,
     },
     [ChainId.ZORA]: {
-      routingTypes: {},
+      routingTypes: {
+        [RoutingType.CLASSIC]: {},
+      },
       alarmEnabled: false,
     },
     [ChainId.ZORA_SEPOLIA]: {
