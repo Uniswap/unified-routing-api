@@ -3,6 +3,7 @@ import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-ro
 import { BigNumber } from 'ethers';
 import axios from './helpers';
 
+import { ChainConfigManager } from '../../config/ChainConfigManager';
 import { BPS, frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { DutchQuoteRequest, Quote } from '../../entities';
 import { DutchQuoteFactory } from '../../entities/quote/DutchQuoteFactory';
@@ -11,7 +12,6 @@ import { log } from '../../util/log';
 import { metrics } from '../../util/metrics';
 import { generateRandomNonce } from '../../util/nonce';
 import { Quoter, QuoterType } from './index';
-import { ChainConfigManager } from '../../config/ChainConfigManager';
 
 export class RfqQuoter implements Quoter {
   static readonly type: QuoterType.UNISWAPX_RFQ;

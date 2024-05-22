@@ -166,9 +166,6 @@ export abstract class DutchQuote<T extends DutchQuoteRequest> implements IQuote 
 
   // The number of seconds from endTime that the order should expire
   public get deadlineBufferSecs(): number {
-    if (this.request.config.deadlineBufferSecs !== undefined) {
-      return this.request.config.deadlineBufferSecs;
-    }
     const quoteConfig = ChainConfigManager.getQuoteConfig(this.chainId, this.request.routingType);
     return this.request.config.deadlineBufferSecs ?? quoteConfig.deadlineBufferSecs ?? this.defaultDeadlineBufferInSecs;
   }
