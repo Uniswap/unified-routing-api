@@ -111,6 +111,8 @@ export class FieldValidator {
     deadlineBufferSecs: FieldValidator.positiveNumber.optional(),
     useSyntheticQuotes: Joi.boolean().optional(),
     gasAdjustmentBps: FieldValidator.bps.optional(),
+    forceOpenOrders: Joi.boolean().optional(),
+    priceImprovementBps: FieldValidator.bps.optional(),
   });
 
   // extends a classic request config, but requires a gasToken and has optional parameters for the fee auction
@@ -131,5 +133,7 @@ export class FieldValidator {
     deadlineBufferSecs: FieldValidator.positiveNumber.optional(),
     useSyntheticQuotes: Joi.boolean().optional(),
     gasAdjustmentBps: FieldValidator.bps.optional(),
+    forceOpenOrders: Joi.boolean().optional(),
+    priceImprovementBps: FieldValidator.bps.optional(),
   });
 }

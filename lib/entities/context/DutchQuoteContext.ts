@@ -137,7 +137,7 @@ export class DutchQuoteContext implements QuoteContext {
     }
 
     const quoteConfig = ChainConfigManager.getQuoteConfig(quote.chainId, this.request.routingType);
-    if (quoteConfig.skipRFQ) {
+    if (quoteConfig.forceOpenOrders || this.request.config.forceOpenOrders) {
       this.log.info('RFQ Orders are disabled in config');
       return null;
     }
@@ -202,8 +202,13 @@ export class DutchQuoteContext implements QuoteContext {
     const chainId = classicQuote.request.info.tokenInChainId;
     const quoteConfig = ChainConfigManager.getQuoteConfig(chainId, this.request.routingType);
     // if the useSyntheticQuotes override is not set by client or server and we're not skipping RFQ, return null
-    // if we are skipping RFQ, we need a synthetic quote
-    if (!this.request.config.useSyntheticQuotes && !syntheticStatus.syntheticEnabled && !quoteConfig.skipRFQ) {
+    // if we are forcing Open Orders, we need a synthetic quote
+    if (
+      !this.request.config.useSyntheticQuotes &&
+      !this.request.config.forceOpenOrders &&
+      !syntheticStatus.syntheticEnabled &&
+      !quoteConfig.forceOpenOrders
+    ) {
       this.log.info('Synthetic not enabled, skipping synthetic');
       return null;
     }

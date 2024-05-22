@@ -15,8 +15,12 @@ export interface DutchConfig {
   startTimeBufferSecs?: number;
   auctionPeriodSecs?: number;
   deadlineBufferSecs?: number;
+  // Setting true will include an Open Order in the quote comparison
   useSyntheticQuotes: boolean;
   gasAdjustmentBps?: number;
+  // Setting true will force an Open Order and skip RFQ
+  forceOpenOrders?: boolean;
+  priceImprovementBps?: number;
 }
 
 export interface DutchQuoteRequestInfo extends QuoteRequestInfo {
@@ -32,6 +36,8 @@ export interface DutchConfigJSON {
   deadlineBufferSecs?: number;
   useSyntheticQuotes?: boolean;
   gasAdjustmentBps?: number;
+  forceOpenOrders?: boolean;
+  priceImprovementBps?: number;
 }
 
 export class DutchV1Request implements QuoteRequest {
@@ -52,6 +58,8 @@ export class DutchV1Request implements QuoteRequest {
         deadlineBufferSecs: body.deadlineBufferSecs,
         useSyntheticQuotes: body.useSyntheticQuotes ?? false,
         gasAdjustmentBps: body.gasAdjustmentBps,
+        forceOpenOrders: body.forceOpenOrders,
+        priceImprovementBps: body.priceImprovementBps,
       }
     );
   }

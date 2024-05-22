@@ -16,7 +16,7 @@ import { generateRandomNonce } from '../../util/nonce';
 
 export class DutchV1Quote extends DutchQuote<DutchV1Request> implements IQuote {
   public routingType: RoutingType.DUTCH_LIMIT = RoutingType.DUTCH_LIMIT;
-  public readonly defaultDeadlienBufferInSecs: number = DEFAULT_DEADLINE_BUFFER_SECS;
+  public readonly defaultDeadlineBufferInSecs: number = DEFAULT_DEADLINE_BUFFER_SECS;
 
   public toJSON(): DutchQuoteDataJSON {
     return {

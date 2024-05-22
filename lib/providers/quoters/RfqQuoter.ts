@@ -3,6 +3,7 @@ import { ID_TO_CHAIN_ID, WRAPPED_NATIVE_CURRENCY } from '@uniswap/smart-order-ro
 import { BigNumber } from 'ethers';
 import axios from './helpers';
 
+import { ChainConfigManager } from '../../config/ChainConfigManager';
 import { BPS, frontendAndUraEnablePortion, NATIVE_ADDRESS, RoutingType } from '../../constants';
 import { DutchQuoteRequest, Quote } from '../../entities';
 import { DutchQuoteFactory } from '../../entities/quote/DutchQuoteFactory';
@@ -19,6 +20,11 @@ export class RfqQuoter implements Quoter {
   constructor(private rfqUrl: string, private serviceUrl: string, private paramApiKey: string) {}
 
   async quote(request: DutchQuoteRequest): Promise<Quote | null> {
+    // Skip RFQ for forced Open Orders
+    const quoteConfig = ChainConfigManager.getQuoteConfig(request.info.tokenInChainId, request.routingType);
+    if (quoteConfig.forceOpenOrders || request.config.forceOpenOrders) {
+      return null;
+    }
     const swapper = request.config.swapper;
     const now = Date.now();
     const portionEnabled = frontendAndUraEnablePortion(request.info.sendPortionEnabled);
