@@ -587,6 +587,9 @@ describe('quote', function () {
           if (chain === ChainId.BLAST || chain === ChainId.ZORA) {
             // Blast doesn't have DAI or USDC yet
             // Zora doesn't have DAI
+
+            // This test will become ETH -> WETH quote, and it will throw INVARIANT ADDRESS from sdk-core.
+            // Reasons explained in https://github.com/Uniswap/unified-routing-api/pull/425#discussion_r1611055408.
             return;
           }
 
