@@ -2062,18 +2062,18 @@
   resolved "https://registry.npmjs.org/@uniswap/lib/-/lib-4.0.1-alpha.tgz"
   integrity sha512-f6UIliwBbRsgVLxIaBANF6w09tYqc6Y/qXdsrbEmXHyFA7ILiKrIwRFXe1yOg8M3cksgVsO9N7yuL2DdCGQKBA==
 
-"@uniswap/permit2-sdk@^1.2.0":
-  version "1.2.0"
-  resolved "https://registry.npmjs.org/@uniswap/permit2-sdk/-/permit2-sdk-1.2.0.tgz"
-  integrity sha512-Ietv3FxN7+RCXcPSED/i/8b0a2GUZrMdyX05k3FsSztvYKyPFAMS/hBXojF0NZqYB1bHecqYc7Ej+7tV/rdYXg==
-  dependencies:
-    ethers "^5.3.1"
-    tiny-invariant "^1.3.1"
-
 "@uniswap/permit2-sdk@^1.2.1":
   version "1.2.1"
   resolved "https://registry.npmjs.org/@uniswap/permit2-sdk/-/permit2-sdk-1.2.1.tgz#7f562d96a26de0538508ba9ea2b2f02150572bf2"
   integrity sha512-3eEVW6d1tepF9L4XLGhrGoVPKFBe/kQYRCvkzMmYu32amEeV2L8sg5TBJhrVZu+cu0srX7rh3nhOucNdMVOGzg==
+  dependencies:
+    ethers "^5.7.0"
+    tiny-invariant "^1.1.0"
+
+"@uniswap/permit2-sdk@^1.3.0":
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/@uniswap/permit2-sdk/-/permit2-sdk-1.3.0.tgz#b54124e570f0adbaca9d39b2de3054fd7d3798a1"
+  integrity sha512-LstYQWP47dwpQrgqBJ+ysFstne9LgI5FGiKHc2ewjj91MTY8Mq1reocu6U/VDncdR5ef30TUOcZ7gPExRY8r6Q==
   dependencies:
     ethers "^5.7.0"
     tiny-invariant "^1.1.0"
@@ -2089,18 +2089,6 @@
     "@uniswap/v2-sdk" "^4.3.2"
     "@uniswap/v3-sdk" "^3.11.2"
 
-"@uniswap/sdk-core@^4.2.0":
-  version "4.2.1"
-  resolved "https://registry.yarnpkg.com/@uniswap/sdk-core/-/sdk-core-4.2.1.tgz#7b8c6fee48446bb67a4e6f2e9cb94c862034a6c3"
-  integrity sha512-hr7vwYrXScg+V8/rRc2UL/Ixc/p0P7yqe4D/OxzUdMRYr8RZd+8z5Iu9+WembjZT/DCdbTjde6lsph4Og0n1BQ==
-  dependencies:
-    "@ethersproject/address" "^5.0.2"
-    big.js "^5.2.2"
-    decimal.js-light "^2.5.0"
-    jsbi "^3.1.4"
-    tiny-invariant "^1.1.0"
-    toformat "^2.0.0"
-
 "@uniswap/sdk-core@^5.0.0":
   version "5.0.0"
   resolved "https://registry.npmjs.org/@uniswap/sdk-core/-/sdk-core-5.0.0.tgz#7accd8c7372b14811777cbd1d92133d4de57c683"
@@ -2113,23 +2101,38 @@
     tiny-invariant "^1.1.0"
     toformat "^2.0.0"
 
-"@uniswap/smart-order-router@^3.33.1":
-  version "3.33.1"
-  resolved "https://registry.yarnpkg.com/@uniswap/smart-order-router/-/smart-order-router-3.33.1.tgz#026143b88e7e9c77904f0179cc456801d431e8dc"
-  integrity sha512-w6LaNgsMdsz3M+DX98M3PzosHg1nn2mIH/1uXVydNhYG9XyIRLS71x/75mx/jfp1MCoqw/OernLE2cMRq5YQUg==
+"@uniswap/sdk-core@^5.3.0":
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/@uniswap/sdk-core/-/sdk-core-5.3.0.tgz#4af6d7d794ce65c5303b2d4c58c87a917bbeb986"
+  integrity sha512-wbMzSY3wbByOkoirZXyeomof4a7goueT4bOa4YqoXDWqIftqrT70UuCgjk98nIBu3UqPxRNMptXusppxZVvwWA==
+  dependencies:
+    "@ethersproject/address" "^5.0.2"
+    "@ethersproject/bytes" "^5.7.0"
+    "@ethersproject/keccak256" "5.7.0"
+    "@ethersproject/strings" "5.7.0"
+    big.js "^5.2.2"
+    decimal.js-light "^2.5.0"
+    jsbi "^3.1.4"
+    tiny-invariant "^1.1.0"
+    toformat "^2.0.0"
+
+"@uniswap/smart-order-router@^3.35.0":
+  version "3.35.0"
+  resolved "https://registry.yarnpkg.com/@uniswap/smart-order-router/-/smart-order-router-3.35.0.tgz#de79f23f05b039be3d1d6d52b8557f646554efc9"
+  integrity sha512-RNieO2HboHwPGkP02K0XLLwPKjnWprEL27zj07HqHaLHA2X9rGraypu7z4Sd8xf5L2NAehgixTMJAOdo1mWHUw==
   dependencies:
     "@eth-optimism/sdk" "^3.2.2"
     "@types/brotli" "^1.3.4"
     "@uniswap/default-token-list" "^11.13.0"
-    "@uniswap/permit2-sdk" "^1.2.0"
+    "@uniswap/permit2-sdk" "^1.3.0"
     "@uniswap/router-sdk" "^1.9.2"
-    "@uniswap/sdk-core" "^5.0.0"
+    "@uniswap/sdk-core" "^5.3.0"
     "@uniswap/swap-router-contracts" "^1.3.1"
     "@uniswap/token-lists" "^1.0.0-beta.31"
     "@uniswap/universal-router" "^1.6.0"
-    "@uniswap/universal-router-sdk" "^2.1.0"
+    "@uniswap/universal-router-sdk" "^2.2.0"
     "@uniswap/v2-sdk" "^4.3.2"
-    "@uniswap/v3-sdk" "^3.11.2"
+    "@uniswap/v3-sdk" "^3.13.0"
     async-retry "^1.3.1"
     await-timeout "^1.1.1"
     axios "^0.21.1"
@@ -2172,17 +2175,17 @@
     "@uniswap/sdk-core" "^5.0.0"
     ethers "^5.7.0"
 
-"@uniswap/universal-router-sdk@^2.1.0":
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/@uniswap/universal-router-sdk/-/universal-router-sdk-2.1.0.tgz#7b4e48af92a6162973d3503bcd6ccf4b52dcba4a"
-  integrity sha512-nLIIr0bZ6AfvwuYC97rM10tyEfqDIdujtG+Ahwqhv1EMWayh6abbqPUwvUQvk6Px4LOyuKtlciryW/MJMusn4w==
+"@uniswap/universal-router-sdk@^2.2.0":
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/@uniswap/universal-router-sdk/-/universal-router-sdk-2.2.0.tgz#fa3d99ae707526d2a250f3b23aa5408311f1e4a6"
+  integrity sha512-8ys8eVLLMBMuTya9d4LjqBQrlunkdTm9HNgcE6IXG/Ro3Lekxe1e0mak0MaIQEFfrE44JvaJu6M/BenxBYWqaw==
   dependencies:
-    "@uniswap/permit2-sdk" "^1.2.1"
+    "@uniswap/permit2-sdk" "^1.3.0"
     "@uniswap/router-sdk" "^1.9.2"
-    "@uniswap/sdk-core" "^5.0.0"
+    "@uniswap/sdk-core" "^5.3.0"
     "@uniswap/universal-router" "1.6.0"
     "@uniswap/v2-sdk" "^4.3.2"
-    "@uniswap/v3-sdk" "^3.11.2"
+    "@uniswap/v3-sdk" "^3.13.0"
     bignumber.js "^9.0.2"
     ethers "^5.7.0"
 
@@ -2251,6 +2254,20 @@
     "@ethersproject/abi" "^5.5.0"
     "@ethersproject/solidity" "^5.0.9"
     "@uniswap/sdk-core" "^5.0.0"
+    "@uniswap/swap-router-contracts" "^1.3.0"
+    "@uniswap/v3-periphery" "^1.1.1"
+    "@uniswap/v3-staker" "1.0.0"
+    tiny-invariant "^1.1.0"
+    tiny-warning "^1.0.3"
+
+"@uniswap/v3-sdk@^3.13.0":
+  version "3.13.0"
+  resolved "https://registry.yarnpkg.com/@uniswap/v3-sdk/-/v3-sdk-3.13.0.tgz#e9f1bc8711b734e36fc58ba4017089d7b79c437e"
+  integrity sha512-Jz8aEU7RrDK4LfFNLClXFr2hkBE08QANLEBTofmu+ueCCKoNoRd/OTR4q04HhIeMyXtzsSOzi32a5yS7OY9glg==
+  dependencies:
+    "@ethersproject/abi" "^5.5.0"
+    "@ethersproject/solidity" "^5.0.9"
+    "@uniswap/sdk-core" "^5.3.0"
     "@uniswap/swap-router-contracts" "^1.3.0"
     "@uniswap/v3-periphery" "^1.1.1"
     "@uniswap/v3-staker" "1.0.0"
@@ -3858,7 +3875,7 @@ ethereumjs-util@^6.0.0, ethereumjs-util@^6.2.1:
     ethjs-util "0.1.6"
     rlp "^2.2.3"
 
-ethers@^5.3.1, ethers@^5.7.0, ethers@^5.7.2:
+ethers@^5.7.0, ethers@^5.7.2:
   version "5.7.2"
   resolved "https://registry.npmjs.org/ethers/-/ethers-5.7.2.tgz"
   integrity sha512-wswUsmWo1aOK8rR7DIKiWSw9DbLWe6x98Jrn8wcTflTVvaXhAMaB5zGAXy0GYQEQp9iO1iSHWVyARQm11zUtyg==

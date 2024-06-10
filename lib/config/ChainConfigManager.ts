@@ -182,6 +182,10 @@ export abstract class ChainConfigManager {
       routingTypes: {},
       alarmEnabled: false,
     },
+    [ChainId.ZKSYNC]: {
+      routingTypes: {},
+      alarmEnabled: false,
+    }
   };
 
   private static _performedDependencyCheck = false;
