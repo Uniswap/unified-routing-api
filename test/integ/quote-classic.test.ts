@@ -8,7 +8,7 @@ import {
   ID_TO_NETWORK_NAME,
   NATIVE_CURRENCY,
   USDB_BLAST,
-  USDC_ZORA,
+  USDC_ZORA
 } from '@uniswap/smart-order-router';
 import { fail } from 'assert';
 import { AxiosResponse } from 'axios';
@@ -456,6 +456,7 @@ describe('quote', function () {
     [ChainId.ZORA_SEPOLIA]: null,
     [ChainId.ROOTSTOCK]: null,
     [ChainId.BLAST]: USDB_BLAST,
+    [ChainId.ZKSYNC]: USDC_ON(ChainId.ZKSYNC),
   };
 
   const TEST_ERC20_2: { [chainId in ChainId]: Token | null } = {
@@ -482,6 +483,7 @@ describe('quote', function () {
     [ChainId.ZORA_SEPOLIA]: null,
     [ChainId.ROOTSTOCK]: null,
     [ChainId.BLAST]: WNATIVE_ON(ChainId.BLAST),
+    [ChainId.ZKSYNC]: WNATIVE_ON(ChainId.ZKSYNC),
   };
 
   // TODO: Find valid pools/tokens on optimistic kovan and polygon mumbai. We skip those tests for now.
@@ -584,9 +586,10 @@ describe('quote', function () {
         });
         const native = NATIVE_CURRENCY[chain];
         it(`${native} -> erc20`, async () => {
-          if (chain === ChainId.BLAST || chain === ChainId.ZORA) {
+          if (chain === ChainId.BLAST || chain === ChainId.ZORA || chain === ChainId.ZKSYNC) {
             // Blast doesn't have DAI or USDC yet
             // Zora doesn't have DAI
+            // Zksync doesn't have liquid USDC/DAI pool yet
 
             // This test will become ETH -> WETH quote, and it will throw INVARIANT ADDRESS from sdk-core.
             // Reasons explained in https://github.com/Uniswap/unified-routing-api/pull/425#discussion_r1611055408.
