@@ -271,11 +271,9 @@ export class DutchQuoteContext implements QuoteContext {
     // either swapper was not set or is zero address
     if (!request.info.swapper || request.info.swapper == NATIVE_ADDRESS) return false;
 
-    const chainId = request.info.tokenInChainId as ChainId
+    const chainId = request.info.tokenInChainId as ChainId;
     const tokenInAddress =
-      request.info.tokenIn == NATIVE_ADDRESS
-        ? WRAPPED_NATIVE_CURRENCY[chainId].address
-        : request.info.tokenIn;
+      request.info.tokenIn == NATIVE_ADDRESS ? WRAPPED_NATIVE_CURRENCY[chainId].address : request.info.tokenIn;
     const tokenContract = Erc20__factory.connect(tokenInAddress, this.rpcProvider);
     const permit2Allowance = await tokenContract.allowance(request.info.swapper, permit2Address(chainId));
 
