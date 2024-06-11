@@ -77,7 +77,7 @@ export abstract class ChainConfigManager {
       routingTypes: {
         [RoutingType.CLASSIC]: {},
         [RoutingType.DUTCH_V2]: {
-          deadlineBufferSecs: 60
+          deadlineBufferSecs: 60,
         },
       },
       alarmEnabled: true,
@@ -183,9 +183,11 @@ export abstract class ChainConfigManager {
       alarmEnabled: false,
     },
     [ChainId.ZKSYNC]: {
-      routingTypes: {},
+      routingTypes: {
+        [RoutingType.CLASSIC]: {},
+      },
       alarmEnabled: false,
-    }
+    },
   };
 
   private static _performedDependencyCheck = false;
