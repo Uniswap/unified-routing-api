@@ -1,4 +1,9 @@
-import { AllowanceTransfer, MaxAllowanceTransferAmount, PERMIT2_ADDRESS, PermitSingleData } from '@uniswap/permit2-sdk';
+import {
+  AllowanceTransfer,
+  MaxAllowanceTransferAmount,
+  permit2Address,
+  PermitSingleData
+} from '@uniswap/permit2-sdk';
 import { UNIVERSAL_ROUTER_ADDRESS } from '@uniswap/universal-router-sdk';
 import ms from 'ms';
 
@@ -22,5 +27,5 @@ export function createPermitData(tokenAddress: string, chainId: number, nonce: s
     sigDeadline: toDeadline(PERMIT_SIG_EXPIRATION).toString(),
   };
 
-  return AllowanceTransfer.getPermitData(permit, PERMIT2_ADDRESS, chainId) as PermitSingleData;
+  return AllowanceTransfer.getPermitData(permit, permit2Address(chainId), chainId) as PermitSingleData;
 }

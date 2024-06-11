@@ -1,4 +1,4 @@
-import { PERMIT2_ADDRESS, PermitDetails } from '@uniswap/permit2-sdk';
+import { permit2Address, PermitDetails } from '@uniswap/permit2-sdk';
 import { ChainId } from '@uniswap/sdk-core';
 import { Unit } from 'aws-embedded-metrics';
 import { ethers, providers } from 'ethers';
@@ -7,16 +7,20 @@ import { log } from '../util/log';
 import { metrics } from '../util/metrics';
 
 export class Permit2Fetcher {
-  public readonly permit2Address: string;
   public readonly permit2Abi: ethers.ContractInterface;
   private readonly permit2: ethers.Contract;
+  private readonly permit2ZkSync: ethers.Contract;
   private readonly chainIdRpcMap: Map<ChainId, providers.StaticJsonRpcProvider>;
 
   constructor(chainIdRpcMap: Map<ChainId, providers.StaticJsonRpcProvider>) {
     this.chainIdRpcMap = chainIdRpcMap;
-    this.permit2Address = PERMIT2_ADDRESS;
     this.permit2Abi = PERMIT2_CONTRACT.abi;
-    this.permit2 = new ethers.Contract(this.permit2Address, this.permit2Abi);
+    this.permit2 = new ethers.Contract(permit2Address(), this.permit2Abi);
+    this.permit2ZkSync = new ethers.Contract(permit2Address(ChainId.ZKSYNC), this.permit2Abi);
+  }
+
+  public permit2Address(chainId: ChainId): string {
+    return permit2Address(chainId);
   }
 
   public async fetchAllowance(
@@ -31,7 +35,8 @@ export class Permit2Fetcher {
       const beforePermitCheck = Date.now();
       const rpcProvider = this.chainIdRpcMap.get(chainId);
       if (!rpcProvider) throw new Error(`No rpc provider found for chain: ${chainId}`);
-      allowance = await this.permit2.connect(rpcProvider).allowance(ownerAddress, tokenAddress, spenderAddress);
+      const permit2 = chainId === ChainId.ZKSYNC ? this.permit2ZkSync : this.permit2;
+      allowance = await permit2.connect(rpcProvider).allowance(ownerAddress, tokenAddress, spenderAddress);
       metrics.putMetric(`Permit2FetcherSuccess`, 1);
       metrics.putMetric(`Latency-Permit2Fetcher-ChainId${chainId}`, Date.now() - beforePermitCheck, Unit.Milliseconds);
     } catch (e) {

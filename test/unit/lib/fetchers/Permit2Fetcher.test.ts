@@ -1,4 +1,4 @@
-import { PERMIT2_ADDRESS } from '@uniswap/permit2-sdk';
+import { permit2Address } from '@uniswap/permit2-sdk';
 import { ChainId } from '@uniswap/sdk-core';
 import PERMIT2_CONTRACT from '../../../../lib/abis/Permit2.json';
 import { Permit2Fetcher } from '../../../../lib/fetchers/Permit2Fetcher';
@@ -9,7 +9,7 @@ describe('Permit2Fetcher Unit Tests', () => {
       const rpcUrlMap = new Map();
       rpcUrlMap.set(ChainId.MAINNET, 'mainnet rpc url');
       const fetcher = new Permit2Fetcher(rpcUrlMap);
-      expect(fetcher.permit2Address).toBe(PERMIT2_ADDRESS);
+      expect(fetcher.permit2Address(ChainId.MAINNET)).toBe(permit2Address(ChainId.MAINNET));
       expect(fetcher.permit2Abi).toBe(PERMIT2_CONTRACT.abi);
     });
 
