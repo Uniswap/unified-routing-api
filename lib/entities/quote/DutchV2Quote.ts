@@ -18,7 +18,7 @@ import { timestampInMstoSeconds } from '../../util/time';
 import { DutchQuote, getPortionAdjustedOutputs } from './DutchQuote';
 
 export const DEFAULT_LABS_COSIGNER = ethers.constants.AddressZero;
-export const V2_OUTPUT_AMOUNT_BUFFER_BPS = 10;
+export const DEFAULT_V2_OUTPUT_AMOUNT_BUFFER_BPS = 10;
 
 // JSON format of a DutchV2Quote, to be returned by the API
 export type DutchV2QuoteDataJSON = SharedOrderQuoteDataJSON & {
@@ -35,6 +35,7 @@ export class DutchV2Quote extends DutchQuote<DutchV2Request> implements IQuote {
   public readonly defaultDeadlineBufferInSecs: number = DEFAULT_V2_DEADLINE_BUFFER_SECS;
 
   public toJSON(): DutchV2QuoteDataJSON {
+    const quoteConfig = ChainConfigManager.getQuoteConfig(this.chainId, this.request.routingType);
     return {
       orderInfo: this.toOrder().toJSON(),
       encodedOrder: this.toOrder().serialize(),
@@ -48,7 +49,12 @@ export class DutchV2Quote extends DutchQuote<DutchV2Request> implements IQuote {
       // this is FE requirement
       ...(frontendAndUraEnablePortion(this.request.info.sendPortionEnabled) && {
         portionBips: this.portion?.bips ?? 0,
-        portionAmount: applyBufferToPortion(this.portionAmountOutStart, this.request.info.type).toString() ?? '0',
+        portionAmount:
+          applyBufferToPortion(
+            this.portionAmountOutStart,
+            this.request.info.type,
+            quoteConfig.priceBufferBps ?? DEFAULT_V2_OUTPUT_AMOUNT_BUFFER_BPS
+          ).toString() ?? '0',
         portionRecipient: this.portion?.recipient,
       }),
     };
@@ -110,6 +116,7 @@ export class DutchV2Quote extends DutchQuote<DutchV2Request> implements IQuote {
   }
 
   public toLog(): LogJSON {
+    const quoteConfig = ChainConfigManager.getQuoteConfig(this.chainId, this.request.routingType);
     return {
       tokenInChainId: this.chainId,
       tokenOutChainId: this.chainId,
@@ -135,8 +142,16 @@ export class DutchV2Quote extends DutchQuote<DutchV2Request> implements IQuote {
       createdAtMs: this.createdAtMs,
       portionBips: this.portion?.bips,
       portionRecipient: this.portion?.recipient,
-      portionAmountOutStart: applyBufferToPortion(this.portionAmountOutStart, this.request.info.type).toString(),
-      portionAmountOutEnd: applyBufferToPortion(this.portionAmountOutEnd, this.request.info.type).toString(),
+      portionAmountOutStart: applyBufferToPortion(
+        this.portionAmountOutStart,
+        this.request.info.type,
+        quoteConfig.priceBufferBps ?? DEFAULT_V2_OUTPUT_AMOUNT_BUFFER_BPS
+      ).toString(),
+      portionAmountOutEnd: applyBufferToPortion(
+        this.portionAmountOutEnd,
+        this.request.info.type,
+        quoteConfig.priceBufferBps ?? DEFAULT_V2_OUTPUT_AMOUNT_BUFFER_BPS
+      ).toString(),
     };
   }
 
@@ -181,9 +196,9 @@ export function addBufferToV2InputOutput(
  * if exact_input, apply buffer to both user and portion outputs
  *  if exact_output, do nothing since the buffer is applied to user input
  */
-export function applyBufferToPortion(portionAmount: BigNumber, type: TradeType): BigNumber {
+export function applyBufferToPortion(portionAmount: BigNumber, type: TradeType, bps: number): BigNumber {
   if (type === TradeType.EXACT_INPUT) {
-    return portionAmount.mul(BPS - V2_OUTPUT_AMOUNT_BUFFER_BPS).div(BPS);
+    return portionAmount.mul(BPS - bps).div(BPS);
   } else {
     return portionAmount;
   }
