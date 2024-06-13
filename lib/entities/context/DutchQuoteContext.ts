@@ -1,5 +1,5 @@
 import DEFAULT_TOKEN_LIST from '@uniswap/default-token-list';
-import { PERMIT2_ADDRESS } from '@uniswap/permit2-sdk';
+import { permit2Address } from '@uniswap/permit2-sdk';
 import { Protocol } from '@uniswap/router-sdk';
 import { ChainId, TradeType } from '@uniswap/sdk-core';
 
@@ -271,12 +271,11 @@ export class DutchQuoteContext implements QuoteContext {
     // either swapper was not set or is zero address
     if (!request.info.swapper || request.info.swapper == NATIVE_ADDRESS) return false;
 
+    const chainId = request.info.tokenInChainId as ChainId;
     const tokenInAddress =
-      request.info.tokenIn == NATIVE_ADDRESS
-        ? WRAPPED_NATIVE_CURRENCY[request.info.tokenInChainId as ChainId].address
-        : request.info.tokenIn;
+      request.info.tokenIn == NATIVE_ADDRESS ? WRAPPED_NATIVE_CURRENCY[chainId].address : request.info.tokenIn;
     const tokenContract = Erc20__factory.connect(tokenInAddress, this.rpcProvider);
-    const permit2Allowance = await tokenContract.allowance(request.info.swapper, PERMIT2_ADDRESS);
+    const permit2Allowance = await tokenContract.allowance(request.info.swapper, permit2Address(chainId));
 
     if (request.info.type == TradeType.EXACT_OUTPUT) {
       // If exactOutput, we don't know how much tokenIn will be needed
