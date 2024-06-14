@@ -3,8 +3,9 @@ import Logger from 'bunyan';
 import { it } from '@jest/globals';
 import { TradeType } from '@uniswap/sdk-core';
 import { BigNumber } from 'ethers';
-import { BPS } from '../../../lib/constants';
-import { DEFAULT_LABS_COSIGNER, DutchQuote, V2_OUTPUT_AMOUNT_BUFFER_BPS } from '../../../lib/entities';
+import { ChainConfigManager } from '../../../lib/config/ChainConfigManager';
+import { BPS, RoutingType } from '../../../lib/constants';
+import { DEFAULT_LABS_COSIGNER, DutchQuote } from '../../../lib/entities';
 import { PortionType } from '../../../lib/fetchers/PortionFetcher';
 import { AMOUNT, ETH_IN, SWAPPER, TOKEN_IN } from '../../constants';
 import { createDutchV2QuoteWithRequestOverrides } from '../../utils/fixtures';
@@ -16,6 +17,8 @@ describe('DutchV2Quote', () => {
   // silent logger in tests
   const logger = Logger.createLogger({ name: 'test' });
   logger.level(Logger.FATAL);
+
+  const quoteConfig = ChainConfigManager.getQuoteConfig(1, RoutingType.DUTCH_V2);
 
   describe('toOrder', () => {
     it('should have proper json form', () => {
@@ -34,7 +37,7 @@ describe('DutchV2Quote', () => {
       expect(orderJson.outputs.length).toEqual(1);
       expect(orderJson.outputs[0].startAmount).toEqual(
         BigNumber.from(AMOUNT) // Default starting amount out in createDutchV2QuoteWithRequestOverrides
-          .mul(BPS - 10)
+          .mul(BPS - quoteConfig.priceBufferBps!)
           .div(BPS)
           .toString()
       );
@@ -58,13 +61,13 @@ describe('DutchV2Quote', () => {
 
       expect(orderJson.outputs[0].startAmount).toEqual(
         v2Quote.amountOutGasAndPortionAdjusted
-          .mul(BPS - V2_OUTPUT_AMOUNT_BUFFER_BPS)
+          .mul(BPS - quoteConfig.priceBufferBps!)
           .div(BPS)
           .toString()
       );
       expect(orderJson.outputs[1].startAmount).toEqual(
         v2Quote.portionAmountOutStart
-          .mul(BPS - V2_OUTPUT_AMOUNT_BUFFER_BPS)
+          .mul(BPS - quoteConfig.priceBufferBps!)
           .div(BPS)
           .toString()
       );
@@ -90,7 +93,7 @@ describe('DutchV2Quote', () => {
 
       expect(orderJson.input.startAmount).toEqual(
         v2Quote.amountInGasAndPortionAdjusted
-          .mul(BPS + V2_OUTPUT_AMOUNT_BUFFER_BPS)
+          .mul(BPS + quoteConfig.priceBufferBps!)
           .div(BPS)
           .toString()
       );

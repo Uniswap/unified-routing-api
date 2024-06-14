@@ -53,7 +53,7 @@ export abstract class ChainConfigManager {
           // 25 blocks from now
           // to cover time to sign, run secondary auction, and some blocks for decay
           deadlineBufferSecs: 300,
-          priceBufferBps: 10,
+          priceBufferBps: 15,
         },
       },
       alarmEnabled: true,
