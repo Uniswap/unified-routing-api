@@ -332,6 +332,10 @@ describe('QuoteHandler', () => {
           requestSource = quoteHandler.getQuoteRequestSource(headers);
           expect(requestSource).toBe(RequestSource.UNKNOWN);
 
+          headers = {'x-request-source': 'uniswap-extension'};
+          requestSource = quoteHandler.getQuoteRequestSource(headers);
+          expect(requestSource).toBe(RequestSource.UNISWAP_EXTENSION);
+
           headers = { 'x-request-source': '' };
           requestSource = quoteHandler.getQuoteRequestSource(headers);
           expect(requestSource).toBe(RequestSource.UNKNOWN);
